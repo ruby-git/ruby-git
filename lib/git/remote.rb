@@ -121,9 +121,7 @@ module Git
     #
     def branch(branch = nil)
       branch ||= remote_repository.current_branch
-      remote_tracking_branch = "#{@name}/#{branch}"
-      branch_info = build_branch_info(remote_tracking_branch)
-      Git::Branch.new(@base, branch_info)
+      Git::Branch.new(@base, "#{@name}/#{branch}")
     end
 
     # Removes this remote from the repository
@@ -158,25 +156,6 @@ module Git
     #
     def remote_repository
       @base
-    end
-
-    # Builds branch metadata for a remote-tracking branch
-    #
-    # @param refname [String] remote-tracking branch name (for example,
-    #   `'origin/main'`)
-    #
-    # @return [Git::BranchInfo] minimal branch metadata for constructing
-    #   {Git::Branch}
-    #
-    def build_branch_info(refname)
-      Git::BranchInfo.new(
-        refname: refname,
-        target_oid: nil,
-        current: false,
-        worktree: false,
-        symref: nil,
-        upstream: nil
-      )
     end
   end
 end

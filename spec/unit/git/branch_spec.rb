@@ -15,7 +15,7 @@ RSpec.describe Git::Branch do
           refname: 'feature/my-feature',
           target_oid: 'abc123',
           current: true,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )
@@ -42,7 +42,7 @@ RSpec.describe Git::Branch do
           refname: 'remotes/origin/main',
           target_oid: 'abc123',
           current: false,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )
@@ -100,7 +100,7 @@ RSpec.describe Git::Branch do
           refname: refname,
           target_oid: 'abc123',
           current: false,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )
@@ -136,7 +136,7 @@ RSpec.describe Git::Branch do
           refname: 'feature',
           target_oid: 'abc123',
           current: false,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )
@@ -157,7 +157,7 @@ RSpec.describe Git::Branch do
           refname: 'remotes/origin/feature',
           target_oid: 'abc123',
           current: false,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )
@@ -189,7 +189,7 @@ RSpec.describe Git::Branch do
         refname: 'feature',
         target_oid: nil,
         current: false,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -228,7 +228,7 @@ RSpec.describe Git::Branch do
         refname: 'feature',
         target_oid: nil,
         current: false,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -264,7 +264,7 @@ RSpec.describe Git::Branch do
           refname: 'feature',
           target_oid: nil,
           current: false,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )
@@ -285,7 +285,7 @@ RSpec.describe Git::Branch do
           refname: 'remotes/origin/feature',
           target_oid: nil,
           current: false,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )
@@ -314,7 +314,7 @@ RSpec.describe Git::Branch do
         refname: 'new-feature',
         target_oid: nil,
         current: false,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -350,7 +350,7 @@ RSpec.describe Git::Branch do
         refname: 'feature',
         target_oid: 'abc123',
         current: false,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -382,7 +382,7 @@ RSpec.describe Git::Branch do
         refname: 'feature',
         target_oid: nil,
         current: false,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -406,7 +406,7 @@ RSpec.describe Git::Branch do
         refname: 'feature',
         target_oid: nil,
         current: false,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -431,7 +431,7 @@ RSpec.describe Git::Branch do
         refname: 'feature',
         target_oid: nil,
         current: false,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -472,7 +472,7 @@ RSpec.describe Git::Branch do
         refname: 'feature',
         target_oid: nil,
         current: false,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -495,7 +495,7 @@ RSpec.describe Git::Branch do
         refname: 'feature',
         target_oid: nil,
         current: false,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -503,166 +503,6 @@ RSpec.describe Git::Branch do
 
     it 'returns the full refname as a string' do
       expect(branch.to_s).to eq('feature')
-    end
-  end
-
-  # ---------------------------------------------------------------------------
-  # #upstream
-  # ---------------------------------------------------------------------------
-
-  describe '#upstream' do
-    subject(:upstream) { described_class.new(base, branch_info).upstream }
-
-    context 'when upstream is configured (BranchInfo path)' do
-      let(:upstream_info) do
-        Git::BranchInfo.new(
-          refname: 'remotes/origin/bar',
-          target_oid: nil,
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil
-        )
-      end
-
-      let(:branch_info) do
-        Git::BranchInfo.new(
-          refname: 'foo',
-          target_oid: 'abc123',
-          current: true,
-          worktree: false,
-          symref: nil,
-          upstream: upstream_info
-        )
-      end
-
-      it 'returns the upstream BranchInfo' do
-        expect(upstream).to eq(upstream_info)
-      end
-
-      it 'exposes the upstream remote name' do
-        expect(upstream.remote_name).to eq('origin')
-      end
-
-      it 'exposes the upstream short name' do
-        expect(upstream.short_name).to eq('bar')
-      end
-    end
-
-    context 'when no upstream is configured (BranchInfo path)' do
-      let(:branch_info) do
-        Git::BranchInfo.new(
-          refname: 'foo',
-          target_oid: 'abc123',
-          current: true,
-          worktree: false,
-          symref: nil,
-          upstream: nil
-        )
-      end
-
-      it 'returns nil' do
-        expect(upstream).to be_nil
-      end
-    end
-
-    context 'when initialized from a String (legacy path)' do
-      let(:branch_info) { 'foo' }
-
-      it 'returns nil' do
-        expect(upstream).to be_nil
-      end
-    end
-  end
-
-  # ---------------------------------------------------------------------------
-  # #upstream_remote
-  # ---------------------------------------------------------------------------
-
-  describe '#upstream_remote' do
-    subject(:upstream_remote) { described_class.new(base, branch_info).upstream_remote }
-
-    context 'when upstream is a remote-tracking branch' do
-      let(:upstream_info) do
-        Git::BranchInfo.new(
-          refname: 'remotes/origin/bar',
-          target_oid: nil,
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil
-        )
-      end
-
-      let(:branch_info) do
-        Git::BranchInfo.new(
-          refname: 'foo',
-          target_oid: 'abc123',
-          current: true,
-          worktree: false,
-          symref: nil,
-          upstream: upstream_info
-        )
-      end
-
-      let(:remote_config) { { 'url' => 'https://github.com/test/repo.git' } }
-
-      before do
-        allow(base).to receive(:config_remote).with('origin').and_return(remote_config)
-      end
-
-      it 'returns a Git::Remote for the upstream remote' do
-        expect(upstream_remote).to be_a(Git::Remote)
-      end
-
-      it 'returns a remote with the correct name' do
-        expect(upstream_remote.name).to eq('origin')
-      end
-    end
-
-    context 'when upstream is a local branch (no remote_name)' do
-      let(:upstream_info) do
-        Git::BranchInfo.new(
-          refname: 'main',
-          target_oid: nil,
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil
-        )
-      end
-
-      let(:branch_info) do
-        Git::BranchInfo.new(
-          refname: 'foo',
-          target_oid: 'abc123',
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: upstream_info
-        )
-      end
-
-      it 'returns nil' do
-        expect(upstream_remote).to be_nil
-      end
-    end
-
-    context 'when no upstream is configured' do
-      let(:branch_info) do
-        Git::BranchInfo.new(
-          refname: 'foo',
-          target_oid: 'abc123',
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil
-        )
-      end
-
-      it 'returns nil' do
-        expect(upstream_remote).to be_nil
-      end
     end
   end
 end

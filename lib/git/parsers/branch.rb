@@ -38,18 +38,21 @@ module Git
     module Branch
       # Format string for git branch --format
       #
-      # Fields (pipe-delimited):
-      # 1. refname - full ref name (e.g., refs/heads/main, refs/remotes/origin/main)
-      # 2. objectname - full SHA of the commit the branch points to
-      # 3. HEAD - '*' if current branch, empty otherwise
+      # Fields (null-delimited):
+      # 1. refname      - full ref name (e.g., refs/heads/main, refs/remotes/origin/main)
+      # 2. objectname  - full SHA of the commit the branch points to
+      # 3. HEAD         - '*' if current branch, empty otherwise
       # 4. worktreepath - path if checked out in another worktree, empty otherwise
-      # 5. symref - target ref if symbolic reference, empty otherwise
-      # 6. upstream - full upstream ref (e.g., refs/remotes/origin/main), empty if none
+      # 5. symref       - target ref if symbolic reference, empty otherwise
+      # 6. upstream     - full upstream ref (e.g., refs/remotes/origin/main), empty if none
       #
-      FORMAT_STRING = '%(refname)|%(objectname)|%(HEAD)|%(worktreepath)|%(symref)|%(upstream)'
+      # Null bytes (%00) are used as field delimiters so that worktree paths
+      # containing special characters (including '|') parse correctly.
+      #
+      FORMAT_STRING = '%(refname)%00%(objectname)%00%(HEAD)%00%(worktreepath)%00%(symref)%00%(upstream)'
 
       # Delimiter used in format output
-      FIELD_DELIMITER = '|'
+      FIELD_DELIMITER = "\0"
 
       # Regex to parse successful deletion lines from stdout
       # Matches: Deleted branch branchname (was abc123).
@@ -65,9 +68,13 @@ module Git
 
       # Parse git branch --list output into BranchInfo objects
       #
-      # @example
-      #   Git::Parsers::Branch.parse_list("refs/heads/main|abc1234|*|||\nrefs/heads/feature|def5678||||\n")
-      #   # => [#<data Git::BranchInfo refname="main", ...>, #<data Git::BranchInfo refname="feature", ...>]
+      # @example Parse NUL-delimited branch list output
+      #   Git::Parsers::Branch.parse_list(
+      #     "refs/heads/main\0abc1234\0*\0\0\0\n" \
+      #     "refs/heads/feature\0def5678\0\0\0\0\n"
+      #   )
+      #   # => [#<data Git::BranchInfo refname="refs/heads/main", ...>,
+      #   #     #<data Git::BranchInfo refname="refs/heads/feature", ...>]
       #
       # @param stdout [String] output from git branch --list --format=...
       #
@@ -79,7 +86,7 @@ module Git
 
       # Parse a single formatted branch line
       #
-      # @param line [String] the line to parse (pipe-delimited fields)
+      # @param line [String] the line to parse (NUL-delimited fields)
       #
       # @return [Git::BranchInfo, nil] branch info object, or nil if line should be skipped
       #
@@ -93,19 +100,18 @@ module Git
 
       # Build a BranchInfo from parsed fields
       #
-      # @param fields [Array<String>] the parsed fields: [refname, objectname, head, worktreepath, symref, upstream]
+      # @param fields [Array<String>] the parsed fields:
+      #   [refname, objectname, head, worktreepath, symref, upstream]
       #
       # @return [Git::BranchInfo] the branch info object
       #
       def build_branch_info(fields)
         raw_refname, objectname, head, worktreepath, symref, upstream = fields
-        current = head == '*'
-
         Git::BranchInfo.new(
-          refname: normalize_refname(raw_refname),
+          refname: raw_refname,
           target_oid: presence(objectname),
-          current: current,
-          worktree: in_other_worktree?(worktreepath, current),
+          current: head == '*',
+          worktree_path: head == '*' ? nil : presence(worktreepath),
           symref: presence(symref),
           upstream: build_upstream_info(upstream)
         )
@@ -125,53 +131,16 @@ module Git
         refname.match?(/^\(HEAD detached/) || refname.match?(/^\(not a branch\)/)
       end
 
-      # Normalize a full refname to the expected format
-      #
-      # Converts:
-      # - refs/heads/main -> main
-      # - refs/remotes/origin/main -> remotes/origin/main
-      #
-      # @param refname [String] the full refname from git
-      #
-      # @return [String] normalized refname
-      #
-      def normalize_refname(refname)
-        refname.sub(%r{^refs/heads/}, '').sub(%r{^refs/}, '')
-      end
-
-      # Check if the branch is checked out in another worktree
-      #
-      # worktree is true when the branch is checked out in ANOTHER worktree
-      # (worktreepath is non-empty AND it's not the current branch)
-      #
-      # @param worktreepath [String, nil] the worktree path from git output
-      #
-      # @param current [Boolean] whether this is the current branch
-      #
-      # @return [Boolean] true if checked out in another worktree
-      #
-      def in_other_worktree?(worktreepath, current)
-        has_worktree = !worktreepath.nil? && !worktreepath.empty?
-        has_worktree && !current
-      end
-
-      # Build upstream BranchInfo from upstream refname
+      # Return the raw upstream refname string, or nil if empty
       #
       # @param upstream_ref [String, nil] the upstream ref (e.g., 'refs/remotes/origin/main')
       #
-      # @return [Git::BranchInfo, nil] upstream branch info or nil
+      # @return [String, nil] the raw upstream refname, or nil
       #
       def build_upstream_info(upstream_ref)
         return nil if upstream_ref.nil? || upstream_ref.empty?
 
-        Git::BranchInfo.new(
-          refname: normalize_refname(upstream_ref),
-          target_oid: nil, # We don't have upstream's OID from this format
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil # Upstream branches don't have their own upstream in this context
-        )
+        upstream_ref
       end
 
       # Return value if non-empty, nil otherwise

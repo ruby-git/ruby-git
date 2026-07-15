@@ -9,7 +9,7 @@ RSpec.describe Git::BranchInfo do
         refname: 'main',
         target_oid: 'abc123def456789012345678901234567890abcd',
         current: true,
-        worktree: false,
+        worktree_path: nil,
         symref: nil,
         upstream: nil
       )
@@ -23,8 +23,8 @@ RSpec.describe Git::BranchInfo do
       expect(branch_info.current).to be true
     end
 
-    it 'exposes worktree' do
-      expect(branch_info.worktree).to be false
+    it 'exposes worktree_path' do
+      expect(branch_info.worktree_path).to be_nil
     end
 
     it 'exposes symref' do
@@ -43,39 +43,43 @@ RSpec.describe Git::BranchInfo do
   describe '#current?' do
     it 'returns true when current is true' do
       branch_info = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: true, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(branch_info.current?).to be true
     end
 
     it 'returns false when current is false' do
       branch_info = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: false, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(branch_info.current?).to be false
     end
   end
 
-  describe '#worktree?' do
-    it 'returns true when worktree is true' do
+  describe '#other_worktree?' do
+    it 'returns true when worktree_path is non-nil' do
       branch_info = described_class.new(
-        refname: 'feature', target_oid: 'abc123', current: false, worktree: true, symref: nil, upstream: nil
+        refname: 'feature', target_oid: 'abc123', current: false, worktree_path: '/path/to/worktree',
+        symref: nil, upstream: nil
       )
-      expect(branch_info.worktree?).to be true
+      expect(branch_info.other_worktree?).to be true
     end
 
-    it 'returns false when worktree is false' do
+    it 'returns false when worktree_path is nil' do
       branch_info = described_class.new(
-        refname: 'feature', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+        refname: 'feature', target_oid: 'abc123', current: false, worktree_path: nil,
+        symref: nil, upstream: nil
       )
-      expect(branch_info.worktree?).to be false
+      expect(branch_info.other_worktree?).to be false
     end
   end
 
   describe '#symref?' do
     it 'returns true when symref is present' do
       branch_info = described_class.new(
-        refname: 'HEAD', target_oid: 'abc123', current: false, worktree: false,
+        refname: 'HEAD', target_oid: 'abc123', current: false, worktree_path: nil,
         symref: 'refs/heads/main', upstream: nil
       )
       expect(branch_info.symref?).to be true
@@ -83,7 +87,8 @@ RSpec.describe Git::BranchInfo do
 
     it 'returns false when symref is nil' do
       branch_info = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: false, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(branch_info.symref?).to be false
     end
@@ -92,7 +97,8 @@ RSpec.describe Git::BranchInfo do
   describe '#detached?' do
     it 'always returns false' do
       branch_info = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: false, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(branch_info.detached?).to be false
     end
@@ -101,14 +107,15 @@ RSpec.describe Git::BranchInfo do
   describe '#unborn?' do
     it 'returns true when target_oid is nil' do
       branch_info = described_class.new(
-        refname: 'main', target_oid: nil, current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: nil, current: true, worktree_path: nil, symref: nil, upstream: nil
       )
       expect(branch_info.unborn?).to be true
     end
 
     it 'returns false when target_oid is present' do
       branch_info = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: false, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(branch_info.unborn?).to be false
     end
@@ -118,14 +125,15 @@ RSpec.describe Git::BranchInfo do
     context 'with local branch' do
       it 'returns false for simple branch name' do
         branch_info = described_class.new(
-          refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+          refname: 'main', target_oid: 'abc123', current: false, worktree_path: nil,
+          symref: nil, upstream: nil
         )
         expect(branch_info.remote?).to be false
       end
 
       it 'returns false for branch with slashes' do
         branch_info = described_class.new(
-          refname: 'feature/my-feature', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'feature/my-feature', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.remote?).to be false
@@ -135,7 +143,7 @@ RSpec.describe Git::BranchInfo do
     context 'with remote-tracking branch' do
       it 'returns true for remotes/origin/main' do
         branch_info = described_class.new(
-          refname: 'remotes/origin/main', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'remotes/origin/main', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.remote?).to be true
@@ -143,7 +151,7 @@ RSpec.describe Git::BranchInfo do
 
       it 'returns true for refs/remotes/origin/main' do
         branch_info = described_class.new(
-          refname: 'refs/remotes/origin/main', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'refs/remotes/origin/main', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.remote?).to be true
@@ -155,14 +163,15 @@ RSpec.describe Git::BranchInfo do
     context 'with local branch' do
       it 'returns nil for simple branch name' do
         branch_info = described_class.new(
-          refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+          refname: 'main', target_oid: 'abc123', current: false, worktree_path: nil,
+          symref: nil, upstream: nil
         )
         expect(branch_info.remote_name).to be_nil
       end
 
       it 'returns nil for branch with slashes' do
         branch_info = described_class.new(
-          refname: 'feature/my-feature', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'feature/my-feature', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.remote_name).to be_nil
@@ -172,7 +181,7 @@ RSpec.describe Git::BranchInfo do
     context 'with remote-tracking branch' do
       it 'extracts remote name from remotes/origin/main' do
         branch_info = described_class.new(
-          refname: 'remotes/origin/main', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'remotes/origin/main', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.remote_name).to eq('origin')
@@ -180,7 +189,7 @@ RSpec.describe Git::BranchInfo do
 
       it 'extracts remote name from refs/remotes/origin/main' do
         branch_info = described_class.new(
-          refname: 'refs/remotes/origin/main', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'refs/remotes/origin/main', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.remote_name).to eq('origin')
@@ -188,7 +197,7 @@ RSpec.describe Git::BranchInfo do
 
       it 'extracts remote name from remotes/upstream/feature' do
         branch_info = described_class.new(
-          refname: 'remotes/upstream/feature', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'remotes/upstream/feature', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.remote_name).to eq('upstream')
@@ -200,14 +209,39 @@ RSpec.describe Git::BranchInfo do
     context 'with local branch' do
       it 'returns the branch name for simple branch' do
         branch_info = described_class.new(
-          refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+          refname: 'main', target_oid: 'abc123', current: false, worktree_path: nil,
+          symref: nil, upstream: nil
         )
         expect(branch_info.short_name).to eq('main')
       end
 
+      it 'returns the branch name for refs/heads/ prefixed refname' do
+        branch_info = described_class.new(
+          refname: 'refs/heads/main', target_oid: 'abc123', current: false, worktree_path: nil,
+          symref: nil, upstream: nil
+        )
+        expect(branch_info.short_name).to eq('main')
+      end
+
+      it 'returns nil for remote_name for refs/heads/ prefixed refname' do
+        branch_info = described_class.new(
+          refname: 'refs/heads/main', target_oid: 'abc123', current: false, worktree_path: nil,
+          symref: nil, upstream: nil
+        )
+        expect(branch_info.remote_name).to be_nil
+      end
+
+      it 'returns false for remote? for refs/heads/ prefixed refname' do
+        branch_info = described_class.new(
+          refname: 'refs/heads/main', target_oid: 'abc123', current: false, worktree_path: nil,
+          symref: nil, upstream: nil
+        )
+        expect(branch_info.remote?).to be false
+      end
+
       it 'returns the full name for branch with slashes' do
         branch_info = described_class.new(
-          refname: 'feature/my-feature', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'feature/my-feature', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.short_name).to eq('feature/my-feature')
@@ -215,7 +249,7 @@ RSpec.describe Git::BranchInfo do
 
       it 'returns the full name for deeply nested branch' do
         branch_info = described_class.new(
-          refname: 'feature/team/project/task', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'feature/team/project/task', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.short_name).to eq('feature/team/project/task')
@@ -225,7 +259,7 @@ RSpec.describe Git::BranchInfo do
     context 'with remote-tracking branch' do
       it 'extracts branch name from remotes/origin/main' do
         branch_info = described_class.new(
-          refname: 'remotes/origin/main', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'remotes/origin/main', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.short_name).to eq('main')
@@ -233,7 +267,7 @@ RSpec.describe Git::BranchInfo do
 
       it 'extracts branch name from refs/remotes/origin/main' do
         branch_info = described_class.new(
-          refname: 'refs/remotes/origin/main', target_oid: 'abc123', current: false, worktree: false,
+          refname: 'refs/remotes/origin/main', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.short_name).to eq('main')
@@ -242,7 +276,7 @@ RSpec.describe Git::BranchInfo do
       it 'preserves slashes in remote branch name' do
         branch_info = described_class.new(
           refname: 'remotes/origin/feature/my-feature', target_oid: 'abc123', current: false,
-          worktree: false, symref: nil, upstream: nil
+          worktree_path: nil, symref: nil, upstream: nil
         )
         expect(branch_info.short_name).to eq('feature/my-feature')
       end
@@ -252,14 +286,15 @@ RSpec.describe Git::BranchInfo do
   describe '#to_s' do
     it 'returns the refname' do
       branch_info = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: true, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(branch_info.to_s).to eq('main')
     end
 
     it 'returns full refname for remote branches' do
       branch_info = described_class.new(
-        refname: 'remotes/origin/main', target_oid: 'abc123', current: false, worktree: false,
+        refname: 'remotes/origin/main', target_oid: 'abc123', current: false, worktree_path: nil,
         symref: nil, upstream: nil
       )
       expect(branch_info.to_s).to eq('remotes/origin/main')
@@ -269,7 +304,8 @@ RSpec.describe Git::BranchInfo do
   describe 'immutability' do
     it 'is frozen' do
       branch_info = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: true, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(branch_info).to be_frozen
     end
@@ -278,30 +314,36 @@ RSpec.describe Git::BranchInfo do
   describe 'equality' do
     it 'is equal to another BranchInfo with same attributes' do
       info1 = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: true, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       info2 = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: true, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(info1).to eq(info2)
     end
 
     it 'is not equal when refname differs' do
       info1 = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: true, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       info2 = described_class.new(
-        refname: 'develop', target_oid: 'abc123', current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'develop', target_oid: 'abc123', current: true, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(info1).not_to eq(info2)
     end
 
     it 'is not equal when current differs' do
       info1 = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: true, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       info2 = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: false, worktree_path: nil,
+        symref: nil, upstream: nil
       )
       expect(info1).not_to eq(info2)
     end
@@ -310,7 +352,8 @@ RSpec.describe Git::BranchInfo do
   describe 'pattern matching' do
     it 'supports pattern matching on attributes' do
       branch_info = described_class.new(
-        refname: 'main', target_oid: 'abc123', current: true, worktree: false, symref: nil, upstream: nil
+        refname: 'main', target_oid: 'abc123', current: true, worktree_path: nil,
+        symref: nil, upstream: nil
       )
 
       result = case branch_info
@@ -326,25 +369,14 @@ RSpec.describe Git::BranchInfo do
 
   describe 'upstream tracking' do
     context 'local branch tracking a remote-tracking branch' do
-      let(:upstream_info) do
-        described_class.new(
-          refname: 'remotes/origin/main',
-          target_oid: 'abc123def456789012345678901234567890abcd',
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil
-        )
-      end
-
       subject(:branch_info) do
         described_class.new(
-          refname: 'main',
+          refname: 'refs/heads/main',
           target_oid: 'abc123def456789012345678901234567890abcd',
           current: true,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
-          upstream: upstream_info
+          upstream: 'refs/remotes/origin/main'
         )
       end
 
@@ -352,49 +384,29 @@ RSpec.describe Git::BranchInfo do
         expect(branch_info.upstream).not_to be_nil
       end
 
-      it 'upstream is a BranchInfo' do
-        expect(branch_info.upstream).to be_a(Git::BranchInfo)
+      it 'upstream is the raw upstream refname String' do
+        expect(branch_info.upstream).to be_a(String)
       end
 
-      it 'upstream has no upstream of its own' do
-        expect(branch_info.upstream.upstream).to be_nil
-      end
-
-      it 'allows accessing upstream properties' do
-        expect(branch_info.upstream.remote_name).to eq('origin')
-        expect(branch_info.upstream.short_name).to eq('main')
+      it 'upstream equals the raw upstream refname' do
+        expect(branch_info.upstream).to eq('refs/remotes/origin/main')
       end
     end
 
     context 'local branch tracking another local branch' do
-      let(:upstream_local) do
-        described_class.new(
-          refname: 'main',
-          target_oid: 'abc123def456789012345678901234567890abcd',
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil
-        )
-      end
-
       subject(:branch_info) do
         described_class.new(
-          refname: 'feature',
+          refname: 'refs/heads/feature',
           target_oid: 'def456789012345678901234567890abcdef12',
           current: false,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
-          upstream: upstream_local
+          upstream: 'refs/heads/main'
         )
       end
 
-      it 'has a local branch as upstream' do
-        expect(branch_info.upstream.remote?).to be false
-      end
-
-      it 'upstream refname is the local branch name' do
-        expect(branch_info.upstream.refname).to eq('main')
+      it 'upstream is the raw upstream refname String' do
+        expect(branch_info.upstream).to eq('refs/heads/main')
       end
     end
 
@@ -404,7 +416,7 @@ RSpec.describe Git::BranchInfo do
           refname: 'orphan-branch',
           target_oid: 'ghi789012345678901234567890abcdef123456',
           current: false,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )
@@ -423,7 +435,7 @@ RSpec.describe Git::BranchInfo do
           refname: 'main',
           target_oid: 'abc123def456789012345678901234567890abcd',
           current: true,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )
@@ -440,7 +452,7 @@ RSpec.describe Git::BranchInfo do
           refname: 'unborn',
           target_oid: nil,
           current: false,
-          worktree: false,
+          worktree_path: nil,
           symref: nil,
           upstream: nil
         )

@@ -32,29 +32,29 @@ RSpec.describe Git::Parsers::Branch, :integration do
       it 'parses all branches' do
         output = git_branch_output
         result = described_class.parse_list(output)
-        expect(result.map(&:refname)).to contain_exactly('main', 'feature-branch')
+        expect(result.map(&:short_name)).to contain_exactly('main', 'feature-branch')
       end
 
       it 'identifies the current branch' do
         output = git_branch_output
         result = described_class.parse_list(output)
-        expect(result.find(&:current).refname).to eq('main')
+        expect(result.find(&:current).short_name).to eq('main')
       end
 
       it 'returns BranchInfo objects with all expected attributes' do
         output = git_branch_output
         result = described_class.parse_list(output)
-        main_branch = result.find { |b| b.refname == 'main' }
+        main_branch = result.find { |b| b.short_name == 'main' }
 
         expect(main_branch).to respond_to(:refname)
         expect(main_branch).to respond_to(:target_oid)
         expect(main_branch).to respond_to(:current)
-        expect(main_branch).to respond_to(:worktree)
+        expect(main_branch).to respond_to(:worktree_path)
         expect(main_branch).to respond_to(:symref)
         expect(main_branch).to respond_to(:upstream)
 
         expect(main_branch.current).to be true
-        expect(main_branch.worktree).to be false
+        expect(main_branch.worktree_path).to be_nil
         expect(main_branch.symref).to be_nil
         expect(main_branch.target_oid).to match(/\A[0-9a-f]{40}\z/)
         expect(main_branch.upstream).to be_nil
@@ -73,13 +73,13 @@ RSpec.describe Git::Parsers::Branch, :integration do
       it 'parses branch names with slashes' do
         output = git_branch_output
         result = described_class.parse_list(output)
-        expect(result.map(&:refname)).to include('feature/with-slash')
+        expect(result.map(&:short_name)).to include('feature/with-slash')
       end
 
       it 'parses branch names with unicode' do
         output = git_branch_output
         result = described_class.parse_list(output)
-        expect(result.map(&:refname)).to include('feature/日本語')
+        expect(result.map(&:short_name)).to include('feature/日本語')
       end
     end
 
@@ -101,16 +101,12 @@ RSpec.describe Git::Parsers::Branch, :integration do
         repo.execution_context.command_capturing('branch', '-u', 'origin/main', 'main')
       end
 
-      it 'populates upstream as BranchInfo with refname' do
+      it 'populates upstream as the raw upstream refname string' do
         output = git_branch_output
         result = described_class.parse_list(output)
-        main_branch = result.find { |b| b.refname == 'main' }
+        main_branch = result.find { |b| b.short_name == 'main' }
 
-        expect(main_branch.upstream).to be_a(Git::BranchInfo)
-        expect(main_branch.upstream.refname).to eq('remotes/origin/main')
-        expect(main_branch.upstream.target_oid).to be_nil
-        expect(main_branch.upstream.current).to be false
-        expect(main_branch.upstream.worktree).to be false
+        expect(main_branch.upstream).to eq('refs/remotes/origin/main')
       end
     end
 
@@ -131,7 +127,7 @@ RSpec.describe Git::Parsers::Branch, :integration do
         result = described_class.parse_list(output)
 
         expect(result.size).to eq(1)
-        expect(result.first.refname).to eq('main')
+        expect(result.first.short_name).to eq('main')
         expect(result.none? { |b| b.refname.include?('detached') }).to be true
       end
     end
