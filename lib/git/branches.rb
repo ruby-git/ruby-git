@@ -30,7 +30,7 @@ module Git
 
       @base = base
 
-      branch_repository.branches_all.each do |branch_info|
+      branch_repository.branch_list.each do |branch_info|
         branch = Git::Branch.new(base, branch_info)
 
         @branches[branch_info.refname] = branch

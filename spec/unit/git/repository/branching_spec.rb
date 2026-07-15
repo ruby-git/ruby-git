@@ -860,12 +860,12 @@ RSpec.describe Git::Repository::Branching do
   end
 
   # ---------------------------------------------------------------------------
-  # #branches_all
+  # #branch_list
   # ---------------------------------------------------------------------------
 
-  describe '#branches_all' do
-    subject(:result) { described_instance.branches_all(**options) }
-    let(:options) { {} }
+  describe '#branch_list' do
+    subject(:result) { described_instance.branch_list(*patterns) }
+    let(:patterns) { [] }
 
     let(:branch_list_command) { instance_double(Git::Commands::Branch::List) }
     let(:branch_list_result) do
@@ -922,7 +922,7 @@ RSpec.describe Git::Repository::Branching do
     end
 
     context 'when a pattern is given' do
-      let(:options) { { pattern: ['foo'] } }
+      let(:patterns) { ['foo'] }
 
       it 'passes the pattern as a positional argument to Branch::List#call' do
         expect(branch_list_command).to(
@@ -938,6 +938,47 @@ RSpec.describe Git::Repository::Branching do
             .ordered
         )
         expect(result).to eq(parsed_branches)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #branches_all (deprecated)
+  # ---------------------------------------------------------------------------
+
+  describe '#branches_all' do
+    subject(:result) { described_instance.branches_all }
+
+    let(:branch_list_command) { instance_double(Git::Commands::Branch::List) }
+    let(:branch_list_result) { command_result("refs/heads/main\0abc1234\0*\0\0\0\n") }
+
+    before do
+      allow(Git::Commands::Branch::List)
+        .to receive(:new).with(execution_context).and_return(branch_list_command)
+      allow(branch_list_command)
+        .to receive(:call)
+        .with(all: true, format: Git::Parsers::Branch::FORMAT_STRING)
+        .and_return(branch_list_result)
+    end
+
+    it 'emits a deprecation warning' do
+      expect(Git::Deprecation).to receive(:warn).with(/branches_all.*deprecated.*branch_list/i)
+      result
+    end
+
+    it 'returns an array of 4-element arrays [refname, current, worktree, symref]' do
+      allow(Git::Deprecation).to receive(:warn)
+      expect(result).to eq([['main', true, false, nil]])
+    end
+
+    context 'with a remote-tracking branch' do
+      let(:branch_list_result) do
+        command_result("refs/remotes/origin/main\0abc1234\0\0\0\0\n")
+      end
+
+      it 'formats the refname as remotes/<remote>/<branch>' do
+        allow(Git::Deprecation).to receive(:warn)
+        expect(result).to eq([['remotes/origin/main', false, false, nil]])
       end
     end
   end
@@ -1015,12 +1056,6 @@ RSpec.describe Git::Repository::Branching do
     context 'with an explicit branch name' do
       subject(:result) { described_instance.branch('feature') }
 
-      before do
-        allow(described_instance).to receive(:branches_all)
-          .with(pattern: ['feature'])
-          .and_return([])
-      end
-
       it 'returns a Git::Branch for the given name' do
         expect(result).to be_a(Git::Branch)
       end
@@ -1045,101 +1080,11 @@ RSpec.describe Git::Repository::Branching do
 
       before do
         allow(show_current_command).to receive(:call).and_return(show_current_result)
-        allow(described_instance).to receive(:branches_all)
-          .with(pattern: ['main'])
-          .and_return([])
       end
 
       it 'returns a Git::Branch for the current branch name' do
         expect(result).to be_a(Git::Branch)
         expect(result.full).to eq('main')
-      end
-    end
-
-    context 'when the branch exists in git with upstream tracking' do
-      subject(:result) { described_instance.branch('foo') }
-
-      let(:upstream_info) do
-        Git::BranchInfo.new(
-          refname: 'remotes/origin/bar',
-          target_oid: nil,
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil
-        )
-      end
-
-      let(:branch_info) do
-        Git::BranchInfo.new(
-          refname: 'foo',
-          target_oid: 'abc123',
-          current: true,
-          worktree: false,
-          symref: nil,
-          upstream: upstream_info
-        )
-      end
-
-      before do
-        allow(described_instance).to receive(:branches_all)
-          .with(pattern: ['foo'])
-          .and_return([branch_info])
-        allow(described_instance).to receive(:config_remote).with('origin').and_return({})
-      end
-
-      it 'returns a Branch with upstream populated from BranchInfo' do
-        expect(result.upstream).to eq(upstream_info)
-      end
-
-      it 'returns a Branch whose upstream_remote has the correct name' do
-        expect(result.upstream_remote.name).to eq('origin')
-      end
-    end
-
-    context 'when the branch does not exist in git (fallback to bare BranchInfo)' do
-      subject(:result) { described_instance.branch('nonexistent') }
-
-      before do
-        allow(described_instance).to receive(:branches_all)
-          .with(pattern: ['nonexistent'])
-          .and_return([])
-      end
-
-      it 'returns a Git::Branch with the given name' do
-        expect(result).to be_a(Git::Branch)
-        expect(result.full).to eq('nonexistent')
-      end
-
-      it 'has nil upstream' do
-        expect(result.upstream).to be_nil
-      end
-    end
-
-    context 'when the branch name is a remote-tracking refname' do
-      subject(:result) { described_instance.branch('remotes/origin/foo') }
-
-      let(:remote_branch_info) do
-        Git::BranchInfo.new(
-          refname: 'remotes/origin/foo',
-          target_oid: 'abc123',
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil
-        )
-      end
-
-      before do
-        allow(described_instance).to receive(:branches_all)
-          .with(pattern: ['foo'])
-          .and_return([remote_branch_info])
-        allow(described_instance).to receive(:config_remote).with('origin').and_return({})
-      end
-
-      it 'returns the remote-tracking Branch' do
-        expect(result.full).to eq('remotes/origin/foo')
-        expect(result.remote.name).to eq('origin')
       end
     end
   end

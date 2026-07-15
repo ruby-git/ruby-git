@@ -8,7 +8,7 @@ RSpec.describe Git::Branches do
       refname: refname,
       target_oid: nil,
       current: current,
-      worktree: false,
+      worktree_path: nil,
       symref: nil,
       upstream: nil
     )
@@ -37,13 +37,13 @@ RSpec.describe Git::Branches do
       let(:base) { instance_double(Git::Repository) }
 
       before do
-        allow(base).to receive(:branches_all).and_return([local_info, remote_info])
+        allow(base).to receive(:branch_list).and_return([local_info, remote_info])
         allow(Git::Branch).to receive(:new).with(base, local_info).and_return(local_branch)
         allow(Git::Branch).to receive(:new).with(base, remote_info).and_return(remote_branch)
       end
 
-      it 'calls branches_all directly on the base' do
-        expect(base).to receive(:branches_all).and_return([local_info, remote_info])
+      it 'calls branch_list directly on the base' do
+        expect(base).to receive(:branch_list).and_return([local_info, remote_info])
         described_class.new(base)
       end
 
@@ -64,7 +64,7 @@ RSpec.describe Git::Branches do
   let(:described_instance) { described_class.new(repo_base) }
 
   before do
-    allow(repo_base).to receive(:branches_all).and_return(branch_infos)
+    allow(repo_base).to receive(:branch_list).and_return(branch_infos)
     allow(Git::Branch).to receive(:new).with(repo_base, local_info).and_return(local_branch)
     allow(Git::Branch).to receive(:new).with(repo_base, remote_info).and_return(remote_branch)
   end

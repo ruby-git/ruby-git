@@ -499,23 +499,25 @@ module Git
       # Returns all local and remote-tracking branches as structured objects
       #
       # @example List all branches
-      #   repo.branches_all
-      #   # => [#<data Git::BranchInfo refname="main", current=true, ...>,
-      #   #     #<data Git::BranchInfo refname="remotes/origin/main", current=false, ...>]
+      #   repo.branch_list
+      #   # => [#<data Git::BranchInfo refname="refs/heads/main", current=true, ...>,
+      #   #     #<data Git::BranchInfo refname="refs/remotes/origin/main", current=false, ...>]
       #
       # @example Find the currently checked-out branch
-      #   repo.branches_all.find(&:current)
+      #   repo.branch_list.find(&:current)
       #
       # @example List only local branches
-      #   repo.branches_all.reject(&:remote?)
+      #   repo.branch_list.reject(&:remote?)
       #
-      # @example Filter by short name pattern
-      #   repo.branches_all(pattern: ['foo'])
-      #   # => [#<data Git::BranchInfo refname="foo", ...>]
+      # @example Filter to an exact branch name
+      #   repo.branch_list('feature/auth')
       #
-      # @param pattern [Array<String>] optional shell wildcard patterns passed
-      #   directly to `git branch --list`; an empty array (the default) returns
-      #   all branches.  Pattern matching follows git's own rules; behavior may
+      # @example Filter using glob patterns
+      #   repo.branch_list('feature/*', 'hotfix/*')
+      #
+      # @param patterns [Array<String>] optional shell wildcard patterns passed
+      #   directly to `git branch --list`; when empty (the default) all branches
+      #   are returned. Pattern matching follows git's own rules; behavior may
       #   differ between local and remote-tracking branches.
       #
       # @return [Array<Git::BranchInfo>] parsed branch information for every
@@ -526,11 +528,35 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      def branches_all(pattern: [])
+      def branch_list(*patterns)
         result = Git::Commands::Branch::List.new(@execution_context).call(
-          *pattern, all: true, format: Git::Parsers::Branch::FORMAT_STRING
+          *patterns, all: true, format: Git::Parsers::Branch::FORMAT_STRING
         )
         Git::Parsers::Branch.parse_list(result.stdout)
+      end
+
+      # Returns all local and remote-tracking branches in the 4.x-compatible format
+      #
+      # Each entry is a 4-element array: `[refname, current, worktree, symref]`.
+      # The `refname` uses the short form (`main`, `remotes/origin/main`) to
+      # match the output of the legacy `Git::Lib#branches_all` method.
+      #
+      # @return [Array<Array>] array of `[refname, current, worktree, symref]` tuples
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#branch_list} instead, which returns richer
+      #   {Git::BranchInfo} objects.
+      #
+      def branches_all
+        Git::Deprecation.warn(
+          'Git::Repository#branches_all is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#branch_list instead.'
+        )
+        branch_list.map do |info|
+          refname = info.remote? ? "remotes/#{info.remote_name}/#{info.short_name}" : info.short_name
+          [refname, info.current, info.other_worktree?, info.symref]
+        end
       end
 
       # Update a branch ref to point to a new commit
@@ -583,13 +609,7 @@ module Git
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def branch(branch_name = current_branch)
-        short_name = branch_name.match(Git::BRANCH_REFNAME_REGEXP)[:branch_name]
-        branch_info = branches_all(pattern: [short_name]).find { |b| b.refname == branch_name }
-        branch_info ||= Git::BranchInfo.new(
-          refname: branch_name, target_oid: nil, current: false,
-          worktree: false, symref: nil, upstream: nil
-        )
-        Git::Branch.new(self, branch_info)
+        Git::Branch.new(self, branch_name)
       end
 
       # Returns a {Git::Branches} collection of all branches in the repository
