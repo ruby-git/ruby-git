@@ -599,13 +599,11 @@ RSpec.describe Git::Repository::RemoteOperations do
   describe '#remote_add' do
     let(:remote_add_command) { instance_double(Git::Commands::Remote::Add) }
     let(:remote_add_result) { command_result('') }
-    let(:remote_object) { instance_double(Git::Remote) }
 
     before do
       allow(Git::Commands::Remote::Add)
         .to receive(:new).with(execution_context).and_return(remote_add_command)
       allow(remote_add_command).to receive(:call).and_return(remote_add_result)
-      allow(Git::Remote).to receive(:new).and_return(remote_object)
     end
 
     # --- Default invocation --------------------------------------------------
@@ -624,9 +622,8 @@ RSpec.describe Git::Repository::RemoteOperations do
         result
       end
 
-      it 'returns Git::Remote' do
-        expect(Git::Remote).to receive(:new).with(described_instance, 'upstream').and_return(remote_object)
-        expect(result).to eq(remote_object)
+      it 'returns nil' do
+        expect(result).to be_nil
       end
     end
 
@@ -706,8 +703,9 @@ RSpec.describe Git::Repository::RemoteOperations do
     let(:remote_object) { instance_double(Git::Remote) }
 
     before do
-      allow(described_instance).to receive(:remote_add).and_return(remote_object)
+      allow(described_instance).to receive(:remote_add).and_return(nil)
       allow(Git::Deprecation).to receive(:warn)
+      allow(Git::Remote).to receive(:new).with(described_instance, 'upstream').and_return(remote_object)
     end
 
     it 'emits a deprecation warning matching /add_remote is deprecated/' do
@@ -715,11 +713,15 @@ RSpec.describe Git::Repository::RemoteOperations do
       described_instance.add_remote('upstream', 'https://example.com/repo.git')
     end
 
-    it 'calls remote_add with all arguments forwarded and returns its return value' do
+    it 'calls remote_add with all arguments forwarded' do
       expect(described_instance)
         .to receive(:remote_add).with('upstream', 'https://example.com/repo.git', { fetch: true })
-        .and_return(remote_object)
-      result = described_instance.add_remote('upstream', 'https://example.com/repo.git', fetch: true)
+      described_instance.add_remote('upstream', 'https://example.com/repo.git', fetch: true)
+    end
+
+    it 'returns a Git::Remote for the named remote' do
+      expect(Git::Remote).to receive(:new).with(described_instance, 'upstream').and_return(remote_object)
+      result = described_instance.add_remote('upstream', 'https://example.com/repo.git')
       expect(result).to be(remote_object)
     end
   end
@@ -888,13 +890,11 @@ RSpec.describe Git::Repository::RemoteOperations do
   describe '#remote_set_url' do
     let(:set_url_command) { instance_double(Git::Commands::Remote::SetUrl) }
     let(:set_url_result) { command_result('') }
-    let(:remote_object) { instance_double(Git::Remote) }
 
     before do
       allow(Git::Commands::Remote::SetUrl)
         .to receive(:new).with(execution_context).and_return(set_url_command)
       allow(set_url_command).to receive(:call).and_return(set_url_result)
-      allow(Git::Remote).to receive(:new).and_return(remote_object)
     end
 
     context 'with a string url' do
@@ -912,9 +912,8 @@ RSpec.describe Git::Repository::RemoteOperations do
         result
       end
 
-      it 'returns the Git::Remote for the updated name' do
-        expect(Git::Remote).to receive(:new).with(described_instance, 'origin').and_return(remote_object)
-        expect(result).to eq(remote_object)
+      it 'returns nil' do
+        expect(result).to be_nil
       end
     end
 
@@ -945,8 +944,9 @@ RSpec.describe Git::Repository::RemoteOperations do
     let(:remote_object) { instance_double(Git::Remote) }
 
     before do
-      allow(described_instance).to receive(:remote_set_url).and_return(remote_object)
+      allow(described_instance).to receive(:remote_set_url).and_return(nil)
       allow(Git::Deprecation).to receive(:warn)
+      allow(Git::Remote).to receive(:new).with(described_instance, 'origin').and_return(remote_object)
     end
 
     it 'emits a deprecation warning matching /set_remote_url is deprecated/' do
@@ -954,10 +954,14 @@ RSpec.describe Git::Repository::RemoteOperations do
       described_instance.set_remote_url('origin', 'https://example.com/repo.git')
     end
 
-    it 'calls remote_set_url with all arguments forwarded and returns its return value' do
+    it 'calls remote_set_url with all arguments forwarded' do
       expect(described_instance)
         .to receive(:remote_set_url).with('origin', 'https://example.com/repo.git')
-        .and_return(remote_object)
+      described_instance.set_remote_url('origin', 'https://example.com/repo.git')
+    end
+
+    it 'returns a Git::Remote for the named remote' do
+      expect(Git::Remote).to receive(:new).with(described_instance, 'origin').and_return(remote_object)
       result = described_instance.set_remote_url('origin', 'https://example.com/repo.git')
       expect(result).to be(remote_object)
     end
