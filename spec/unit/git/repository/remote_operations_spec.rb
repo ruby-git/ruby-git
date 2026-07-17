@@ -1041,6 +1041,71 @@ RSpec.describe Git::Repository::RemoteOperations do
   end
 
   # ---------------------------------------------------------------------------
+  # #remote_list
+  # ---------------------------------------------------------------------------
+
+  describe '#remote_list' do
+    let(:origin_entry) do
+      Git::ConfigEntryInfo.new(
+        scope: 'local', origin: 'file:.git/config',
+        key: 'remote.origin.url', value: 'https://github.com/user/repo.git'
+      )
+    end
+    let(:upstream_entry) do
+      Git::ConfigEntryInfo.new(
+        scope: 'local', origin: 'file:.git/config',
+        key: 'remote.upstream.url', value: 'https://github.com/upstream/repo.git'
+      )
+    end
+    let(:config_entries) { [origin_entry, upstream_entry] }
+    let(:origin_info) do
+      Git::RemoteInfo.new(
+        name: 'origin',
+        url: ['https://github.com/user/repo.git'],
+        push_url: [], fetch: [], push: []
+      )
+    end
+    let(:upstream_info) do
+      Git::RemoteInfo.new(
+        name: 'upstream',
+        url: ['https://github.com/upstream/repo.git'],
+        push_url: [], fetch: [], push: []
+      )
+    end
+    let(:parsed_remotes) { [origin_info, upstream_info] }
+
+    before do
+      allow(described_instance).to receive(:config_list).and_return(config_entries)
+      allow(Git::Parsers::Remote).to receive(:parse_list).and_return(parsed_remotes)
+    end
+
+    it 'calls config_list on the repository to retrieve all config entries' do
+      expect(described_instance).to receive(:config_list).and_return(config_entries)
+      described_instance.remote_list
+    end
+
+    it 'passes the config entries to Git::Parsers::Remote.parse_list' do
+      expect(Git::Parsers::Remote).to receive(:parse_list).with(config_entries).and_return(parsed_remotes)
+      described_instance.remote_list
+    end
+
+    it 'returns the result from Git::Parsers::Remote.parse_list' do
+      expect(described_instance.remote_list).to eq(parsed_remotes)
+    end
+
+    context 'when no config entries exist' do
+      before do
+        allow(described_instance).to receive(:config_list).and_return([])
+        allow(Git::Parsers::Remote).to receive(:parse_list).with([]).and_return([])
+      end
+
+      it 'returns an empty array' do
+        expect(described_instance.remote_list).to eq([])
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #remotes
   # ---------------------------------------------------------------------------
 

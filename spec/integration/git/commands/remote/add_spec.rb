@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::Remote::Add, :integration do
         result = command.call('origin', remote_repo.dir.to_s)
 
         expect(result).to be_a(Git::CommandLine::Result)
-        expect(repo.remotes.map(&:name)).to include('origin')
+        expect(repo.remote_list.map(&:name)).to include('origin')
       end
     end
 
