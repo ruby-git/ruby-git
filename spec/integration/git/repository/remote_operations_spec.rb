@@ -55,7 +55,7 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
 
     it 'registers the remote so it appears in the repository config' do
       described_instance.remote_add('secondary', remote_dir)
-      expect(repo.remotes.map(&:name)).to include('secondary')
+      expect(described_instance.remote_list.map(&:name)).to include('secondary')
     end
   end
 
@@ -66,7 +66,7 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   describe '#remote_remove' do
     it 'removes the named remote' do
       described_instance.remote_remove('origin')
-      expect(repo.remotes.map(&:name)).not_to include('origin')
+      expect(described_instance.remote_list.map(&:name)).not_to include('origin')
     end
   end
 
@@ -87,6 +87,39 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
 
     it 'returns an empty hash for an unknown remote name' do
       expect(described_instance.config_remote('nonexistent-remote')).to eq({})
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #remote_list
+  # ---------------------------------------------------------------------------
+
+  describe '#remote_list' do
+    it 'returns one RemoteInfo per configured remote' do
+      described_instance.remote_add('upstream', bare_dir)
+      expect(described_instance.remote_list.map(&:name)).to contain_exactly('origin', 'upstream')
+    end
+
+    it 'returns RemoteInfo objects' do
+      expect(described_instance.remote_list).to contain_exactly(be_a(Git::RemoteInfo))
+    end
+
+    it 'includes the fetch URL for the remote' do
+      result = described_instance.remote_list.find { |r| r.name == 'origin' }
+      expect(result.url).to contain_exactly(bare_dir)
+    end
+
+    it 'includes at least one fetch refspec for the remote' do
+      result = described_instance.remote_list.find { |r| r.name == 'origin' }
+      expect(result.fetch).not_to be_empty
+    end
+
+    context 'when no remotes are configured' do
+      before { described_instance.remote_remove('origin') }
+
+      it 'returns an empty array' do
+        expect(described_instance.remote_list).to eq([])
+      end
     end
   end
 

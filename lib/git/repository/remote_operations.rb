@@ -7,6 +7,7 @@ require 'git/commands/pull'
 require 'git/commands/push'
 require 'git/commands/remote'
 require 'git/parsers/ls_remote'
+require 'git/parsers/remote'
 require 'git/remote'
 
 require 'git/repository/shared_private'
@@ -529,6 +530,34 @@ module Git
         Private.config_list(@execution_context).each_with_object({}) do |(key, value), hsh|
           hsh[key.delete_prefix(prefix)] = value if key.start_with?(prefix)
         end
+      end
+
+      # List all configured remotes as {Git::RemoteInfo} objects
+      #
+      # Reads the repository configuration via {Git::Configuring#config_list} and
+      # returns one {Git::RemoteInfo} per configured remote, preserving the order
+      # in which remotes appear in the config. Multi-value fields (`:url`,
+      # `:push_url`, `:fetch`, `:push`) are always `Array<String>` (never `nil`).
+      #
+      # @example List all remotes
+      #   repo.remote_list
+      #   # => [#<data Git::RemoteInfo name="origin" ...>,
+      #   #      #<data Git::RemoteInfo name="upstream" ...>]
+      #
+      # @example Get fetch URLs for all remotes
+      #   repo.remote_list.map { |r| [r.name, r.url] }.to_h
+      #
+      # @return [Array<Git::RemoteInfo>] one entry per configured remote
+      #
+      #   Returns an empty array when no remotes are configured.
+      #
+      # @raise [ArgumentError] if a `remote.*` config entry carries an
+      #   unrecognized boolean value (e.g. `remote.origin.prune=maybe`)
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def remote_list
+        Git::Parsers::Remote.parse_list(config_list)
       end
 
       # Returns a {Git::Remote} object for the named remote

@@ -25,8 +25,8 @@ RSpec.describe Git::Commands::Remote::Rename, :integration do
         result = command.call('origin', 'upstream')
 
         expect(result).to be_a(Git::CommandLine::Result)
-        expect(repo.remotes.map(&:name)).to include('upstream')
-        expect(repo.remotes.map(&:name)).not_to include('origin')
+        expect(repo.remote_list.map(&:name)).to include('upstream')
+        expect(repo.remote_list.map(&:name)).not_to include('origin')
       end
     end
 
