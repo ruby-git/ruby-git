@@ -3,19 +3,25 @@
 require 'spec_helper'
 
 RSpec.describe Git::Branches do
-  def make_branch_info(refname:, current: false)
-    Git::BranchInfo.new(
+  def make_branch_info(refname:, current: false, remote_name: :not_given)
+    branch_info_args = {
       refname: refname,
       target_oid: nil,
       current: current,
       worktree_path: nil,
       symref: nil,
       upstream: nil
-    )
+    }
+    branch_info_args[:remote_name] = remote_name unless remote_name == :not_given
+
+    Git::BranchInfo.new(**branch_info_args)
   end
 
   let(:local_info) { make_branch_info(refname: 'main', current: true) }
   let(:remote_info) { make_branch_info(refname: 'remotes/origin/main') }
+  let(:slash_remote_info) do
+    make_branch_info(refname: 'refs/remotes/team/upstream/main', remote_name: 'team/upstream')
+  end
 
   let(:local_branch) do
     instance_double(Git::Branch, full: 'main', name: 'main', remote: nil, current: true, to_s: 'main')
@@ -167,6 +173,28 @@ RSpec.describe Git::Branches do
         result
 
         expect(described_instance.map(&:full)).to contain_exactly('main', 'remotes/origin/main')
+      end
+    end
+
+    context 'with the short form of a slash-remote branch' do
+      let(:branch_infos) { [local_info, slash_remote_info] }
+      let(:branch_name) { 'team/upstream/main' }
+
+      before do
+        allow(repo_base).to receive(:config_remote).with('team/upstream').and_return({})
+        allow(Git::Branch).to receive(:new).with(repo_base, slash_remote_info).and_call_original
+      end
+
+      it 'returns the remote branch' do
+        expect(result).to have_attributes(
+          full: 'remotes/team/upstream/main',
+          name: 'main',
+          remote: have_attributes(name: 'team/upstream')
+        )
+      end
+
+      it 'indexes the branch with the full remotes-prefixed name' do
+        expect(described_instance['remotes/team/upstream/main']).to equal(result)
       end
     end
 

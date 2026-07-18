@@ -386,6 +386,10 @@ module Git
     # Matches full and short refnames, capturing an optional remote name and the
     # branch name. Used internally to identify remote-tracking branches.
     #
+    # @note This legacy string-constructor path does not resolve remote names
+    #   containing `/`. Use {Git::Repository#branch_list} to build branch objects
+    #   from remote-aware {Git::BranchInfo} values.
+    #
     # @api private
     #
     BRANCH_NAME_REGEXP = %r{
