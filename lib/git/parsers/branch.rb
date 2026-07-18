@@ -78,24 +78,30 @@ module Git
       #
       # @param stdout [String] output from git branch --list --format=...
       #
+      # @param remote_names [Array<String>] configured remote names used to resolve
+      #   remote-tracking refs with slash-containing remote names
+      #
       # @return [Array<Git::BranchInfo>] parsed branch information
       #
-      def parse_list(stdout)
-        stdout.split("\n").filter_map { |line| parse_branch_line(line) }
+      def parse_list(stdout, remote_names: [])
+        stdout.split("\n").filter_map { |line| parse_branch_line(line, remote_names: remote_names) }
       end
 
       # Parse a single formatted branch line
       #
       # @param line [String] the line to parse (NUL-delimited fields)
       #
+      # @param remote_names [Array<String>] configured remote names used to resolve
+      #   remote-tracking refs with slash-containing remote names
+      #
       # @return [Git::BranchInfo, nil] branch info object, or nil if line should be skipped
       #
-      def parse_branch_line(line)
+      def parse_branch_line(line, remote_names: [])
         fields = line.split(FIELD_DELIMITER, 6)
 
         return nil if non_branch_entry?(fields[0])
 
-        build_branch_info(fields)
+        build_branch_info(fields, remote_names: remote_names)
       end
 
       # Build a BranchInfo from parsed fields
@@ -103,9 +109,12 @@ module Git
       # @param fields [Array<String>] the parsed fields:
       #   [refname, objectname, head, worktreepath, symref, upstream]
       #
+      # @param remote_names [Array<String>] configured remote names used to resolve
+      #   remote-tracking refs with slash-containing remote names
+      #
       # @return [Git::BranchInfo] the branch info object
       #
-      def build_branch_info(fields)
+      def build_branch_info(fields, remote_names: [])
         raw_refname, objectname, head, worktreepath, symref, upstream = fields
         Git::BranchInfo.new(
           refname: raw_refname,
@@ -113,8 +122,28 @@ module Git
           current: head == '*',
           worktree_path: head == '*' ? nil : presence(worktreepath),
           symref: presence(symref),
-          upstream: build_upstream_info(upstream)
+          upstream: build_upstream_info(upstream),
+          remote_name: resolve_remote_name(raw_refname, remote_names)
         )
+      end
+
+      # Resolve a remote-tracking refname to a configured remote name
+      #
+      # @param refname [String] the branch refname to inspect
+      #
+      # @param remote_names [Array<String>] configured remote names
+      #
+      # @return [String, nil] the resolved remote name, or nil for local branches
+      #
+      def resolve_remote_name(refname, remote_names)
+        remote_path = refname[%r{\A(?:refs/)?remotes/(.+)\z}, 1]
+        return nil if remote_path.nil?
+
+        configured_remote_name = remote_names
+                                 .select { |remote_name| remote_path.start_with?("#{remote_name}/") }
+                                 .max_by(&:length)
+
+        configured_remote_name || Git::BranchInfo.fallback_remote_name(refname)
       end
 
       # Check if the refname represents a detached HEAD state or non-branch entry

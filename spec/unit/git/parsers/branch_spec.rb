@@ -41,6 +41,30 @@ RSpec.describe Git::Parsers::Branch do
       expect(result[0].remote_name).to eq('origin')
     end
 
+    it 'parses remote-tracking branches using configured slash remote names' do
+      stdout = "refs/remotes/team/upstream/main\0abc123\0\0\0\0\n"
+      result = described_class.parse_list(stdout, remote_names: ['team/upstream'])
+
+      expect(result[0].remote_name).to eq('team/upstream')
+      expect(result[0].short_name).to eq('main')
+    end
+
+    it 'uses the longest configured remote name prefix' do
+      stdout = "refs/remotes/team/upstream/main\0abc123\0\0\0\0\n"
+      result = described_class.parse_list(stdout, remote_names: %w[team team/upstream])
+
+      expect(result[0].remote_name).to eq('team/upstream')
+      expect(result[0].short_name).to eq('main')
+    end
+
+    it 'falls back to single-segment remote parsing for stale refs' do
+      stdout = "refs/remotes/missing/main\0abc123\0\0\0\0\n"
+      result = described_class.parse_list(stdout, remote_names: ['origin'])
+
+      expect(result[0].remote_name).to eq('missing')
+      expect(result[0].short_name).to eq('main')
+    end
+
     it 'skips detached HEAD entries' do
       stdout = <<~OUTPUT
         (HEAD detached at abc123)\0abc123\0\0\0\0

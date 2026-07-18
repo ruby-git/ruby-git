@@ -19,11 +19,10 @@ module Git
   #   {Git::BranchInfo#refname} and normalized short-form refs (e.g., `main`,
   #   `remotes/origin/main`) used elsewhere.
   #
-  # @note This regex assumes remote names do not contain '/'. If a remote name
-  #   contains '/', parsing will be incorrect. For example, 'remotes/team/upstream/main'
-  #   would parse as remote_name='team' instead of 'team/upstream'. This is an inherent
-  #   ambiguity in git refnames that can only be resolved with knowledge of configured
-  #   remotes. See: https://github.com/ruby-git/ruby-git/issues/919
+  # @note This regex is a fallback for branch refnames parsed without configured
+  #   remote context. Remote names containing '/' can only be resolved reliably
+  #   when the parser is given the configured remote names. See:
+  #   https://github.com/ruby-git/ruby-git/issues/919
   #
   # @api private
   BRANCH_REFNAME_REGEXP = %r{
@@ -33,6 +32,10 @@ module Git
     (?<branch_name>.+)                            # branch name (everything else)
     \z                                            # end of string
   }x
+
+  # Sentinel for distinguishing omitted BranchInfo remote_name from explicit nil
+  REMOTE_NAME_NOT_GIVEN = Object.new.freeze
+  private_constant :REMOTE_NAME_NOT_GIVEN
 
   # Value object representing branch metadata from git branch output
   #
@@ -83,6 +86,11 @@ module Git
   #
   #   @return [String] the branch refname (e.g., 'refs/heads/main',
   #     'refs/remotes/origin/main')
+  #
+  # @!attribute [r] remote_name
+  #
+  #   @return [String, nil] the resolved or fallback-derived remote name, or nil
+  #     for local branches
   #
   # @!attribute [r] target_oid
   #
@@ -138,7 +146,64 @@ module Git
   #   @note This is the raw refname snapshot from when the branch list was read.
   #     It does not reflect live git state after the snapshot was taken.
   #
-  BranchInfo = Data.define(:refname, :target_oid, :current, :worktree_path, :symref, :upstream) do
+  BranchInfo = Data.define(:refname, :remote_name, :target_oid, :current, :worktree_path, :symref, :upstream) do
+    # @param refname [String] the full branch refname
+    #
+    # @param remote_name [String, nil] resolved remote name, nil for local branches,
+    #   or omitted to derive from `refname`
+    #
+    # @param target_oid [String, nil] the commit object ID, or nil for unborn branches
+    #
+    # @param current [Boolean] whether this branch is currently checked out
+    #
+    # @param worktree_path [String, nil] path to another linked worktree, or nil
+    #
+    # @param symref [String, nil] symbolic reference target, or nil
+    #
+    # @param upstream [String, nil] upstream refname, or nil
+    #
+    def initialize(refname:, target_oid:, current:, worktree_path:, symref:, upstream:, # rubocop:disable Metrics/ParameterLists
+                   remote_name: REMOTE_NAME_NOT_GIVEN)
+      remote_name = self.class.fallback_remote_name(refname) if remote_name.equal?(REMOTE_NAME_NOT_GIVEN)
+      self.class.validate_remote_name!(refname, remote_name)
+
+      super
+    end
+
+    # @param refname [String] the branch refname to validate
+    #
+    # @param remote_name [String, nil] the remote name to validate
+    #
+    # @return [void]
+    #
+    # @raise [ArgumentError] if the remote name contradicts the refname type
+    def self.validate_remote_name!(refname, remote_name)
+      if remote_tracking_refname?(refname)
+        unless remote_name.is_a?(String) && !remote_name.empty?
+          raise ArgumentError, 'remote_name must be a non-empty String for remote-tracking refname'
+        end
+
+        remote_ref_prefix = %r{\A(?:refs/)?remotes/#{Regexp.escape(remote_name)}/}
+        raise ArgumentError, 'remote_name must match remote-tracking refname' unless refname.match?(remote_ref_prefix)
+      elsif !remote_name.nil?
+        raise ArgumentError, 'remote_name must be nil for local branch refname'
+      end
+    end
+
+    # @param refname [String] the branch refname to parse
+    #
+    # @return [String, nil] the regex-derived remote name, or nil for local branches
+    def self.fallback_remote_name(refname)
+      refname.match(Git::BRANCH_REFNAME_REGEXP)[:remote_name]
+    end
+
+    # @param refname [String] the branch refname to inspect
+    #
+    # @return [Boolean] true if the refname is a remote-tracking refname
+    def self.remote_tracking_refname?(refname)
+      refname.match?(%r{\A(?:refs/)?remotes/[^/]+/.+})
+    end
+
     # @return [Boolean] always false for BranchInfo (see DetachedHeadInfo for detached state)
     def detached? = false
 
@@ -147,7 +212,12 @@ module Git
 
     # @return [String] the short branch name without any remote or heads prefix
     #   (e.g., 'main' or 'feature/foo')
-    def short_name = refname.match(Git::BRANCH_REFNAME_REGEXP)[:branch_name]
+    def short_name
+      return refname.delete_prefix('refs/heads/') if remote_name.nil?
+
+      remote_ref_prefix = %r{\A(?:refs/)?remotes/#{Regexp.escape(remote_name)}/}
+      refname.sub(remote_ref_prefix, '')
+    end
 
     # @return [Boolean] true if this is the currently checked out branch
     def current? = current
@@ -160,9 +230,6 @@ module Git
 
     # @return [Boolean] true if this is a remote-tracking branch
     def remote? = !remote_name.nil?
-
-    # @return [String, nil] the name of the remote (e.g., 'origin'), or nil for local branches
-    def remote_name = refname.match(Git::BRANCH_REFNAME_REGEXP)[:remote_name]
 
     # @return [String] string representation (the full refname)
     def to_s = refname
