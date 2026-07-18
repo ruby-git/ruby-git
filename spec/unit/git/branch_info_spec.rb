@@ -3,6 +3,78 @@
 require 'spec_helper'
 
 RSpec.describe Git::BranchInfo do
+  describe '#initialize' do
+    it 'raises when remote_name is given for a local branch refname' do
+      expect do
+        described_class.new(
+          refname: 'refs/heads/main',
+          target_oid: 'abc123',
+          current: false,
+          worktree_path: nil,
+          symref: nil,
+          upstream: nil,
+          remote_name: 'origin'
+        )
+      end.to raise_error(ArgumentError, /remote_name must be nil for local branch refname/)
+    end
+
+    it 'raises when remote_name is nil for a remote-tracking branch refname' do
+      expect do
+        described_class.new(
+          refname: 'refs/remotes/origin/main',
+          target_oid: 'abc123',
+          current: false,
+          worktree_path: nil,
+          symref: nil,
+          upstream: nil,
+          remote_name: nil
+        )
+      end.to raise_error(ArgumentError, /remote_name must be a non-empty String for remote-tracking refname/)
+    end
+
+    it 'raises when remote_name is empty for a remote-tracking branch refname' do
+      expect do
+        described_class.new(
+          refname: 'refs/remotes/origin/main',
+          target_oid: 'abc123',
+          current: false,
+          worktree_path: nil,
+          symref: nil,
+          upstream: nil,
+          remote_name: ''
+        )
+      end.to raise_error(ArgumentError, /remote_name must be a non-empty String for remote-tracking refname/)
+    end
+
+    it 'raises when remote_name is not a String for a remote-tracking branch refname' do
+      expect do
+        described_class.new(
+          refname: 'refs/remotes/origin/main',
+          target_oid: 'abc123',
+          current: false,
+          worktree_path: nil,
+          symref: nil,
+          upstream: nil,
+          remote_name: :origin
+        )
+      end.to raise_error(ArgumentError, /remote_name must be a non-empty String for remote-tracking refname/)
+    end
+
+    it 'raises when remote_name does not match the remote-tracking branch refname' do
+      expect do
+        described_class.new(
+          refname: 'refs/remotes/team/upstream/main',
+          target_oid: 'abc123',
+          current: false,
+          worktree_path: nil,
+          symref: nil,
+          upstream: nil,
+          remote_name: 'origin'
+        )
+      end.to raise_error(ArgumentError, /remote_name must match remote-tracking refname/)
+    end
+  end
+
   describe 'attributes' do
     subject(:branch_info) do
       described_class.new(
@@ -37,6 +109,20 @@ RSpec.describe Git::BranchInfo do
 
     it 'exposes upstream' do
       expect(branch_info.upstream).to be_nil
+    end
+
+    it 'exposes an explicit remote_name' do
+      branch_info = described_class.new(
+        refname: 'refs/remotes/team/upstream/main',
+        target_oid: 'abc123',
+        current: false,
+        worktree_path: nil,
+        symref: nil,
+        upstream: nil,
+        remote_name: 'team/upstream'
+      )
+
+      expect(branch_info.remote_name).to eq('team/upstream')
     end
   end
 
@@ -138,6 +224,14 @@ RSpec.describe Git::BranchInfo do
         )
         expect(branch_info.remote?).to be false
       end
+
+      it 'returns false for a remotes-prefixed branch name without a branch segment' do
+        branch_info = described_class.new(
+          refname: 'remotes/foo', target_oid: 'abc123', current: false, worktree_path: nil,
+          symref: nil, upstream: nil
+        )
+        expect(branch_info.remote?).to be false
+      end
     end
 
     context 'with remote-tracking branch' do
@@ -172,6 +266,14 @@ RSpec.describe Git::BranchInfo do
       it 'returns nil for branch with slashes' do
         branch_info = described_class.new(
           refname: 'feature/my-feature', target_oid: 'abc123', current: false, worktree_path: nil,
+          symref: nil, upstream: nil
+        )
+        expect(branch_info.remote_name).to be_nil
+      end
+
+      it 'returns nil for a refs/remotes-prefixed branch name without a branch segment' do
+        branch_info = described_class.new(
+          refname: 'refs/remotes/main', target_oid: 'abc123', current: false, worktree_path: nil,
           symref: nil, upstream: nil
         )
         expect(branch_info.remote_name).to be_nil
@@ -254,6 +356,14 @@ RSpec.describe Git::BranchInfo do
         )
         expect(branch_info.short_name).to eq('feature/team/project/task')
       end
+
+      it 'returns the full name for a refs/remotes-prefixed branch name without a branch segment' do
+        branch_info = described_class.new(
+          refname: 'refs/remotes/main', target_oid: 'abc123', current: false, worktree_path: nil,
+          symref: nil, upstream: nil
+        )
+        expect(branch_info.short_name).to eq('refs/remotes/main')
+      end
     end
 
     context 'with remote-tracking branch' do
@@ -279,6 +389,20 @@ RSpec.describe Git::BranchInfo do
           worktree_path: nil, symref: nil, upstream: nil
         )
         expect(branch_info.short_name).to eq('feature/my-feature')
+      end
+
+      it 'derives branch name from explicit slash remote name' do
+        branch_info = described_class.new(
+          refname: 'refs/remotes/team/upstream/feature/foo',
+          target_oid: 'abc123',
+          current: false,
+          worktree_path: nil,
+          symref: nil,
+          upstream: nil,
+          remote_name: 'team/upstream'
+        )
+
+        expect(branch_info.short_name).to eq('feature/foo')
       end
     end
   end
@@ -346,6 +470,19 @@ RSpec.describe Git::BranchInfo do
         symref: nil, upstream: nil
       )
       expect(info1).not_to eq(info2)
+    end
+
+    it 'is equal when explicit remote_name matches the fallback remote_name' do
+      info1 = described_class.new(
+        refname: 'refs/remotes/origin/main', target_oid: 'abc123', current: false, worktree_path: nil,
+        symref: nil, upstream: nil
+      )
+      info2 = described_class.new(
+        refname: 'refs/remotes/origin/main', target_oid: 'abc123', current: false, worktree_path: nil,
+        symref: nil, upstream: nil, remote_name: 'origin'
+      )
+
+      expect(info1).to eq(info2)
     end
   end
 

@@ -110,6 +110,34 @@ RSpec.describe Git::Parsers::Branch, :integration do
       end
     end
 
+    context 'with a slash-containing remote name' do
+      let(:bare_dir) { Dir.mktmpdir('bare_repo') }
+
+      after do
+        FileUtils.rm_rf(bare_dir)
+      end
+
+      before do
+        write_file('file.txt')
+        repo.add('file.txt')
+        repo.commit('Initial commit')
+
+        Git.init(bare_dir, bare: true)
+        repo.remote_add('team/upstream', bare_dir)
+        repo.push('team/upstream', 'main')
+        repo.fetch('team/upstream')
+      end
+
+      it 'resolves the remote name using configured remote names' do
+        output = git_branch_output('--remotes')
+        result = described_class.parse_list(output, remote_names: ['team/upstream'])
+        remote_branch = result.find { |branch| branch.refname == 'refs/remotes/team/upstream/main' }
+
+        expect(remote_branch.remote_name).to eq('team/upstream')
+        expect(remote_branch.short_name).to eq('main')
+      end
+    end
+
     context 'with detached HEAD' do
       before do
         write_file('file.txt')
