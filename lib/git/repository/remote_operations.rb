@@ -594,6 +594,31 @@ module Git
         result.stdout.split("\n").map { |name| Git::Remote.new(self, name) }
       end
 
+      # Returns the names of all configured remotes
+      #
+      # Lists remote names by running `git remote`. This is a lightweight
+      # alternative to {#remote_list} when only names are needed — in
+      # particular, it returns the raw name (e.g. `"team/upstream"`) preserving
+      # any slashes in the remote name.
+      #
+      # @example Get all remote names
+      #   repo.remote_names  #=> ["origin", "upstream"]
+      #
+      # @example With a slash-containing remote name
+      #   repo.remote_names  #=> ["origin", "team/upstream"]
+      #
+      # @return [Array<String>] the configured remote names
+      #
+      #   Returns an empty array when no remotes are configured.
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @api public
+      #
+      def remote_names
+        Git::Commands::Remote::List.new(@execution_context).call.stdout.split("\n")
+      end
+
       # Option keys accepted by {#ls_remote}
       #
       # @return [Array<Symbol>]

@@ -1147,6 +1147,42 @@ RSpec.describe Git::Repository::RemoteOperations do
   end
 
   # ---------------------------------------------------------------------------
+  # #remote_names
+  # ---------------------------------------------------------------------------
+
+  describe '#remote_names' do
+    subject(:result) { described_instance.remote_names }
+
+    let(:list_command) { instance_double(Git::Commands::Remote::List) }
+
+    before do
+      allow(Git::Commands::Remote::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command).to receive(:call).and_return(command_result("origin\nteam/upstream\n"))
+    end
+
+    it 'delegates to Git::Commands::Remote::List.new with the execution_context' do
+      expect(Git::Commands::Remote::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+      result
+    end
+
+    it 'returns the remote names as an Array<String>' do
+      expect(result).to eq(%w[origin team/upstream])
+    end
+
+    context 'when no remotes are configured (empty stdout)' do
+      before do
+        allow(list_command).to receive(:call).and_return(command_result(''))
+      end
+
+      it 'returns an empty array' do
+        expect(result).to eq([])
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #ls_remote
   # ---------------------------------------------------------------------------
 
