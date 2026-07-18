@@ -48,11 +48,11 @@ module Git
       # @example Merge without committing
       #   repo.merge('feature', nil, no_commit: true)
       #
-      # @param branch [String, Array<String>, #to_s] the branch or branches to merge
-      #   into the current branch
+      # @param branch [#to_s, Array<#to_s>] the branch or branches to merge into the
+      #   current branch
       #
-      #   When an Array is given, an octopus merge is performed; a {Git::Branch}
-      #   object is coerced to a String via `#to_s`.
+      #   When an Array is given, an octopus merge is performed; each branch-ish
+      #   object (e.g., {Git::BranchInfo}) is coerced to a String via `#to_s`.
       #
       # @param message [String, nil] optional commit message for the merge commit
       #

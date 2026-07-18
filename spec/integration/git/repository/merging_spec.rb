@@ -16,45 +16,40 @@ RSpec.describe Git::Repository::Merging, :integration do
     repo.commit('Initial commit')
   end
 
-  # ---------------------------------------------------------------------------
-  # #merge — Git::Branch object coercion
-  # ---------------------------------------------------------------------------
+  describe '#merge' do
+    context 'with a Git::BranchInfo object' do
+      let(:branch_info) { repo.branch_list.find { |info| info.refname == 'refs/heads/feature' } }
+      let(:merged_file_path) { File.join(repo_dir, 'from_branch_info.txt') }
 
-  describe '#merge with a Git::Branch object' do
-    before do
-      repo.branch_new('feature')
-      repo.checkout('feature')
-      write_file('from_branch_obj.txt', "branch object content\n")
-      repo.add('from_branch_obj.txt')
-      repo.commit('Add from_branch_obj.txt')
-      repo.checkout('main')
+      before do
+        repo.branch_new('feature')
+        repo.checkout('feature')
+        write_file('from_branch_info.txt', "branch info content\n")
+        repo.add('from_branch_info.txt')
+        repo.commit('Add from_branch_info.txt')
+        repo.checkout('main')
+      end
+
+      it 'coerces it to a String and merges successfully' do
+        expect { described_instance.merge(branch_info) }
+          .to change { File.exist?(merged_file_path) }.from(false).to(true)
+      end
     end
 
-    it 'coerces the Git::Branch to a String and merges successfully' do
-      branch_obj = repo.branch('feature')
-      described_instance.merge(branch_obj)
-      expect(File.exist?(File.join(repo_dir, 'from_branch_obj.txt'))).to be(true)
-    end
-  end
+    context 'with a message on a fast-forward merge' do
+      before do
+        repo.branch_new('feature')
+        repo.checkout('feature')
+        write_file('ff.txt', "ff content\n")
+        repo.add('ff.txt')
+        repo.commit('first commit message')
+        repo.checkout('main')
+      end
 
-  # ---------------------------------------------------------------------------
-  # #merge — fast-forward with message (git ignores -m on ff)
-  # ---------------------------------------------------------------------------
-
-  describe '#merge fast-forward with a message' do
-    before do
-      repo.branch_new('feature')
-      repo.checkout('feature')
-      write_file('ff.txt', "ff content\n")
-      repo.add('ff.txt')
-      repo.commit('first commit message')
-      repo.checkout('main')
-    end
-
-    it 'does NOT set the commit message (git ignores -m on fast-forward merges)' do
-      described_instance.merge('feature', 'merge commit message')
-      commits = repo.log.execute
-      expect(commits.first.message).to eq('first commit message')
+      it 'keeps the fast-forwarded commit message' do
+        described_instance.merge('feature', 'merge commit message')
+        expect(repo.log.execute.first.message).to eq('first commit message')
+      end
     end
   end
 
@@ -63,74 +58,67 @@ RSpec.describe Git::Repository::Merging, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#merge_base' do
-    before do
-      # Record the SHA of the initial commit — that is the common ancestor
-      @common_ancestor_sha = repo.log(1).execute.first.sha
+    subject(:result) { described_instance.merge_base(*merge_base_args, **merge_base_options) }
 
-      # Add a commit on feature that is NOT on main
-      repo.branch_new('feature')
-      repo.checkout('feature')
-      write_file('feature.txt', "feature\n")
-      repo.add('feature.txt')
-      repo.commit('Feature commit')
-      repo.checkout('main')
+    let(:merge_base_args) { %w[main feature] }
+    let(:merge_base_options) { {} }
 
-      # Add a commit on main that is NOT on feature (forces a real divergence)
-      write_file('main_extra.txt', "main extra\n")
-      repo.add('main_extra.txt')
-      repo.commit('Main extra commit')
+    context 'when branches have one common ancestor' do
+      let!(:common_ancestor_sha) { repo.log(1).execute.first.sha }
+
+      before do
+        # Add a commit on feature that is NOT on main
+        repo.branch_new('feature')
+        repo.checkout('feature')
+        write_file('feature.txt', "feature\n")
+        repo.add('feature.txt')
+        repo.commit('Feature commit')
+        repo.checkout('main')
+
+        # Add a commit on main that is NOT on feature (forces a real divergence)
+        write_file('main_extra.txt', "main extra\n")
+        repo.add('main_extra.txt')
+        repo.commit('Main extra commit')
+      end
+
+      it 'returns the common ancestor SHA' do
+        expect(result).to eq([common_ancestor_sha])
+      end
     end
 
-    it 'returns the correct common ancestor SHA' do
-      result = described_instance.merge_base('main', 'feature')
-      expect(result).to eq([@common_ancestor_sha])
-    end
-  end
+    context 'with all: true when multiple bases exist' do
+      let(:merge_base_args) { %w[new_branch_1 new_branch_2] }
+      let(:merge_base_options) { { all: true } }
 
-  # ---------------------------------------------------------------------------
-  # #merge_base — all: true returns multiple bases when they exist
-  # ---------------------------------------------------------------------------
+      let!(:first_commit_sha) do
+        repo.branch_new('new_branch_1')
+        repo.checkout('new_branch_1')
+        write_file('b1_1.txt', "b1 first\n")
+        repo.add('b1_1.txt')
+        repo.commit('B: first commit on branch 1')
+        repo.log(1).execute.first.sha
+      end
 
-  describe '#merge_base with all: true' do
-    before do
-      # Build a criss-cross merge history so there are two equally good bases.
-      #
-      # Starting from the initial commit A on main, diverge two independent
-      # branches — B (new_branch_1) and C (new_branch_2) — then cross-merge:
-      #
-      #   A ─── B (nb1) ─── merge(B,C) M1
-      #     └── C (nb2) ─── merge(C,B) M2
-      #
-      # merge_base(M1, M2) returns both B and C.
+      let!(:second_commit_sha) do
+        repo.checkout('main')
+        repo.branch_new('new_branch_2')
+        repo.checkout('new_branch_2')
+        write_file('b2_1.txt', "b2 first\n")
+        repo.add('b2_1.txt')
+        repo.commit('C: first commit on branch 2')
+        repo.log(1).execute.first.sha
+      end
 
-      # B: commit on new_branch_1 (branches off main/A)
-      repo.branch_new('new_branch_1')
-      repo.checkout('new_branch_1')
-      write_file('b1_1.txt', "b1 first\n")
-      repo.add('b1_1.txt')
-      repo.commit('B: first commit on branch 1')
-      @first_commit_sha = repo.log(1).execute.first.sha
+      before do
+        # Build a criss-cross merge history so there are two equally good bases.
+        repo.merge(first_commit_sha.to_s)
+        repo.checkout('new_branch_1')
+        repo.merge(second_commit_sha.to_s)
+      end
 
-      # C: commit on new_branch_2 (branches off main/A independently)
-      repo.checkout('main')
-      repo.branch_new('new_branch_2')
-      repo.checkout('new_branch_2')
-      write_file('b2_1.txt', "b2 first\n")
-      repo.add('b2_1.txt')
-      repo.commit('C: first commit on branch 2')
-      @second_commit_sha = repo.log(1).execute.first.sha
-
-      # M2: nb2 merges B → merge commit with parents C and B
-      repo.merge(@first_commit_sha.to_s)
-
-      # M1: nb1 merges C → merge commit with parents B and C
-      repo.checkout('new_branch_1')
-      repo.merge(@second_commit_sha.to_s)
-    end
-
-    it 'returns more than one ancestor when multiple equally good bases exist' do
-      result = described_instance.merge_base('new_branch_1', 'new_branch_2', all: true)
-      expect(result.size).to be >= 2
+      it 'returns both equally good common ancestor SHAs' do
+        expect(result).to contain_exactly(first_commit_sha, second_commit_sha)
+      end
     end
   end
 
@@ -139,9 +127,11 @@ RSpec.describe Git::Repository::Merging, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#unmerged' do
+    subject(:result) { described_instance.unmerged }
+
     context 'when there are no conflicts' do
       it 'returns an empty Array' do
-        expect(described_instance.unmerged).to eq([])
+        expect(result).to eq([])
       end
     end
 
@@ -171,7 +161,7 @@ RSpec.describe Git::Repository::Merging, :integration do
       end
 
       it 'returns the conflicting file path(s)' do
-        expect(described_instance.unmerged).to include('example.txt')
+        expect(result).to include('example.txt')
       end
     end
   end
@@ -181,13 +171,15 @@ RSpec.describe Git::Repository::Merging, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#each_conflict' do
+    subject(:result) { described_instance.each_conflict { nil } }
+
     context 'when there are no conflicts' do
       it 'does not yield' do
         expect { |b| described_instance.each_conflict(&b) }.not_to yield_control
       end
 
       it 'returns an empty Array' do
-        expect(described_instance.each_conflict { nil }).to eq([])
+        expect(result).to eq([])
       end
     end
 
@@ -239,7 +231,6 @@ RSpec.describe Git::Repository::Merging, :integration do
       end
 
       it 'returns an Array of unmerged file paths' do
-        result = described_instance.each_conflict { nil }
         expect(result).to eq(['example.txt'])
       end
     end
@@ -256,12 +247,9 @@ RSpec.describe Git::Repository::Merging, :integration do
       repo.commit('Add feature file')
     end
 
-    let(:head_sha) { repo.log(1).execute.first.sha }
-
     it 'treats a nil commitish as HEAD and reverts HEAD' do
-      log_before = repo.log(10_000).execute.count
-      described_instance.revert(nil)
-      expect(repo.log(10_000).execute.count).to eq(log_before + 1)
+      expect { described_instance.revert(nil) }
+        .to change { repo.log(10_000).execute.count }.by(1)
     end
   end
 end
