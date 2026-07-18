@@ -18,6 +18,10 @@ RSpec.describe Git::Repository::Merging do
   # ---------------------------------------------------------------------------
 
   describe '#merge' do
+    subject(:result) { described_instance.merge(*merge_args) }
+
+    let(:merge_args) { ['feature'] }
+    let(:merge_result) { command_result('') }
     let(:merge_start_command) { instance_double(Git::Commands::Merge::Start) }
 
     before do
@@ -28,8 +32,6 @@ RSpec.describe Git::Repository::Merging do
     # --- Single String branch ------------------------------------------------
 
     context 'with a single String branch name' do
-      subject(:result) { described_instance.merge('feature') }
-
       let(:merge_result) { command_result("Merge made by the 'ort' strategy.\n") }
 
       it 'delegates to Git::Commands::Merge::Start.new with the execution_context' do
@@ -54,7 +56,7 @@ RSpec.describe Git::Repository::Merging do
     # --- Array of branch names (octopus merge) --------------------------------
 
     context 'with an Array of branch names' do
-      subject(:result) { described_instance.merge(%w[feature-a feature-b]) }
+      let(:merge_args) { [%w[feature-a feature-b]] }
 
       let(:merge_result) { command_result("Merge made by octopus strategy.\n") }
 
@@ -71,17 +73,60 @@ RSpec.describe Git::Repository::Merging do
       end
     end
 
-    # --- Git::Branch coercion -------------------------------------------------
+    # --- Git::BranchInfo coercion ---------------------------------------------
 
-    context 'with a Git::Branch object' do
-      subject(:result) { described_instance.merge(branch_obj) }
+    context 'with a Git::BranchInfo object' do
+      let(:merge_args) { [branch_info] }
 
-      let(:branch_obj) { instance_double('Git::Branch', to_s: 'feature') }
+      let(:branch_info) do
+        Git::BranchInfo.new(
+          refname: 'refs/heads/feature',
+          target_oid: 'abc123',
+          current: false,
+          worktree_path: nil,
+          symref: nil,
+          upstream: nil
+        )
+      end
       let(:merge_result) { command_result("Already up to date.\n") }
 
-      it 'coerces the branch to a String via #to_s' do
+      it 'coerces the branch info to a String via #to_s' do
         expect(merge_start_command)
-          .to receive(:call).with('feature', no_edit: true).and_return(merge_result)
+          .to receive(:call).with('refs/heads/feature', no_edit: true).and_return(merge_result)
+        result
+      end
+    end
+
+    context 'with an Array of Git::BranchInfo objects' do
+      let(:merge_args) { [[feature_info, hotfix_info]] }
+
+      let(:feature_info) do
+        Git::BranchInfo.new(
+          refname: 'refs/heads/feature',
+          target_oid: 'abc123',
+          current: false,
+          worktree_path: nil,
+          symref: nil,
+          upstream: nil
+        )
+      end
+      let(:hotfix_info) do
+        Git::BranchInfo.new(
+          refname: 'refs/heads/hotfix',
+          target_oid: 'def456',
+          current: false,
+          worktree_path: nil,
+          symref: nil,
+          upstream: nil
+        )
+      end
+      let(:merge_result) { command_result("Merge made by octopus strategy.\n") }
+
+      it 'coerces each branch info object to a String via #to_s' do
+        expect(merge_start_command)
+          .to receive(:call)
+          .with('refs/heads/feature', 'refs/heads/hotfix', no_edit: true)
+          .and_return(merge_result)
         result
       end
     end
@@ -89,9 +134,7 @@ RSpec.describe Git::Repository::Merging do
     # --- Positional message argument ------------------------------------------
 
     context 'with a positional message argument' do
-      subject(:result) { described_instance.merge('feature', 'My merge commit') }
-
-      let(:merge_result) { command_result('') }
+      let(:merge_args) { ['feature', 'My merge commit'] }
 
       it 'translates the message to the :m keyword option' do
         expect(merge_start_command)
@@ -101,9 +144,7 @@ RSpec.describe Git::Repository::Merging do
     end
 
     context 'with a nil message argument (explicit nil)' do
-      subject(:result) { described_instance.merge('feature', nil) }
-
-      let(:merge_result) { command_result('') }
+      let(:merge_args) { ['feature', nil] }
 
       it 'does not include :m in the call options' do
         expect(merge_start_command)
@@ -113,10 +154,6 @@ RSpec.describe Git::Repository::Merging do
     end
 
     context 'with no message argument' do
-      subject(:result) { described_instance.merge('feature') }
-
-      let(:merge_result) { command_result('') }
-
       it 'does not include :m in the call options' do
         expect(merge_start_command)
           .to receive(:call).with('feature', no_edit: true).and_return(merge_result)
@@ -127,9 +164,8 @@ RSpec.describe Git::Repository::Merging do
     # --- opts[:message] translation -------------------------------------------
 
     context 'with opts[:message] (no positional message)' do
-      subject(:result) { described_instance.merge('feature', nil, message: 'via opts') }
-
-      let(:merge_result) { command_result('') }
+      let(:merge_args) { ['feature', nil, caller_opts] }
+      let(:caller_opts) { { message: 'via opts' } }
 
       it 'translates opts[:message] to :m' do
         expect(merge_start_command)
@@ -147,9 +183,8 @@ RSpec.describe Git::Repository::Merging do
       end
 
       it 'does not mutate the caller opts hash' do
-        caller_opts = { message: 'via opts' }
         allow(merge_start_command).to receive(:call).and_return(merge_result)
-        described_instance.merge('feature', nil, caller_opts)
+        result
         expect(caller_opts).to eq({ message: 'via opts' })
       end
     end
@@ -157,9 +192,7 @@ RSpec.describe Git::Repository::Merging do
     # --- Pass-through options -------------------------------------------------
 
     context 'with no_ff: true' do
-      subject(:result) { described_instance.merge('feature', nil, no_ff: true) }
-
-      let(:merge_result) { command_result('') }
+      let(:merge_args) { ['feature', nil, { no_ff: true }] }
 
       it 'passes no_ff: true through to Merge::Start#call' do
         expect(merge_start_command)
@@ -169,9 +202,7 @@ RSpec.describe Git::Repository::Merging do
     end
 
     context 'with no_commit: true' do
-      subject(:result) { described_instance.merge('feature', nil, no_commit: true) }
-
-      let(:merge_result) { command_result('') }
+      let(:merge_args) { ['feature', nil, { no_commit: true }] }
 
       it 'passes no_commit: true through to Merge::Start#call' do
         expect(merge_start_command)
@@ -183,9 +214,7 @@ RSpec.describe Git::Repository::Merging do
     # --- Combined message + opts ---------------------------------------------
 
     context 'with a positional message and no_ff: true' do
-      subject(:result) { described_instance.merge('feature', 'merge commit', no_ff: true) }
-
-      let(:merge_result) { command_result('') }
+      let(:merge_args) { ['feature', 'merge commit', { no_ff: true }] }
 
       it 'passes m: and no_ff: through to Merge::Start#call' do
         expect(merge_start_command)
@@ -197,7 +226,7 @@ RSpec.describe Git::Repository::Merging do
     # --- Unknown option guard -------------------------------------------------
 
     context 'with an unknown option' do
-      subject(:result) { described_instance.merge('feature', nil, bogus: true) }
+      let(:merge_args) { ['feature', nil, { bogus: true }] }
 
       it 'raises ArgumentError' do
         expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
@@ -219,6 +248,9 @@ RSpec.describe Git::Repository::Merging do
   # ---------------------------------------------------------------------------
 
   describe '#merge_base' do
+    subject(:result) { described_instance.merge_base(*merge_base_args) }
+
+    let(:merge_base_args) { %w[main feature] }
     let(:merge_base_command) { instance_double(Git::Commands::MergeBase) }
     let(:merge_base_result) { command_result("abc123\n") }
 
@@ -230,8 +262,6 @@ RSpec.describe Git::Repository::Merging do
     # --- Basic two-commit invocation -----------------------------------------
 
     context 'with two branch names' do
-      subject(:result) { described_instance.merge_base('main', 'feature') }
-
       it 'delegates to Git::Commands::MergeBase.new with the execution_context' do
         expect(Git::Commands::MergeBase).to receive(:new).with(execution_context).and_return(merge_base_command)
         allow(merge_base_command).to receive(:call).and_return(merge_base_result)
@@ -254,7 +284,7 @@ RSpec.describe Git::Repository::Merging do
     # --- Three commits (octopus merge ancestor search) -----------------------
 
     context 'with three branch names' do
-      subject(:result) { described_instance.merge_base('main', 'branch-a', 'branch-b') }
+      let(:merge_base_args) { %w[main branch-a branch-b] }
 
       it 'passes all three commits to MergeBase#call' do
         expect(merge_base_command)
@@ -266,7 +296,7 @@ RSpec.describe Git::Repository::Merging do
     # --- Trailing hash extraction ---------------------------------------------
 
     context 'with a trailing options hash' do
-      subject(:result) { described_instance.merge_base('main', 'feature', all: true) }
+      let(:merge_base_args) { ['main', 'feature', { all: true }] }
 
       let(:merge_base_result) { command_result("abc123\ndef456\n") }
 
@@ -286,8 +316,6 @@ RSpec.describe Git::Repository::Merging do
     # --- Return value parsing -------------------------------------------------
 
     context 'when stdout contains trailing whitespace and blank lines' do
-      subject(:result) { described_instance.merge_base('main', 'feature') }
-
       let(:merge_base_result) { command_result("  abc123  \n\n") }
 
       it 'strips each line and removes blank lines' do
@@ -298,8 +326,6 @@ RSpec.describe Git::Repository::Merging do
     end
 
     context 'when stdout is empty (no common ancestor)' do
-      subject(:result) { described_instance.merge_base('main', 'feature') }
-
       let(:merge_base_result) { command_result('') }
 
       it 'returns an empty Array' do
@@ -312,7 +338,7 @@ RSpec.describe Git::Repository::Merging do
     # --- Option forwarding ----------------------------------------------------
 
     context 'with octopus: true' do
-      subject(:result) { described_instance.merge_base('main', 'b1', 'b2', octopus: true) }
+      let(:merge_base_args) { ['main', 'b1', 'b2', { octopus: true }] }
 
       it 'forwards octopus: true to MergeBase#call' do
         expect(merge_base_command)
@@ -322,7 +348,7 @@ RSpec.describe Git::Repository::Merging do
     end
 
     context 'with independent: true' do
-      subject(:result) { described_instance.merge_base('sha1', 'main', 'feature', independent: true) }
+      let(:merge_base_args) { ['sha1', 'main', 'feature', { independent: true }] }
 
       it 'forwards independent: true to MergeBase#call' do
         expect(merge_base_command)
@@ -332,7 +358,7 @@ RSpec.describe Git::Repository::Merging do
     end
 
     context 'with fork_point: true' do
-      subject(:result) { described_instance.merge_base('main', 'feature', fork_point: true) }
+      let(:merge_base_args) { ['main', 'feature', { fork_point: true }] }
 
       it 'forwards fork_point: true to MergeBase#call' do
         expect(merge_base_command)
@@ -343,16 +369,17 @@ RSpec.describe Git::Repository::Merging do
 
     # --- Option whitelisting --------------------------------------------------
 
-    context 'option whitelisting' do
+    context 'with option whitelisting' do
+      let(:merge_base_args) { ['main', 'feature', { bogus: true }] }
+
       it 'raises ArgumentError for an unknown option key' do
-        expect { described_instance.merge_base('main', 'feature', bogus: true) }
-          .to raise_error(ArgumentError, /Unknown options: bogus/)
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
       end
 
       it 'does not call MergeBase when an unknown option is given' do
         expect(merge_base_command).not_to receive(:call)
         begin
-          described_instance.merge_base('main', 'feature', bogus: true)
+          result
         rescue ArgumentError
           # expected
         end
@@ -568,6 +595,10 @@ RSpec.describe Git::Repository::Merging do
   # ---------------------------------------------------------------------------
 
   describe '#revert' do
+    subject(:result) { described_instance.revert(*revert_args) }
+
+    let(:revert_args) { ['abc1234'] }
+    let(:revert_result) { command_result('') }
     let(:revert_start_command) { instance_double(Git::Commands::Revert::Start) }
 
     before do
@@ -578,8 +609,6 @@ RSpec.describe Git::Repository::Merging do
     # --- Default invocation ---------------------------------------------------
 
     context 'with a commit SHA' do
-      subject(:result) { described_instance.revert('abc1234') }
-
       let(:revert_result) { command_result("[main 1234abc] Revert \"first commit\"\n") }
 
       it 'delegates to Git::Commands::Revert::Start.new with the execution_context' do
@@ -604,9 +633,7 @@ RSpec.describe Git::Repository::Merging do
     # --- nil commitish defaults to HEAD ---------------------------------------
 
     context 'with a nil commitish' do
-      subject(:result) { described_instance.revert(nil) }
-
-      let(:revert_result) { command_result('') }
+      let(:revert_args) { [nil] }
 
       it 'maps nil to HEAD and calls Revert::Start#call with HEAD' do
         expect(revert_start_command)
@@ -618,9 +645,7 @@ RSpec.describe Git::Repository::Merging do
     # --- no_edit default can be overridden -----------------------------------
 
     context 'with no_edit: false' do
-      subject(:result) { described_instance.revert('abc1234', no_edit: false) }
-
-      let(:revert_result) { command_result('') }
+      let(:revert_args) { ['abc1234', { no_edit: false }] }
 
       it 'passes no_edit: false through to Revert::Start#call, overriding the default' do
         expect(revert_start_command)
@@ -632,9 +657,7 @@ RSpec.describe Git::Repository::Merging do
     # --- no_edit: true explicit (same as default) ----------------------------
 
     context 'with no_edit: true explicitly' do
-      subject(:result) { described_instance.revert('abc1234', no_edit: true) }
-
-      let(:revert_result) { command_result('') }
+      let(:revert_args) { ['abc1234', { no_edit: true }] }
 
       it 'passes no_edit: true to Revert::Start#call' do
         expect(revert_start_command)
@@ -645,16 +668,17 @@ RSpec.describe Git::Repository::Merging do
 
     # --- Option whitelisting --------------------------------------------------
 
-    context 'option whitelisting' do
+    context 'with option whitelisting' do
+      let(:revert_args) { ['abc1234', { bogus: true }] }
+
       it 'raises ArgumentError for an unknown option key' do
-        expect { described_instance.revert('abc1234', bogus: true) }
-          .to raise_error(ArgumentError, /Unknown options: bogus/)
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
       end
 
       it 'does not call Revert::Start when an unknown option is given' do
         expect(revert_start_command).not_to receive(:call)
         begin
-          described_instance.revert('abc1234', bogus: true)
+          result
         rescue ArgumentError
           # expected
         end
