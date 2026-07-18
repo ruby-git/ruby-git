@@ -319,6 +319,26 @@ RSpec.describe Git::Repository::Branching, :integration do
       end
     end
 
+    context 'when a remote-tracking branch belongs to a slash-containing remote name' do
+      let(:bare_dir) { Dir.mktmpdir('slash_remote_repo') }
+
+      after { FileUtils.rm_rf(bare_dir) }
+
+      before do
+        Git.init(bare_dir, bare: true)
+        repo.remote_add('team/upstream', bare_dir)
+        repo.push('team/upstream', 'main')
+      end
+
+      it 'returns a BranchInfo with the configured remote name and short branch name' do
+        branch_info = described_instance.branch_list.find { |info| info.refname == 'refs/remotes/team/upstream/main' }
+
+        expect(branch_info).not_to be_nil
+        expect(branch_info.remote_name).to eq('team/upstream')
+        expect(branch_info.short_name).to eq('main')
+      end
+    end
+
     context 'when in detached HEAD state' do
       before do
         sha = repo.log(1).execute.first.sha

@@ -520,6 +520,12 @@ module Git
       #   are returned. Pattern matching follows git's own rules; behavior may
       #   differ between local and remote-tracking branches.
       #
+      # @param remote_names [Array<String>, nil] configured remote names used to
+      #   resolve remote-tracking refs
+      #
+      #   Especially useful for remotes whose remote names contain slashes. When
+      #   omitted, the repository's configured remote names are fetched automatically.
+      #
       # @return [Array<Git::BranchInfo>] parsed branch information for every
       #   local and remote-tracking branch matching the pattern
       #
@@ -528,11 +534,12 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      def branch_list(*patterns)
+      def branch_list(*patterns, remote_names: nil)
+        remote_names ||= self.remote_names
         result = Git::Commands::Branch::List.new(@execution_context).call(
           *patterns, all: true, format: Git::Parsers::Branch::FORMAT_STRING
         )
-        Git::Parsers::Branch.parse_list(result.stdout)
+        Git::Parsers::Branch.parse_list(result.stdout, remote_names:)
       end
 
       # Returns all local and remote-tracking branches in the 4.x-compatible format

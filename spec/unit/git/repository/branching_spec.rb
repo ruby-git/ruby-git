@@ -270,6 +270,14 @@ RSpec.describe Git::Repository::Branching do
       end
     end
 
+    context 'with options passed as the first argument' do
+      it 'treats the hash as options and delegates without a branch' do
+        expect(checkout_branch_command)
+          .to receive(:call).with(nil, force: true).and_return(checkout_branch_result)
+        described_instance.checkout(force: true)
+      end
+    end
+
     context 'with options passed as a bare Hash variable' do
       let(:opts) { { force: true } }
 
@@ -391,6 +399,20 @@ RSpec.describe Git::Repository::Branching do
         expect(checkout_index_command)
           .to receive(:call).with('foo.rb', force: true).and_return(checkout_index_result)
         result
+      end
+    end
+
+    context 'with an empty path_limiter' do
+      it 'omits the path operand' do
+        expect(checkout_index_command).to receive(:call).with(no_args).and_return(checkout_index_result)
+        described_instance.checkout_index(path_limiter: '')
+      end
+    end
+
+    context 'with an invalid path_limiter type' do
+      it 'raises ArgumentError' do
+        expect { described_instance.checkout_index(path_limiter: 123) }
+          .to raise_error(ArgumentError, /Invalid path_limiter/)
       end
     end
 
@@ -864,8 +886,10 @@ RSpec.describe Git::Repository::Branching do
   # ---------------------------------------------------------------------------
 
   describe '#branch_list' do
-    subject(:result) { described_instance.branch_list(*patterns) }
+    subject(:result) { described_instance.branch_list(*patterns, **branch_list_options) }
     let(:patterns) { [] }
+    let(:branch_list_options) { {} }
+    let(:remote_names) { ['origin', 'team/upstream'] }
 
     let(:branch_list_command) { instance_double(Git::Commands::Branch::List) }
     let(:branch_list_result) do
@@ -881,6 +905,7 @@ RSpec.describe Git::Repository::Branching do
     before do
       allow(Git::Commands::Branch::List)
         .to receive(:new).with(execution_context).and_return(branch_list_command)
+      allow(described_instance).to receive(:remote_names).and_return(remote_names)
     end
 
     context 'when the repository has branches' do
@@ -893,7 +918,7 @@ RSpec.describe Git::Repository::Branching do
         )
         expect(Git::Parsers::Branch).to(
           receive(:parse_list)
-            .with(branch_list_result.stdout)
+            .with(branch_list_result.stdout, remote_names: remote_names)
             .and_return(parsed_branches)
             .ordered
         )
@@ -913,7 +938,7 @@ RSpec.describe Git::Repository::Branching do
         )
         expect(Git::Parsers::Branch).to(
           receive(:parse_list)
-            .with('')
+            .with('', remote_names: remote_names)
             .and_return([])
             .ordered
         )
@@ -933,10 +958,45 @@ RSpec.describe Git::Repository::Branching do
         )
         expect(Git::Parsers::Branch).to(
           receive(:parse_list)
-            .with(branch_list_result.stdout)
+            .with(branch_list_result.stdout, remote_names: remote_names)
             .and_return(parsed_branches)
             .ordered
         )
+        expect(result).to eq(parsed_branches)
+      end
+    end
+
+    context 'when remote_names is omitted' do
+      it 'fetches configured remote names for parser resolution' do
+        expect(described_instance).to receive(:remote_names).and_return(remote_names)
+        allow(branch_list_command)
+          .to receive(:call)
+          .with(all: true, format: Git::Parsers::Branch::FORMAT_STRING)
+          .and_return(branch_list_result)
+        allow(Git::Parsers::Branch)
+          .to receive(:parse_list)
+          .with(branch_list_result.stdout, remote_names: remote_names)
+          .and_return(parsed_branches)
+
+        expect(result).to eq(parsed_branches)
+      end
+    end
+
+    context 'when remote_names is given explicitly' do
+      let(:explicit_remote_names) { ['team/upstream'] }
+      let(:branch_list_options) { { remote_names: explicit_remote_names } }
+
+      it 'uses the given remote names without querying the repository remotes' do
+        expect(described_instance).not_to receive(:remote_names)
+        allow(branch_list_command)
+          .to receive(:call)
+          .with(all: true, format: Git::Parsers::Branch::FORMAT_STRING)
+          .and_return(branch_list_result)
+        allow(Git::Parsers::Branch)
+          .to receive(:parse_list)
+          .with(branch_list_result.stdout, remote_names: explicit_remote_names)
+          .and_return(parsed_branches)
+
         expect(result).to eq(parsed_branches)
       end
     end
@@ -955,6 +1015,7 @@ RSpec.describe Git::Repository::Branching do
     before do
       allow(Git::Commands::Branch::List)
         .to receive(:new).with(execution_context).and_return(branch_list_command)
+      allow(described_instance).to receive(:remote_names).and_return(['origin'])
       allow(branch_list_command)
         .to receive(:call)
         .with(all: true, format: Git::Parsers::Branch::FORMAT_STRING)
