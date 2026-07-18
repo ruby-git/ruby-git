@@ -143,6 +143,40 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   end
 
   # ---------------------------------------------------------------------------
+  # #remote_names
+  # ---------------------------------------------------------------------------
+
+  describe '#remote_names' do
+    let(:slash_remote_dir) { Dir.mktmpdir('slash_remote') }
+
+    before { Git.init(slash_remote_dir, bare: true, initial_branch: 'main') }
+
+    after { FileUtils.rm_rf(slash_remote_dir) }
+
+    it 'returns an Array<String> of remote names' do
+      expect(described_instance.remote_names).to all(be_a(String))
+    end
+
+    it 'includes all configured remote names' do
+      described_instance.remote_add('team/upstream', slash_remote_dir)
+      expect(described_instance.remote_names).to contain_exactly('origin', 'team/upstream')
+    end
+
+    it 'preserves the slash in slash-containing remote names' do
+      described_instance.remote_add('team/upstream', slash_remote_dir)
+      expect(described_instance.remote_names).to include('team/upstream')
+    end
+
+    context 'when no remotes are configured' do
+      before { described_instance.remote_remove('origin') }
+
+      it 'returns an empty array' do
+        expect(described_instance.remote_names).to eq([])
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #remote_set_url
   # ---------------------------------------------------------------------------
 
