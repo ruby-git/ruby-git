@@ -116,9 +116,11 @@ For each domain:
 - **Stashes are not branch-scoped in git**, so no branch-scoped stash API is
   warranted.
 
-## Open threads / not yet tracked
+## Open threads
 
-- **`Git::Repository#worktree` / `#worktrees` factory deprecation** — implied by
-  #1635 but should be confirmed as part of that issue's scope.
-- **`config_remote` relationship to `remote_list`** — flagged as unresolved in
-  `remote_refactor_plan.md`.
+All previously loose threads are now tracked within the issues above:
+
+- **`Git::Repository#worktree` / `#worktrees` factory deprecation** — in scope of
+  #1635 (confirmed in its transition plan).
+- **`config_remote` relationship to `remote_list`** — folded into #1640 as an open
+  question to resolve during that work.
