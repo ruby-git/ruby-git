@@ -19,18 +19,17 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 - [Install](#install)
 - [Quick Start](#quick-start)
 - [Examples](#examples)
-  - [Configuration](#configuration)
-  - [Read Operations](#read-operations)
-  - [Write Operations](#write-operations)
-  - [Index and Tree Operations](#index-and-tree-operations)
-- [Errors Raised By This Gem](#errors-raised-by-this-gem)
-- [Specifying And Handling Timeouts](#specifying-and-handling-timeouts)
+  - [Gem Configuration](#gem-configuration)
+  - [Git Configuration](#git-configuration)
+  - [Full API](#full-api)
+- [Errors Raised by This Gem](#errors-raised-by-this-gem)
+- [Specifying and Handling Timeouts](#specifying-and-handling-timeouts)
 - [Deprecations](#deprecations)
 - [Upgrading from v4.x to v5.0.0](#upgrading-from-v4x-to-v500)
 - [Project Policies](#project-policies)
   - [Ruby Version Support Policy](#ruby-version-support-policy)
   - [Git Version Support Policy](#git-version-support-policy)
-- [📢 Project Announcements 📢](#-project-announcements-)
+- [Project Announcements](#project-announcements)
   - [2026-07-13: v5.0.0.beta.5 Released](#2026-07-13-v500beta5-released)
   - [2026-07-11: v5.0.0.beta.4 Released](#2026-07-11-v500beta4-released)
   - [2026-06-26: v5.0.0.beta.3 Released](#2026-06-26-v500beta3-released)
@@ -60,6 +59,10 @@ Methods that can be called on a repository object are documented in
 [Git::Repository](https://rubydoc.info/gems/git/Git/Repository)
 
 ## Install
+
+This gem is a wrapper around the `git` command line, so a `git` executable (version
+2.28.0 or greater) must be installed and on your `PATH`. See the [Git Version Support
+Policy](#git-version-support-policy) for details.
 
 Install the gem and add to the application's Gemfile by executing:
 
@@ -91,7 +94,7 @@ require 'git'
 
 repo = Git.clone('https://github.com/ruby-git/ruby-git.git', 'ruby-git')
 repo.status.changed.each { |f| puts "changed: #{f.path}" }
-repo.log(5).each { |c| puts c.message }
+repo.log(5).execute.each { |c| puts c.message }
 ```
 
 Open an existing repo and commit:
@@ -117,27 +120,10 @@ repo.commit('initial commit')
 
 ## Examples
 
-Beyond the basics covered in Quick Start, these examples show the full range of
-options and variations for each operation.
+These examples cover configuring the gem and git itself. For the full set of
+repository operations, see [Full API](#full-api) below.
 
-### Configuration
-
-Configure the `git` command line:
-
-```ruby
-# Global config (in ~/.gitconfig)
-entries = Git.config_list(global: true)         # returns Array<Git::ConfigEntryInfo>
-entry   = Git.config_get('user.email', global: true) # returns Git::ConfigEntryInfo or nil
-email    = entry&.value                          # => "user@example.com" or nil
-Git.config_set('user.email', 'user@example.com', global: true)
-
-# Repository config
-repo = Git.open('path/to/repo')
-entries  = repo.config_list                     # returns Array<Git::ConfigEntryInfo>
-entry    = repo.config_get('user.email')        # returns Git::ConfigEntryInfo or nil
-email    = entry&.value                         # => "anotheruser@example.com" or nil
-repo.config_set('user.email', 'anotheruser@example.com')
-```
+### Gem Configuration
 
 Configure the git gem:
 
@@ -179,326 +165,36 @@ git = Git.init('new-repo', git_ssh: 'ssh -i /path/to/private_key')
 This is especially useful in multi-threaded applications where different repositories
 require different SSH credentials.
 
-### Read Operations
+### Git Configuration
 
-Here are the operations that need read permission only:
-
-```ruby
-repo = Git.open(working_dir, :log => Logger.new(STDOUT))
-
-repo.index            # Pathname to the index file
-repo.index.readable?  # check if index is readable
-repo.index.writable?  # check if index is writable
-repo.repo             # Pathname to the .git directory
-repo.dir              # Pathname to the working directory
-
-# ls-tree with recursion into subtrees (list files)
-repo.ls_tree("HEAD", recursive: true)
-
-# log - returns a Git::Log object, which is an Enumerator of Git::Commit objects
-# default configuration returns a max of 30 commits
-repo.log
-repo.log(200) # 200 most recent commits
-repo.log.since('2 weeks ago') # default count of commits since 2 weeks ago.
-repo.log(200).since('2 weeks ago') # commits since 2 weeks ago, limited to 200.
-repo.log.between('v2.5', 'v2.6')
-repo.log.each {|l| puts l.sha }
-repo.gblob('v2.5:Makefile').log.since('2 weeks ago')
-
-repo.object('HEAD^').to_s  # git show / git rev-parse
-repo.object('HEAD^').contents
-repo.object('v2.5:Makefile').size
-repo.object('v2.5:Makefile').sha
-
-repo.gtree(treeish)
-repo.gblob(treeish)
-repo.gcommit(treeish)
-
-
-commit = repo.gcommit('1cc8667014381')
-
-commit.gtree
-commit.parent.sha
-commit.parents.size
-commit.author.name
-commit.author.email
-commit.author.date.strftime("%m-%d-%y")
-commit.committer.name
-commit.date.strftime("%m-%d-%y")
-commit.message
-
-tree = repo.gtree("HEAD^{tree}")
-
-tree.blobs
-tree.subtrees
-tree.children # blobs and subtrees
-
-repo.rev_parse('v2.0.0:README.md')
-
-repo.branches # returns Git::Branch objects
-repo.branches.local
-repo.current_branch
-repo.branches.remote
-repo.branches[:main].gcommit
-repo.branches['origin/main'].gcommit
-
-repo.grep('hello')  # implies HEAD
-repo.blob('v2.5:Makefile').grep('hello')
-repo.tag('v2.5').grep('hello', 'docs/')
-repo.describe()
-repo.describe('0djf2aa')
-repo.describe('HEAD', {:all => true, :tags => true})
-
-repo.diff(commit1, commit2).size
-repo.diff(commit1, commit2).stats
-repo.diff(commit1, commit2).name_status
-repo.gtree('v2.5').diff('v2.6').insertions
-repo.diff('gitsearch1', 'v2.5').path('lib/')
-repo.diff('gitsearch1', 'v2.5').path('lib/', 'docs/', 'README.md')  # multiple paths
-repo.diff('gitsearch1', repo.gtree('v2.5'))
-repo.diff('gitsearch1', 'v2.5').path('docs/').patch
-repo.gtree('v2.5').diff('v2.6').patch
-
-repo.gtree('v2.5').diff('v2.6').each do |file_diff|
-  puts file_diff.path
-  puts file_diff.patch
-  puts file_diff.blob(:src).contents
-end
-
-repo.worktrees # returns Git::Worktree objects
-repo.worktrees.count
-repo.worktrees.each do |worktree|
-  worktree.dir
-  worktree.gcommit
-  worktree.to_s
-end
-
-# Check repository integrity with fsck
-result = repo.fsck
-result.dangling.each { |obj| puts "dangling #{obj.type}: #{obj.sha}" }
-result.missing.each { |obj| puts "missing #{obj.type}: #{obj.sha}" }
-
-# Check if repository has any issues
-puts "Repository is clean" if result.empty?
-
-# fsck with options
-result = repo.fsck(unreachable: true, strict: true)
-
-# Suppress dangling object output
-result = repo.fsck(dangling: false)
-
-repo.config_get('user.name')&.value  # returns 'Scott Chacon'
-repo.config_list                     # returns Array<Git::ConfigEntryInfo>
-
-# Configuration can be set when cloning using the :config option.
-# This option can be an single configuration String or an Array
-# if multiple config items need to be set.
-#
-repo = Git.clone(
-  git_uri, destination_path,
-  :config => [
-    'core.sshCommand=ssh -i /home/user/.ssh/id_rsa',
-    'submodule.recurse=true'
-  ]
-)
-
-repo.tags # returns array of Git::Tag objects
-
-repo.show()
-repo.show('HEAD')
-repo.show('v2.8', 'README.md')
-
-Git.ls_remote('https://github.com/ruby-git/ruby-git.git') # returns a hash containing the available references of the repo.
-Git.ls_remote('/path/to/local/repo')
-Git.ls_remote() # same as Git.ls_remote('.')
-
-Git.default_branch('https://github.com/ruby-git/ruby-git') #=> 'main'
-```
-
-### Write Operations
-
-And here are the operations that will need to write to your git repository.
+Read and set `git` configuration values (via `git config`):
 
 ```ruby
-repo = Git.init # default is the current directory
-repo = Git.init('project')
-repo = Git.init(
-  '/home/schacon/proj',
-  { :repository => '/opt/git/proj.git', :index => '/tmp/index'}
-)
+# Global config (in ~/.gitconfig)
+entries = Git.config_list(global: true)         # returns Array<Git::ConfigEntryInfo>
+entry   = Git.config_get('user.email', global: true) # returns Git::ConfigEntryInfo or nil
+email    = entry&.value                          # => "user@example.com" or nil
+Git.config_set('user.email', 'user@example.com', global: true)
 
-# Clone from a git url
-git_url = 'https://github.com/ruby-git/ruby-git.git'
-repo = Git.clone(git_url)
-
-# Clone into /tmp/clone/ruby-git-clean
-name = 'ruby-git-clean'
-path = '/tmp/clone'
-repo = Git.clone(git_url, name, :path => path)
-repo.dir #=> /tmp/clone/ruby-git-clean
-
-repo.config_set('user.name', 'Scott Chacon')
-repo.config_set('user.email', 'email@email.com')
-
-# Clone can take a filter to tell the serve to send a partial clone
-repo = Git.clone(git_url, name, :path => path, :filter => 'tree:0')
-
-# Clone can control single-branch behavior (nil default keeps current git behavior)
-repo = Git.clone(git_url, name, :path => path, :depth => 1, :single_branch => false)
-
-# Clone can take an optional logger
-logger = Logger.new(STDOUT)
-repo = Git.clone(git_url, 'my-repo', :log => logger)
-
-repo.add                                   # git add -- "."
-repo.add(:all=>true)                       # git add --all -- "."
-repo.add('file_path')                      # git add -- "file_path"
-repo.add(['file_path_1', 'file_path_2'])   # git add -- "file_path_1" "file_path_2"
-
-repo.remove()                                # git rm -f -- "."
-repo.remove('file.txt')                      # git rm -f -- "file.txt"
-repo.remove(['file.txt', 'file2.txt'])       # git rm -f -- "file.txt" "file2.txt"
-repo.remove('file.txt', :recursive => true)  # git rm -f -r -- "file.txt"
-repo.remove('file.txt', :cached => true)     # git rm -f --cached -- "file.txt"
-
-repo.commit('message')
-repo.commit_all('message')
-
-# Sign a commit using the gpg key configured in the user.signingkey config setting
-repo.config_set('user.signingkey', '0A46826A')
-repo.commit('message', gpg_sign: true)
-
-# Sign a commit using a specified gpg key
-key_id = '0A46826A'
-repo.commit('message', gpg_sign: key_id)
-
-# Skip signing a commit (overriding any global gpgsign setting)
-repo.commit('message', no_gpg_sign: true)
-
-repo = Git.clone(git_url, 'myrepo')
-repo.chdir do
-  File.write('test-file', 'blahblahblah')
-  repo.status.changed.each do |file|
-    puts file.blob(:index).contents
-  end
-end
-
-repo.reset # defaults to HEAD
-repo.reset_hard(Git::Commit)
-
-repo.branch('new_branch') # creates new or fetches existing
-repo.branch('new_branch').checkout
-repo.branch('new_branch').delete
-repo.branch('existing_branch').checkout
-repo.branch('main').contains?('existing_branch')
-
-# delete remote branch
-repo.push('origin', 'remote_branch_name', force: true, delete: true)
-
-repo.checkout('new_branch')
-repo.checkout('new_branch', new_branch: true, start_point: 'main')
-repo.checkout(repo.branch('new_branch'))
-
-repo.branch(name).merge(branch2)
-repo.branch(branch2).merge  # merges HEAD with branch2
-
-repo.branch(name).in_branch(message) { # add files }  # auto-commits
-repo.merge('new_branch')
-repo.merge('new_branch', 'merge commit message', no_ff: true)
-repo.merge('origin/remote_branch')
-repo.merge(repo.branch('main'))
-repo.merge([branch1, branch2])
-
-repo.merge_base('branch1', 'branch2')
-
-r = repo.remote_add(name, uri)  # Git::Remote
-r = repo.remote_add(name, other_repo)  # Git::Remote (other_repo is a Git::Repository instance)
-
-repo.remotes  # array of Git::Remotes
-repo.remote(name).fetch
-repo.remote(name).remove
-repo.remote(name).merge
-repo.remote(name).merge(branch)
-
-repo.remote_set_branches('origin', '*', add: true) # append additional fetch refspecs
-repo.remote_set_branches('origin', 'feature', 'release/*') # replace fetch refspecs
-
-repo.fetch
-repo.fetch(repo.remotes.first)
-repo.fetch('origin', {:ref => 'some/ref/head'} )
-repo.fetch(all: true, force: true, depth: 2)
-repo.fetch('origin', {:'update-head-ok' => true})
-
-repo.pull
-repo.pull(Git::Repo, Git::Branch) # fetch and a merge
-
-repo.tag_add('tag_name') # returns Git::Object::Tag
-repo.tag_add('tag_name', 'object_reference')
-repo.tag_add('tag_name', 'object_reference', {:options => 'here'})
-repo.tag_add('tag_name', {:options => 'here'})
-
-repo.tag_delete('tag_name')
-
-repo.repack
-
-repo.push
-repo.push(repo.remote('name'))
-
-# delete remote branch
-repo.push('origin', 'remote_branch_name', force: true, delete: true)
-
-# push all branches to remote at one time
-repo.push('origin', all: true)
-
-repo.worktree('/tmp/new_worktree').add
-repo.worktree('/tmp/new_worktree', 'branch1').add
-repo.worktree('/tmp/new_worktree').remove
-repo.worktrees.prune
+# Repository config
+repo = Git.open('path/to/repo')
+entries  = repo.config_list                     # returns Array<Git::ConfigEntryInfo>
+entry    = repo.config_get('user.email')        # returns Git::ConfigEntryInfo or nil
+email    = entry&.value                         # => "anotheruser@example.com" or nil
+repo.config_set('user.email', 'anotheruser@example.com')
 ```
 
-### Index and Tree Operations
+### Full API
 
-Some examples of more low-level index and tree operations
+Quick Start and the configuration sections above cover the most common setup. For
+the complete set of operations — reading history, diffs, branches, remotes,
+worktrees, staging, and low-level index and tree work — see the
+[`Git::Repository`](https://rubydoc.info/gems/git/Git/Repository) reference. It
+documents every method along with the object types each one returns (such as
+`Git::Log`, `Git::Object::Commit`, `Git::Diff`, `Git::Branch`, and `Git::Worktree`),
+so you can follow the links from a method to the full API of its result.
 
-```ruby
-repo.with_temp_index do
-
-  repo.read_tree(tree3) # calls self.index.read_tree
-  repo.read_tree(tree1, :prefix => 'hi/')
-
-  c = repo.commit_tree('message')
-  # or #
-  t = repo.write_tree
-  c = repo.commit_tree(t, :message => 'message', :parents => [sha1, sha2])
-
-  repo.branch('branch_name').update_ref(c)
-  repo.update_ref(branch, c)
-
-  repo.with_temp_working do # new blank working directory
-    repo.checkout
-    repo.checkout(another_index)
-    repo.commit # commits to temp_index
-  end
-end
-
-repo.set_index('/path/to/index')
-
-repo.with_index(path) do
-  # calls set_index, then switches back after
-end
-
-repo.with_working(dir) do
-# calls set_working, then switches back after
-end
-
-repo.with_temp_working(dir) do
-  repo.checkout_index(:prefix => dir, :path_limiter => path)
-  # do file work
-  repo.commit # commits to index
-end
-```
-
-## Errors Raised By This Gem
+## Errors Raised by This Gem
 
 The git gem will only raise an `ArgumentError` or an error that is a subclass of
 `Git::Error`. It does not explicitly raise any other types of errors.
@@ -516,9 +212,7 @@ end
 
 See [`Git::Error`](https://rubydoc.info/gems/git/Git/Error) for more information.
 
-## Specifying And Handling Timeouts
-
-The timeout feature was added in git gem version `2.0.0`.
+## Specifying and Handling Timeouts
 
 A timeout for git command line operations can be set either globally or for specific
 method calls that accept a `:timeout` parameter.
@@ -555,7 +249,7 @@ repo_url = 'https://github.com/ruby-git/ruby-git.git'
 Git.clone(repo_url) # Use the global timeout value
 Git.clone(repo_url, timeout: nil) # Also uses the global timeout value
 Git.clone(repo_url, timeout: 0) # Do not enforce a timeout
-Git.clone(repo_url, timeout: 10.5)  # Timeout after 10.5 seconds raising Git::SignaledError
+Git.clone(repo_url, timeout: 10.5)  # Timeout after 10.5 seconds raising Git::TimeoutError
 ```
 
 If the command takes too long, a `Git::TimeoutError` will be raised:
@@ -663,7 +357,7 @@ gem as new git features are adopted or as maintaining backward compatibility bec
 impractical. Such changes will be clearly documented in the CHANGELOG and release
 notes.
 
-## 📢 Project Announcements 📢
+## Project Announcements
 
 ### 2026-07-13: v5.0.0.beta.5 Released
 

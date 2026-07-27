@@ -20,3 +20,5 @@ rubocop-report.json
 
 # generated git reference docs
 git-reference/
+
+tmp
