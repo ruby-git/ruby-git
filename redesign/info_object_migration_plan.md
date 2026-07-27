@@ -53,7 +53,7 @@ For each domain:
 | Domain | AR class(es) | Value object | State |
 | --- | --- | --- | --- |
 | Branch | `Git::Branch` / `Git::Branches` | `Git::BranchInfo`, `Git::DetachedHeadInfo` | Value object + `branch_list` shipped; deprecation of AR classes tracked (#1639) |
-| Remote | `Git::Remote` | `Git::RemoteInfo` | `RemoteInfo` + parser shipped; `remotes` deprecation tracked (#1640); `Git::Remote` class deprecation not yet tracked |
+| Remote | `Git::Remote` | `Git::RemoteInfo` | `RemoteInfo` + parser shipped; `remotes` deprecation tracked (#1640); `Git::Remote` class deprecation tracked (#1643) |
 | Stash | `Git::Stash` / `Git::Stashes` | `Git::StashInfo` (exists) | Redesign tracked (#1634); `Git::Branch#stashes` cleanup (#1637) |
 | Worktree | `Git::Worktree` / `Git::Worktrees` | *(needs `Git::WorktreeInfo`)* | Redesign tracked (#1635) — value object + parser do not exist yet |
 | Tag | `Git::Object::Tag` | `Git::TagInfo` (exists) | Half-migrated; finish tracked under umbrella (#1636) |
@@ -80,6 +80,8 @@ For each domain:
   (from `remote_refactor_plan.md` PR 3, Step 5).
 - **#1641** — add `Git::Repository#in_branch` and a merge-into-branch facade path
   (preconditions for #1639).
+- **#1643** — deprecate `Git::Remote` (and `Git::Repository#remote`) in favor of
+  the `RemoteInfo` API (remote analog of #1639; depends on #1640).
 
 ## Versioning and sequencing
 
@@ -116,9 +118,6 @@ For each domain:
 
 ## Open threads / not yet tracked
 
-- **`Git::Remote` (class) deprecation** — the remote analog of #1639. Called out
-  in `remote_refactor_plan.md` (line ~163) as a "separate future effort" and noted
-  in #1640, but has **no dedicated issue** yet.
 - **`Git::Repository#worktree` / `#worktrees` factory deprecation** — implied by
   #1635 but should be confirmed as part of that issue's scope.
 - **`config_remote` relationship to `remote_list`** — flagged as unresolved in
