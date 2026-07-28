@@ -25,16 +25,11 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 - [Errors Raised by This Gem](#errors-raised-by-this-gem)
 - [Specifying and Handling Timeouts](#specifying-and-handling-timeouts)
 - [Deprecations](#deprecations)
-- [Upgrading from v4.x to v5.0.0](#upgrading-from-v4x-to-v500)
 - [Project Policies](#project-policies)
   - [Ruby Version Support Policy](#ruby-version-support-policy)
   - [Git Version Support Policy](#git-version-support-policy)
 - [Project Announcements](#project-announcements)
-  - [2026-07-13: v5.0.0.beta.5 Released](#2026-07-13-v500beta5-released)
-  - [2026-07-11: v5.0.0.beta.4 Released](#2026-07-11-v500beta4-released)
-  - [2026-06-26: v5.0.0.beta.3 Released](#2026-06-26-v500beta3-released)
-  - [2026-06-25: v5.0.0.beta.2 Released](#2026-06-25-v500beta2-released)
-  - [2026-06-04: v5.0.0.beta.1 Released](#2026-06-04-v500beta1-released)
+  - [2026-07-28: v5.0.0 Released](#2026-07-28-v500-released)
   - [2026-01-07: AI Policy Introduced](#2026-01-07-ai-policy-introduced)
   - [2025-07-09: Architectural Redesign](#2025-07-09-architectural-redesign)
   - [2025-07-07: We Now Use RuboCop](#2025-07-07-we-now-use-rubocop)
@@ -302,11 +297,6 @@ needed for the upgrade.
 For the full list of deprecated methods and their replacements, see
 [UPGRADING.md](UPGRADING.md).
 
-## Upgrading from v4.x to v5.0.0
-
-v5.0.0 is a major release with breaking changes. See
-[UPGRADING.md](UPGRADING.md) for a comprehensive migration guide.
-
 ## Project Policies
 
 These documents set expectations for behavior, contribution workflows, AI-assisted
@@ -359,136 +349,30 @@ notes.
 
 ## Project Announcements
 
-### 2026-07-13: v5.0.0.beta.5 Released
+### 2026-07-28: v5.0.0 Released
 
-We have published
-[`git v5.0.0.beta.5`](https://rubygems.org/gems/git/versions/5.0.0.beta.5) as our
-fifth pre-release.
+We have published [`git v5.0.0`](https://rubygems.org/gems/git/versions/5.0.0) —
+the first stable release of the v5.x series, after five public beta releases
+spanning June–July 2026.
 
-The main user-visible change is a temporary compatibility shim for users who
-monkeypatch `Git::Base`. In v5.0.0, `Git::Base` has been replaced by
-`Git::Repository`; the shim forwards methods defined on `Git::Base` to repository
-instances and emits deprecation warnings so applications can migrate those patches
-to `Git::Repository` before v6.0.0.
+**v5.0.0 is a major release with breaking changes.** See
+[UPGRADING.md](UPGRADING.md) for the complete migration guide.
 
-**To try the beta**, add the pre-release version to your `Gemfile`:
+To install:
 
 ```ruby
-gem 'git', '~> 5.0.0.beta'
+gem 'git', '~> 5.0'
 ```
 
-Or install it directly:
+Or:
 
 ```sh
-gem install git --pre
+gem install git
 ```
 
-The intent is full backward compatibility with v4.x, but given the size and scope of
-the redesign, some incompatibilities may exist. Please give the latest beta a try and
-[open an issue](https://github.com/ruby-git/ruby-git/issues) if you hit anything
-unexpected — your feedback helps us ship a solid v5.0.0.
-
-See [UPGRADING.md](UPGRADING.md) for a full list of deprecations and breaking changes.
-
-### 2026-07-11: v5.0.0.beta.4 Released
-
-The architectural redesign is **feature complete** and we have published
-[`git v5.0.0.beta.4`](https://rubygems.org/gems/git/versions/5.0.0.beta.4) as our
-fourth pre-release.
-
-**To try the beta**, add the pre-release version to your `Gemfile`:
-
-```ruby
-gem 'git', '~> 5.0.0.beta'
-```
-
-Or install it directly:
-
-```sh
-gem install git --pre
-```
-
-The intent is full backward compatibility with v4.x, but given the size and scope of
-the redesign, some incompatibilities may exist. Please give the latest beta a try and
-[open an issue](https://github.com/ruby-git/ruby-git/issues) if you hit anything
-unexpected — your feedback helps us ship a solid v5.0.0.
-
-See [UPGRADING.md](UPGRADING.md) for a full list of deprecations and breaking changes.
-
-### 2026-06-26: v5.0.0.beta.3 Released
-
-The architectural redesign is approximately **93% complete** and we have published
-[`git v5.0.0.beta.3`](https://rubygems.org/gems/git/versions/5.0.0.beta.3) as our
-third pre-release.
-
-**To try the beta**, add the pre-release version to your `Gemfile`:
-
-```ruby
-gem 'git', '~> 5.0.0.beta'
-```
-
-Or install it directly:
-
-```sh
-gem install git --pre
-```
-
-The intent is full backward compatibility with v4.x, but given the size and scope of
-the redesign, some incompatibilities may exist. Please give the latest beta a try and
-[open an issue](https://github.com/ruby-git/ruby-git/issues) if you hit anything
-unexpected — your feedback helps us ship a solid v5.0.0.
-
-See [UPGRADING.md](UPGRADING.md) for a full list of deprecations and breaking changes.
-
-### 2026-06-25: v5.0.0.beta.2 Released
-
-The architectural redesign is approximately **90% complete** and we have published
-[`git v5.0.0.beta.2`](https://rubygems.org/gems/git/versions/5.0.0.beta.2) as our
-second pre-release.
-
-**To try the beta**, add the pre-release version to your `Gemfile`:
-
-```ruby
-gem 'git', '~> 5.0.0.beta'
-```
-
-Or install it directly:
-
-```sh
-gem install git --pre
-```
-
-The intent is full backward compatibility with v4.x, but given the size and scope of
-the redesign, some incompatibilities may exist. Please give the latest beta a try and
-[open an issue](https://github.com/ruby-git/ruby-git/issues) if you hit anything
-unexpected — your feedback helps us ship a solid v5.0.0.
-
-See [UPGRADING.md](UPGRADING.md) for a full list of deprecations and breaking changes.
-
-### 2026-06-04: v5.0.0.beta.1 Released
-
-The architectural redesign is approximately **65% complete** and we have published
-[`git v5.0.0.beta.1`](https://rubygems.org/gems/git/versions/5.0.0.beta.1) as our
-first pre-release.
-
-**To try the beta**, add the pre-release version to your `Gemfile`:
-
-```ruby
-gem 'git', '~> 5.0.0.beta'
-```
-
-Or install it directly:
-
-```sh
-gem install git --pre
-```
-
-The intent is full backward compatibility with 4.x, but given the size and scope of
-the redesign, some incompatibilities may exist. Please give the latest beta a try and
-[open an issue](https://github.com/ruby-git/ruby-git/issues) if you hit anything
-unexpected — your feedback helps us ship a solid 5.0.0.
-
-See [UPGRADING.md](UPGRADING.md) for a full list of deprecations and breaking changes.
+Most v4.x code requires **no changes** — compatibility shims keep the old API
+working while emitting deprecation warnings that tell you what to migrate before
+v6.0.0.
 
 ### 2026-01-07: AI Policy Introduced
 
