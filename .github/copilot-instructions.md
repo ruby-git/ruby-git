@@ -2,70 +2,37 @@
 
 ## Project Overview
 
-ruby-git is a Ruby gem providing a Ruby interface to Git repositories. It wraps
-system calls to the `git` CLI and exposes an API for creating and manipulating repos,
-working with branches/commits/tags/remotes, inspecting history and objects, and
-performing all standard Git operations.
+A Ruby gem providing an interface to Git repositories by wrapping system calls to the
+`git` CLI.
 
-**Status:** Stable. Minimum Ruby 3.2.0, minimum Git 2.28.0. MRI on macOS/Linux/Windows;
-JRuby and TruffleRuby on Linux (JRuby/TruffleRuby on Windows are not tested).
+Read the "Project Context" skill (`.github/skills/project-context/SKILL.md`) for
+design philosophy, technical details, and compatibility requirements.
 
-For architecture details, coding standards, design philosophy, key technical details,
-and compatibility requirements see the
-[Project Context](skills/project-context/SKILL.md) skill.
+This project enforces Conventional Commits. See `.commitlintrc.yml` for allowed types
+and scopes. Never use `#` in the commit message body. Doing so will cause
+commitlint to incorrectly parse the commit message body as a footer. If you need to
+refer to an issue in the body, use `issue 999` instead of `issue #999`. It is still
+fine to use `#` in footer values such as `Closes: #999` or `Refs: #999`.
 
 ## Terminology & Writing Style
 
-- Use American English always. Avoid British English spellings and idioms.
-- **Version strings** — use the most precise form appropriate to the context:
-  - `vN.x` (e.g. `v5.x`, `v4.x`) — the whole major series; use for compatibility
-    statements and upgrade guide scope ("v4.x code works on v5.x").
-  - `vN.0.0` (e.g. `v5.0.0`, `v6.0.0`) — a specific first release; use when
-    precision matters ("removed in v5.0.0", "the foundation delivered in v5.0.0").
-  - `vN.0` — avoid; ambiguous between "minor version 0" and "shorthand for vN.0.0".
-- **RuboCop** — correct capitalization when referring to the tool by name in prose,
-  documentation, or comments.
-- **`rubocop`** — correct form when referring to the command-line executable or gem
-  name (e.g., `gem 'rubocop'`, `bundle exec rubocop`).
-- **Rubocop** — incorrect; never use this form.
-
-## Skill Loading
-
-When a skill applies to a request, read the entire `SKILL.md` file before taking
-any other action. Read from line 1 through EOF with no gaps. Simple code review
-or explanation does not require a skill.
+- Use American English.
+- **Version strings:** Use `vN.x` for major series compatibility (e.g., `v4.x`) and
+  `vN.0.0` for specific releases (e.g., `v5.0.0`). Never use the ambiguous `vN.0`.
+- **RuboCop:** Use `RuboCop` for prose and `rubocop` for CLI or gem names. Never use
+  `Rubocop`.
 
 ## Project Commands
 
 | Purpose | Command |
 | --- | --- |
-| First-time setup | `bin/setup` |
-| Run all tests and linters (CI-equivalent) | `bundle exec rake default` |
-| Run all tests and linters (force parallel) | `bundle exec rake default:parallel` |
-| Run all RSpec tests | `bundle exec rake spec:parallel` |
-| Run RSpec unit tests | `bundle exec rake spec:unit:parallel` |
-| Run RSpec integration tests | `bundle exec rake spec:integration:parallel` |
+| First-time project or new worktree setup | `bin/setup` |
+| Run all tests and linters (CI-equivalent) | `bundle exec rake` |
+| Run all RSpec tests | `bundle exec rake spec` |
+| Run RSpec unit tests | `bundle exec rake spec:unit` |
+| Run RSpec integration tests | `bundle exec rake spec:integration` |
 | Run a specific RSpec spec | `bundle exec rspec <path>` |
 | Run linters | `bundle exec rake rubocop yard build` |
-
-**Test suite:** `spec/` (RSpec) is the sole test suite — all new tests go here.
-
-## Commit Conventions
-
-This project uses [Conventional Commits](https://www.conventionalcommits.org/).
-Automated releases via [release-please](https://github.com/googleapis/release-please).
-
-**Format:** `type[optional scope][!]: description`
-
-**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`,
-`revert`, `ci`, `build`
-
-**Breaking changes:** Add `!` before `:` and a `BREAKING CHANGE: <description>`
-footer.
-
-**Version bumps:** breaking change → major; `feat` → minor; others → patch.
-
-**Pre-commit hook:** Run `bin/setup` to install a validator.
 
 ## Branch & PR Strategy
 
@@ -73,24 +40,3 @@ footer.
 | --- | --- |
 | `main` | New features, breaking changes, all active development |
 | `4.x` | Security fixes and backward-compatible bug fixes for the v4.x series |
-
-> **Never commit directly to `main` or `4.x`** — this rule must never be violated.
-> Always check `git branch --show-current` before committing. If on a release branch,
-> run `git switch -c <type>/<short-description>` first.
-
-All changes go through a PR from a topic branch.
-
-**Creating a PR:** Use `gh pr create`. Read `.github/pull_request_template.md` for
-the body structure. Complete the [PR Readiness Review](skills/pr-readiness-review/SKILL.md)
-skill first.
-
-## Key Documents
-
-| Document | Purpose |
-| --- | --- |
-| `CONTRIBUTING.md` | Design philosophy, contribution guidelines |
-| `CHANGELOG.md` | Version history (auto-updated by release-please) |
-| `MAINTAINERS.md` | Maintainer list and responsibilities |
-| `AI_POLICY.md` | AI usage policy for this project |
-| `redesign/` | Architecture redesign plans and implementation guide |
-| `.github/skills/` | All Copilot skills |
