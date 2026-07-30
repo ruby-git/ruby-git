@@ -6,14 +6,14 @@
 # The Git Gem
 
 [![Gem Version](https://badge.fury.io/rb/git.svg)](https://badge.fury.io/rb/git)
+[![Build Status](https://github.com/ruby-git/ruby-git/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/ruby-git/ruby-git/actions/workflows/continuous_integration.yml)
 [![Documentation](https://img.shields.io/badge/Documentation-Latest-green)](https://rubydoc.info/gems/git/)
 [![Change
 Log](https://img.shields.io/badge/CHANGELOG-Latest-green)](https://rubydoc.info/gems/git/file/CHANGELOG.md)
-[![Build
-Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=main)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
 [![Conventional
 Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
-[![AI Policy](https://img.shields.io/badge/AI%20Policy-Required-blue)](AI_POLICY.md)
+[![AI Policy](https://img.shields.io/badge/AI%20Policy-Doc-blue)](AI_POLICY.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 - [Summary](#summary)
 - [Install](#install)
