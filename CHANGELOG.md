@@ -5,6 +5,14 @@
 
 # Change Log
 
+## [5.0.1](https://github.com/ruby-git/ruby-git/compare/v5.0.0...v5.0.1) (2026-07-30)
+
+
+### Other Changes
+
+* Review and streamline AI agent instructions ([536eb86](https://github.com/ruby-git/ruby-git/commit/536eb865440da8c0e74de0dfc32828b82fc675db))
+* Summarize v5.0.0 as architectural redesign in CHANGELOG ([712c93e](https://github.com/ruby-git/ruby-git/commit/712c93ea237490be3b037250af44cd6633baf68f))
+
 ## [5.0.0](https://github.com/ruby-git/ruby-git/compare/v4.1.2...v5.0.0) (2026-07-28)
 
 v5.0.0 is a complete architectural redesign of the `git` gem. The monolithic
