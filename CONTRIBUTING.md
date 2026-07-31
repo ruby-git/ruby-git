@@ -902,6 +902,8 @@ process.stdin.on('end', () =>
   appropriate.
 - The entire test suite must pass when `bundle exec rake` is run from the project's
   local working copy.
+- Test runs are covered by SimpleCov by default. Set `COVERAGE=false` (or `0`/`no`/
+  `off`) to skip coverage, e.g. `COVERAGE=false bundle exec rake spec`.
 
 This project uses **RSpec** (`spec/`) as its sole test framework. Structure,
 naming, setup, stubbing, and coverage rules for unit specs are defined in the

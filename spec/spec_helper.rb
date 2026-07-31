@@ -64,20 +64,6 @@ RSpec.configure do |config|
   end
 end
 
-# SimpleCov configuration
-#
-# JRuby and TruffleRuby do not provide reliable coverage data.
-# SimpleCov's branch coverage crashes on TruffleRuby and coverage metrics
-# are not meaningful on alternative runtimes. Skip coverage entirely.
-#
-SIMPLECOV_ENABLED = RUBY_ENGINE == 'ruby'
-
-if SIMPLECOV_ENABLED
-  require 'simplecov'
-  require 'simplecov-lcov'
-  require 'simplecov-rspec'
-end
-
 # Returns `false` when git meets the minimum version, or a skip message when it does not
 #
 # Pass the return value to RSpec's `skip:` metadata key to conditionally skip
@@ -158,8 +144,26 @@ def unless_ci_build(feature)
   "#{feature} modifies OS-level state; only runs on CI (set GITHUB_ACTIONS=true to run locally)"
 end
 
-if SIMPLECOV_ENABLED
+# Skip coverage when the COVERAGE environment variable is set to a falsy value
+def coverage_disabled_via_env?
+  coverage_env = ENV.fetch('COVERAGE', 'true').strip.downcase
+  %w[false 0 no off].include?(coverage_env)
+end
+
+# Skip coverage if disabled via the COVERAGE env var or on non-MRI runtimes
+#
+# JRuby and TruffleRuby do not provide reliable coverage data and SimpleCov's branch
+# coverage crashes on TruffleRuby 24.2.1.
+#
+def enable_coverage? = RUBY_ENGINE == 'ruby' && !coverage_disabled_via_env?
+
+if enable_coverage?
+  require 'simplecov'
+  require 'simplecov-rspec'
+
   if ci_build?
+    require 'simplecov-lcov'
+
     SimpleCov.formatters = [
       SimpleCov::Formatter::HTMLFormatter,
       SimpleCov::Formatter::LcovFormatter
