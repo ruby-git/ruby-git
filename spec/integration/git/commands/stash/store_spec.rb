@@ -28,8 +28,10 @@ RSpec.describe Git::Commands::Stash::Store, :integration do
     end
 
     describe 'when the command fails' do
-      it 'raises FailedError with an invalid commit SHA' do
-        expect { command.call('0000000000000000000000000000000000000000') }.to raise_error(Git::FailedError)
+      it 'raises FailedError with a nonexistent commit SHA' do
+        expect do
+          command.call('deadbeefdeadbeefdeadbeefdeadbeefdeadbeef')
+        end.to raise_error(Git::FailedError)
       end
     end
   end
