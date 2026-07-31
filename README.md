@@ -15,6 +15,11 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 [![AI Policy](https://img.shields.io/badge/AI%20Policy-Doc-blue)](AI_POLICY.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+> **v5.0.0 is here.** This is a major release with a redesigned internal
+> architecture, but most v4.x code runs unchanged thanks to compatibility
+> shims. See [UPGRADING.md](UPGRADING.md) for the migration guide and
+> [CHANGELOG.md](CHANGELOG.md) for full release notes.
+
 - [Summary](#summary)
 - [Install](#install)
 - [Quick Start](#quick-start)
