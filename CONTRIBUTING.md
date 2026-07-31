@@ -23,32 +23,28 @@
   - [Agent skills](#agent-skills)
 - [Design philosophy](#design-philosophy)
 - [Layered architecture](#layered-architecture)
-  - [Command layer responsibilities](#command-layer-responsibilities)
-- [Wrapping a git command](#wrapping-a-git-command)
-  - [Method placement](#method-placement)
-  - [Method naming](#method-naming)
-  - [Result class naming](#result-class-naming)
-  - [Parameter naming](#parameter-naming)
-  - [Parameter values](#parameter-values)
-    - [Options](#options)
-    - [Positional arguments](#positional-arguments)
-  - [Output processing](#output-processing)
-  - [From design to implementation](#from-design-to-implementation)
+- [Implementing a git command](#implementing-a-git-command)
+  - [API design](#api-design)
+    - [Method placement](#method-placement)
+    - [Method naming](#method-naming)
+    - [Result class naming](#result-class-naming)
+    - [Parameter naming](#parameter-naming)
+    - [Parameter values](#parameter-values)
+    - [Output processing](#output-processing)
+  - [Implementation](#implementation)
   - [Example implementations](#example-implementations)
 - [Coding standards](#coding-standards)
   - [Commit message guidelines](#commit-message-guidelines)
     - [What does this mean for contributors?](#what-does-this-mean-for-contributors)
     - [What to know about Conventional Commits](#what-to-know-about-conventional-commits)
     - [Issue and PR references](#issue-and-pr-references)
-  - [Unit tests](#unit-tests)
-    - [RSpec best practices](#rspec-best-practices)
+  - [Testing guidelines](#testing-guidelines)
     - [Unit tests vs Integration tests](#unit-tests-vs-integration-tests)
 - [Building a specific version of the Git command-line](#building-a-specific-version-of-the-git-command-line)
   - [Install pre-requisites](#install-pre-requisites)
   - [Obtain Git source code](#obtain-git-source-code)
   - [Build git](#build-git)
   - [Use the new Git version](#use-the-new-git-version)
-- [Licensing](#licensing)
 
 ## Summary
 
@@ -199,10 +195,6 @@ This project maintains two active branches:
 - **`4.x`**: Maintenance branch for the v4.x release series. This branch receives bug
   fixes and backward-compatible improvements only.
 
-**Important:** Never commit directly to `main` or `4.x`. All changes must be
-submitted via pull requests from feature branches. This ensures proper code review,
-CI validation, and maintains a clean commit history.
-
 When submitting a pull request:
 
 - **New features and breaking changes**: Target the `main` branch
@@ -256,7 +248,11 @@ guidance that mirrors maintainer expectations:
 
 ## Design philosophy
 
-The `git` gem is designed as a lightweight wrapper around the `git` command-line
+The `git` gem follows a design philosophy that allows users to leverage their
+existing knowledge of Git while benefiting from the expressiveness and power of
+Ruby's syntax and paradigms.
+
+Its public API is designed as a lightweight wrapper around the `git` command-line
 tool, providing Ruby developers with a simple and intuitive interface for
 programmatically interacting with Git.
 
@@ -265,44 +261,51 @@ introduce unnecessary abstraction layers or modify Git's core functionality. Ins
 the gem maintains a close alignment with the existing `git` command-line interface,
 avoiding extensions or alterations that could lead to unexpected behaviors.
 
-By following this philosophy, the `git` gem allows users to leverage their existing
-knowledge of Git while benefiting from the expressiveness and power of Ruby's syntax
-and paradigms.
+`git` commands generally translate to `Git::Repository` methods of the same name.
+Positional arguments map to the `git` CLI operands (such as paths, SHAs, etc.) in the
+same order. Keyword arguments map to `git` CLI options by long OR short name.
+
+Some examples:
+
+- To execute `git clone <url> --depth=1`, call `Git.clone(url, depth: 1)`
+- To execute `git add <path> --force`, call `Git::Repository#add(path, force: true)`
 
 ## Layered architecture
 
-The three architectural layers each play a distinct role:
+The `git` gem is organized into three architectural layers:
 
 | Layer | Responsibility | Mechanism |
 | --- | --- | --- |
-| **Facade** (`Git::Repository::*` and `Git` module) | Public API and policy | Normalizes Ruby arguments, sets safe defaults, calls one or more `Git::Commands::*` classes, and may parse output into public Ruby objects |
-| **Command** (`Git::Commands::*`) | Neutral git CLI interface | Declares CLI arguments via the [Arguments DSL](lib/git/commands/arguments.rb), executes git, and returns `Git::CommandLine::Result` |
-| **Execution** (`Git::ExecutionContext`) | Execution context and subprocess defaults | Carries repository/global execution settings such as working directory, environment, timeout, binary path, and logging; runs the git CLI with subprocess defaults such as `GIT_EDITOR='true'` |
-
-### Command layer responsibilities
+| **Facade** (`Git::Repository` and `Git`) | Public API | Normalizes Ruby arguments, sets safe defaults, calls one or more `Git::Commands::*` classes, and may parse output into public Ruby objects |
+| **Command** (`Git::Commands::*`) | Neutral git CLI interface | Declares CLI arguments via the [Arguments DSL](lib/git/commands/arguments.rb), builds the git argv and executes git via `#call`, and returns `Git::CommandLine::Result` |
+| **Execution** (`Git::ExecutionContext::*`) | Execution context and subprocess defaults | Carries execution settings such as working directory, environment, timeout, binary path, and logging; runs the git CLI with default global options (such as `-c color.ui=false`) and subprocess environment variables (such as `LC_ALL=en_US.UTF-8`) |
 
 Command classes (`Git::Commands::*`) are **faithful, neutral representations of the
 git CLI**. Each command class does the following:
 
-- Declares every CLI argument/option via the [Arguments DSL](lib/git/commands/arguments.rb)
-- Binds `#call` parameters with the [Arguments DSL](lib/git/commands/arguments.rb) to
-  build the git argv
-- Executes a git CLI command via `Git::ExecutionContext`
-- Returns the raw git CLI result as a `Git::CommandLine::Result` object
+- Declares acceptable CLI arguments and options via the
+  [Arguments DSL](lib/git/commands/arguments.rb)
+- Defines a `#call` method which:
+  - Maps its parameters to the git argv using the declared arguments
+  - Executes a git CLI command via `Git::ExecutionContext`
+  - Returns the unprocessed git CLI result as a `Git::CommandLine::Result` object
 
-Command classes should not embed policy choices such as output-control flags, editor
-suppression, progress output, or verbose mode. These policy decisions belong to the
-`Git::Repository::*` facade methods, which set safe defaults at each call site when
-policy is needed. In most cases, the facade gives callers the choice to override those
-defaults when they have a legitimate reason (e.g., running in a TTY-attached
+Command classes should not embed choices such as output format flags, editor
+suppression, progress output, or verbose mode. These decisions belong to the facade
+layer which sets them as needed. The facade layer may give callers the choice to
+override those decisions when appropriate (e.g., running in a TTY-attached
 environment where an editor is desired).
 
 For example:
 
-- **Anti-pattern:** `literal '--no-edit'`, `literal '--verbose'`, or
-  `literal '--no-progress'` inside a command class — embeds policy in the wrong layer
-- **Correct pattern:** `flag_option :edit, negatable: true` in the command; `edit:
-  false` passed from the facade call site
+- **Anti-pattern:** declaring non-overidable and non-default options in the Arguments
+  DSL to control output such as `literal '--no-edit'`, `literal '--verbose'`, or
+  `literal '--no-progress'` inside a command class. This embeds policy in the wrong
+  layer.
+- **Correct pattern:** declaring options which allow the user of the command (often a
+  facade method) to set desired values such as: `flag_option :edit, negatable: true`.
+  This allows the facade to either accept the default or to hard code `edit: false`
+  if it is needed.
 
 This separation keeps command classes reusable across facade methods with different
 policy needs. For example, a facade method that parses command output may pass
@@ -311,41 +314,41 @@ a stable, parseable output shape. Those parser-contract options belong at the fa
 call site, not as hard-coded literals in the command class. Other facade methods can
 reuse the same command class with different options.
 
-## Wrapping a git command
+## Implementing a git command
 
-This section guides you through wrapping a git command. The first subsections focus
-on **API design**: where methods belong, how to name them, and how to handle
-parameters and output. These describe the public interface that gem users will see.
+Start with the official git documentation page for the command (e.g., `man git-add`
+or the [git-scm.com](https://git-scm.com/docs) reference page). Its SYNOPSIS line
+identifies the positional operands, and its OPTIONS section identifies the flags and
+value options the Ruby method must expose.
 
-[From design to implementation](#from-design-to-implementation) then shows how to
-structure your code using the gem's three-layer architecture. The public API is
-`Git::Repository` (and the `Git` module), whose facade methods delegate directly to
-internal `Git::Commands::*` classes.
+Implementing the command has two major tasks: [API design](#api-design) and
+[Implementation](#implementation).
 
-> **Note:** When adding new git command wrappers, **always use the architecture**
-> described in "From design to implementation" with `Git::Commands::*` classes and
-> the [Arguments DSL](lib/git/commands/arguments.rb).
+### API design
 
-### Method placement
+The section focuses on deciding where git command methods belong, how to name them,
+and how to handle parameters and output. These describe the public interface that gem
+users will see.
 
-When implementing a git command, first determine what type of command it is. This
-determines where to implement it in the Ruby API:
+#### Method placement
 
-> **Note:** These placement guidelines define the **public API**. Always add public
-> methods to the `Git` module or `Git::Repository` (the facade), even though the
-> implementation will be in a `Git::Commands::*` class.
+The public API is `Git::Repository` (and the `Git` module). These facade methods must
+be exposed there, even when their implementation lives in private mixin modules or
+`Git::Commands::*` classes.
 
-**Repository factory methods** are implemented on the `Git` module. Use these to
-obtain a repository object for subsequent operations:
+**Repository factory commands** are exposed via `Git` as module methods and
+are usually implemented in the `Git::Factories` mixin. These methods return a
+`Git::Repository` object for subsequent operations:
 
 ```ruby
 repo = Git.clone('https://github.com/user/repo.git', 'local_path')
-repo = Git.init('new_repo')
+repo = Git.init('new_repo', initial_branch: 'main')
 repo = Git.open('.')
 ```
 
-**Repository-scoped commands** operate within a repository context. Implement these
-`Git::Repository` instance methods:
+**Repository-scoped commands** require a repository context. These methods are
+exposed via `Git::Repository` instance methods and are usually implemented in a
+`Git::Repository::*` mixin.
 
 ```ruby
 repo.add('file.txt')
@@ -353,23 +356,26 @@ repo.commit('Add file')
 repo.log
 ```
 
-**Non-repository commands** do not require a repository context. Implement these as
-methods on the `Git` module:
+**Global commands** do not require a repository context. Expose these
+as methods on the `Git` module:
 
 ```ruby
 Git.config_get('user.name', global: true)
 Git.config_set('user.email', 'user@example.com', global: true)
 ```
 
-Some commands, like `git config`, can operate in multiple contexts:
+Some commands, like `git config` commands, can be called either in a global or
+repository scope. Here is how that was solved for the config commands:
 
-- **On the `Git` module**: A scope parameter (`global: true`, `system: true`) or
-  `file:` parameter is required. The `local:` and `worktree:` options are not allowed
-  since they require a repository.
-- **On a `Git::Repository` instance**: The command defaults to the repository's local
-  scope. The `worktree: true` option is also available.
+- When called via the `Git` module, a scope parameter such as `global: true`,
+  `system: true`, or `file: <filename>` MUST be given. `local` and `worktree`
+  scopes are not allowed.
 
-### Method naming
+- When called via a `Git::Repository` instance, `local: true` and `worktree: true`
+  scope parameters may be given, with `local` being the default if no scope is given.
+  `global`, `system`, and `file` scopes are also allowed.
+
+#### Method naming
 
 Each method corresponds directly to a `git` command. For example, the `git add`
 command is implemented as `Git::Repository#add`, and the `git ls-files` command is
@@ -397,12 +403,14 @@ names where appropriate.
 See also [Output processing](#output-processing) for when different output formats
 require separate methods.
 
-### Result class naming
+#### Result class naming
 
-Parsed result objects returned from facade methods follow a reserved suffix convention:
+Parsed result objects returned from facade methods follow a reserved suffix
+convention:
 
 - **`*Info`** — a parsed metadata struct returned from a query (e.g., `BranchInfo`,
-  `TagInfo`, `StashInfo`, `DiffInfo`). Always lives in the top-level `Git::` namespace.
+  `TagInfo`, `StashInfo`, `DiffInfo`). Always lives in the top-level `Git::`
+  namespace.
 - **`*Result`** — the outcome of a mutating or destructive operation (e.g.,
   `BranchDeleteResult`, `TagDeleteResult`). Also lives in `Git::`.
 
@@ -410,7 +418,7 @@ Do **not** use these suffixes on `Git::Commands::*` command classes — those ar
 subprocess runners, not data objects. A reader seeing `Commands::Foo::BarInfo`
 expects a parsed struct, not a class that shells out to git.
 
-### Parameter naming
+#### Parameter naming
 
 Parameters within the `git` gem methods are named after their corresponding long
 command-line options, ensuring familiarity and ease of use for developers already
@@ -424,18 +432,12 @@ This means git itself will validate option combinations and report errors. This
 approach is preferred as long as the error messages returned by git are actionable
 and understandable for users of the gem.
 
-When multiple options are mutually exclusive (like `--global`, `--local`,
-`--system`), only one may be specified. Providing more than one will raise an
-`ArgumentError`.
-
-Note that not all Git command options are supported.
-
-### Parameter values
+#### Parameter values
 
 This section defines how git command-line options and positional arguments map to
 Ruby method parameters. Contributors must follow these conventions:
 
-#### Options
+##### Options
 
 Git command-line options are passed as keyword arguments in the Ruby API. Methods
 accept these via an options splat parameter (e.g., `def replace(object, replacement,
@@ -504,7 +506,7 @@ accept these via an options splat parameter (e.g., `def replace(object, replacem
   all of them raises `ArgumentError`. The DSL enforces this via `requires_one_of`
   declarations at bind time.
 
-#### Positional arguments
+##### Positional arguments
 
 Arguments that are not options (e.g., file names, branch names) are passed as method
 arguments, not as keyword arguments.
@@ -551,7 +553,7 @@ arguments, not as keyword arguments.
 These conventions ensure the API is predictable and closely aligned with the git CLI.
 If a new option type is encountered, extend this section to document the mapping.
 
-### Output processing
+#### Output processing
 
 The `git` gem translates the output of many Git commands into Ruby objects, making it
 easier to work with programmatically.
@@ -578,7 +580,7 @@ repo.diff_path_status('HEAD~1', 'HEAD') # File paths and status (git diff --name
 This approach ensures each method has a clear, predictable return type and allows for
 targeted parsing logic appropriate to each output format.
 
-### From design to implementation
+### Implementation
 
 The gem uses the three-layer architecture described in
 [Layered architecture](#layered-architecture). When wrapping a git command, keep the
@@ -595,6 +597,10 @@ layer responsibilities separate:
 3. **Add the facade method** to `Git::Repository` (or the `Git` module) that applies
    facade policy, calls the command class, and parses the raw result when returning
    structured Ruby objects.
+
+Steps 2 and 3 correspond to the Command and Facade layers, respectively. The
+Execution layer (`Git::ExecutionContext::*`) already exists — a command class only
+consumes it via `@execution_context`; it is not authored per command.
 
 Example structure for `git add`:
 
@@ -614,33 +620,54 @@ module Git
         operand :pathspec, repeatable: true
       end
 
-      # @!method call(*, **)
+      # @overload call(*pathspec, **options)
       #
-      #   @overload call(*pathspec, **options)
+      #   Execute the `git add` command
       #
-      #     Execute the `git add` command
+      #   @param pathspec [Array<String>] files to be added to the repository
+      #     (relative to the worktree root)
       #
-      #     @param pathspec [Array<String>] files to be added to the repository
-      #       (relative to the worktree root)
+      #   @param options [Hash] command options
       #
-      #     @param options [Hash] command options
+      #   @option options [Boolean, nil] :verbose (nil) be verbose
       #
-      #     @option options [Boolean, nil] :verbose (nil) be verbose
+      #     Alias: :v
       #
-      #       Alias: :v
+      #   @option options [Boolean, nil] :force (nil) allow adding otherwise ignored
+      #     files
       #
-      #     @option options [Boolean, nil] :force (nil) allow adding otherwise ignored
-      #       files
+      #     Alias: :f
       #
-      #       Alias: :f
+      #   @return [Git::CommandLine::Result] the result of calling `git add`
       #
-      #     @return [Git::CommandLine::Result] the result of calling `git add`
+      #   @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [ArgumentError] if unsupported options are provided
+      #   @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @api public
       #
-      #     @api public
+      def call(*, **)
+        super
+      end
+    end
+  end
+end
+```
+
+Here is the corresponding facade method that calls it:
+
+```ruby
+# lib/git/repository/staging.rb (facade — a topic module included into Git::Repository)
+module Git
+  class Repository
+    module Staging
+      ADD_ALLOWED_OPTS = %i[all force].freeze
+      private_constant :ADD_ALLOWED_OPTS
+
+      def add(paths = '.', **)
+        SharedPrivate.assert_valid_opts!(ADD_ALLOWED_OPTS, **)
+        Git::Commands::Add.new(@execution_context).call(*Array(paths), **).stdout
+      end
     end
   end
 end
@@ -678,7 +705,7 @@ into private helpers to satisfy RuboCop `Metrics` thresholds:
 def call(*objects, **options)
   raise ArgumentError, '...' if objects.empty? && !options[:batch_all_objects]
 
-  bound = args_definition.bind(**options)
+  bound = args_definition.bind(*objects, **options)
   with_stdin(objects.map { |o| "#{o}\n" }.join) { |reader| run_batch(bound, reader) }
 end
 
@@ -711,25 +738,9 @@ also handles translation from single values or arrays to the splat format.
 > testing each option to ensure clarity and isolation. See
 > `spec/unit/git/commands/add_spec.rb` for examples of comprehensive argument testing.
 
-```ruby
-# lib/git/repository/staging.rb (facade — a topic module included into Git::Repository)
-module Git
-  class Repository
-    module Staging
-      ADD_ALLOWED_OPTS = %i[all force].freeze
-      private_constant :ADD_ALLOWED_OPTS
-
-      def add(paths = '.', **)
-        SharedPrivate.assert_valid_opts!(ADD_ALLOWED_OPTS, **)
-        Git::Commands::Add.new(@execution_context).call(*Array(paths), **).stdout
-      end
-    end
-  end
-end
-```
-
 For factory methods and module-level commands, the pattern is the same but
-`Git::ExecutionContext::Global` is used instead of the repository's `@execution_context`:
+`Git::ExecutionContext::Global` is used instead of the repository's
+`@execution_context`:
 
 ```ruby
 # Factory method (Git.clone) — creates a global context, runs the command, returns a repository
@@ -743,8 +754,9 @@ end
 ```
 
 > **Note:** `Git::Repository` facade methods pass `@execution_context` (a
-> `Git::ExecutionContext::Repository`) to each command class they invoke. Module-level
-> methods such as `Git.clone` construct a `Git::ExecutionContext::Global` instead.
+> `Git::ExecutionContext::Repository`) to each command class they invoke.
+> Module-level methods such as `Git.clone` construct a
+> `Git::ExecutionContext::Global` instead.
 
 ### Example implementations
 
@@ -884,27 +896,17 @@ process.stdin.on('end', () =>
 " | jq
 ```
 
-### Unit tests
+### Testing guidelines
 
-- All changes must be accompanied by new or modified unit tests.
-- The entire test suite must pass when `bundle exec rake default` is run from the
-  project's local working copy.
+- All changes must be accompanied by new or modified unit and integration tests as
+  appropriate.
+- The entire test suite must pass when `bundle exec rake` is run from the project's
+  local working copy.
 
-This project uses **RSpec** (`spec/`) as its sole test framework.
-
-#### RSpec best practices
-
-- **Public methods**: Use a separate `describe '#method_name'` block for each public
-  method.
-- **Contexts**: Use separate `context` blocks for different scenarios.
-- **Options**: For methods accepting options (like commands), use a separate
-  `context` for each option to ensure isolation and comprehensiveness.
-- **One assertion per test**: Each test should verify one specific aspect of
-  behavior. Exceptions include: (a) testing that an object has expected attributes
-  after creation (e.g., verifying multiple fields of a returned object), (b)
-  verifying expected side effects of a single operation (e.g., a method that both
-  returns a value and modifies state), (c) testing that multiple related
-  assertions hold for the same setup (e.g., boundary conditions).
+This project uses **RSpec** (`spec/`) as its sole test framework. Structure,
+naming, setup, stubbing, and coverage rules for unit specs are defined in the
+[`rspec-unit-testing-standards`](.github/skills/rspec-unit-testing-standards/SKILL.md)
+skill — follow it when writing or reviewing specs under `spec/unit/`.
 
 #### Unit tests vs Integration tests
 
@@ -958,9 +960,6 @@ $ bundle exec rspec spec/unit/git/commands/add_spec.rb
 # Run tests with a different version of the git command line:
 $ GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bundle exec rake spec
 ```
-
-New and updated public-facing features should be documented in the project's
-[README.md](README.md).
 
 ## Building a specific version of the Git command-line
 
@@ -1027,11 +1026,3 @@ GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bundle exec rake spec
 ```
 
 Note: `GIT_PATH` refers to the directory containing the `git` executable.
-
-## Licensing
-
-`ruby-git` uses [the MIT license](https://choosealicense.com/licenses/mit/) as
-declared in the [LICENSE](LICENSE) file.
-
-Licensing is critical to open-source projects as it ensures the software remains
-available under the terms desired by the author.
