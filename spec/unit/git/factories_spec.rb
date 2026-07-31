@@ -2,10 +2,11 @@
 
 require 'spec_helper'
 require 'git/repository'
+require 'git/factories'
 
-RSpec.describe Git::Repository::Factories do
+RSpec.describe Git::Factories do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
-  let(:host) { Module.new { extend Git::Repository::Factories } }
+  let(:host) { Module.new { extend Git::Factories } }
 
   describe '.open' do
     subject(:repository) { host.open(working_dir, options) }
@@ -18,12 +19,12 @@ RSpec.describe Git::Repository::Factories do
 
     before do
       allow(Dir).to receive(:exist?).with(working_dir).and_return(true)
-      allow(Git::Repository::PathResolver).to(
+      allow(Git::PathResolver).to(
         receive(:root_of_worktree)
           .with(working_dir, binary_path: :use_global_config, git_ssh: :use_global_config)
           .and_return(working_dir)
       )
-      allow(Git::Repository::PathResolver).to receive(:resolve_paths).and_return(resolved_paths)
+      allow(Git::PathResolver).to receive(:resolve_paths).and_return(resolved_paths)
       allow(Git::ExecutionContext::Repository).to receive(:from_hash).and_return(execution_context)
     end
 
@@ -33,7 +34,7 @@ RSpec.describe Git::Repository::Factories do
 
     it 'detects the root of the worktree when no repository option is given' do
       repository
-      expect(Git::Repository::PathResolver).to(
+      expect(Git::PathResolver).to(
         have_received(:root_of_worktree)
           .with(working_dir, binary_path: :use_global_config, git_ssh: :use_global_config)
       )
@@ -41,7 +42,7 @@ RSpec.describe Git::Repository::Factories do
 
     it 'resolves the paths from the detected working directory' do
       repository
-      expect(Git::Repository::PathResolver).to(
+      expect(Git::PathResolver).to(
         have_received(:resolve_paths).with(working_directory: working_dir, repository: nil, index: nil)
       )
     end
@@ -57,7 +58,7 @@ RSpec.describe Git::Repository::Factories do
       let(:options) { { binary_path: '/custom/git' } }
 
       it 'forwards binary_path to root_of_worktree' do
-        expect(Git::Repository::PathResolver).to(
+        expect(Git::PathResolver).to(
           receive(:root_of_worktree)
             .with(working_dir, binary_path: '/custom/git', git_ssh: :use_global_config)
             .and_return(working_dir)
@@ -70,7 +71,7 @@ RSpec.describe Git::Repository::Factories do
       let(:options) { { git_ssh: '/custom/ssh' } }
 
       it 'forwards git_ssh to root_of_worktree' do
-        expect(Git::Repository::PathResolver).to(
+        expect(Git::PathResolver).to(
           receive(:root_of_worktree)
             .with(working_dir, binary_path: :use_global_config, git_ssh: '/custom/ssh')
             .and_return(working_dir)
@@ -83,7 +84,7 @@ RSpec.describe Git::Repository::Factories do
       let(:options) { { git_ssh: nil } }
 
       before do
-        allow(Git::Repository::PathResolver).to(
+        allow(Git::PathResolver).to(
           receive(:root_of_worktree)
             .with(working_dir, binary_path: :use_global_config, git_ssh: nil)
             .and_return(working_dir)
@@ -92,7 +93,7 @@ RSpec.describe Git::Repository::Factories do
 
       it 'forwards nil git_ssh to root_of_worktree' do
         repository
-        expect(Git::Repository::PathResolver).to(
+        expect(Git::PathResolver).to(
           have_received(:root_of_worktree)
             .with(working_dir, binary_path: :use_global_config, git_ssh: nil)
         )
@@ -103,13 +104,13 @@ RSpec.describe Git::Repository::Factories do
       let(:options) { { repository: '/custom/.git' } }
 
       it 'does not auto-detect the root of the worktree' do
-        expect(Git::Repository::PathResolver).not_to receive(:root_of_worktree)
+        expect(Git::PathResolver).not_to receive(:root_of_worktree)
         repository
       end
 
       it 'forwards the repository and index options to resolve_paths' do
         repository
-        expect(Git::Repository::PathResolver).to(
+        expect(Git::PathResolver).to(
           have_received(:resolve_paths).with(working_directory: working_dir, repository: '/custom/.git', index: nil)
         )
       end
@@ -153,7 +154,7 @@ RSpec.describe Git::Repository::Factories do
       allow(Git::ExecutionContext::Global).to receive(:new).and_return(global_context)
       allow(Git::Commands::Clone).to receive(:new).with(global_context).and_return(clone_command)
       allow(clone_command).to receive(:call).and_return(clone_result)
-      allow(Git::Repository::PathResolver).to receive(:resolve_paths).and_return(resolved_paths)
+      allow(Git::PathResolver).to receive(:resolve_paths).and_return(resolved_paths)
       allow(Git::ExecutionContext::Repository).to receive(:from_hash).and_return(execution_context)
     end
 
@@ -182,7 +183,7 @@ RSpec.describe Git::Repository::Factories do
 
     it 'resolves paths using the working directory for non-bare clones' do
       repository
-      expect(Git::Repository::PathResolver).to(
+      expect(Git::PathResolver).to(
         have_received(:resolve_paths).with(working_directory: 'ruby-git', index: nil)
       )
     end
@@ -193,7 +194,7 @@ RSpec.describe Git::Repository::Factories do
 
       it 'resolves paths as a bare repository' do
         repository
-        expect(Git::Repository::PathResolver).to(
+        expect(Git::PathResolver).to(
           have_received(:resolve_paths).with(repository: 'ruby-git.git', bare: true, index: nil)
         )
       end
@@ -205,7 +206,7 @@ RSpec.describe Git::Repository::Factories do
 
       it 'resolves paths as a bare repository' do
         repository
-        expect(Git::Repository::PathResolver).to(
+        expect(Git::PathResolver).to(
           have_received(:resolve_paths).with(repository: 'ruby-git.git', bare: true, index: nil)
         )
       end
@@ -216,7 +217,7 @@ RSpec.describe Git::Repository::Factories do
 
       it 'prefixes the clone directory with chdir' do
         repository
-        expect(Git::Repository::PathResolver).to(
+        expect(Git::PathResolver).to(
           have_received(:resolve_paths).with(working_directory: '/output/ruby-git', index: nil)
         )
       end
@@ -231,7 +232,7 @@ RSpec.describe Git::Repository::Factories do
 
         it 'uses the absolute path as-is (ignores :chdir)' do
           repository
-          expect(Git::Repository::PathResolver).to(
+          expect(Git::PathResolver).to(
             have_received(:resolve_paths).with(working_directory: '/abs/path', index: nil)
           )
         end
@@ -300,14 +301,14 @@ RSpec.describe Git::Repository::Factories do
       end
 
       before do
-        allow(Git::Repository::PathResolver).to receive(:resolve_paths)
+        allow(Git::PathResolver).to receive(:resolve_paths)
           .with(working_directory: 'ruby-git', index: '/custom/index')
           .and_return(resolved_with_index)
       end
 
       it 'forwards :index to path resolution' do
         repository
-        expect(Git::Repository::PathResolver).to(
+        expect(Git::PathResolver).to(
           have_received(:resolve_paths).with(working_directory: 'ruby-git', index: '/custom/index')
         )
       end
@@ -426,10 +427,10 @@ RSpec.describe Git::Repository::Factories do
       allow(Git::Commands::Init).to receive(:new).with(global_context).and_return(init_command)
       allow(init_command).to receive(:call).and_return(init_result)
       allow(Dir).to receive(:exist?).with(directory).and_return(true)
-      allow(Git::Repository::PathResolver).to(
+      allow(Git::PathResolver).to(
         receive(:root_of_worktree).with(directory, any_args).and_return(directory)
       )
-      allow(Git::Repository::PathResolver).to receive(:resolve_paths).and_return(resolved_paths)
+      allow(Git::PathResolver).to receive(:resolve_paths).and_return(resolved_paths)
       allow(Git::ExecutionContext::Repository).to receive(:from_hash).and_return(execution_context)
     end
 
@@ -454,7 +455,7 @@ RSpec.describe Git::Repository::Factories do
       end
 
       before do
-        allow(Git::Repository::PathResolver).to receive(:resolve_paths)
+        allow(Git::PathResolver).to receive(:resolve_paths)
           .with(repository: directory, bare: true)
           .and_return(resolved_bare_paths)
       end
@@ -466,7 +467,7 @@ RSpec.describe Git::Repository::Factories do
 
       it 'opens the result as a bare repository' do
         repository
-        expect(Git::Repository::PathResolver).to(
+        expect(Git::PathResolver).to(
           have_received(:resolve_paths).with(repository: directory, bare: true)
         )
       end
@@ -488,7 +489,7 @@ RSpec.describe Git::Repository::Factories do
       end
 
       before do
-        allow(Git::Repository::PathResolver).to receive(:resolve_paths)
+        allow(Git::PathResolver).to receive(:resolve_paths)
           .with(working_directory: directory, repository: '/custom/git', index: nil)
           .and_return(resolved_custom_paths)
       end
@@ -506,7 +507,7 @@ RSpec.describe Git::Repository::Factories do
       end
 
       before do
-        allow(Git::Repository::PathResolver).to receive(:resolve_paths)
+        allow(Git::PathResolver).to receive(:resolve_paths)
           .with(working_directory: directory, repository: '/custom/git', index: nil)
           .and_return(resolved_custom_paths)
       end
@@ -544,7 +545,7 @@ RSpec.describe Git::Repository::Factories do
       let(:options) { { git_ssh: '/custom/ssh' } }
 
       before do
-        allow(Git::Repository::PathResolver).to(
+        allow(Git::PathResolver).to(
           receive(:root_of_worktree)
             .with(directory, binary_path: :use_global_config, git_ssh: '/custom/ssh')
             .and_return(directory)
@@ -565,7 +566,7 @@ RSpec.describe Git::Repository::Factories do
       let(:options) { { binary_path: '/custom/git' } }
 
       before do
-        allow(Git::Repository::PathResolver).to(
+        allow(Git::PathResolver).to(
           receive(:root_of_worktree)
             .with(directory, binary_path: '/custom/git', git_ssh: :use_global_config)
             .and_return(directory)
@@ -593,7 +594,7 @@ RSpec.describe Git::Repository::Factories do
     end
 
     before do
-      allow(Git::Repository::PathResolver).to receive(:resolve_paths).and_return(resolved_paths)
+      allow(Git::PathResolver).to receive(:resolve_paths).and_return(resolved_paths)
       allow(Git::ExecutionContext::Repository).to receive(:from_hash).and_return(execution_context)
     end
 
@@ -603,7 +604,7 @@ RSpec.describe Git::Repository::Factories do
 
     it 'resolves the paths as a bare repository' do
       repository
-      expect(Git::Repository::PathResolver).to(
+      expect(Git::PathResolver).to(
         have_received(:resolve_paths).with(repository: git_dir, bare: true)
       )
     end

@@ -55,6 +55,7 @@ require 'git/config'
 require 'git/config_entry_info'
 require 'git/parsers/config_entry'
 require 'git/configuring'
+require 'git/factories'
 require 'git/diff'
 require 'git/diff_file_numstat_info'
 require 'git/diff_file_patch_info'
@@ -99,7 +100,7 @@ require 'git/worktrees'
 #
 module Git
   extend Git::Configuring
-  extend Git::Repository::Factories
+  extend Git::Factories
 
   # Minimum git version required by this gem
   #

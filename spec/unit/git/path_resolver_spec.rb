@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'git/repository/path_resolver'
+require 'git/path_resolver'
 
-RSpec.describe Git::Repository::PathResolver do
+RSpec.describe Git::PathResolver do
   describe '.resolve_paths' do
     subject(:paths) { described_class.resolve_paths(**args) }
 
