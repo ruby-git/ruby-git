@@ -1,0 +1,339 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Download and build every Git release (>= 2.28.0, the minimum version
+# supported by this gem) from the kernel.org mirror.
+#
+# For each release, this script:
+#   * downloads the .tar.gz source tarball
+#   * extracts it
+#   * builds it with:
+#       NO_GETTEXT=1 make CFLAGS="-I/usr/local/opt/openssl/include" \
+#         LDFLAGS="-L/usr/local/opt/openssl/lib"
+#   * installs it (`make install`) into <dest-dir>/<version>/
+#   * deletes the downloaded tarball and extracted source tree, keeping only
+#     the installed <dest-dir>/<version>/{bin,libexec,share} tree
+#
+# Git is not a single relocatable binary: the `git` executable dispatches to
+# sibling helper programs (e.g. git-remote-http, git-http-backend, mergetools,
+# templates) that must be installed alongside it under the same prefix. This
+# is why each version's installed tree, not just a `git` binary, is retained.
+#
+# The resulting git for each version can be run as:
+#   <dest-dir>/<version>/bin/git
+#
+# A version is considered already built (and is skipped) when
+# <dest-dir>/<version>/bin/git exists and reports that version. Build output
+# for each version is written to a temporary log file; the log is deleted if
+# that version's build succeeds, and kept (with its path printed) if it
+# fails.
+#
+# By default the script stops at the first failure. Pass --continue-on-failure
+# to keep building the remaining versions instead; a summary of all failures
+# is printed at the end.
+#
+# Usage: bin/build-git-versions [options] [<dest-dir>] [<version>...]
+#
+#   -s, --start VERSION       Skip versions newer than VERSION (printed as
+#                             SKIPPED) and start building from VERSION onward.
+#   -c, --continue-on-failure Keep building remaining versions after a failure.
+#
+# dest-dir defaults to git-versions. If one or more <version> are given, only
+# those versions are built.
+
+require 'optparse'
+require 'tmpdir'
+require 'net/http'
+require 'open3'
+require 'securerandom'
+require 'fileutils'
+
+MIRROR_URL = 'https://mirrors.edge.kernel.org/pub/software/scm/git/'
+MIN_VERSION = '2.28.0'
+HTTP_OPEN_TIMEOUT = 10
+HTTP_READ_TIMEOUT = 30
+HTTP_RETRIES = 3
+HTTP_RETRY_DELAY = 5
+
+# Methods are defined at the top level (rather than executed as a linear
+# script) so each piece of behavior can be exercised independently, e.g. from
+# a test file that requires this one under `$PROGRAM_NAME` guarded by
+# `if __FILE__ == $PROGRAM_NAME`.
+
+# Builds the OptionParser, wiring each flag to write into options.
+def build_option_parser(options)
+  OptionParser.new do |opts|
+    opts.banner = "Usage: #{File.basename($PROGRAM_NAME)} [options] [<dest-dir>] [<version>...]"
+    configure_options(opts, options)
+  end
+end
+
+def configure_options(opts, options)
+  opts.on('-s VERSION', '--start VERSION', 'Skip versions newer than VERSION') { |v| options[:start_version] = v }
+  opts.on('-c', '--continue-on-failure', 'Keep building remaining versions after a failure') do
+    options[:continue_on_failure] = true
+  end
+  opts.on('-h', '--help', 'Show this help') do
+    puts opts
+    exit 0
+  end
+end
+
+def parse_options(argv)
+  options = { dest_dir: nil, versions: nil, start_version: nil, continue_on_failure: false }
+  parser = build_option_parser(options)
+
+  positional = parser.parse(argv)
+  options[:dest_dir] = positional[0] || 'git-versions'
+  options[:versions] = positional[1..] || []
+  options
+rescue OptionParser::ParseError => e
+  warn "ERROR: #{e.message}"
+  puts parser
+  exit 1
+end
+
+# The path to the `git` executable for a given version under dest_dir.
+def git_bin_path(dest_dir, version)
+  File.join(dest_dir, version, 'bin', 'git')
+end
+
+# Returns true if the given version is already built and reports the
+# expected version string.
+def already_built?(dest_dir, version)
+  bin_path = git_bin_path(dest_dir, version)
+  return false unless File.executable?(bin_path)
+
+  output, = Open3.capture2(bin_path, '--version')
+  output.strip == "git version #{version}"
+end
+
+# Performs a single GET of uri, raising on any non-2xx response or
+# connection error.
+def http_get_once(uri)
+  http_options = { use_ssl: uri.scheme == 'https', open_timeout: HTTP_OPEN_TIMEOUT, read_timeout: HTTP_READ_TIMEOUT }
+  response = Net::HTTP.start(uri.host, uri.port, **http_options) { |http| http.get(uri) }
+  raise "#{response.code} #{response.message}" unless response.is_a?(Net::HTTPSuccess)
+
+  response.body
+end
+
+# GETs uri, retrying transient failures (e.g. connection timeouts) up to
+# HTTP_RETRIES times before raising a clear error, rather than letting a raw
+# Net::HTTP exception/backtrace surface.
+def http_get(uri)
+  attempt = 1
+  begin
+    http_get_once(uri)
+  rescue StandardError => e
+    raise "failed to fetch #{uri}: #{e.message}" if attempt >= HTTP_RETRIES
+
+    attempt += 1
+    sleep HTTP_RETRY_DELAY
+    retry
+  end
+end
+
+# Fetches the list of available git-*.tar.gz release tarball names from the
+# mirror, sorted and de-duplicated.
+def fetch_tarballs
+  body = http_get(URI(MIRROR_URL))
+  body.scan(/href="(git-\d+\.\d+(?:\.\d+)?\.tar\.gz)"/).flatten.sort.uniq
+end
+
+# Returns all release versions >= MIN_VERSION found at the mirror, sorted
+# newest-first.
+def fetch_available_versions
+  puts "Fetching release list from #{MIRROR_URL}"
+  fetch_tarballs
+    .map { |tarball| tarball.delete_prefix('git-').delete_suffix('.tar.gz') }
+    .select { |version| Gem::Version.new(version) >= Gem::Version.new(MIN_VERSION) }
+    .sort_by { |version| Gem::Version.new(version) }
+    .reverse
+end
+
+# Splits versions into [versions_to_skip, versions_to_run] based on
+# start_version. versions_to_skip are newer than start_version;
+# versions_to_run is start_version and everything older. Returns
+# [[], versions] unchanged when start_version is nil.
+def partition_by_start_version(versions, start_version)
+  return [[], versions] unless start_version
+
+  start_index = versions.index(start_version)
+  raise ArgumentError, "start version #{start_version} was not found among available versions" unless start_index
+
+  [versions[0...start_index], versions[start_index..]]
+end
+
+# Downloads and extracts the source tarball for version into build_dir,
+# returning the path to the extracted source directory.
+def download_and_extract(build_dir, version, log)
+  tarball = "git-#{version}.tar.gz"
+  tarball_path = File.join(build_dir, tarball)
+
+  log.puts "Downloading #{tarball}"
+  File.binwrite(tarball_path, http_get(URI("#{MIRROR_URL}#{tarball}")))
+
+  log.puts "Extracting #{tarball}"
+  system('tar', '-xzf', tarball_path, '-C', build_dir, out: log, err: log) or raise 'extraction failed'
+
+  File.join(build_dir, "git-#{version}")
+end
+
+# Compiles and installs the extracted source directory into install_prefix.
+def compile_and_install(src_dir, install_prefix, log)
+  make_env = {
+    'NO_GETTEXT' => '1',
+    'CFLAGS' => '-I/usr/local/opt/openssl/include',
+    'LDFLAGS' => '-L/usr/local/opt/openssl/lib'
+  }
+
+  # NO_GETTEXT/CFLAGS/LDFLAGS must match between `make` and `make install`;
+  # a mismatch (e.g. a different prefix) makes Git's build system detect
+  # changed flags and silently rebuild without NO_GETTEXT, which then fails
+  # on missing libintl.h.
+  system(make_env, 'make', chdir: src_dir, out: log, err: log) or raise 'make failed'
+
+  # prefix must be passed as a make command-line variable, not an
+  # environment variable: Git's Makefile assigns `prefix` itself, which
+  # takes precedence over (and so would silently ignore) an env var.
+  system(make_env, 'make', 'install', "prefix=#{install_prefix}", chdir: src_dir, out: log, err: log) or
+    raise 'make install failed'
+end
+
+# A unique temporary path for version, optionally with the given extension.
+def temp_path_for(version, ext = nil)
+  File.join(Dir.tmpdir, "build-git-versions-#{version}-#{SecureRandom.hex(8)}#{ext}")
+end
+
+# Downloads, extracts, compiles and installs version into build_dir/log,
+# returning true on success or false if any step raised.
+def download_and_install(dest_dir, build_dir, version, log)
+  install_dir = File.join(dest_dir, version)
+  src_dir = download_and_extract(build_dir, version, log)
+  compile_and_install(src_dir, File.expand_path(install_dir), log)
+  true
+rescue StandardError => e
+  log.puts "ERROR: #{e.message}"
+  false
+end
+
+# Builds one version into dest_dir, writing output to a temporary log file.
+# Returns { success:, log_file: }.
+def build_version(dest_dir, version)
+  build_dir = temp_path_for(version)
+  log_file = temp_path_for(version, '.log')
+  FileUtils.mkdir_p([File.join(dest_dir, version), build_dir])
+
+  success = File.open(log_file, 'w') { |log| download_and_install(dest_dir, build_dir, version, log) }
+  { success: success, log_file: log_file }
+ensure
+  FileUtils.rm_rf(build_dir)
+end
+
+def print_failure_summary(failures)
+  puts
+  puts "#{failures.size} version(s) failed to build:"
+  failures.each { |failure| puts "  git #{failure[:version]}: #{failure[:log_file]}" }
+end
+
+# Returns available_versions narrowed to options[:versions] if any were
+# requested, or nil (having already warned) if there is nothing to build.
+def find_requested_versions(options)
+  available_versions = fetch_available_versions
+  return nil unless available_versions_present?(available_versions)
+  return available_versions if options[:versions].empty?
+
+  select_requested_versions(available_versions, options[:versions])
+end
+
+def available_versions_present?(available_versions)
+  return true unless available_versions.empty?
+
+  warn "ERROR: no available git versions found at #{MIRROR_URL}"
+  false
+end
+
+def select_requested_versions(available_versions, versions)
+  missing = versions - available_versions
+  missing.each { |version| warn "ERROR: git #{version} was not found at #{MIRROR_URL}" }
+  return nil unless missing.empty?
+
+  available_versions.select { |version| versions.include?(version) }
+end
+
+# Returns [skipped_versions, versions_to_run], or nil (having already warned)
+# if the requested versions or start version could not be resolved.
+def skipped_and_versions_to_run(options)
+  available_versions = find_requested_versions(options)
+  return nil unless available_versions
+
+  partition_by_start_version(available_versions, options[:start_version])
+rescue StandardError => e
+  warn "ERROR: #{e.message}"
+  nil
+end
+
+# Builds each version in turn, returning the list of failures. Stops after
+# the first failure unless continue_on_failure is true.
+def build_versions(dest_dir, versions_to_run, continue_on_failure)
+  failures = []
+
+  versions_to_run.each do |version|
+    failure = build_one_version(dest_dir, version)
+    next unless failure
+
+    failures << failure
+    break unless continue_on_failure
+  end
+
+  failures
+end
+
+# Builds a single version, printing its result. Returns a failure hash
+# ({ version:, log_file: }), or nil on success (or if already built).
+def build_one_version(dest_dir, version)
+  print "Building git #{version}: "
+  $stdout.flush
+
+  if already_built?(dest_dir, version)
+    puts 'ALREADY BUILT'
+    return nil
+  end
+
+  result = build_version(dest_dir, version)
+  return success_result(result) if result[:success]
+
+  puts "ERROR. See #{result[:log_file]} for details."
+  { version: version, log_file: result[:log_file] }
+end
+
+def success_result(result)
+  puts 'SUCCESS'
+  File.delete(result[:log_file])
+  nil
+end
+
+# Runs the full build-git-versions workflow. Returns a process exit code.
+def run(argv)
+  options = parse_options(argv)
+  dest_dir = options[:dest_dir]
+  FileUtils.mkdir_p(dest_dir)
+
+  skipped_versions, versions_to_run = skipped_and_versions_to_run(options)
+  return 1 unless versions_to_run
+
+  skipped_versions.each { |version| puts "Building git #{version}: SKIPPED" }
+
+  failures = build_versions(dest_dir, versions_to_run, options[:continue_on_failure])
+  finalize(failures, options[:continue_on_failure])
+end
+
+def finalize(failures, continue_on_failure)
+  return 0 if failures.empty?
+
+  print_failure_summary(failures) if continue_on_failure
+  1
+end
+
+exit(run(ARGV)) if __FILE__ == $PROGRAM_NAME

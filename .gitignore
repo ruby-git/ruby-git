@@ -21,4 +21,7 @@ rubocop-report.json
 # generated git reference docs
 git-reference/
 
+# git versions built by bin/build-git-versions
+git-versions/
+
 tmp

@@ -1,0 +1,259 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Run the integration test suite against every Git version built by
+# bin/build-all-git-versions.
+#
+# For each version directory found under <base-dir>/<version>/bin/git, this
+# script runs:
+#
+#   GIT_PATH=<absolute path to base-dir/version/bin> bundle exec rake spec:integration:parallel
+#
+# Versions are run newest-first (sorted semantically, e.g. 2.53.0 after
+# 2.5.0). Test output for each version is written to a temporary log file;
+# the log is deleted if that version's tests pass, and kept (with its path
+# printed) if they fail.
+#
+# By default the script stops at the first failure. Pass --continue-on-failure
+# to keep testing the remaining versions instead; a summary of all failures
+# is printed at the end. Whenever a failure is encountered, the number of
+# failing examples (parsed from the test output) is included in the message.
+#
+# Usage: bin/test-git-versions [options] [<base-dir>] [<version>...]
+#
+#   -s, --start VERSION       Skip versions newer than VERSION (printed as
+#                             SKIPPED) and start testing from VERSION onward.
+#   -c, --continue-on-failure Keep testing remaining versions after a failure.
+#
+# base-dir defaults to git-versions. If one or more <version> are given, only
+# those versions are tested. Any requested version not already built under
+# base-dir is built first (via bin/build-git-versions); an error is raised if
+# it still cannot be found afterward.
+
+require 'optparse'
+require 'tmpdir'
+require 'securerandom'
+
+# Methods are defined at the top level (rather than executed as a linear
+# script) so each piece of behavior can be exercised independently, e.g. from
+# a test file that requires this one under `$PROGRAM_NAME` guarded by
+# `if __FILE__ == $PROGRAM_NAME`.
+
+# Builds the OptionParser, wiring each flag to write into options.
+def build_option_parser(options)
+  OptionParser.new do |opts|
+    opts.banner = "Usage: #{File.basename($PROGRAM_NAME)} [options] [<base-dir>] [<version>...]"
+    configure_options(opts, options)
+  end
+end
+
+def configure_options(opts, options)
+  opts.on('-s VERSION', '--start VERSION', 'Skip versions newer than VERSION') { |v| options[:start_version] = v }
+  opts.on('-c', '--continue-on-failure', 'Keep testing remaining versions after a failure') do
+    options[:continue_on_failure] = true
+  end
+  opts.on('-h', '--help', 'Show this help') do
+    puts opts
+    exit 0
+  end
+end
+
+def parse_options(argv)
+  options = { base_dir: nil, versions: nil, start_version: nil, continue_on_failure: false }
+  parser = build_option_parser(options)
+
+  positional = parser.parse(argv)
+  options[:base_dir] = positional[0] || 'git-versions'
+  options[:versions] = positional[1..] || []
+  options
+rescue OptionParser::ParseError => e
+  warn "ERROR: #{e.message}"
+  puts parser
+  exit 1
+end
+
+# The path to the `git` executable for a given version under base_dir.
+def git_bin_path(base_dir, version)
+  File.join(base_dir, version, 'bin', 'git')
+end
+
+# The absolute path to the `bin` directory to use as GIT_PATH for a version.
+def git_path_for(base_dir, version)
+  File.expand_path(File.join(base_dir, version, 'bin'))
+end
+
+# Returns built versions found under base_dir, sorted newest-first.
+def find_built_versions(base_dir)
+  Dir.children(base_dir)
+     .select { |entry| File.executable?(git_bin_path(base_dir, entry)) }
+     .sort_by { |version| Gem::Version.new(version) }
+     .reverse
+end
+
+# Splits built_versions into [versions_to_skip, versions_to_run] based on
+# start_version. versions_to_skip are newer than start_version;
+# versions_to_run is start_version and everything older. Returns
+# [[], built_versions] unchanged when start_version is nil.
+def partition_by_start_version(built_versions, start_version)
+  return [[], built_versions] unless start_version
+
+  start_index = built_versions.index(start_version)
+  raise ArgumentError, "start version #{start_version} was not found among built versions" unless start_index
+
+  [built_versions[0...start_index], built_versions[start_index..]]
+end
+
+# Extracts the number of failing examples from parallel_rspec/RSpec output,
+# e.g. "371 examples, 2 failures, 1 pending". Returns nil if not found.
+def extract_failure_count(log_file)
+  matches = File.read(log_file).scan(/\d+\s+examples?,\s+(\d+)\s+failures?/)
+  matches.last&.first&.to_i
+end
+
+# Runs the integration test suite for one version, writing output to a
+# temporary log file. Returns { success:, log_file:, command: }.
+def run_version_tests(base_dir, version)
+  git_path = git_path_for(base_dir, version)
+  log_file = File.join(Dir.tmpdir, "test-git-versions-#{version}-#{SecureRandom.hex(8)}.log")
+  command = "GIT_PATH=#{git_path} bundle exec rake spec:integration:parallel"
+
+  success = File.open(log_file, 'w') do |log|
+    system({ 'GIT_PATH' => git_path }, 'bundle', 'exec', 'rake', 'spec:integration:parallel', out: log, err: log)
+  end
+
+  { success: success, log_file: log_file, command: command }
+end
+
+def failure_message(count, log_file, command)
+  prefix = count ? "ERROR: #{count} failure#{'s' unless count == 1}." : 'ERROR: tests failed.'
+  "#{prefix} See #{log_file} for details. Ran with `#{command}`"
+end
+
+def print_failure_summary(failures)
+  puts
+  puts "#{failures.size} version(s) had failing tests:"
+  failures.each do |failure|
+    count_description = failure[:count] ? "#{failure[:count]} failure(s)" : 'unknown number of failures'
+    puts "  git #{failure[:version]}: #{count_description} - #{failure[:log_file]}"
+    puts "    Ran with `#{failure[:command]}`"
+  end
+end
+
+# Returns built_versions narrowed to options[:versions] if any were
+# requested, or nil (having already warned) if there is nothing to test.
+def find_requested_versions(base_dir, options)
+  built_versions = find_built_versions(base_dir)
+  return select_requested_versions(base_dir, built_versions, options[:versions]) unless options[:versions].empty?
+  return nil unless built_versions_present?(base_dir, built_versions)
+
+  built_versions
+end
+
+def built_versions_present?(base_dir, built_versions)
+  return true unless built_versions.empty?
+
+  warn "ERROR: no built git versions found under #{base_dir}"
+  false
+end
+
+# Builds any requested versions not already present under base_dir (via
+# bin/build-git-versions), then returns built_versions narrowed to the
+# requested ones, or nil (having already warned) if any could not be built.
+def select_requested_versions(base_dir, built_versions, versions)
+  missing = versions - built_versions
+  built_versions = build_missing_versions(base_dir, missing) unless missing.empty?
+
+  still_missing = versions - built_versions
+  still_missing.each { |version| warn "ERROR: git #{version} was not found (or not built) under #{base_dir}" }
+  return nil unless still_missing.empty?
+
+  built_versions.select { |version| versions.include?(version) }
+end
+
+# Builds the given missing versions under base_dir by running
+# bin/build-git-versions, returning the resulting built_versions.
+def build_missing_versions(base_dir, missing)
+  build_script = File.join(__dir__, 'build-git-versions')
+  puts "Building missing version(s) under #{base_dir}: #{missing.join(', ')}"
+  system(build_script, base_dir, *missing)
+  find_built_versions(base_dir)
+end
+
+# Returns [skipped_versions, versions_to_run], or nil (having already warned)
+# if the requested versions or start version could not be resolved.
+def skipped_and_versions_to_run(base_dir, options)
+  built_versions = find_requested_versions(base_dir, options)
+  return nil unless built_versions
+
+  partition_by_start_version(built_versions, options[:start_version])
+rescue ArgumentError => e
+  warn "ERROR: #{e.message}"
+  nil
+end
+
+# Runs the tests for each version in turn, returning the list of failures.
+# Stops after the first failure unless continue_on_failure is true.
+def test_versions(base_dir, versions_to_run, continue_on_failure)
+  failures = []
+
+  versions_to_run.each do |version|
+    failure = test_one_version(base_dir, version)
+    next unless failure
+
+    failures << failure
+    break unless continue_on_failure
+  end
+
+  failures
+end
+
+# Runs the tests for a single version, printing its result. Returns a
+# failure hash ({ version:, count:, log_file: }), or nil on success.
+def test_one_version(base_dir, version)
+  print "Testing git #{version}: "
+  $stdout.flush
+
+  result = run_version_tests(base_dir, version)
+  return success_result(result) if result[:success]
+
+  count = extract_failure_count(result[:log_file])
+  puts failure_message(count, result[:log_file], result[:command])
+  { version: version, count: count, log_file: result[:log_file], command: result[:command] }
+end
+
+def success_result(result)
+  puts 'SUCCESS'
+  File.delete(result[:log_file])
+  nil
+end
+
+# Runs the full test-git-versions workflow. Returns a process exit code.
+def run(argv)
+  options = parse_options(argv)
+  base_dir = options[:base_dir]
+  return 1 unless valid_base_dir?(base_dir)
+
+  skipped_versions, versions_to_run = skipped_and_versions_to_run(base_dir, options)
+  return 1 unless versions_to_run
+
+  skipped_versions.each { |version| puts "Testing git #{version}: SKIPPED" }
+
+  failures = test_versions(base_dir, versions_to_run, options[:continue_on_failure])
+  finalize(failures, options[:continue_on_failure])
+end
+
+def valid_base_dir?(base_dir)
+  return true if Dir.exist?(base_dir)
+
+  warn "ERROR: base directory not found: #{base_dir}"
+  false
+end
+
+def finalize(failures, continue_on_failure)
+  return 0 if failures.empty?
+
+  print_failure_summary(failures) if continue_on_failure
+  1
+end
+
+exit(run(ARGV)) if __FILE__ == $PROGRAM_NAME
