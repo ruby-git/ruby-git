@@ -5,6 +5,24 @@
 
 # Change Log
 
+## [5.0.2](https://github.com/ruby-git/ruby-git/compare/v5.0.1...v5.0.2) (2026-08-02)
+
+
+### Bug Fixes
+
+* Add bin/build-git-versions and bin/test-git-versions scripts ([3314503](https://github.com/ruby-git/ruby-git/commit/3314503708efcec2f386ca97bb6d96309a6c5c1a))
+
+
+### Other Changes
+
+* Align CONTRIBUTING.md with current architecture and testing conventions ([60ac8e9](https://github.com/ruby-git/ruby-git/commit/60ac8e940776a3fb4efe46a98574ca5bbfcd718e))
+* Allow disabling SimpleCov via COVERAGE=false env var ([3788418](https://github.com/ruby-git/ruby-git/commit/37884189eb646013628f78b6671e9876f0ebb925))
+* Allow disabling SimpleCov via COVERAGE=false env var ([3788418](https://github.com/ruby-git/ruby-git/commit/37884189eb646013628f78b6671e9876f0ebb925))
+* Avoid git-version-dependent all-zero SHA in stash store integration spec ([82a15e5](https://github.com/ruby-git/ruby-git/commit/82a15e57ebca03df3c3802f153c3545bc46920f4))
+* Make 5.0.0 release more prominent in README ([2c8c42d](https://github.com/ruby-git/ruby-git/commit/2c8c42d30a7d7d35e03f1c4f8489fa49c866cded))
+* Move Git::Repository::Factories and PathResolver to Git namespace ([dd0ae7b](https://github.com/ruby-git/ruby-git/commit/dd0ae7b34b912187f150d56b38f6eeb14b8882bf))
+* Update README badges ([079a121](https://github.com/ruby-git/ruby-git/commit/079a1211216666f190583b2bfd3124ebb823ae58))
+
 ## [5.0.1](https://github.com/ruby-git/ruby-git/compare/v5.0.0...v5.0.1) (2026-07-30)
 
 
