@@ -142,7 +142,8 @@ RSpec.describe Git::Parsers::ConfigEntry, :integration do
         set_cmd.call('http.https://example.com.proxy', 'http://proxy.example.com', local: true)
       end
 
-      it 'returns a ConfigEntryInfo with scope, key, and value populated' do
+      it 'returns a ConfigEntryInfo with scope, key, and value populated',
+         skip: unless_git('2.42.0', 'git config --get-urlmatch --show-scope reporting the correct scope') do
         raw = urlmatch_cmd.call('http.proxy', 'https://example.com', local: true, show_scope: true, null: true).stdout
 
         result = described_class.parse_urlmatch(raw)
