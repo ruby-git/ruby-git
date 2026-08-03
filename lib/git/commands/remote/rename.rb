@@ -22,6 +22,13 @@ module Git
       #   rename = Git::Commands::Remote::Rename.new(execution_context)
       #   rename.call('origin', 'upstream', no_progress: true)
       #
+      # @note No `end_of_options` boundary despite `:progress` preceding the operands:
+      #   `git remote rename` did not accept a `--` separator until git 2.36.0. Since
+      #   the `old`/`new` operands are still validated (an operand is rejected as
+      #   option-like whenever no `--` boundary exists anywhere in the definition),
+      #   a name that looks like a flag (e.g. `-weird`) raises `ArgumentError` instead
+      #   of ever reaching git, so omitting the boundary introduces no ambiguity.
+      #
       # @note `arguments` block audited against https://git-scm.com/docs/git-remote/2.53.0
       #
       # @see Git::Commands::Remote
@@ -35,8 +42,6 @@ module Git
           literal 'remote'
           literal 'rename'
           flag_option :progress, negatable: true
-
-          end_of_options
 
           operand :old, required: true
           operand :new, required: true
