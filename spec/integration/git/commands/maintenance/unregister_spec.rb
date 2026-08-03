@@ -3,10 +3,10 @@
 require 'spec_helper'
 require 'git/commands/maintenance/unregister'
 
-# GIT_CONFIG_GLOBAL (used for global config isolation) requires git 2.32.0,
-# so these integration tests require 2.32.0 even though the command itself supports 2.30.0.
+# --config-file requires git 2.39.0, so these integration tests require 2.39.0
+# even though the command itself supports 2.30.0.
 RSpec.describe Git::Commands::Maintenance::Unregister, :integration,
-               skip: unless_git('2.32.0', 'git maintenance unregister') do
+               skip: unless_git('2.39.0', 'git maintenance unregister --config-file') do
   include_context 'in an empty repository'
 
   subject(:command) { described_class.new(execution_context) }
