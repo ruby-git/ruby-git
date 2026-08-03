@@ -13,9 +13,9 @@ module Git
       #   remove = Git::Commands::Remote::Remove.new(execution_context)
       #   remove.call('origin')
       #
-      # @example Remove a remote with a name that looks like a flag
-      #   remove = Git::Commands::Remote::Remove.new(execution_context)
-      #   remove.call('-weirdremote')
+      # @note No `end_of_options` boundary: `git remote remove` did not accept a `--`
+      #   separator until git 2.38.0, so a name that looks like a flag (e.g. `-weird`)
+      #   raises `ArgumentError` instead of being sent to git.
       #
       # @note `arguments` block audited against https://git-scm.com/docs/git-remote/2.53.0
       #
@@ -29,8 +29,6 @@ module Git
         arguments do
           literal 'remote'
           literal 'remove'
-
-          end_of_options
 
           operand :name, required: true
         end
