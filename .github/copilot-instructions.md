@@ -22,18 +22,6 @@ fine to use `#` in footer values such as `Closes: #999` or `Refs: #999`.
 - **RuboCop:** Use `RuboCop` for prose and `rubocop` for CLI or gem names. Never use
   `Rubocop`.
 
-## Project Commands
-
-| Purpose | Command |
-| --- | --- |
-| First-time project or new worktree setup | `bin/setup` |
-| Run all tests and linters (CI-equivalent) | `bundle exec rake` |
-| Run all RSpec tests | `bundle exec rake spec` |
-| Run RSpec unit tests | `bundle exec rake spec:unit` |
-| Run RSpec integration tests | `bundle exec rake spec:integration` |
-| Run a specific RSpec spec | `bundle exec rspec <path>` |
-| Run linters | `bundle exec rake rubocop yard build` |
-
 ## Branch & PR Strategy
 
 | Target | When |

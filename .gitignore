@@ -25,3 +25,6 @@ git-reference/
 git-versions/
 
 tmp
+
+# per-developer Claude Code overrides (shared config is in .claude/settings.json)
+.claude/settings.local.json
