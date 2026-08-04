@@ -24,7 +24,10 @@ RSpec.describe Git::Commands::CheckoutIndex, :integration do
     end
 
     describe 'when the command fails' do
-      it 'raises FailedError for a nonexistent file path' do
+      # git checkout-index only exits non-zero for a missing path starting in 2.30.0; on
+      # 2.28.0-2.29.x it warns on stderr but exits 0.
+      it 'raises FailedError for a nonexistent file path',
+         skip: unless_git('2.30.0', 'git checkout-index exit status for a nonexistent path') do
         expect { command.call('nonexistent.txt') }.to raise_error(Git::FailedError)
       end
     end
