@@ -188,11 +188,11 @@ This skill supports three modes. Determine which mode applies before starting:
      requirements](REFERENCE.md#phased-rollout-requirements).
 
 5. **Run quality gates** — discover the prerequisite tasks for
-   `default:parallel` and run them sequentially, fixing failures before
+   `default` and run them sequentially, fixing failures before
    advancing:
 
    ```bash
-   bundle exec ruby -e "require 'rake'; load 'Rakefile'; puts Rake::Task['default:parallel'].prerequisites"
+   bundle exec ruby -e "require 'rake'; load 'Rakefile'; puts Rake::Task['default'].prerequisites"
    ```
 
    Run each listed task **individually** in order via `bundle exec rake <task>`
