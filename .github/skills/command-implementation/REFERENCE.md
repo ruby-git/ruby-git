@@ -908,7 +908,7 @@ For migration PRs, verify process constraints:
 - each slice is independently revertible
 - refactor-only changes are not mixed with unrelated behavior changes
 - quality gates pass for the slice — discover tasks via
-  `bundle exec ruby -e "require 'rake'; load 'Rakefile'; puts Rake::Task['default:parallel'].prerequisites"`
+  `bundle exec ruby -e "require 'rake'; load 'Rakefile'; puts Rake::Task['default'].prerequisites"`
   and run each individually via `bundle exec rake <task>`, fixing failures before
   advancing
 

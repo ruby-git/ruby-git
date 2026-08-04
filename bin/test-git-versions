@@ -7,7 +7,7 @@
 # For each version directory found under <base-dir>/<version>/bin/git, this
 # script runs:
 #
-#   GIT_PATH=<absolute path to base-dir/version/bin> bundle exec rake spec:integration:parallel
+#   GIT_PATH=<absolute path to base-dir/version/bin> bundle exec rake spec:integration
 #
 # Versions are run newest-first (sorted semantically, e.g. 2.53.0 after
 # 2.5.0). Test output for each version is written to a temporary log file;
@@ -115,10 +115,10 @@ end
 def run_version_tests(base_dir, version)
   git_path = git_path_for(base_dir, version)
   log_file = File.join(Dir.tmpdir, "test-git-versions-#{version}-#{SecureRandom.hex(8)}.log")
-  command = "GIT_PATH=#{git_path} bundle exec rake spec:integration:parallel"
+  command = "GIT_PATH=#{git_path} bundle exec rake spec:integration"
 
   success = File.open(log_file, 'w') do |log|
-    system({ 'GIT_PATH' => git_path }, 'bundle', 'exec', 'rake', 'spec:integration:parallel', out: log, err: log)
+    system({ 'GIT_PATH' => git_path }, 'bundle', 'exec', 'rake', 'spec:integration', out: log, err: log)
   end
 
   { success: success, log_file: log_file, command: command }

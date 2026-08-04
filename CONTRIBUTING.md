@@ -926,6 +926,9 @@ process.stdin.on('end', () =>
   local working copy.
 - Test runs are covered by SimpleCov by default. Set `COVERAGE=false` (or `0`/`no`/
   `off`) to skip coverage, e.g. `COVERAGE=false bundle exec rake spec`.
+- `rake spec:integration` runs in parallel (via `parallel_tests`) on MRI. Set
+  `PARALLEL_TESTS=false` (or `0`/`no`/`off`) to force serial execution, e.g.
+  `PARALLEL_TESTS=false bundle exec rake spec:integration`.
 
 This project uses **RSpec** (`spec/`) as its sole test framework. Structure,
 naming, setup, stubbing, and coverage rules for unit specs are defined in the

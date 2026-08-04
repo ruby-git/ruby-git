@@ -2,46 +2,54 @@
 
 require 'rspec/core/rake_task'
 
-# Run all specs
-RSpec::Core::RakeTask.new(:spec) do |t|
-  t.pattern = 'spec/**/*_spec.rb'
+# Skip parallel test execution when the PARALLEL_TESTS environment variable is set to a falsy value
+def parallel_tests_disabled_via_env?
+  parallel_tests_env = ENV.fetch('PARALLEL_TESTS', 'true').strip.downcase
+  %w[false 0 no off].include?(parallel_tests_env)
 end
 
-# Run only unit specs (mocked, fast)
-RSpec::Core::RakeTask.new('spec:unit') do |t|
-  t.pattern = 'spec/unit/**/*_spec.rb'
-  # On JRuby, use 'documentation' formatter so each test name is printed before
-  # it runs. When the suite hangs, the last printed line identifies the blocking
-  # test. Mirrors the same diagnostic added to spec:integration in PR #1274.
-  t.rspec_opts = '--format documentation' if RUBY_ENGINE == 'jruby'
+# Use parallel test execution for MRI where it cuts build times by 30-48%.
+# JRuby and TruffleRuby are slower with parallel_tests because each worker
+# process pays JVM/Truffle startup and warm-up overhead independently,
+# resulting in 18-28% slower builds vs. serial execution.
+def parallel_tests?
+  RUBY_ENGINE == 'ruby' && !parallel_tests_disabled_via_env?
 end
 
-# Run only integration specs (real git, slower)
-RSpec::Core::RakeTask.new('spec:integration') do |t|
-  t.pattern = 'spec/integration/**/*_spec.rb'
-  # On JRuby, override the default Fuubar formatter with 'documentation' so that
-  # each test name is printed before it runs. This makes CI logs useful when the
-  # suite hangs: the last printed test is the one that caused the hang.
-  t.rspec_opts = '--format documentation' if RUBY_ENGINE == 'jruby'
+def define_parallel_spec_task(name, dir)
+  task name do
+    sh 'bundle', 'exec', 'parallel_rspec', dir
+  end
 end
 
-# Run all specs in parallel
-desc 'Run all specs in parallel'
-task 'spec:parallel' do
-  sh 'bundle exec parallel_rspec spec/'
+def define_serial_spec_task(name, dir)
+  RSpec::Core::RakeTask.new(name) do |t|
+    t.pattern = "#{dir}**/*_spec.rb"
+    # On JRuby, use 'documentation' formatter so each test name is printed before
+    # it runs. When the suite hangs, the last printed line identifies the blocking
+    # test.
+    t.rspec_opts = '--format documentation' if RUBY_ENGINE == 'jruby'
+  end
 end
 
-# Run only unit specs in parallel
-desc 'Run unit specs in parallel'
-task 'spec:unit:parallel' do
-  sh 'bundle exec parallel_rspec spec/unit/'
+# Define a spec task that runs in parallel (via parallel_tests) when parallel_tests? is
+# true, and serially (via RSpec::Core::RakeTask) otherwise.
+def define_spec_task(name, dir, desc_text)
+  desc desc_text
+  parallel_tests? ? define_parallel_spec_task(name, dir) : define_serial_spec_task(name, dir)
 end
 
-# Run only integration specs in parallel
-desc 'Run integration specs in parallel'
-task 'spec:integration:parallel' do
-  sh 'bundle exec parallel_rspec spec/integration/'
-end
+# Run only unit specs. These run in a few seconds, so parallel_tests startup
+# overhead isn't worth it - always run serially.
+desc 'Run unit RSpec tests (mocked, fast)'
+define_serial_spec_task('spec:unit', 'spec/unit/')
+
+# Run only integration specs
+define_spec_task('spec:integration', 'spec/integration/', 'Run integration RSpec tests (real git, slower)')
+
+# Run all specs, keeping unit and integration output clearly separated
+desc 'Run unit and integration RSpec tests'
+task spec: %w[spec:unit spec:integration]
 
 CLEAN << 'coverage'
 CLEAN << '.rspec_status'

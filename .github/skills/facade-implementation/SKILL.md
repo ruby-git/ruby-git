@@ -224,11 +224,11 @@ This skill supports three modes. Determine which mode applies before starting:
    - has tests that verify call-shape compatibility when classification is
      `legacy-contract` (positional hash and/or keyword-arg / `**opts` forms where required)
 
-5. **Run quality gates** — discover the prerequisite tasks for `default:parallel`
+5. **Run quality gates** — discover the prerequisite tasks for `default`
    and run them sequentially, fixing failures before advancing:
 
    ```bash
-   bundle exec ruby -e "require 'rake'; load 'Rakefile'; puts Rake::Task['default:parallel'].prerequisites"
+   bundle exec ruby -e "require 'rake'; load 'Rakefile'; puts Rake::Task['default'].prerequisites"
    ```
 
    Run each listed task **individually** in order via `bundle exec rake <task>`
