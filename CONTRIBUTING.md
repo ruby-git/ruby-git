@@ -20,6 +20,7 @@
   - [Before requesting review](#before-requesting-review)
 - [Branch strategy](#branch-strategy)
 - [AI-assisted contributions](#ai-assisted-contributions)
+  - [Agent configuration](#agent-configuration)
   - [Agent skills](#agent-skills)
 - [Design philosophy](#design-philosophy)
 - [Layered architecture](#layered-architecture)
@@ -214,6 +215,27 @@ when the change was authored end-to-end by an agent. "The agent ran the tests"
 and "CI is green" are not substitutes for the submitter running
 [the local validation step](#contributor-validation-policy) themselves; CI is a
 backstop, not a primary validation surface.
+
+### Agent configuration
+
+Agent configuration is shared: each piece of guidance is stored once and surfaced to
+every supported agent.
+
+| Content | Canonical location | Also read by |
+| --- | --- | --- |
+| Project instructions | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Claude Code, via an import in [`CLAUDE.md`](CLAUDE.md) |
+| Skills | [`.github/skills/`](.github/skills/) | Claude Code, via the `.claude/skills` symlink |
+| Prompts | [`.github/prompts/`](.github/prompts/) | Claude Code, via wrappers in `.claude/commands/` |
+| Setup hook | [`.github/hooks/run-bin-setup-once.sh`](.github/hooks/run-bin-setup-once.sh) | Claude Code, via `.claude/settings.json` |
+
+Always edit the canonical file. The Claude Code side is a pointer in every case, so
+changes reach both agents without a sync step.
+
+One caveat: `.claude/skills` is a committed symlink. Git for Windows only
+materializes symlinks when `core.symlinks` is enabled (which requires Developer Mode
+or an elevated shell). Without it, Windows contributors get a plain text file there
+and Claude Code silently loads no skills; either enable symlinks or point your agent
+at [`.github/skills/`](.github/skills/) directly. Copilot is unaffected.
 
 ### Agent skills
 
