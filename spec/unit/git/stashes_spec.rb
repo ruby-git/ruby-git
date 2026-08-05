@@ -68,6 +68,40 @@ RSpec.describe Git::Stashes do
     end
   end
 
+  describe '#save' do
+    subject(:stashes) { described_class.new(repository) }
+
+    before do
+      allow(Git::Stash).to receive(:new).and_return(double('Stash', saved?: true))
+    end
+
+    context 'when there are changes to stash' do
+      let(:new_stash) { double('Stash', saved?: true) }
+
+      before do
+        allow(Git::Stash).to receive(:new).with(repository, 'WIP').and_return(new_stash)
+      end
+
+      it 'adds the new stash to the collection' do
+        stashes.save('WIP')
+        expect(stashes.size).to eq(3)
+      end
+    end
+
+    context 'when there are no changes to stash' do
+      let(:new_stash) { double('Stash', saved?: false) }
+
+      before do
+        allow(Git::Stash).to receive(:new).with(repository, 'WIP').and_return(new_stash)
+      end
+
+      it 'does not add anything to the collection' do
+        stashes.save('WIP')
+        expect(stashes.size).to eq(2)
+      end
+    end
+  end
+
   describe '#each' do
     subject(:stashes) { described_class.new(repository) }
 
