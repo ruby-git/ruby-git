@@ -170,4 +170,15 @@ RSpec.describe Git::Parsers::CatFile do
       end
     end
   end
+
+  describe '.each_header' do
+    it 'stops cleanly when a header line is the last line (no trailing separator)' do
+      lines = ['type commit']
+
+      headers = {}
+      described_class.each_header(lines) { |key, value| headers[key] = value }
+
+      expect(headers).to eq('type' => 'commit')
+    end
+  end
 end
