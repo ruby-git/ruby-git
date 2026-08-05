@@ -173,6 +173,26 @@ end
 #
 def enable_coverage? = RUBY_ENGINE == 'ruby' && !coverage_disabled_via_env?
 
+# Returns true when this run is the complete unit suite (`rake spec:unit` with no
+# SPEC filter), false for any focused subset.
+#
+# The 100% thresholds are only meaningful for the whole unit suite. spec_helper
+# does `require 'git'`, so a focused run (`SPEC=<glob> rake spec:unit`, or
+# `rspec <file>`) loads all of lib/ but exercises only a slice of it -- enforcing
+# thresholds there would fail every time and push contributors toward disabling
+# coverage entirely. Coverage is still measured and reported for those runs; it
+# just doesn't fail them.
+#
+# FAIL_ON_LOW_COVERAGE takes precedence over this value in simplecov-rspec, so
+# `FAIL_ON_LOW_COVERAGE=true` can still force enforcement on for a subset run.
+#
+def full_unit_suite?
+  files_run = RSpec.configuration.files_to_run.map { |f| File.expand_path(f) }.sort
+  all_unit_specs = Dir[File.join(__dir__, 'unit', '**', '*_spec.rb')].map { |f| File.expand_path(f) }.sort
+
+  files_run == all_unit_specs
+end
+
 if enable_coverage?
   require 'simplecov'
   require 'simplecov-rspec'
@@ -188,11 +208,21 @@ if enable_coverage?
 
   SimpleCov.enable_coverage :branch
 
+  # The project requires 100% line and branch coverage of lib/ from the unit suite.
+  # See the "Test coverage policy" section of CONTRIBUTING.md.
+  #
+  # list_uncovered_detail is tied to the same condition as enforcement. For the full
+  # suite it costs nothing at 100% (there is nothing to print) and makes a failing
+  # CI log self-diagnosing by naming the exact uncovered lines and branches. For a
+  # focused run, where most of lib/ is legitimately unexercised, that same detail
+  # would be thousands of lines of noise, so those runs get the count summary and a
+  # hint instead. LIST_UNCOVERED_DETAIL overrides this either way.
+  #
   SimpleCov::RSpec.start(
     minimum_coverage: { line: 100, branch: 100 },
-    fail_on_low_coverage: false,
+    fail_on_low_coverage: full_unit_suite?,
     list_uncovered: %i[branch line],
-    list_uncovered_detail: false
+    list_uncovered_detail: full_unit_suite?
   ) do
     command_name "RSpec-#{ENV['TEST_ENV_NUMBER']}" if ENV['TEST_ENV_NUMBER']
   end

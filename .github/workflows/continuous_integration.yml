@@ -53,5 +53,17 @@ jobs:
         run: bundle exec rake default
         timeout-minutes: 15
 
+      # The unit suite enforces 100% line and branch coverage (see the "Test coverage
+      # policy" section of CONTRIBUTING.md). The failure log names the uncovered lines
+      # and branches; this artifact adds the browsable HTML report for the same run.
+      - name: Upload Coverage Report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-ruby-${{ matrix.ruby }}-${{ matrix.operating-system }}
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Test Gem
         run: bundle exec rake test:gem
