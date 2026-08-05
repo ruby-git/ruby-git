@@ -31,6 +31,13 @@ RSpec.describe Git::Parsers::Diff do
 
       expect(result).to eq(files_changed: 0, insertions: 0, deletions: 0)
     end
+
+    it 'returns 0 for files_changed when the file count is missing' do
+      line = ' 10 insertions(+), 5 deletions(-)'
+      result = described_class.parse_shortstat(line)
+
+      expect(result).to eq(files_changed: 0, insertions: 10, deletions: 5)
+    end
   end
 
   describe '.parse_dirstat' do
@@ -54,6 +61,14 @@ RSpec.describe Git::Parsers::Diff do
       result = described_class.parse_dirstat([])
 
       expect(result.entries).to be_empty
+    end
+
+    it 'skips lines that do not match the percentage pattern' do
+      lines = ['  50.0% lib/', 'not a dirstat line']
+      result = described_class.parse_dirstat(lines)
+
+      expect(result.entries.size).to eq(1)
+      expect(result.entries[0].directory).to eq('lib/')
     end
   end
 
@@ -316,6 +331,21 @@ RSpec.describe Git::Parsers::Diff::Raw do
       expect(file.deletions).to eq(5)
     end
 
+    it 'includes dirstat when requested' do
+      output = <<~OUTPUT
+        :100644 100644 abc1234 def5678 M\tlib/file.rb
+        10\t5\tlib/file.rb
+         1 file changed, 10 insertions(+), 5 deletions(-)
+        100.0% lib/
+      OUTPUT
+
+      result = described_class.parse(output, include_dirstat: true)
+
+      expect(result.dirstat).not_to be_nil
+      expect(result.dirstat.entries.size).to eq(1)
+      expect(result.dirstat.entries[0].percentage).to eq(100.0)
+    end
+
     it 'parses renamed files' do
       output = <<~OUTPUT
         :100644 100644 abc1234 def5678 R075\told.rb\tnew.rb
@@ -486,6 +516,16 @@ RSpec.describe Git::Parsers::Diff::Patch do
       expect(result.files_changed).to eq(0)
     end
 
+    it 'ignores a diff header line that starts with "diff --git" but does not match the full pattern' do
+      # The line is located by a loose `start_with?('diff --git')` check, but
+      # DIFF_HEADER_PATTERN requires the full "a/<path> b/<path>" shape to match.
+      output = "diff --git malformed header line\n"
+
+      result = described_class.parse(output)
+
+      expect(result.files).to be_empty
+    end
+
     it 'parses patch output with numstat and shortstat' do
       output = <<~OUTPUT
         10\t5\tlib/file.rb
@@ -512,6 +552,48 @@ RSpec.describe Git::Parsers::Diff::Patch do
       expect(file.deletions).to eq(5)
       expect(file.patch).to include('diff --git')
       expect(file.patch).to include('+new line')
+    end
+
+    it 'includes dirstat when requested' do
+      output = <<~OUTPUT
+        10\t5\tlib/file.rb
+         1 file changed, 10 insertions(+), 5 deletions(-)
+        100.0% lib/
+        diff --git a/lib/file.rb b/lib/file.rb
+        index abc1234..def5678 100644
+        --- a/lib/file.rb
+        +++ b/lib/file.rb
+        @@ -1,5 +1,10 @@
+        +new line
+         existing line
+      OUTPUT
+
+      result = described_class.parse(output, include_dirstat: true)
+
+      expect(result.dirstat).not_to be_nil
+      expect(result.dirstat.entries.size).to eq(1)
+      expect(result.dirstat.entries[0].percentage).to eq(100.0)
+    end
+
+    it 'defaults to zeroed shortstat totals when the shortstat line is missing' do
+      output = <<~OUTPUT
+        10\t5\tlib/file.rb
+        diff --git a/lib/file.rb b/lib/file.rb
+        index abc1234..def5678 100644
+        --- a/lib/file.rb
+        +++ b/lib/file.rb
+        @@ -1,5 +1,10 @@
+        +new line
+         existing line
+      OUTPUT
+
+      result = described_class.parse(output)
+
+      expect(result.files_changed).to eq(0)
+      expect(result.total_insertions).to eq(0)
+      expect(result.total_deletions).to eq(0)
+      expect(result.files[0].insertions).to eq(10)
+      expect(result.files[0].deletions).to eq(5)
     end
 
     it 'parses new files' do
@@ -554,6 +636,28 @@ RSpec.describe Git::Parsers::Diff::Patch do
       expect(file.status).to eq(:deleted)
       expect(file.src.path).to eq('old_file.rb')
       expect(file.dst).to be_nil
+    end
+
+    it 'parses a mode change combined with content changes' do
+      # When both the mode and content change, the index line carries a mode
+      # suffix, but old/new mode lines (processed first) already set src_mode
+      # and dst_mode, so the index line's mode must not overwrite them.
+      output = <<~OUTPUT
+        0\t0\tfile.sh
+         1 file changed, 0 insertions(+), 0 deletions(-)
+        diff --git a/file.sh b/file.sh
+        old mode 100644
+        new mode 100755
+        index abc1234..def5678 100755
+        --- a/file.sh
+        +++ b/file.sh
+      OUTPUT
+
+      result = described_class.parse(output)
+      file = result.files[0]
+
+      expect(file.src.mode).to eq('100644')
+      expect(file.dst.mode).to eq('100755')
     end
 
     it 'parses renamed files with similarity' do
