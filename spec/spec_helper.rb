@@ -193,6 +193,33 @@ def full_unit_suite?
   files_run == all_unit_specs
 end
 
+# The lib/ files a focused run is actually about, for scoping the uncovered listing
+#
+# Two independent signals, unioned, because each covers the other's gap:
+#
+# - What the run described, via simplecov-rspec's `described_source_files` (the same
+#   thing `list_uncovered_files: :described` scopes to). Handles the classes that
+#   don't get their own file, e.g. `Git::TimeoutError` lives in lib/git/errors.rb
+#   alongside its siblings.
+# - The mirrored path. Handles the specs whose top-level `describe` is a String, e.g.
+#   `RSpec.describe 'Git::VERSION'`, which yields no described_class at all.
+#
+# Passed to simplecov-rspec as a callable: SimpleCov::RSpec.start runs before any
+# example group is defined, so neither signal exists yet at that point. This narrows
+# only the listing, never the measured percentage.
+#
+def code_under_test
+  (SimpleCov::RSpec.described_source_files + mirrored_source_files).uniq
+end
+
+# The lib/ file each spec file mirrors, for the specs that mirror one
+def mirrored_source_files
+  RSpec.configuration.files_to_run.filter_map do |spec_file|
+    source = File.expand_path(spec_file).sub(%r{/spec/unit/}, '/lib/').sub(/_spec\.rb\z/, '.rb')
+    source if File.file?(source)
+  end
+end
+
 if enable_coverage?
   require 'simplecov'
   require 'simplecov-rspec'
@@ -211,18 +238,20 @@ if enable_coverage?
   # The project requires 100% line and branch coverage of lib/ from the unit suite.
   # See the "Test coverage policy" section of CONTRIBUTING.md.
   #
-  # list_uncovered_detail is tied to the same condition as enforcement. For the full
-  # suite it costs nothing at 100% (there is nothing to print) and makes a failing
-  # CI log self-diagnosing by naming the exact uncovered lines and branches. For a
-  # focused run, where most of lib/ is legitimately unexercised, that same detail
-  # would be thousands of lines of noise, so those runs get the count summary and a
-  # hint instead. LIST_UNCOVERED_DETAIL overrides this either way.
+  # The uncovered listing is always detailed, because it is always scoped to code the
+  # run is about. For the full suite that costs nothing at 100% (there is nothing to
+  # print) and makes a failing CI log self-diagnosing by naming the exact uncovered
+  # lines and branches. For a focused run, list_uncovered_files narrows it to the
+  # handful of lib/ files under test, so the detail is short and directly actionable
+  # instead of the thousands of lines the whole of lib/ would produce.
+  # LIST_UNCOVERED_DETAIL and LIST_UNCOVERED_FILES override this either way.
   #
   SimpleCov::RSpec.start(
     minimum_coverage: { line: 100, branch: 100 },
     fail_on_low_coverage: full_unit_suite?,
     list_uncovered: %i[branch line],
-    list_uncovered_detail: full_unit_suite?
+    list_uncovered_detail: true,
+    list_uncovered_files: full_unit_suite? ? nil : -> { code_under_test }
   ) do
     command_name "RSpec-#{ENV['TEST_ENV_NUMBER']}" if ENV['TEST_ENV_NUMBER']
   end

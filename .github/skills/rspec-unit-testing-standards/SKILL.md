@@ -68,9 +68,13 @@ Adoption and enforcement notes:
 - Apply these rules as hard requirements for new and modified unit specs.
 - Legacy specs may violate some rules; treat those as incremental cleanup work.
 - Branch and line coverage are both reported by SimpleCov in this repository.
-- `minimum_coverage: { line: 100, branch: 100 }` is configured, but `fail_on_low_coverage`
-  is currently `false`; enforce Rule 21 during review by checking the coverage report
-  until strict failure is enabled.
+- `minimum_coverage: { line: 100, branch: 100 }` is configured and enforced: a full
+  `rake spec:unit` run fails when either threshold is missed, and CI fails the pull
+  request with it. Rule 21 is a build gate, not just a review check. See the
+  [Test coverage policy](../../../CONTRIBUTING.md#test-coverage-policy) in
+  `CONTRIBUTING.md` for the full policy.
+- Focused runs (`SPEC=<glob> rake spec:unit`, or `rspec <file>`) report coverage but
+  do not fail on it, since they load all of `lib/` while exercising only a slice.
 
 ## Related skills
 
@@ -484,10 +488,50 @@ Every conditional path through the public interface must be exercised by at leas
 one example. If a branch cannot be reached through the public interface, that is a
 design smell.
 
+This is enforced by the build: a full `rake spec:unit` run fails below 100% line or
+branch coverage, and the failure output names each uncovered line and branch.
+
+When a branch is hard to cover, apply these in order:
+
+1. **Reach it through the public interface** — if it is reachable, test it.
+2. **Delete it** — a branch unreachable through the public interface is usually dead
+   code. Removing it is preferable to excluding it.
+3. **Exclude it with `# simplecov:disable`** — the last resort, per the exception below.
+
 > **Exception:** Defensive guards that require breaking OS-level invariants to reach
 > (e.g., `raise "unreachable"` that would require triggering out-of-memory) may be
-> excluded. Mark them explicitly with `# :nocov:` and a brief comment explaining why
-> — never leave branches silently uncovered.
+> excluded. Mark them explicitly with a `# simplecov:disable` directive carrying a
+> reason — never leave branches silently uncovered. Cover the smallest possible span,
+> and expect a reviewer to challenge it. `lib/` currently contains no coverage
+> directives.
+
+Prefer the inline form for a single line. It applies only to its own line and needs no
+matching `enable`, so a region can never be left open by accident:
+
+```ruby
+raise 'unreachable' # simplecov:disable defensive guard; only reachable on OOM
+```
+
+Use the block form only for a genuine span, and close it explicitly:
+
+```ruby
+# simplecov:disable branch platform-specific fallback; not reachable on MRI
+...
+# simplecov:enable branch
+```
+
+Always name the narrowest criterion that solves the problem — `line`, `branch`,
+`method`, or a comma-separated combination — and write the reason after it, so the
+required justification lives in the directive.
+
+> **Review check:** verify the criterion is spelled exactly. A word SimpleCov does not
+> recognize is parsed as free-form reason text, which silently widens the directive to
+> all three criteria rather than failing.
+
+> **Coverage is a floor on evidence, not a proof of correctness.** Never write an
+> example whose only purpose is to execute a line. Such a test turns the report green
+> while violating [Rule 24](#rule-24-must-assert-observable-behavior-not-implementation-details),
+> and must be rejected in review.
 
 ### Rule 22 (MUST): Error assertions must specify both the error class and a message pattern
 
@@ -614,7 +658,9 @@ After writing or modifying tests, verify compliance before finishing:
 
 1. **Run the specs:** `bundle exec rspec spec/unit/path/to_spec.rb`
 2. **Check branch coverage** meets 100% (Rule 21) — open `coverage/index.html` and
-   confirm no uncovered branches in the class under test.
+   confirm no uncovered lines or branches in the class under test. A focused run
+   reports coverage but does not fail on it; `bundle exec rake spec:unit` is the
+   authority and will fail below 100%, naming each uncovered line and branch.
 3. **Re-check MUST rules.** Scan the spec against every MUST rule. Fix violations.
 4. **Run in random order** (Rule 27): `bundle exec rspec spec/unit/path/to_spec.rb --order rand`
 
