@@ -34,6 +34,21 @@ RSpec.describe Git::DiffFilePatchInfo do
 
       expect(patch.path).to eq('deleted.rb')
     end
+
+    it 'returns nil when both src and dst are nil' do
+      patch = described_class.new(
+        src: nil,
+        dst: nil,
+        patch: 'diff text',
+        status: :modified,
+        similarity: nil,
+        binary: false,
+        insertions: 0,
+        deletions: 0
+      )
+
+      expect(patch.path).to be_nil
+    end
   end
 
   describe '#src_path' do
