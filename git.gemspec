@@ -1,7 +1,19 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift File.expand_path('lib', __dir__)
-require 'git/version'
+# Read the version out of lib/git/version.rb rather than requiring it.
+#
+# The Gemfile uses `gemspec`, so Bundler evaluates this file on every `bundle exec`.
+# `require`ing lib/git/version.rb here would therefore load it before SimpleCov
+# starts in spec_helper, leaving it invisible to the coverage report -- an
+# unmeasured hole in the 100% coverage gate. See the "Test coverage policy" section
+# of CONTRIBUTING.md.
+#
+# release-please rewrites the `VERSION = '...'` assignment in place (see
+# `version-file` in .release-please-config.json), so matching on it stays correct
+# across releases. If the match ever fails, the raise below stops the build
+# immediately rather than letting a nil version reach the specification.
+version = File.read(File.expand_path('lib/git/version.rb', __dir__))[/^\s*VERSION\s*=\s*['"]([^'"]+)['"]/, 1]
+raise 'Could not determine Git::VERSION from lib/git/version.rb' if version.nil?
 
 Gem::Specification.new do |spec|
   spec.author = 'Scott Chacon and others'
@@ -17,7 +29,7 @@ Gem::Specification.new do |spec|
     including branching and merging, object inspection and manipulation, history, patch
     generation and more.
   DESCRIPTION
-  spec.version = Git::VERSION
+  spec.version = version
 
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = spec.homepage
