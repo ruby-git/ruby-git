@@ -371,6 +371,35 @@ RSpec.describe Git::Branch do
   end
 
   # ---------------------------------------------------------------------------
+  # #stashes
+  # ---------------------------------------------------------------------------
+
+  describe '#stashes' do
+    subject(:branch) { described_class.new(base, branch_info) }
+
+    let(:branch_info) do
+      Git::BranchInfo.new(
+        refname: 'feature',
+        target_oid: nil,
+        current: false,
+        worktree_path: nil,
+        symref: nil,
+        upstream: nil
+      )
+    end
+
+    before { allow(base).to receive(:stashes_all).and_return([]) }
+
+    it 'returns a Git::Stashes for the branch repository' do
+      expect(branch.stashes).to be_a(Git::Stashes)
+    end
+
+    it 'memoizes the result' do
+      expect(branch.stashes).to be(branch.stashes)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #archive
   # ---------------------------------------------------------------------------
 
