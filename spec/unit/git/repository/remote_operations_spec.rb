@@ -159,6 +159,16 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
 
+    context 'with a String option key' do
+      subject(:result) { described_instance.fetch('origin', 'force' => true) }
+
+      it 'normalizes the String key to a Symbol before validating options' do
+        expect(fetch_command)
+          .to receive(:call).with('origin', force: true, merge: true).and_return(fetch_result)
+        result
+      end
+    end
+
     # --- Option whitelisting -------------------------------------------------
 
     context 'with an unknown option key' do
