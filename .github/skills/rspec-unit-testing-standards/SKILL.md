@@ -68,9 +68,9 @@ Adoption and enforcement notes:
 - Apply these rules as hard requirements for new and modified unit specs.
 - Legacy specs may violate some rules; treat those as incremental cleanup work.
 - Branch and line coverage are both reported by SimpleCov in this repository.
-- `coverage_threshold: 100` is configured, but `fail_on_low_coverage` is currently
-  `false`; enforce Rule 21 during review by checking the coverage report until
-  strict failure is enabled.
+- `minimum_coverage: { line: 100, branch: 100 }` is configured, but `fail_on_low_coverage`
+  is currently `false`; enforce Rule 21 during review by checking the coverage report
+  until strict failure is enabled.
 
 ## Related skills
 

@@ -29,8 +29,24 @@ RSpec.configure do |config|
     expectations.syntax = :expect
   end
 
-  # Use the documentation formatter for detailed output
-  config.default_formatter = 'doc' if config.files_to_run.one?
+  # Choose the formatter here (rather than a static --format in .rspec), since Fuubar
+  # isn't the right choice for every case:
+  #
+  # - Single-file run (focused debugging) or JRuby (so a hang's last printed line
+  #   identifies the blocking test): plain per-example output is more useful than a
+  #   progress bar.
+  # - Under parallel_tests (ENV['TEST_ENV_NUMBER'] is set for every worker, including
+  #   the first): multiple worker processes redraw Fuubar's progress bar on the same
+  #   terminal line concurrently, corrupting the output. Plain dots don't redraw, so
+  #   they interleave safely.
+  config.default_formatter =
+    if (config.files_to_run.one? && !ENV['TEST_ENV_NUMBER']) || RUBY_ENGINE == 'jruby'
+      'documentation'
+    elsif ENV['TEST_ENV_NUMBER']
+      'progress'
+    else
+      'Fuubar'
+    end
 
   # Run specs in random order to surface order dependencies
   config.order = :random
@@ -173,9 +189,10 @@ if enable_coverage?
   SimpleCov.enable_coverage :branch
 
   SimpleCov::RSpec.start(
-    coverage_threshold: 100,
+    minimum_coverage: { line: 100, branch: 100 },
     fail_on_low_coverage: false,
-    list_uncovered_lines: false
+    list_uncovered: %i[branch line],
+    list_uncovered_detail: false
   ) do
     command_name "RSpec-#{ENV['TEST_ENV_NUMBER']}" if ENV['TEST_ENV_NUMBER']
   end
