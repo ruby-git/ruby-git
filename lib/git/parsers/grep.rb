@@ -32,7 +32,7 @@ module Git
       def parse(output)
         output.each_line.with_object(Hash.new { |h, k| h[k] = [] }) do |line, hsh|
           filename, line_num, text = line.chomp.split("\0", 3)
-          next unless text && line_num&.match?(/\A\d+\z/)
+          next unless text && line_num.match?(/\A\d+\z/)
 
           hsh[filename] << [line_num.to_i, text]
         end
