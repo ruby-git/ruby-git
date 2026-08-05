@@ -2399,11 +2399,11 @@ module Git
           build_option(args, entry[:name], @option_definitions[entry[:name]], normalized_opts[entry[:name]])
         when :operand
           build_single_positional(args, entry[:name], allocated_positionals)
-        # :nocov: this case should be unreachable
+        # simplecov:disable this case should be unreachable
         else
           raise ArgumentError, "unknown entry kind: #{entry[:kind].inspect}"
         end
-        # :nocov:
+        # simplecov:enable
       end
 
       # Replace the END_OF_OPTIONS_MARKER with the stored `as:` value if any element
