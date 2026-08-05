@@ -346,5 +346,19 @@ RSpec.describe Git::Parsers::Remote do
         expect(result[0].vcs).to eq('svn')
       end
     end
+
+    context 'with an unrecognized config variable' do
+      subject(:result) do
+        entries = [
+          entry('origin', 'url', 'https://github.com/ruby-git/ruby-git.git'),
+          entry('origin', 'somefuturevariable', 'unknown-value')
+        ]
+        described_class.parse_list(entries)
+      end
+
+      it 'silently ignores the unrecognized variable' do
+        expect(result[0].url).to eq(['https://github.com/ruby-git/ruby-git.git'])
+      end
+    end
   end
 end
