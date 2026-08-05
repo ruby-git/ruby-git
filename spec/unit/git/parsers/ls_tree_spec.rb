@@ -78,6 +78,18 @@ RSpec.describe Git::Parsers::LsTree do
       end
     end
 
+    context 'with a line that has no tab-separated filename' do
+      subject(:result) do
+        described_class.parse('100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391')
+      end
+
+      it 'still parses mode, type, and sha, keying the entry by a nil filename' do
+        expect(result['blob']).to eq(
+          { nil => { mode: '100644', sha: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391' } }
+        )
+      end
+    end
+
     context 'with empty output' do
       subject(:result) { described_class.parse('') }
 
