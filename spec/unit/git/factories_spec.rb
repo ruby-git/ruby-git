@@ -188,6 +188,14 @@ RSpec.describe Git::Factories do
       )
     end
 
+    context 'when the clone stderr cannot be parsed' do
+      let(:clone_stderr) { "fatal: repository 'bogus' does not exist\n" }
+
+      it 'raises Git::UnexpectedResultError' do
+        expect { repository }.to raise_error(Git::UnexpectedResultError, /Unable to determine clone directory/)
+      end
+    end
+
     context 'when cloning a bare repository via :bare option' do
       let(:options) { { bare: true } }
       let(:clone_stderr) { "Cloning into bare repository 'ruby-git.git'...\n" }
