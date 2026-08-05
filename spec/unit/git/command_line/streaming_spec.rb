@@ -304,5 +304,25 @@ RSpec.describe Git::CommandLine::Streaming do
           end
       end
     end
+
+    context 'when ProcessExecuter raises Errno::ESRCH (timeout race)' do
+      let(:original_error) { Errno::ESRCH.new('No such process') }
+
+      before do
+        allow(ProcessExecuter).to receive(:run).and_raise(original_error)
+      end
+
+      it 'translates to Git::ProcessIOError' do
+        expect { described_instance.run('status') }
+          .to raise_error(Git::ProcessIOError, /timeout race/)
+      end
+
+      it 'sets the Errno::ESRCH as the cause' do
+        expect { described_instance.run('status') }
+          .to raise_error(Git::ProcessIOError, /timeout race/) do |error|
+            expect(error.cause).to be(original_error)
+          end
+      end
+    end
   end
 end
