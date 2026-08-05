@@ -508,6 +508,26 @@ RSpec.describe Git::Factories do
       end
     end
 
+    context 'when :index option is given' do
+      let(:options) { { index: '/custom/index' } }
+      let(:resolved_custom_index_paths) do
+        { working_directory: '/new-repo', repository: '/new-repo/.git', index: '/custom/index' }
+      end
+
+      before do
+        allow(Git::PathResolver).to receive(:resolve_paths)
+          .with(working_directory: directory, repository: nil, index: '/custom/index')
+          .and_return(resolved_custom_index_paths)
+      end
+
+      it 'passes the custom index path through to Git.open' do
+        repository
+        expect(Git::PathResolver).to(
+          have_received(:resolve_paths).with(working_directory: directory, repository: nil, index: '/custom/index')
+        )
+      end
+    end
+
     context 'when :separate_git_dir option is given' do
       let(:options) { { separate_git_dir: '/custom/git' } }
       let(:resolved_custom_paths) do
