@@ -122,6 +122,20 @@ RSpec.describe Git::DiffFileRawInfo do
 
       expect(info.path).to eq('deleted.rb')
     end
+
+    it 'returns nil when both src and dst are nil' do
+      info = described_class.new(
+        src: nil,
+        dst: nil,
+        status: :modified,
+        similarity: nil,
+        insertions: 0,
+        deletions: 0,
+        binary: false
+      )
+
+      expect(info.path).to be_nil
+    end
   end
 
   describe '#src_path' do
