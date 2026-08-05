@@ -593,11 +593,10 @@ module Git
           # @return [void]
           #
           def apply_file_mode(type, mode)
-            case type
-            when 'new'
+            if type == 'new'
               @current_file[:dst_mode] = mode
               @current_file[:src_path] = nil
-            when 'deleted'
+            else
               @current_file[:src_mode] = mode
               @current_file[:dst_path] = nil
             end
