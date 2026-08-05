@@ -252,6 +252,47 @@ RSpec.describe Git::Branch do
   end
 
   # ---------------------------------------------------------------------------
+  # #merge
+  # ---------------------------------------------------------------------------
+
+  describe '#merge' do
+    subject(:branch) { described_class.new(base, branch_info) }
+
+    let(:branch_info) do
+      Git::BranchInfo.new(
+        refname: 'feature',
+        target_oid: nil,
+        current: false,
+        worktree_path: nil,
+        symref: nil,
+        upstream: nil
+      )
+    end
+
+    context 'when a branch is given' do
+      before do
+        allow(base).to receive(:current_branch).and_return('main')
+        allow(base).to receive(:branch_new).with('feature').and_return(command_result(''))
+        allow(base).to receive(:checkout).and_return('')
+        allow(base).to receive(:reset).with(nil, hard: true).and_return(command_result(''))
+      end
+
+      it 'merges the given branch into this branch, then restores the original branch' do
+        expect(base).to receive(:merge).with('other-branch', 'my message').and_return('merged')
+        expect(base).to receive(:checkout).with('main').and_return('restored')
+        expect(branch.merge('other-branch', 'my message')).to eq('restored')
+      end
+    end
+
+    context 'when no branch is given' do
+      it 'merges this branch into the current branch' do
+        expect(base).to receive(:merge).with('feature').and_return('merged')
+        expect(branch.merge).to eq('merged')
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #update_ref
   # ---------------------------------------------------------------------------
 
