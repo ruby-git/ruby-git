@@ -16,4 +16,6 @@ Review our [guidelines for contributing](https://github.com/ruby-git/ruby-git/bl
 - [ ] I ran `bundle exec rake` locally on this branch and it passed (see
   [Local development setup](../CONTRIBUTING.md#local-development-setup)).
 - [ ] Tests added/updated as needed.
+- [ ] `bundle exec rake spec:unit` reports 100% line and branch coverage (see
+  [Test coverage policy](../CONTRIBUTING.md#test-coverage-policy)).
 - [ ] Documentation updated where applicable (README and/or YARD).
