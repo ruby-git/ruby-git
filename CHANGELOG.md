@@ -5,6 +5,18 @@
 
 # Change Log
 
+## [5.0.4](https://github.com/ruby-git/ruby-git/compare/v5.0.3...v5.0.4) (2026-08-07)
+
+
+### Bug Fixes
+
+* Return the full ref path in the ls_remote :ref value ([34b0b06](https://github.com/ruby-git/ruby-git/commit/34b0b0678c6ab47f77afaf7331fb6b41160def1a)), closes [#1416](https://github.com/ruby-git/ruby-git/issues/1416)
+
+
+### Other Changes
+
+* Pin the locale for the CommandLine::Capturing integration spec ([6040867](https://github.com/ruby-git/ruby-git/commit/6040867ecfb44434a26006f9b79bebfb590d1ca8))
+
 ## [5.0.3](https://github.com/ruby-git/ruby-git/compare/v5.0.2...v5.0.3) (2026-08-07)
 
 
