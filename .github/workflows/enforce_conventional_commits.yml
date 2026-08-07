@@ -10,6 +10,12 @@ on:
       - main
       - 4.x
 
+# Cancel an in-progress run when the same PR gets a new push; only the commit messages
+# as they stand after the latest push are worth linting.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   commit-lint:
     name: Verify Conventional Commits

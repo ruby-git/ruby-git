@@ -27,6 +27,11 @@ Style/OneClassPerFile:
   Enabled: false
 
 AllCops:
-  # Pin this project to Ruby 3.1 in case the shared config above is upgraded to 3.2
-  # or later.
+  # Must match the floor of required_ruby_version in the gemspec: TargetRubyVersion
+  # decides which syntax RuboCop permits and suggests, so a value above the floor
+  # would let in code that does not parse on the oldest supported Ruby.
+  #
+  # Pinned explicitly rather than inferred because main_branch_shared_rubocop_config
+  # sets 3.1, which is older than this gem supports, and a value inherited through
+  # inherit_gem takes precedence over inference from the gemspec.
   TargetRubyVersion: 3.2

@@ -5,7 +5,51 @@ on:
     branches: [main, 4.x]
   workflow_dispatch:
 
+# Cancel an in-progress run when the same PR (or branch) gets a new push. For
+# pull_request events github.ref is refs/pull/<n>/merge, so runs are grouped per PR
+# and pushing a new commit -- or force-pushing during a rebase -- no longer leaves a
+# full matrix running to completion against a commit nobody will merge.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # RuboCop and YARD analyze source text, so their results do not depend on the
+  # runtime executing them: RuboCop's verdict is fixed by TargetRubyVersion in
+  # .rubocop.yml, not by the host Ruby. Running them once here instead of inside the
+  # matrix removes the single largest cost in the build -- RuboCop alone accounted for
+  # over half the wall time of the JRuby and TruffleRuby jobs -- while checking exactly
+  # the same things.
+  #
+  # Ruby 3.4 hosts this job rather than the newest supported Ruby because it gates
+  # merges: a lint gate should be insulated from churn in a brand-new major, and Ruby
+  # 4.0 deprecations still surface through the matrix jobs below, which do run 4.0.
+  # 3.3+ is also a hard floor here, since yard-lint is only installed on 3.3 and later
+  # (see the gemspec) and YARD itself cannot build on JRuby or TruffleRuby.
+  lint:
+    name: Lint and Docs
+
+    # Skip this job if triggered by a release PR
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+      - name: Run RuboCop and YARD
+        run: bundle exec rake rubocop yard
+        timeout-minutes: 15
+
   build:
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
 
@@ -21,8 +65,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Only the minimum required versions of JRuby and TruffleRuby are tested
-        ruby: ["3.2", "3.4", "4.0", "truffleruby-24.2.1", "jruby-10.0.0.1"]
+        # Only the minimum required versions of JRuby and TruffleRuby are tested.
+        #
+        ruby: ["3.2", "4.0", "truffleruby-24.2.1", "jruby-10.0.0.1"]
         operating-system: [ubuntu-latest]
         experimental: [No]
         java_version: [""]
@@ -49,8 +94,11 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      - name: Run Build
-        run: bundle exec rake default
+      # Specs only. RuboCop and YARD run once in the lint job above instead of being
+      # repeated identically on every runtime. `rake build` still runs on every
+      # platform, as a prerequisite of the Test Gem step below.
+      - name: Run Specs
+        run: bundle exec rake spec
         timeout-minutes: 15
 
       # The unit suite enforces 100% line and branch coverage (see the "Test coverage
