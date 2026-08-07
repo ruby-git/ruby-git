@@ -1299,6 +1299,10 @@ RSpec.describe Git::Repository::RemoteOperations do
         expect(branches).to have_key('main')
         expect(branches['main'][:sha]).to eq('abc123')
       end
+
+      it 'gives the branch entry the full ref path as its :ref' do
+        expect(result['branches']['main'][:ref]).to eq('refs/heads/main')
+      end
     end
 
     # --- Signature compatibility (legacy-contract) ---------------------------

@@ -15,6 +15,38 @@ RSpec.describe Git::Parsers::LsRemote do
       end
     end
 
+    context 'with a branch ref line' do
+      let(:line) { "abc123\trefs/heads/main" }
+
+      it 'returns the full ref path as the :ref value' do
+        expect(result).to eq(['branches', 'main', { ref: 'refs/heads/main', sha: 'abc123' }])
+      end
+    end
+
+    context 'with a tag ref line' do
+      let(:line) { "def456\trefs/tags/v1.0.0" }
+
+      it 'returns the full ref path as the :ref value' do
+        expect(result).to eq(['tags', 'v1.0.0', { ref: 'refs/tags/v1.0.0', sha: 'def456' }])
+      end
+    end
+
+    context 'with a branch name containing a slash' do
+      let(:line) { "abc123\trefs/heads/feature/nested" }
+
+      it 'keeps the whole ref path in :ref and the whole branch name as the name' do
+        expect(result).to eq(['branches', 'feature/nested', { ref: 'refs/heads/feature/nested', sha: 'abc123' }])
+      end
+    end
+
+    context 'with a peeled tag ref line' do
+      let(:line) { "def456\trefs/tags/v1.0.0^{}" }
+
+      it 'preserves the peeled suffix in :ref' do
+        expect(result).to eq(['tags', 'v1.0.0^{}', { ref: 'refs/tags/v1.0.0^{}', sha: 'def456' }])
+      end
+    end
+
     context 'with a symref ref: line (e.g. --symref output)' do
       let(:line) { "ref: refs/heads/main\tHEAD" }
 

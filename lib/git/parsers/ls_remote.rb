@@ -47,12 +47,12 @@ module Git
         end
 
         sha, info = line.split("\t", 2)
-        ref, type, name = info.split('/', 3)
+        _, type, name = info.split('/', 3)
 
         type ||= 'head'
         type = 'branches' if type == 'heads'
 
-        value = { ref: ref, sha: sha }
+        value = { ref: info, sha: sha }
 
         [type, name, value]
       end
