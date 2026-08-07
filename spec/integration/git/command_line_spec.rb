@@ -6,8 +6,14 @@ require 'tempfile'
 RSpec.describe 'CommandLine::Capturing#run raise_on_failure integration' do
   include_context 'in an empty repository'
 
+  # The env below is required, not incidental: git translates its diagnostics when the
+  # environment selects a non-English locale, and the example on raise_on_failure: false
+  # matches the English text "unknown revision". Git::ExecutionContext pins the locale for
+  # every command it runs, but this spec drives Git::CommandLine::Capturing directly and so
+  # bypasses that layer. Without an explicit locale here, the git subprocess inherits the
+  # developer's, and the example fails on any non-English machine.
   let(:command_line) do
-    Git::CommandLine::Capturing.new({}, 'git', [], Logger.new(nil))
+    Git::CommandLine::Capturing.new({ 'LC_ALL' => 'en_US.UTF-8' }, 'git', [], Logger.new(nil))
   end
 
   describe 'raise_on_failure: false' do
