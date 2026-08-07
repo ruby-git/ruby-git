@@ -59,7 +59,6 @@ jobs:
       (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
 
     runs-on: ${{ matrix.operating-system }}
-    continue-on-error: ${{ matrix.experimental == 'Yes' }}
     env: { JAVA_OPTS: -Djdk.io.File.enableADS=true }
 
     strategy:
@@ -69,24 +68,13 @@ jobs:
         #
         ruby: ["3.2", "4.0", "truffleruby-24.2.1", "jruby-10.0.0.1"]
         operating-system: [ubuntu-latest]
-        experimental: [No]
-        java_version: [""]
         include:
           - ruby: "3.2"
             operating-system: windows-latest
-            experimental: No
-            java_version: ""
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
-
-      - name: Setup Java
-        if: matrix.java_version != ''
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: ${{ matrix.java_version }}
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
