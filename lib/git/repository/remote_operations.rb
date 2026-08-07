@@ -639,7 +639,7 @@ module Git
       # @example List all refs from the local repository
       #   repo.ls_remote
       #   # => {"head"=>{ref: "HEAD", sha: "abc123"},
-      #   #     "branches"=>{"main"=>{ref: "refs", sha: "abc123"}}}
+      #   #     "branches"=>{"main"=>{ref: "refs/heads/main", sha: "abc123"}}}
       #
       # @example List all refs from a named remote
       #   repo.ls_remote('origin')
@@ -647,7 +647,7 @@ module Git
       #
       # @example List only tags from a named remote
       #   repo.ls_remote('origin', tags: true)
-      #   # => {"tags"=>{"v1.0"=>{ref: "refs", sha: "def456"}}}
+      #   # => {"tags"=>{"v1.0"=>{ref: "refs/tags/v1.0", sha: "def456"}}}
       #
       # @param location [String, nil] the remote name or URL to query; defaults to
       #   `'.'` (the local repository) when nil
@@ -677,12 +677,6 @@ module Git
       # @raise [ArgumentError] if unsupported options are provided
       #
       # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
-      #
-      # @note The `:ref` value in each pair is only the **first path segment** of the
-      #   full git ref (e.g. `"refs"` for `refs/heads/main`), not the complete ref
-      #   path. This matches the behavior of 4.x. See
-      #   [issue 1416](https://github.com/ruby-git/ruby-git/issues/1416) for the
-      #   planned fix.
       #
       def ls_remote(location = nil, opts = {})
         SharedPrivate.assert_valid_opts!(LS_REMOTE_ALLOWED_OPTS, **opts)

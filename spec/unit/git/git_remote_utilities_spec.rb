@@ -22,7 +22,7 @@ RSpec.describe Git do
 
       expect(described_class.ls_remote('.', tags: true)).to eq(
         'head' => { ref: 'HEAD', sha: 'abc123' },
-        'branches' => { 'main' => { ref: 'refs', sha: 'abc123' } }
+        'branches' => { 'main' => { ref: 'refs/heads/main', sha: 'abc123' } }
       )
     end
 
