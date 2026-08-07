@@ -103,3 +103,82 @@ jobs:
 
       - name: Test Gem
         run: bundle exec rake test:gem
+
+  # Everything above runs in English, because GitHub-hosted runners generate no locale
+  # beyond C/C.UTF-8. That makes git's translated diagnostics invisible to CI even
+  # though they are the default experience for any contributor whose shell locale is not
+  # English -- so a spec that matches an English git message passes here and fails for
+  # them, on code they did not touch. This job is what stops such a spec from reaching
+  # main. See issue #1670.
+  #
+  # German because git's `de` translation is close enough to complete that a
+  # message-matching assumption cannot hide behind a string that was never translated.
+  # Most of the suite is insulated from this by the LC_ALL pin in Git::ExecutionContext;
+  # what this job really exercises is the code that bypasses that pin.
+  locale:
+    name: Non-English Locale
+
+    # Skip this job if triggered by a release PR
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
+
+    runs-on: ubuntu-latest
+
+    # Set at job scope rather than on the spec step so that every step -- including the
+    # check below that the locale is real -- sees exactly the environment the suite runs
+    # under. Setting these before locale-gen is harmless: they are simply inert until
+    # the locale exists.
+    env:
+      LANG: de_DE.UTF-8
+      LC_ALL: de_DE.UTF-8
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      # Two separate things are missing from a stock runner, and skipping either one
+      # leaves the env above inert -- git keeps answering in English and the job proves
+      # nothing:
+      #
+      #   1. The locale itself. Only C and C.UTF-8 are generated, so setlocale fails for
+      #      anything else and every process falls back to English.
+      #   2. git's German message catalog. Unlike Debian, Ubuntu strips gettext catalogs
+      #      out of packages and ships them in language packs, so the installed git has
+      #      no de translation until language-pack-de provides one.
+      #
+      # `update-locale` is deliberately not run: it edits /etc/default/locale, which is
+      # only consulted for logins that do not already set LANG and LC_ALL, and this job
+      # sets both explicitly.
+      - name: Install the German locale and message catalogs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends language-pack-de
+          sudo locale-gen de_DE.UTF-8
+
+      # Ruby 3.4 to share the bundler cache the lint job already warms. Nothing about
+      # this job is Ruby-version specific -- the locale is what is under test.
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+      # Guard against a vacuous pass. Diffing git's output against the same command run
+      # under LC_ALL=C proves translation is actually active, without pinning a German
+      # string that a future git release is free to reword.
+      - name: Verify the Locale Took Effect
+        run: |
+          dir="$(mktemp -d)"
+          localized="$(cd "$dir" && git status 2>&1 || true)"
+          english="$(cd "$dir" && LC_ALL=C git status 2>&1 || true)"
+          echo "LC_ALL=$LC_ALL -> $localized"
+          echo "LC_ALL=C -> $english"
+          if [ "$localized" = "$english" ]; then
+            echo "::error::git is still emitting English: de_DE.UTF-8 did not take effect, so this job would test nothing"
+            exit 1
+          fi
+
+      - name: Run Specs
+        run: bundle exec rake spec
+        timeout-minutes: 15
