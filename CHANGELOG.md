@@ -5,6 +5,47 @@
 
 # Change Log
 
+## [5.0.3](https://github.com/ruby-git/ruby-git/compare/v5.0.2...v5.0.3) (2026-08-07)
+
+
+### Bug Fixes
+
+* Drop unsupported -- separator from remote remove/rename commands ([8ec466f](https://github.com/ruby-git/ruby-git/commit/8ec466f8b282a5e94abd7d499bc26a92d94b2fc3))
+* Remove unreachable case branch in Patch#apply_file_mode ([896fc49](https://github.com/ruby-git/ruby-git/commit/896fc49e3c2c03c401fe1b213c3f75bb40730521))
+* Remove unreachable nil check in Git::Parsers::Grep.parse ([74e919a](https://github.com/ruby-git/ruby-git/commit/74e919a401126ad4415615f92cc9597e966239c6))
+
+
+### Other Changes
+
+* Add Claude Code support alongside GitHub Copilot ([37f7d6a](https://github.com/ruby-git/ruby-git/commit/37f7d6a14c6d53bcf5b9644b8023d323290a5977))
+* Add unit spec for Git::EncodingUtils ([5f0f10e](https://github.com/ruby-git/ruby-git/commit/5f0f10e4db78324bbe453de49598564a25f3428a))
+* Consolidate parallel and serial spec rake tasks ([49616b1](https://github.com/ruby-git/ruby-git/commit/49616b12f52c6941a8617afbf7c56e7d7d5fe0f6))
+* Cover :index option in Git::Factories#worktree_open_options_after_init ([efeba22](https://github.com/ruby-git/ruby-git/commit/efeba2294bb05327489a6523c46f26dc7392a84e))
+* Cover #path when both src and dst are nil ([3a1a05a](https://github.com/ruby-git/ruby-git/commit/3a1a05a9be13057a1fc304df5008866634179124))
+* Cover edge-case branches in Git::Parsers::Diff ([38d8b3f](https://github.com/ruby-git/ruby-git/commit/38d8b3f88f4f76a65776e9f6b8b87c6bb839e710))
+* Cover Errno::ESRCH timeout-race rescue in run_process_executer ([899bf36](https://github.com/ruby-git/ruby-git/commit/899bf36399489038524cecf1d7ac2c606df03bde))
+* Cover Git::Branch#merge ([71c0ea3](https://github.com/ruby-git/ruby-git/commit/71c0ea39d4c786a38245a8fb95fd93235ee03903))
+* Cover Git::Branch#stashes ([27ba130](https://github.com/ruby-git/ruby-git/commit/27ba130a6cd3ef78171d1bb20230459c3f678a3a))
+* Cover Git::Diff#name_status ([fa2ee98](https://github.com/ruby-git/ruby-git/commit/fa2ee98fd4613177843d285f7bc4a2ffb44ca79c))
+* Cover Git::Factories#parse_clone_stderr unparseable-output branch ([65aa9b9](https://github.com/ruby-git/ruby-git/commit/65aa9b9318c7f8a8986c2aaae7dd0af0aeec4d69))
+* Cover Git::Parsers::CatFile.each_header without trailing separator ([b7a9ed9](https://github.com/ruby-git/ruby-git/commit/b7a9ed93e03dcbd22a4fb25e9bb7b9c49647262d))
+* Cover Git::Parsers::LsTree.parse with no tab-separated filename ([98b9ebf](https://github.com/ruby-git/ruby-git/commit/98b9ebf03c49f51c76b2e56dd670a9f68f220da8))
+* Cover Git::Parsers::Remote.apply_pair unrecognized-variable branch ([03b10f6](https://github.com/ruby-git/ruby-git/commit/03b10f618a2f012b578ab995120cedbcd96ed8d1))
+* Cover Git::Stashes#save ([7bca04c](https://github.com/ruby-git/ruby-git/commit/7bca04c53e64c747627784773d0c03ad0b9ff2e3))
+* Cover Git.const_missing fallback branch for unrelated constants ([05c3c43](https://github.com/ruby-git/ruby-git/commit/05c3c4350e18bf1403fa314902708cfc40848c70))
+* Cover Git.export ([4bd7f58](https://github.com/ruby-git/ruby-git/commit/4bd7f58432a19385ff55aecca9e89e2d9a96fa4a))
+* Cover normalize_fetch_keys with a String option key ([47fb7fe](https://github.com/ruby-git/ruby-git/commit/47fb7fe061df9177a26ec7ada90b35b902ffc1df))
+* Disable coverage for spec:integration, add SPEC filtering, fix formatters ([cb53d03](https://github.com/ruby-git/ruby-git/commit/cb53d03f8b671873f24368aadcafec638de32345))
+* Document the project test coverage policy ([d378c1e](https://github.com/ruby-git/ruby-git/commit/d378c1e8b75e0c4209e17cc040ed36eb93053797))
+* Enforce 100% unit test coverage on pull requests ([a446098](https://github.com/ruby-git/ruby-git/commit/a446098af548039b2c8b68bbb6562a53cb79fe40))
+* Guard checkout-index nonexistent-path spec for git &lt; 2.30.0 ([cf212a9](https://github.com/ruby-git/ruby-git/commit/cf212a98b41218a7940ce54aa9b7c56a630412c3))
+* Guard worktree repair spec for git &lt; 2.29.0 ([c527fb1](https://github.com/ruby-git/ruby-git/commit/c527fb15c2f21f9be5913192d43c847cf49681eb))
+* **merge:** Fix incorrect version-gated failure expectation in quit_spec ([24c5ba4](https://github.com/ruby-git/ruby-git/commit/24c5ba4ce77b02413485d226a94b283f6af9d110))
+* Read the gem version without loading lib/git/version.rb ([45c4b14](https://github.com/ruby-git/ruby-git/commit/45c4b14e944fcb43bda800823e377cf954ce2d3b))
+* Require git 2.39.0 for maintenance register/unregister --config-file specs ([5b1fd52](https://github.com/ruby-git/ruby-git/commit/5b1fd527c39e4b3f1796851795a44694d94f4402))
+* Skip get-urlmatch scope spec on git &lt; 2.42.0 ([e1ede7a](https://github.com/ruby-git/ruby-git/commit/e1ede7adddea28b654a183c618fc2336b5ffb83b))
+* Upgrade simplecov and simplecov-rspec to ~&gt; 1.0 ([65e92b9](https://github.com/ruby-git/ruby-git/commit/65e92b9a9a621435efbf2a0855d48c47bb62425d))
+
 ## [5.0.2](https://github.com/ruby-git/ruby-git/compare/v5.0.1...v5.0.2) (2026-08-02)
 
 
