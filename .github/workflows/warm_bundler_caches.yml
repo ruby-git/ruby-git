@@ -52,7 +52,7 @@ jobs:
           - ruby: "3.2"
             operating-system: ubuntu-latest
 
-          - # Hosts the lint job in continuous_integration.yml
+          - # Hosts the lint and locale jobs in continuous_integration.yml
             ruby: "3.4"
             operating-system: ubuntu-latest
 
