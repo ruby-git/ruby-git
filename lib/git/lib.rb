@@ -2075,7 +2075,7 @@ module Git
     # @example Unsetting an environment variable (used by worktree_command_line)
     #   env_overrides('GIT_INDEX_FILE' => nil)
     #   # => { 'GIT_DIR' => '/path/to/.git', 'GIT_WORK_TREE' => '/path/to/worktree',
-    #   #      'GIT_INDEX_FILE' => nil, 'GIT_SSH' => <git_ssh_value>, 'LC_ALL' => 'en_US.UTF-8' }
+    #   #      'GIT_INDEX_FILE' => nil, 'GIT_SSH' => <git_ssh_value>, 'LC_ALL' => <pinned_locale> }
     #   # When passed to Process.spawn, GIT_INDEX_FILE will be unset in the environment
     #
     # @see https://ruby-doc.org/core/Process.html#method-c-spawn Process.spawn
@@ -2088,8 +2088,65 @@ module Git
         'GIT_WORK_TREE' => @git_work_dir,
         'GIT_INDEX_FILE' => @git_index_file,
         'GIT_SSH' => resolved_git_ssh,
-        'LC_ALL' => 'en_US.UTF-8'
+        # Pin the locale so git's behavior does not depend on the user's environment.
+        # Added for issue #753, where a German user's `git branch` output
+        # ("* (HEAD losgelöst bei origin/25.1)") broke branch parsing.
+        #
+        # The pin has two halves, and both are load-bearing here:
+        #
+        # - Messages: keeps git's human-readable text in English. `BRANCH_LINE_REGEXP`
+        #   matches the literal English strings "(HEAD detached at ...)" and
+        #   "(not a branch)" in `git branch -a` output, which is the exact issue #753
+        #   failure mode.
+        # - Ctype: makes git's regex engine match *characters* rather than *bytes*.
+        #   Under a C ctype, `grep` and `log --grep` silently return wrong answers —
+        #   with exit status zero — for any pattern whose metacharacters span
+        #   non-ASCII text.
+        #
+        # So do not "simplify" this to `C`: that yields English messages and a broken
+        # ctype, which is the worst of both. A pinned locale the host does not have
+        # degrades to that same C ctype, which is why each branch below has to name a
+        # locale that actually exists on the platform it applies to:
+        #
+        # - Non-Darwin: `C.UTF-8`. Stock Debian, Ubuntu, and RHEL images generate no
+        #   `en_US.UTF-8`, so pinning it there produced exactly the silent breakage
+        #   above. (musl ignores the locale name for ctype, so Alpine is UTF-8 either
+        #   way.)
+        # - Darwin: `en_US.UTF-8`, which every macOS release ships. `C.UTF-8` did not
+        #   arrive until macOS 15, so macOS 11–14 — including Intel Macs that are
+        #   hardware-capped below 15 — would break under it. Delete this branch once
+        #   macOS 14 and earlier are out of support.
+        #
+        # Windows takes the non-Darwin branch, where the value makes no difference:
+        # Git for Windows folds case and runs PCRE in UTF mode under every value, and
+        # matches bytes for `.` and POSIX classes under every value — measured on git
+        # 2.55.0 against `en_US.UTF-8`, `C.UTF-8`, `C`, and no pin at all.
+        #
+        # RHEL 7 (glibc 2.17) has neither locale and gets a C ctype whatever is pinned.
+        # It is EOL, and there is deliberately no public override for this value.
+        'LC_ALL' => darwin_platform? ? 'en_US.UTF-8' : 'C.UTF-8'
       }.merge(additional_overrides)
+    end
+
+    # Whether this process is running on macOS
+    #
+    # Checks `RUBY_DESCRIPTION` as well as `RUBY_PLATFORM` because JRuby reports
+    # `RUBY_PLATFORM` as `"java"` on every host and records the real platform only in
+    # `RUBY_DESCRIPTION` (as, for example, `"... [arm64-darwin]"`). Testing
+    # `RUBY_PLATFORM` alone would put JRuby on macOS onto the non-Darwin branch, which is
+    # the one platform pairing that branch must not be given. This is the same detection
+    # the test suite uses for Windows, and for the same reason.
+    #
+    # Test the platform plainly rather than sniffing the Darwin version: `RUBY_PLATFORM`
+    # records the version Ruby was *built* against, so a Ruby built on macOS 14 still
+    # reports `darwin23` when run on macOS 15.
+    #
+    # @return [Boolean] true if this process is running on macOS
+    #
+    # @api private
+    #
+    def darwin_platform?
+      RUBY_PLATFORM.include?('darwin') || RUBY_DESCRIPTION.include?('darwin')
     end
 
     # Resolve the git_ssh value to use for this instance
