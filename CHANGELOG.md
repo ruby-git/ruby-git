@@ -5,6 +5,17 @@
 
 # Change Log
 
+## [5.0.5](https://github.com/ruby-git/ruby-git/compare/v5.0.4...v5.0.5) (2026-08-08)
+
+
+### Other Changes
+
+* Gate merges on a matrix-free job instead of the per-matrix checks ([47f2d17](https://github.com/ruby-git/ruby-git/commit/47f2d17d16d1ea201bf9cc8f74aedffa7619eb0a)), closes [#1675](https://github.com/ruby-git/ruby-git/issues/1675)
+* Remove vestigial matrix dimensions ([3a89886](https://github.com/ruby-git/ruby-git/commit/3a8988650a7d8f0a81c093c470fb9f524142c9b9)), closes [#1676](https://github.com/ruby-git/ruby-git/issues/1676)
+* Run RuboCop and YARD once instead of on every matrix job ([0726964](https://github.com/ruby-git/ruby-git/commit/072696491662867cfbc0424febcf36542548f051))
+* Run the test suite under a non-English locale ([c65d402](https://github.com/ruby-git/ruby-git/commit/c65d4022f358a4e4e676dbf2492427851205cdd6)), closes [#1670](https://github.com/ruby-git/ruby-git/issues/1670)
+* Warm bundler caches at default-branch scope on push to main ([2821477](https://github.com/ruby-git/ruby-git/commit/282147796f6b859fb9c7f8b5a614cab399cc9539)), closes [#1674](https://github.com/ruby-git/ruby-git/issues/1674)
+
 ## [5.0.4](https://github.com/ruby-git/ruby-git/compare/v5.0.3...v5.0.4) (2026-08-07)
 
 
