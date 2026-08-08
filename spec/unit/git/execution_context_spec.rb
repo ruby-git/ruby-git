@@ -76,7 +76,7 @@ RSpec.describe Git::ExecutionContext do
           'GIT_INDEX_FILE' => '/fake/repo/.git/index',
           'GIT_SSH' => '/configured/ssh',
           'GIT_EDITOR' => 'true',
-          'LC_ALL' => 'en_US.UTF-8'
+          'LC_ALL' => expected_lc_all
         )
       end
 
@@ -84,6 +84,22 @@ RSpec.describe Git::ExecutionContext do
         allow(Git::Config.instance).to receive(:git_ssh).and_return('/first/ssh', '/second/ssh')
         expect(context.env_overrides['GIT_SSH']).to eq('/first/ssh')
         expect(context.env_overrides['GIT_SSH']).to eq('/second/ssh')
+      end
+    end
+
+    context 'when running on Darwin' do
+      before { stub_const('RUBY_PLATFORM', 'arm64-darwin24') }
+
+      it 'pins LC_ALL to en_US.UTF-8' do
+        expect(env).to include('LC_ALL' => 'en_US.UTF-8')
+      end
+    end
+
+    context 'when running on a platform other than Darwin' do
+      before { stub_const('RUBY_PLATFORM', 'x86_64-linux') }
+
+      it 'pins LC_ALL to C.UTF-8' do
+        expect(env).to include('LC_ALL' => 'C.UTF-8')
       end
     end
 
@@ -141,7 +157,7 @@ RSpec.describe Git::ExecutionContext do
           'GIT_SSH' => nil,
           'GIT_DIR' => '/fake/repo/.git',
           'GIT_WORK_TREE' => '/fake/repo',
-          'LC_ALL' => 'en_US.UTF-8'
+          'LC_ALL' => expected_lc_all
         )
       end
     end
@@ -229,10 +245,10 @@ RSpec.describe Git::ExecutionContext do
         allow(command_line_double).to receive(:run).and_return(result)
       end
 
-      it 'passes GIT_EDITOR=true and LC_ALL=en_US.UTF-8 in the env hash' do
+      it 'passes GIT_EDITOR=true and the platform pinned LC_ALL in the env hash' do
         context.command_capturing('version')
         expect(Git::CommandLine::Capturing).to have_received(:new).with(
-          hash_including('GIT_EDITOR' => 'true', 'LC_ALL' => 'en_US.UTF-8'),
+          hash_including('GIT_EDITOR' => 'true', 'LC_ALL' => expected_lc_all),
           anything, anything, anything
         )
       end
@@ -290,7 +306,7 @@ RSpec.describe Git::ExecutionContext do
         context.command_streaming('version')
 
         expect(Git::CommandLine::Streaming).to have_received(:new).with(
-          hash_including('GIT_EDITOR' => 'true', 'LC_ALL' => 'en_US.UTF-8'),
+          hash_including('GIT_EDITOR' => 'true', 'LC_ALL' => expected_lc_all),
           context.binary_path,
           anything,
           anything

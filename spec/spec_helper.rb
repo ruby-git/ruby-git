@@ -146,6 +146,18 @@ end
 
 def ci_build? = ENV.fetch('GITHUB_ACTIONS', 'false') == 'true'
 
+# The value ruby-git pins `LC_ALL` to on this host
+#
+# Mirrors the platform-conditional pin in `Git::ExecutionContext#env_overrides` so
+# that specs which merely pass through the git environment can assert on it without
+# hardcoding a literal that is only correct on one platform family. Specs that are
+# *about* the pin stub `RUBY_PLATFORM` and assert literals instead, so both branches
+# stay covered on every host.
+#
+# @return [String] the `LC_ALL` value expected on the current platform
+#
+def expected_lc_all = RUBY_PLATFORM.include?('darwin') ? 'en_US.UTF-8' : 'C.UTF-8'
+
 # Returns false when running on CI, or a skip-reason string when not on CI.
 # Use as the `skip:` metadata value for tests that modify shared OS state
 # (e.g. launchctl/systemd scheduler entries) and must only run on CI where
