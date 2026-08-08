@@ -94,10 +94,10 @@ RSpec.describe Git::ExecutionContext::Global do
         allow(command_line_double).to receive(:run).and_return(result)
       end
 
-      it 'passes GIT_EDITOR=true and LC_ALL=en_US.UTF-8 in the env hash' do
+      it 'passes GIT_EDITOR=true and the platform pinned LC_ALL in the env hash' do
         context.command_capturing('version')
         expect(Git::CommandLine::Capturing).to have_received(:new).with(
-          hash_including('GIT_EDITOR' => 'true', 'LC_ALL' => 'en_US.UTF-8'),
+          hash_including('GIT_EDITOR' => 'true', 'LC_ALL' => expected_lc_all),
           anything, anything, anything
         )
       end

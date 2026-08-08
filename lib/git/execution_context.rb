@@ -453,7 +453,46 @@ module Git
         'GIT_INDEX_FILE' => git_index_file,
         'GIT_SSH' => git_ssh,
         'GIT_EDITOR' => 'true',
-        'LC_ALL' => 'en_US.UTF-8'
+        # Pin the locale so git's behavior does not depend on the user's environment.
+        # Added for issue #753, where a German user's `git branch` output
+        # ("* (HEAD losgelöst bei origin/25.1)") broke branch parsing.
+        #
+        # The pin has two halves, and the load-bearing one is not the obvious one:
+        #
+        # - Messages: keeps git's human-readable text in English. This is now only
+        #   defense-in-depth — lib/ reads `--format=%(refname:short)` rather than
+        #   git's prose, and matches no English git message.
+        # - Ctype: makes git's regex engine match *characters* rather than *bytes*.
+        #   This is the half that matters. Under a C ctype, `grep`, `log`, and the
+        #   `config` value regexes silently return wrong answers — with exit status
+        #   zero — for any pattern whose metacharacters span non-ASCII text.
+        #
+        # So do not "simplify" this to `C`: that yields English messages and a broken
+        # ctype, which is the worst of both. A pinned locale the host does not have
+        # degrades to that same C ctype, which is why each branch below has to name a
+        # locale that actually exists on the platform it applies to:
+        #
+        # - Non-Darwin: `C.UTF-8`. Stock Debian, Ubuntu, and RHEL images generate no
+        #   `en_US.UTF-8`, so pinning it there produced exactly the silent breakage
+        #   above. (musl ignores the locale name for ctype, so Alpine is UTF-8 either
+        #   way.)
+        # - Darwin: `en_US.UTF-8`, which every macOS release ships. `C.UTF-8` did not
+        #   arrive until macOS 15, so macOS 11–14 — including Intel Macs that are
+        #   hardware-capped below 15 — would break under it. Delete this branch once
+        #   macOS 14 and earlier are out of support.
+        #
+        # Windows takes the non-Darwin branch, where the value makes no difference:
+        # Git for Windows folds case and runs PCRE in UTF mode under every value, and
+        # matches bytes for `.` and POSIX classes under every value — measured on git
+        # 2.55.0 against `en_US.UTF-8`, `C.UTF-8`, `C`, and no pin at all.
+        #
+        # Test `RUBY_PLATFORM` plainly rather than sniffing the Darwin version:
+        # `RUBY_PLATFORM` records the version Ruby was *built* against, so a Ruby built
+        # on macOS 14 still reports `darwin23` when run on macOS 15.
+        #
+        # RHEL 7 (glibc 2.17) has neither locale and gets a C ctype whatever is pinned.
+        # It is EOL, and there is deliberately no public override for this value.
+        'LC_ALL' => RUBY_PLATFORM.include?('darwin') ? 'en_US.UTF-8' : 'C.UTF-8'
       }.merge(additional_overrides)
     end
 

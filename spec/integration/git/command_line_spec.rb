@@ -13,7 +13,7 @@ RSpec.describe 'CommandLine::Capturing#run raise_on_failure integration' do
   # bypasses that layer. Without an explicit locale here, the git subprocess inherits the
   # developer's, and the example fails on any non-English machine.
   let(:command_line) do
-    Git::CommandLine::Capturing.new({ 'LC_ALL' => 'en_US.UTF-8' }, 'git', [], Logger.new(nil))
+    Git::CommandLine::Capturing.new({ 'LC_ALL' => expected_lc_all }, 'git', [], Logger.new(nil))
   end
 
   describe 'raise_on_failure: false' do

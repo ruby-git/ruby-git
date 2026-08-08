@@ -301,7 +301,7 @@ The `git` gem is organized into three architectural layers:
 | --- | --- | --- |
 | **Facade** (`Git::Repository` and `Git`) | Public API | Normalizes Ruby arguments, sets safe defaults, calls one or more `Git::Commands::*` classes, and may parse output into public Ruby objects |
 | **Command** (`Git::Commands::*`) | Neutral git CLI interface | Declares CLI arguments via the [Arguments DSL](lib/git/commands/arguments.rb), builds the git argv and executes git via `#call`, and returns `Git::CommandLine::Result` |
-| **Execution** (`Git::ExecutionContext::*`) | Execution context and subprocess defaults | Carries execution settings such as working directory, environment, timeout, binary path, and logging; runs the git CLI with default global options (such as `-c color.ui=false`) and subprocess environment variables (such as `LC_ALL=en_US.UTF-8`) |
+| **Execution** (`Git::ExecutionContext::*`) | Execution context and subprocess defaults | Carries execution settings such as working directory, environment, timeout, binary path, and logging; runs the git CLI with default global options (such as `-c color.ui=false`) and subprocess environment variables (such as a platform-conditional `LC_ALL` — `en_US.UTF-8` on macOS, `C.UTF-8` elsewhere) |
 
 Command classes (`Git::Commands::*`) are **faithful, neutral representations of the
 git CLI**. Each command class does the following:
