@@ -486,17 +486,34 @@ module Git
         # matches bytes for `.` and POSIX classes under every value — measured on git
         # 2.55.0 against `en_US.UTF-8`, `C.UTF-8`, `C`, and no pin at all.
         #
-        # Test `RUBY_PLATFORM` plainly rather than sniffing the Darwin version:
-        # `RUBY_PLATFORM` records the version Ruby was *built* against, so a Ruby built
-        # on macOS 14 still reports `darwin23` when run on macOS 15.
-        #
         # RHEL 7 (glibc 2.17) has neither locale and gets a C ctype whatever is pinned.
         # It is EOL, and there is deliberately no public override for this value.
-        'LC_ALL' => RUBY_PLATFORM.include?('darwin') ? 'en_US.UTF-8' : 'C.UTF-8'
+        'LC_ALL' => darwin_platform? ? 'en_US.UTF-8' : 'C.UTF-8'
       }.merge(additional_overrides)
     end
 
     private
+
+    # Whether this process is running on macOS
+    #
+    # Checks `RUBY_DESCRIPTION` as well as `RUBY_PLATFORM` because JRuby reports
+    # `RUBY_PLATFORM` as `"java"` on every host and records the real platform only in
+    # `RUBY_DESCRIPTION` (as, for example, `"... [arm64-darwin]"`). Testing
+    # `RUBY_PLATFORM` alone would put JRuby on macOS onto the non-Darwin branch of the
+    # `LC_ALL` pin, which is the one platform pairing that branch must never be given —
+    # see {#env_overrides}.
+    #
+    # Test the platform plainly rather than sniffing the Darwin version: `RUBY_PLATFORM`
+    # records the version Ruby was *built* against, so a Ruby built on macOS 14 still
+    # reports `darwin23` when run on macOS 15.
+    #
+    # @return [Boolean] true if this process is running on macOS
+    #
+    # @api private
+    #
+    def darwin_platform?
+      RUBY_PLATFORM.include?('darwin') || RUBY_DESCRIPTION.include?('darwin')
+    end
 
     # Returns the Array of git global option strings for this context
     #
