@@ -104,6 +104,44 @@ jobs:
       - name: Test Gem
         run: bundle exec rake test:gem
 
+  # The branch ruleset cannot require the matrix jobs above directly. A required status
+  # check is matched by name, and `build`'s name is a template -- GitHub only expands it
+  # into "Ruby 3.2 on ubuntu-latest" and friends when it evaluates the matrix. The
+  # job-level `if:` short-circuits before that happens, so a release PR reports one check
+  # named literally "Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}" and the
+  # five expanded names never report at all. Required checks that never report block a PR
+  # indefinitely rather than passing, which is what stranded the v5.0.5 release PR.
+  #
+  # So the ruleset requires this job instead: one stable name, no matrix, no `if:` guard
+  # on the name's existence. It also decouples the required-check list from the matrix, so
+  # adding or dropping a Ruby version no longer needs a matching ruleset edit.
+  #
+  # `always()` rather than `!cancelled()` because a skipped job reports a skipped
+  # conclusion, which rulesets treat as passing -- so skipping this gate on a cancelled
+  # run would report success for a build that never finished. Running it and inspecting
+  # `needs.build.result` fails closed instead: only success (the matrix passed) and
+  # skipped (a release PR, where the matrix was never meant to run) are accepted.
+  build-complete:
+    name: All Specs Passed
+
+    needs: [build]
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check the result of the build job
+        run: |
+          case "${{ needs.build.result }}" in
+            success | skipped)
+              echo "build: ${{ needs.build.result }}"
+              ;;
+            *)
+              echo "::error::build: ${{ needs.build.result }}"
+              exit 1
+              ;;
+          esac
+
   # Everything above runs in English, because GitHub-hosted runners generate no locale
   # beyond C/C.UTF-8. That makes git's translated diagnostics invisible to CI even
   # though they are the default experience for any contributor whose shell locale is not
