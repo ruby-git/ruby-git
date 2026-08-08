@@ -151,12 +151,22 @@ def ci_build? = ENV.fetch('GITHUB_ACTIONS', 'false') == 'true'
 # Mirrors the platform-conditional pin in `Git::ExecutionContext#env_overrides` so
 # that specs which merely pass through the git environment can assert on it without
 # hardcoding a literal that is only correct on one platform family. Specs that are
-# *about* the pin stub `RUBY_PLATFORM` and assert literals instead, so both branches
-# stay covered on every host.
+# *about* the pin stub `RUBY_PLATFORM` and `RUBY_DESCRIPTION` and assert literals
+# instead, so every branch stays covered on every host.
 #
 # @return [String] the `LC_ALL` value expected on the current platform
 #
-def expected_lc_all = RUBY_PLATFORM.include?('darwin') ? 'en_US.UTF-8' : 'C.UTF-8'
+def expected_lc_all = darwin_platform? ? 'en_US.UTF-8' : 'C.UTF-8'
+
+# Whether these specs are running on macOS
+#
+# Checks `RUBY_DESCRIPTION` as well as `RUBY_PLATFORM` because JRuby reports
+# `RUBY_PLATFORM` as `"java"` on every host. Mirrors
+# `Git::ExecutionContext#darwin_platform?`.
+#
+# @return [Boolean] true if these specs are running on macOS
+#
+def darwin_platform? = RUBY_PLATFORM.include?('darwin') || RUBY_DESCRIPTION.include?('darwin')
 
 # Returns false when running on CI, or a skip-reason string when not on CI.
 # Use as the `skip:` metadata value for tests that modify shared OS state

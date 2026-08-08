@@ -87,19 +87,61 @@ RSpec.describe Git::ExecutionContext do
       end
     end
 
-    context 'when running on Darwin' do
-      before { stub_const('RUBY_PLATFORM', 'arm64-darwin24') }
+    # The pinned locale has to name a locale that exists on the platform it applies to,
+    # or the git subprocess falls back to a C ctype and matches bytes rather than
+    # characters. Every branch is asserted on every host so none can rot on a platform
+    # CI does not run — there is no macOS job in the matrix.
+    #
+    # `RUBY_PLATFORM` and `RUBY_DESCRIPTION` are stubbed together because the platform
+    # is read from the latter when the former is `'java'`; stubbing only one would leave
+    # the host's real platform visible through the other.
+    describe 'the LC_ALL pin' do
+      context 'when running on Darwin' do
+        before do
+          stub_const('RUBY_PLATFORM', 'arm64-darwin24')
+          stub_const('RUBY_DESCRIPTION', 'ruby 3.4.1 (2024-12-25 revision abc1234) [arm64-darwin24]')
+        end
 
-      it 'pins LC_ALL to en_US.UTF-8' do
-        expect(env).to include('LC_ALL' => 'en_US.UTF-8')
+        it 'pins LC_ALL to en_US.UTF-8' do
+          expect(env).to include('LC_ALL' => 'en_US.UTF-8')
+        end
       end
-    end
 
-    context 'when running on a platform other than Darwin' do
-      before { stub_const('RUBY_PLATFORM', 'x86_64-linux') }
+      context 'when running on a platform other than Darwin' do
+        before do
+          stub_const('RUBY_PLATFORM', 'x86_64-linux')
+          stub_const('RUBY_DESCRIPTION', 'ruby 3.4.1 (2024-12-25 revision abc1234) [x86_64-linux]')
+        end
 
-      it 'pins LC_ALL to C.UTF-8' do
-        expect(env).to include('LC_ALL' => 'C.UTF-8')
+        it 'pins LC_ALL to C.UTF-8' do
+          expect(env).to include('LC_ALL' => 'C.UTF-8')
+        end
+      end
+
+      # JRuby reports RUBY_PLATFORM as 'java' on every host and records the real
+      # platform only in RUBY_DESCRIPTION. A Darwin check that consults only
+      # RUBY_PLATFORM would put JRuby on macOS onto the non-Darwin branch — the one
+      # pairing that branch exists to prevent, since macOS 11-14 have no C.UTF-8.
+      context 'when running under JRuby on Darwin' do
+        before do
+          stub_const('RUBY_PLATFORM', 'java')
+          stub_const('RUBY_DESCRIPTION', 'jruby 10.0.0.1 (3.4.2) OpenJDK 64-Bit Server VM [arm64-darwin]')
+        end
+
+        it 'pins LC_ALL to en_US.UTF-8' do
+          expect(env).to include('LC_ALL' => 'en_US.UTF-8')
+        end
+      end
+
+      context 'when running under JRuby on a platform other than Darwin' do
+        before do
+          stub_const('RUBY_PLATFORM', 'java')
+          stub_const('RUBY_DESCRIPTION', 'jruby 10.0.0.1 (3.4.2) OpenJDK 64-Bit Server VM [x86_64-linux]')
+        end
+
+        it 'pins LC_ALL to C.UTF-8' do
+          expect(env).to include('LC_ALL' => 'C.UTF-8')
+        end
       end
     end
 
