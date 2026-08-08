@@ -193,6 +193,60 @@ module Test
         RUBY_PLATFORM == 'java'
       end
 
+      # The value this gem pins `LC_ALL` to on this host
+      #
+      # Mirrors the platform-conditional pin in `Git::Lib#env_overrides` so that tests
+      # which merely pass the git environment through can assert on it without
+      # hardcoding a literal that is only correct on one platform family. Tests that
+      # are *about* the pin use {#with_ruby_platform} and assert literals instead, so
+      # every branch stays covered on every host.
+      #
+      # @return [String] the `LC_ALL` value expected on the current platform
+      #
+      def expected_lc_all
+        darwin_platform? ? 'en_US.UTF-8' : 'C.UTF-8'
+      end
+
+      # Whether these tests are running on macOS
+      #
+      # Checks `RUBY_DESCRIPTION` as well as `RUBY_PLATFORM` for the same reason
+      # {#windows_platform?} does: JRuby reports `RUBY_PLATFORM` as `"java"` on every
+      # host. Mirrors `Git::Lib#darwin_platform?`.
+      #
+      def darwin_platform?
+        RUBY_PLATFORM.include?('darwin') || RUBY_DESCRIPTION.include?('darwin')
+      end
+
+      # Run the given block with `RUBY_PLATFORM` and `RUBY_DESCRIPTION` replaced
+      #
+      # Both have to be replaced together: the platform is read from `RUBY_DESCRIPTION`
+      # when `RUBY_PLATFORM` is `"java"`, so replacing only the latter would leave the
+      # host's real platform visible through the former. They are ordinary constants on
+      # `Object`, so they are removed and redefined rather than stubbed, and the
+      # original values are always restored.
+      #
+      # @param platform [String] the value `RUBY_PLATFORM` should report in the block
+      # @param description [String] the value `RUBY_DESCRIPTION` should report
+      #
+      # @yield [] the block to run with the replaced constants
+      #
+      # @return [Object] the value returned by the block
+      #
+      def with_ruby_platform(platform, description)
+        originals = { RUBY_PLATFORM: RUBY_PLATFORM, RUBY_DESCRIPTION: RUBY_DESCRIPTION }
+        replacements = { RUBY_PLATFORM: platform, RUBY_DESCRIPTION: description }
+
+        replacements.each { |name, value| redefine_object_const(name, value) }
+        yield
+      ensure
+        originals.each { |name, value| redefine_object_const(name, value) }
+      end
+
+      def redefine_object_const(name, value)
+        Object.send(:remove_const, name)
+        Object.const_set(name, value)
+      end
+
       # Run a command and return the status including stdout and stderr output
       #
       # @example

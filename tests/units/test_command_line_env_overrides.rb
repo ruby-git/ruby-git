@@ -17,7 +17,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
           'GIT_INDEX_FILE' => git.lib.git_index_file,
           'GIT_SSH' => 'ssh -i /path/to/key',
           'GIT_WORK_TREE' => git.lib.git_work_dir,
-          'LC_ALL' => 'en_US.UTF-8'
+          'LC_ALL' => expected_lc_all
         }
         expected_command_line = [expected_env, 'checkout', {}]
 
@@ -37,9 +37,49 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
       assert_equal git.lib.git_dir, env['GIT_DIR']
       assert_equal git.lib.git_work_dir, env['GIT_WORK_TREE']
       assert_equal git.lib.git_index_file, env['GIT_INDEX_FILE']
-      assert_equal 'en_US.UTF-8', env['LC_ALL']
+      assert_equal expected_lc_all, env['LC_ALL']
       assert_equal Git::Base.config.git_ssh, env['GIT_SSH']
     end
+  end
+
+  # The pinned locale has to name a locale that exists on the platform it applies to, or
+  # the git subprocess falls back to a C ctype and matches bytes rather than characters.
+  # Both branches are asserted on every host so neither can rot on a platform CI does not
+  # run (there is no macOS job in the matrix).
+  #
+  # JRuby is covered explicitly because it reports RUBY_PLATFORM as "java" everywhere, so
+  # a Darwin check that consults only RUBY_PLATFORM would put JRuby on macOS onto the
+  # non-Darwin branch — the one pairing that branch must never be given.
+
+  CRUBY_DARWIN = ['arm64-darwin24', 'ruby 3.4.1 (2024-12-25 revision abc1234) [arm64-darwin24]'].freeze
+  CRUBY_LINUX = ['x86_64-linux', 'ruby 3.4.1 (2024-12-25 revision abc1234) [x86_64-linux]'].freeze
+  JRUBY_DARWIN = ['java', 'jruby 10.0.0.1 (3.4.2) 2025-05-27 OpenJDK 64-Bit Server VM on 21 [arm64-darwin]'].freeze
+  JRUBY_LINUX = ['java', 'jruby 10.0.0.1 (3.4.2) 2025-05-27 OpenJDK 64-Bit Server VM on 21 [x86_64-linux]'].freeze
+
+  def assert_lc_all_pinned_to(expected, platform)
+    in_temp_dir do |_path|
+      git = Git.init('test_project')
+
+      env = with_ruby_platform(*platform) { git.lib.send(:env_overrides) }
+
+      assert_equal expected, env['LC_ALL']
+    end
+  end
+
+  test 'env_overrides should pin LC_ALL to en_US.UTF-8 on Darwin' do
+    assert_lc_all_pinned_to('en_US.UTF-8', CRUBY_DARWIN)
+  end
+
+  test 'env_overrides should pin LC_ALL to C.UTF-8 on platforms other than Darwin' do
+    assert_lc_all_pinned_to('C.UTF-8', CRUBY_LINUX)
+  end
+
+  test 'env_overrides should pin LC_ALL to en_US.UTF-8 on Darwin under JRuby' do
+    assert_lc_all_pinned_to('en_US.UTF-8', JRUBY_DARWIN)
+  end
+
+  test 'env_overrides should pin LC_ALL to C.UTF-8 on platforms other than Darwin under JRuby' do
+    assert_lc_all_pinned_to('C.UTF-8', JRUBY_LINUX)
   end
 
   test 'env_overrides should allow adding additional environment variables' do
@@ -88,7 +128,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
       # Other variables should remain unchanged
       assert_equal git.lib.git_dir, env['GIT_DIR']
       assert_equal git.lib.git_work_dir, env['GIT_WORK_TREE']
-      assert_equal 'en_US.UTF-8', env['LC_ALL']
+      assert_equal expected_lc_all, env['LC_ALL']
     end
   end
 
@@ -108,7 +148,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
       # Other environment variables should still be present
       assert_equal git.lib.git_dir, env['GIT_DIR']
       assert_equal git.lib.git_work_dir, env['GIT_WORK_TREE']
-      assert_equal 'en_US.UTF-8', env['LC_ALL']
+      assert_equal expected_lc_all, env['LC_ALL']
     end
   end
 
