@@ -127,13 +127,13 @@ jobs:
   # `if:` implies `success()`, so a failing matrix would skip this job -- and a skipped
   # required check counts as passing, meaning a red build would merge. `always()` forces a
   # real verdict on every run that is not a release PR. `!cancelled()` is not a substitute:
-  # a cancelled run would then skip the gate and report success for a build that never
-  # finished.
+  # a cancelled run would then skip the gate, and a skipped conclusion is one rulesets treat
+  # as passing -- so a build that never finished would stop blocking the merge.
   #
-  # The case below accepts `success` only. `build` and this job now carry identical guards,
-  # so this job runs exactly when `build` ran; a `skipped` result would mean the two guards
-  # have drifted apart, and failing closed on it turns that into a loud failure rather than
-  # a silent pass.
+  # The case below accepts `success` only. `build` and this job now carry the same release-PR
+  # guard, so this job runs exactly when `build` ran; a `skipped` result would mean the two
+  # guards have drifted apart, and failing closed on it turns that into a loud failure rather
+  # than a silent pass.
   build-complete:
     name: All Specs Passed
 
