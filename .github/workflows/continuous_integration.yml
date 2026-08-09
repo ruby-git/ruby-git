@@ -63,18 +63,31 @@ jobs:
   # indefinitely rather than passing, which is what stranded the v5.0.5 release PR on
   # main and the v4.4.1 release PR here.
   #
-  # So the ruleset requires this job instead: one stable name, no matrix, no `if:` guard
-  # on the name's existence. It also decouples the required-check list from the matrix, so
-  # adding or dropping a Ruby version no longer needs a matching ruleset edit.
+  # So the ruleset requires this job instead: one stable name, no matrix, no template to
+  # expand. It also decouples the required-check list from the matrix, so adding or
+  # dropping a Ruby version no longer needs a matching ruleset edit.
   #
   # Unlike main, this branch has no separate lint job: `rake default` runs RuboCop and
   # YARD inside every matrix leg, so this one check covers everything CI does here.
   #
-  # `always()` rather than `!cancelled()` because a skipped job reports a skipped
-  # conclusion, which rulesets treat as passing -- so skipping this gate on a cancelled
-  # run would report success for a build that never finished. Running it and inspecting
-  # `needs.build.result` fails closed instead: only success (the matrix passed) and
-  # skipped (a release PR, where the matrix was never meant to run) are accepted.
+  # This job carries the same release-PR guard as the matrix above, so that a release PR
+  # reports it as skipped rather than as a success for specs that never ran. Skipping is
+  # safe here and was not safe for `build`: this job's name is a literal string, so the
+  # check run exists and reports a skipped conclusion whether or not the job runs, and
+  # rulesets treat skipped as passing. A matrix job's name does not exist at all until the
+  # matrix is evaluated, which is the whole reason this job exists.
+  #
+  # `always()` is load-bearing and must stay. Without a status check function a job-level
+  # `if:` implies `success()`, so a failing matrix would skip this job -- and a skipped
+  # required check counts as passing, meaning a red build would merge. `always()` forces a
+  # real verdict on every run that is not a release PR. `!cancelled()` is not a substitute:
+  # a cancelled run would then skip the gate, and a skipped conclusion is one rulesets treat
+  # as passing -- so a build that never finished would stop blocking the merge.
+  #
+  # The case below accepts `success` only. `build` and this job now carry the same release-PR
+  # guard, so this job runs exactly when `build` ran; a `skipped` result would mean the two
+  # guards have drifted apart, and failing closed on it turns that into a loud failure rather
+  # than a silent pass.
   #
   # Note that a matrix leg marked `experimental: Yes` carries continue-on-error, and a
   # continue-on-error failure does not fail the job as a whole -- so it does not fail this
@@ -83,7 +96,13 @@ jobs:
     name: All Specs Passed
 
     needs: [build]
-    if: always()
+
+    # Report a verdict on every non-release PR regardless of the matrix result, and skip
+    # on release PRs, where the matrix was never meant to run.
+    if: >-
+      always() &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--')))
 
     runs-on: ubuntu-latest
 
@@ -91,7 +110,7 @@ jobs:
       - name: Check the result of the build job
         run: |
           case "${{ needs.build.result }}" in
-            success | skipped)
+            success)
               echo "build: ${{ needs.build.result }}"
               ;;
             *)
