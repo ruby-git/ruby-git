@@ -5,6 +5,19 @@
 
 # Change Log
 
+## [4.4.1](https://github.com/ruby-git/ruby-git/compare/v4.4.0...v4.4.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* Pin LC_ALL to a locale that exists on the host platform ([690360e](https://github.com/ruby-git/ruby-git/commit/690360e386bac1dafb7b5bd0adbf10072e834f69)), closes [#1669](https://github.com/ruby-git/ruby-git/issues/1669)
+
+
+### Other Changes
+
+* Add a matrix-free All Specs Passed gate to 4.x ([5352d6d](https://github.com/ruby-git/ruby-git/commit/5352d6d4edfcb52c544139e265fb3636bc1937b7)), closes [#1675](https://github.com/ruby-git/ruby-git/issues/1675)
+* Skip the All Specs Passed gate on release PRs ([52473b2](https://github.com/ruby-git/ruby-git/commit/52473b21a733499eb274a7b03d53f1a0efbf5c86)), closes [#1675](https://github.com/ruby-git/ruby-git/issues/1675)
+
 ## [4.4.0](https://github.com/ruby-git/ruby-git/compare/v4.3.2...v4.4.0) (2026-07-11)
 
 
