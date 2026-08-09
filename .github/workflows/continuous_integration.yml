@@ -220,3 +220,105 @@ jobs:
       - name: Run Specs
         run: bundle exec rake spec
         timeout-minutes: 15
+
+  # On the ubuntu jobs above, `C.UTF-8` and `en_US.UTF-8` both resolve to a UTF-8 ctype
+  # (measured on the runner in issue #1669), and on windows the pinned value makes no
+  # difference under any value at all. So the non-ASCII regex coverage those jobs run
+  # passes whatever `Git::ExecutionContext` pins, and cannot tell a correct `LC_ALL`
+  # value from a wrong one. That blind spot is what let the original defect go
+  # unreported for eighteen months: the gem pinned `en_US.UTF-8`, stock Debian, Ubuntu,
+  # and RHEL images generate no such locale, git silently fell back to a C ctype, and
+  # every non-ASCII regex in `grep`, `log`, and the `config` value regexes returned a
+  # wrong answer with exit status zero -- while CI stayed green throughout.
+  #
+  # This job makes one run discriminating. `LOCPATH` overrides where glibc looks for
+  # compiled locale data, so pointing it at an empty directory takes away every locale
+  # that needs a locale archive -- `en_US.UTF-8` among them -- while leaving `C.UTF-8`
+  # working, because glibc 2.35 and later compile that one into the library itself.
+  # The suite then runs in an environment where the value shipped before #1681 fails
+  # and the value shipped now passes: no container image, no second bundle install,
+  # no cache miss. Measured on ubuntu:24.04 (glibc 2.39, the runner's base) with
+  # `en_US.UTF-8` generated first:
+  #
+  #   normal         en_US.UTF-8 charmap=UTF-8           C.UTF-8 charmap=UTF-8
+  #   LOCPATH=empty  en_US.UTF-8 charmap=ANSI_X3.4-1968  C.UTF-8 charmap=UTF-8
+  #
+  # This has to be a property of the run rather than of a spec. Never gate a spec on
+  # whether the pinned locale loads: such a spec skips itself in exactly the
+  # environments where this defect lives, which is how the defect went unreported for
+  # eighteen months.
+  #
+  # LANG is set explicitly so only `en_US.UTF-8` is taken away and the ambient
+  # environment stays UTF-8. The runner already sets this value; pinning it here keeps
+  # the job from depending on the image's default.
+  missing-locale:
+    name: Missing en_US.UTF-8 Locale
+
+    # Skip this job if triggered by a release PR
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
+
+    runs-on: ubuntu-latest
+
+    env:
+      LANG: C.UTF-8
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      # Exported through GITHUB_ENV rather than set at job scope because the `runner`
+      # context is not available there, and the directory has to exist before anything
+      # reads a locale -- glibc warns on every process when LOCPATH names a directory
+      # that does not exist. RUNNER_TEMP rather than the workspace so that
+      # actions/checkout cannot clean it away.
+      - name: Point LOCPATH at an Empty Directory
+        run: |
+          mkdir -p "$RUNNER_TEMP/empty-locale-dir"
+          echo "LOCPATH=$RUNNER_TEMP/empty-locale-dir" >> "$GITHUB_ENV"
+
+      # Ruby 3.4 to share the bundler cache the lint job already warms. Nothing about
+      # this job is Ruby-version specific -- the locale environment is what differs.
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+      # Guard against a vacuous pass, functionally. `locale -a` still lists en_US.utf8
+      # under LOCPATH (measured) even though setlocale then refuses it, so asking git
+      # to match is the only assertion worth making: `.` spans the two-byte U+00C4 only
+      # under a UTF-8 ctype. The metacharacter-free control has to keep matching under
+      # the removed locale as well -- it matches bytes under any ctype, so if it fails,
+      # the probe never delivered UTF-8 bytes to git and the rest proves nothing.
+      - name: Verify the Run Discriminates
+        run: |
+          dir="$(mktemp -d)"
+          cd "$dir"
+          git init -q .
+          printf '\xc3\x84PFEL sind gut\n' > w.txt
+          git add w.txt
+
+          if ! LC_ALL=C.UTF-8 git grep -q '^.PFEL' -- w.txt; then
+            echo "::error::C.UTF-8 no longer yields a UTF-8 ctype under LOCPATH, so this job would fail for the wrong reason"
+            exit 1
+          fi
+          if ! LC_ALL=en_US.UTF-8 git grep -q 'PFEL sind' -- w.txt; then
+            echo "::error::the control pattern did not match, so this probe is not delivering UTF-8 bytes to git"
+            exit 1
+          fi
+          if LC_ALL=en_US.UTF-8 git grep -q '^.PFEL' -- w.txt; then
+            echo "::error::en_US.UTF-8 still yields a UTF-8 ctype, so this job cannot detect a wrong LC_ALL pin"
+            exit 1
+          fi
+          echo "en_US.UTF-8 is unusable and C.UTF-8 works: a wrong pin fails this job"
+
+      # The whole suite rather than the non-ASCII regex spec alone: the point is that
+      # this run is indistinguishable from any other except for the missing locale, so
+      # every locale-sensitive surface added later is covered without touching this
+      # file. It also keeps the coverage gate satisfied, which a single spec file
+      # cannot do.
+      - name: Run Specs
+        run: bundle exec rake spec
+        timeout-minutes: 15
