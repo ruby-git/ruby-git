@@ -184,6 +184,19 @@ RSpec.describe Git::Log do
     end
   end
 
+  describe '#perl_regexp' do
+    before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+    it 'forwards perl_regexp to full_log_commits' do
+      expect(repository).to receive(:full_log_commits).with(hash_including(perl_regexp: true)).and_return([])
+      described_instance.perl_regexp.execute
+    end
+
+    it 'returns the query builder so it can be chained' do
+      expect(described_instance.perl_regexp).to be(described_instance)
+    end
+  end
+
   describe '#cherry' do
     before { allow(repository).to receive(:full_log_commits).and_return([]) }
 

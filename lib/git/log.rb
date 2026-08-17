@@ -142,6 +142,25 @@ module Git
     #
     def grep(regex)         = set_option(:grep, regex)
 
+    # Interprets {#grep} and {#author} patterns as Perl-compatible regular expressions
+    #
+    # Selects PCRE instead of git's default POSIX basic regular expressions for
+    # every pattern in the query. Requires a git built with PCRE support.
+    #
+    # @example Match a metacharacter against a non-ASCII character on Git for Windows
+    #   repo.log.perl_regexp.grep('^.PFEL').execute
+    #
+    # @return [Git::Log] the current query builder
+    #
+    # @note On Git for Windows, git's default regex engine matches *bytes* rather
+    #   than characters, so a metacharacter such as `.` or a POSIX class such as
+    #   `[[:alpha:]]` never matches a whole multi-byte character. The match fails
+    #   silently: git exits zero and the result is empty. PCRE does match characters
+    #   on that platform, but it is a different dialect than git's default, so
+    #   selecting it is a deliberate choice by the caller.
+    #
+    def perl_regexp         = set_option(:perl_regexp, true)
+
     # Limits commits to those that touch the given path or paths
     #
     # @param path [String, Pathname, Array<String, Pathname>] path limiter input

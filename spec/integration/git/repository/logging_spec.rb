@@ -37,6 +37,18 @@ RSpec.describe Git::Repository::Logging, :integration do
         expect(result.first['message']).to eq("Add changelog\n")
         expect(result.first['parent']).to be_a(Array)
       end
+
+      context 'with :perl_regexp', skip: unless_pcre('full_log_commits with perl_regexp') do
+        it 'matches a grep pattern using Perl-compatible regular expressions' do
+          result = described_instance.full_log_commits(grep: 'Add(?= changelog)', perl_regexp: true)
+
+          expect(result.map { |c| c['message'] }).to eq(["Add changelog\n"])
+        end
+
+        it 'treats a PCRE-only construct as a literal without the option' do
+          expect(described_instance.full_log_commits(grep: 'Add(?= changelog)')).to be_empty
+        end
+      end
     end
   end
 
@@ -65,6 +77,18 @@ RSpec.describe Git::Repository::Logging, :integration do
 
         expect(result.size).to eq(1)
         expect(result.first.message.strip).to eq('Add changelog')
+      end
+
+      context 'with #perl_regexp', skip: unless_pcre('Git::Log#perl_regexp') do
+        it 'matches a grep pattern using Perl-compatible regular expressions' do
+          result = described_instance.log.perl_regexp.grep('Add(?= changelog)').execute
+
+          expect(result.map { |c| c.message.strip }).to eq(['Add changelog'])
+        end
+
+        it 'treats a PCRE-only construct as a literal without the selector' do
+          expect(described_instance.log.grep('Add(?= changelog)').execute.size).to eq(0)
+        end
       end
     end
   end
