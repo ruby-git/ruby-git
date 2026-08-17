@@ -64,6 +64,13 @@ Gem::Specification.new do |spec|
 
   unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
     spec.add_development_dependency 'irb', '~> 1.16'
+
+    # Ruby 4.0.0 dropped fiddle from the default gems. On Windows, irb loads
+    # reline/io/windows.rb, which requires fiddle/import for the Win32 console API,
+    # so bin/console cannot start without fiddle in the bundle. Other platforms use
+    # reline's ANSI IO gate and never load it.
+    spec.add_development_dependency 'fiddle', '~> 1.1' if Gem.win_platform?
+
     spec.add_development_dependency 'redcarpet', '~> 3.6'
     spec.add_development_dependency 'yard', '~> 0.9', '>= 0.9.28'
     spec.add_development_dependency 'yard_example_test', '~> 0.2', '>= 0.2.1'
