@@ -454,7 +454,7 @@ module Git
       end
 
       # Option keys accepted by {#grep}
-      GREP_ALLOWED_OPTS = %i[ignore_case i invert_match v extended_regexp E object].freeze
+      GREP_ALLOWED_OPTS = %i[ignore_case i invert_match v extended_regexp E perl_regexp P object].freeze
       private_constant :GREP_ALLOWED_OPTS
 
       # Search tracked file contents in a git tree for a pattern
@@ -474,6 +474,9 @@ module Git
       #
       # @example Case-insensitive search
       #   repo.grep('todo', nil, ignore_case: true)
+      #
+      # @example Match a metacharacter against a non-ASCII character on Git for Windows
+      #   repo.grep('^.PFEL', nil, perl_regexp: true)
       #
       # @param pattern [String] the pattern to search for
       #
@@ -499,6 +502,14 @@ module Git
       #
       #   Alias: :E
       #
+      # @option opts [Boolean, nil] :perl_regexp (nil) use Perl-compatible regular
+      #   expressions (PCRE) for the pattern
+      #
+      #   Requires a git built with PCRE support; git otherwise fails with
+      #   "cannot use Perl-compatible regexes...".
+      #
+      #   Alias: :P
+      #
       # @return [Hash<String, Array<Array(Integer, String)>>] a hash mapping
       #   each `"treeish:filename"` key to an array of `[line_number, text]`
       #   pairs; returns an empty hash when no lines match
@@ -507,6 +518,16 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero status and
       #   stderr is non-empty (e.g. bad object reference)
+      #
+      # @note On Git for Windows, git's default regex engine matches *bytes* rather
+      #   than characters, so a metacharacter such as `.` or a POSIX class such as
+      #   `[[:alpha:]]` never matches a whole multi-byte character. The failure is
+      #   silent: nothing raises, and the empty hash returned is indistinguishable
+      #   from a pattern that genuinely does not occur in the tree. Pass
+      #   `perl_regexp: true` to select PCRE, which does match characters. PCRE is a
+      #   different dialect than git's default POSIX basic/extended regular
+      #   expressions, so this is a deliberate choice by the caller rather than a
+      #   transparent substitution, and it requires a git built with PCRE support.
       #
       # @see https://git-scm.com/docs/git-grep git-grep documentation
       #
