@@ -26,6 +26,13 @@ Layout/LineLength:
 Style/OneClassPerFile:
   Enabled: false
 
+# The repository is stored with LF line endings, but this cop defaults to `native`,
+# which expects CRLF on Windows and so reports every file in the project as an
+# offense there. Pinning it to `lf` makes the lint verdict identical on every
+# platform, which is the same reason CI runs RuboCop on one runtime only.
+Layout/EndOfLine:
+  EnforcedStyle: lf
+
 AllCops:
   # Must match the floor of required_ruby_version in the gemspec: TargetRubyVersion
   # decides which syntax RuboCop permits and suggests, so a value above the floor
