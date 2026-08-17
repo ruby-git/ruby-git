@@ -30,6 +30,8 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 - [Errors Raised by This Gem](#errors-raised-by-this-gem)
 - [Specifying and Handling Timeouts](#specifying-and-handling-timeouts)
 - [Deprecations](#deprecations)
+- [Platform Limitations](#platform-limitations)
+  - [Regex Metacharacters on Git for Windows](#regex-metacharacters-on-git-for-windows)
 - [Project Policies](#project-policies)
   - [Ruby Version Support Policy](#ruby-version-support-policy)
   - [Git Version Support Policy](#git-version-support-policy)
@@ -301,6 +303,71 @@ needed for the upgrade.
 
 For the full list of deprecated methods and their replacements, see
 [UPGRADING.md](UPGRADING.md).
+
+## Platform Limitations
+
+### Regex Metacharacters on Git for Windows
+
+On Git for Windows, git's regex engine matches **bytes** rather than characters. A
+metacharacter such as `.`, or a POSIX character class such as `[[:alpha:]]`, therefore
+never matches a whole multi-byte character. The same call matches on Linux and macOS.
+
+The failure is silent — nothing raises, and the result is indistinguishable from a
+pattern that genuinely does not occur:
+
+```ruby
+# File content, commit message, and config value are all 'ÄPFEL sind gut'.
+# 'Ä' is two bytes in UTF-8 (C3 84), so '.' has to match both to match the character.
+
+repo.grep('^.PFEL')                              # => {} on Windows, matches elsewhere
+repo.log.grep('^.PFEL').execute.size             # =>  0 on Windows, 1 elsewhere
+repo.config_get_all('test.desc', '^.PFEL')       # => [] on Windows, matches elsewhere
+```
+
+This is a property of the regex engine git bundles on that platform, not something the
+gem sets. It is unaffected by the locale: the behavior is identical under `en_US.UTF-8`,
+`C.UTF-8`, `C`, and with no `LC_ALL` set at all. Literal (metacharacter-free) patterns
+and case-insensitive matching are unaffected on every platform.
+
+**Workaround.** Perl-compatible regular expressions do match characters on Git for
+Windows, so the surfaces that can reach a PCRE engine accept an opt-in selector:
+
+```ruby
+repo.grep('^.PFEL', nil, perl_regexp: true)      # matches on every platform
+repo.log.perl_regexp.grep('^.PFEL').execute      # matches on every platform
+repo.full_log_commits(grep: '^.PFEL', perl_regexp: true)
+```
+
+Two caveats:
+
+- **PCRE is a different dialect** than git's default POSIX basic/extended regular
+  expressions. Selecting it is a deliberate choice by the caller, so the gem does not
+  substitute it automatically based on the host.
+- **PCRE must be compiled in.** Git for Windows and the mainstream Linux and macOS
+  packages ship it, but git built without `USE_LIBPCRE` fails with `cannot use
+  Perl-compatible regexes...`.
+
+**There is no workaround for `git config` value patterns.** They are POSIX extended
+regular expressions with no PCRE mode, so `config_get`, `config_get_all`,
+`config_get_regexp`, `config_replace_all`, `config_unset`, and `config_unset_all` cannot
+match a metacharacter against a non-ASCII character on Git for Windows. Match on ASCII
+text or an exact value instead.
+
+`config_replace_all` deserves particular care, because there the failure is not merely an
+empty result. When the value pattern selects nothing, `git config --replace-all` *adds*
+the new value as an additional entry rather than replacing one, and exits zero:
+
+```ruby
+# Existing value of test.desc is 'ÄPFEL sind gut'
+repo.config_replace_all('test.desc', 'NEW', '^.PFEL')
+
+repo.config_get_all('test.desc').map(&:value)
+# => ["NEW"]                     elsewhere — replaced, as intended
+# => ["ÄPFEL sind gut", "NEW"]   on Windows — original kept, duplicate added
+```
+
+So a replace can silently leave the original value in place and add a second entry beside
+it. Confirm with `config_get_all` when the key must end up single-valued.
 
 ## Project Policies
 

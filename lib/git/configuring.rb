@@ -88,6 +88,14 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with an unexpected non-zero status
     #
+    # @note On Git for Windows, git's default regex engine matches *bytes* rather than
+    #   characters, so a metacharacter such as `.` or a POSIX class such as
+    #   `[[:alpha:]]` in `value_regex` never matches a whole multi-byte character. The
+    #   failure is silent: nothing raises, and the outcome is indistinguishable from a
+    #   `value_regex` that genuinely matches nothing. `git config` value patterns are
+    #   POSIX extended regular expressions with no PCRE mode, so unlike
+    #   {Git::Repository#grep} there is no alternate regex engine to select here.
+    #
     def config_get(name, value_regex = nil, **options)
       Private.assert_valid_opts!(CONFIG_GET_ALLOWED_OPTS, **options)
       assert_valid_scope!(**options)
@@ -138,6 +146,14 @@ module Git
     # @raise [ArgumentError] if unsupported options are provided
     #
     # @raise [Git::FailedError] if git exits with an unexpected non-zero status
+    #
+    # @note On Git for Windows, git's default regex engine matches *bytes* rather than
+    #   characters, so a metacharacter such as `.` or a POSIX class such as
+    #   `[[:alpha:]]` in `value_regex` never matches a whole multi-byte character. The
+    #   failure is silent: nothing raises, and the outcome is indistinguishable from a
+    #   `value_regex` that genuinely matches nothing. `git config` value patterns are
+    #   POSIX extended regular expressions with no PCRE mode, so unlike
+    #   {Git::Repository#grep} there is no alternate regex engine to select here.
     #
     def config_get_all(name, value_regex = nil, **options)
       Private.assert_valid_opts!(CONFIG_GET_ALL_ALLOWED_OPTS, **options)
@@ -237,6 +253,14 @@ module Git
     # @raise [ArgumentError] if unsupported options are provided
     #
     # @raise [Git::FailedError] if git exits with an unexpected non-zero status
+    #
+    # @note On Git for Windows, git's default regex engine matches *bytes* rather than
+    #   characters, so a metacharacter such as `.` or a POSIX class such as
+    #   `[[:alpha:]]` in `value_regex` never matches a whole multi-byte character. The
+    #   failure is silent: nothing raises, and the outcome is indistinguishable from a
+    #   `value_regex` that genuinely matches nothing. `git config` value patterns are
+    #   POSIX extended regular expressions with no PCRE mode, so unlike
+    #   {Git::Repository#grep} there is no alternate regex engine to select here.
     #
     def config_get_regexp(name_regex, value_regex = nil, **options)
       Private.assert_valid_opts!(CONFIG_GET_REGEXP_ALLOWED_OPTS, **options)
@@ -529,6 +553,22 @@ module Git
     #
     #   @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @note On Git for Windows, git's default regex engine matches *bytes* rather than
+    #   characters, so a metacharacter such as `.` or a POSIX class such as
+    #   `[[:alpha:]]` in `value_regex` never matches a whole multi-byte character. The
+    #   failure is silent: nothing raises, and the outcome is indistinguishable from a
+    #   `value_regex` that genuinely matches nothing. `git config` value patterns are
+    #   POSIX extended regular expressions with no PCRE mode, so unlike
+    #   {Git::Repository#grep} there is no alternate regex engine to select here.
+    #
+    # @note A `value_regex` that selects nothing does not make this method a no-op.
+    #   `git config --replace-all` *adds* `value` as an additional entry when no
+    #   existing value matches, and exits zero. On Git for Windows, a `value_regex`
+    #   whose metacharacters span non-ASCII text therefore leaves the value it was
+    #   meant to replace in place and silently creates a duplicate entry beside it.
+    #   Confirm the result with {#config_get_all}, or match on ASCII text, when the
+    #   key must end up single-valued.
+    #
     def config_replace_all(name, value, value_regex = nil, **)
       Private.assert_valid_opts!(CONFIG_REPLACE_ALL_ALLOWED_OPTS, **)
       assert_valid_scope!(**)
@@ -621,6 +661,14 @@ module Git
     #
     #   @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @note On Git for Windows, git's default regex engine matches *bytes* rather than
+    #   characters, so a metacharacter such as `.` or a POSIX class such as
+    #   `[[:alpha:]]` in `value_regex` never matches a whole multi-byte character. The
+    #   failure is silent: nothing raises, and the outcome is indistinguishable from a
+    #   `value_regex` that genuinely matches nothing. `git config` value patterns are
+    #   POSIX extended regular expressions with no PCRE mode, so unlike
+    #   {Git::Repository#grep} there is no alternate regex engine to select here.
+    #
     def config_unset(name, value_regex = nil, **)
       Private.assert_valid_opts!(CONFIG_UNSET_ALLOWED_OPTS, **)
       assert_valid_scope!(**)
@@ -665,6 +713,14 @@ module Git
     #   @raise [ArgumentError] if unsupported options are provided
     #
     #   @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    # @note On Git for Windows, git's default regex engine matches *bytes* rather than
+    #   characters, so a metacharacter such as `.` or a POSIX class such as
+    #   `[[:alpha:]]` in `value_regex` never matches a whole multi-byte character. The
+    #   failure is silent: nothing raises, and the outcome is indistinguishable from a
+    #   `value_regex` that genuinely matches nothing. `git config` value patterns are
+    #   POSIX extended regular expressions with no PCRE mode, so unlike
+    #   {Git::Repository#grep} there is no alternate regex engine to select here.
     #
     def config_unset_all(name, value_regex = nil, **)
       Private.assert_valid_opts!(CONFIG_UNSET_ALL_ALLOWED_OPTS, **)
