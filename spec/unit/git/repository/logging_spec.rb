@@ -152,7 +152,8 @@ RSpec.describe Git::Repository::Logging do
           between: %w[v1.0.0 HEAD],
           path_limiter: Pathname('README.md'),
           skip: 1,
-          merges: true
+          merges: true,
+          perl_regexp: true
         }
       end
 
@@ -167,10 +168,23 @@ RSpec.describe Git::Repository::Logging do
           until: '2024-01-31',
           grep: 'fix',
           author: 'Jane',
+          perl_regexp: true,
           max_count: 2,
           path: [Pathname('README.md')],
           skip: 1,
           merges: true
+        ).and_return(command_result(''))
+
+        expect(result).to eq([])
+      end
+    end
+
+    context 'with a :perl_regexp option' do
+      let(:opts) { { grep: '^.PFEL', perl_regexp: true } }
+
+      it 'forwards perl_regexp to the command' do
+        expect(log_command).to receive(:call).with(
+          no_color: true, pretty: 'raw', grep: '^.PFEL', perl_regexp: true
         ).and_return(command_result(''))
 
         expect(result).to eq([])

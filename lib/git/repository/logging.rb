@@ -18,7 +18,7 @@ module Git
       # @return [Array<Symbol>] the supported option keys
       #
       FULL_LOG_COMMITS_ALLOWED_OPTS = %i[
-        count all cherry since until grep author between object path_limiter skip merges
+        count all cherry since until grep author between object path_limiter skip merges perl_regexp
       ].freeze
       private_constant :FULL_LOG_COMMITS_ALLOWED_OPTS
 
@@ -68,6 +68,13 @@ module Git
       #
       # @option opts [Boolean, nil] :merges (nil) include only merge commits
       #
+      # @option opts [Boolean, nil] :perl_regexp (nil) interpret the `:grep` and
+      #   `:author` patterns as Perl-compatible regular expressions (PCRE) instead of
+      #   git's default POSIX basic regular expressions
+      #
+      #   Requires a git built with PCRE support; git otherwise fails with
+      #   "cannot use Perl-compatible regexes...".
+      #
       # @return [Array<Hash>] the parsed raw log output for each commit
       #
       # @raise [ArgumentError] if unsupported options are provided
@@ -75,6 +82,14 @@ module Git
       # @raise [ArgumentError] if `:count` is not an Integer
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @note On Git for Windows, git's default regex engine matches *bytes* rather
+      #   than characters, so a metacharacter such as `.` or a POSIX class such as
+      #   `[[:alpha:]]` never matches a whole multi-byte character in a `:grep` or
+      #   `:author` pattern. The match fails silently: git exits zero and the result
+      #   is empty. Pass `perl_regexp: true` to select PCRE, which does match
+      #   characters. PCRE is a different dialect than git's default, so this is a
+      #   deliberate choice by the caller rather than a transparent substitution.
       #
       # @see https://git-scm.com/docs/git-log git-log
       #
@@ -112,6 +127,14 @@ module Git
       #
       module Private
         module_function
+
+        # Log option keys forwarded to {Git::Commands::Log#call} under the same name
+        #
+        # The remaining options are renamed or reshaped by {#log_base_call_options}.
+        #
+        # @return [Array<Symbol>] the pass-through option keys
+        #
+        PASSTHROUGH_LOG_OPTS = %i[all cherry since until grep author perl_regexp].freeze
 
         # Validates the :count log option
         #
@@ -195,6 +218,9 @@ module Git
         # @option opts [String, nil] :author (nil) only include commits whose author
         #   matches this pattern
         #
+        # @option opts [Boolean, nil] :perl_regexp (nil) interpret the `:grep` and
+        #   `:author` patterns as Perl-compatible regular expressions
+        #
         # @option opts [Integer, nil] :count (nil) maximum number of commits to return
         #
         # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
@@ -207,16 +233,14 @@ module Git
         # @return [Hash] keyword options for {Git::Commands::Log#call}
         #
         def log_base_call_options(opts, extra = {})
-          {
-            all: opts[:all],
-            cherry: opts[:cherry],
-            since: opts[:since],
-            until: opts[:until],
-            grep: opts[:grep],
-            author: opts[:author],
-            max_count: opts[:count],
-            path: opts[:path_limiter] ? Array(opts[:path_limiter]) : nil
-          }.merge(extra).compact
+          opts
+            .slice(*PASSTHROUGH_LOG_OPTS)
+            .merge(
+              max_count: opts[:count],
+              path: opts[:path_limiter] ? Array(opts[:path_limiter]) : nil
+            )
+            .merge(extra)
+            .compact
         end
 
         # Executes git log and parses the raw output
