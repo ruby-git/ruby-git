@@ -46,38 +46,59 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'process_executer', '~> 4.0'
   spec.add_dependency 'rchardet', '~> 1.9'
 
+  # Not every development dependency is installed on every runtime. Each predicate
+  # below names one reason for holding a gem back, which keeps the dependency list
+  # itself a flat, readable list. Deriving one predicate from another also keeps
+  # coupled gems from drifting apart when a condition changes.
+  #
+  # These are local variables rather than methods deliberately. The Gemfile uses
+  # `gemspec`, so Bundler evaluates this file on every `bundle exec`, and a top-level
+  # `def` -- including one written inside this block, since a block is not a definition
+  # scope -- would define a private method on Object in every one of those processes.
+
+  # JRuby (which reports RUBY_PLATFORM as 'java') and TruffleRuby build no C extensions
+  # and do not run the docs build.
+  mri = !(RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby')
+
+  # irb stopped being a default gem in Ruby 3.4. JRuby and TruffleRuby ship their own.
+  install_irb = mri
+
+  # Ruby 4.0.0 dropped fiddle from the default gems. On Windows, irb loads
+  # reline/io/windows.rb, which requires fiddle/import for the Win32 console API, so
+  # bin/console cannot start without it; every other platform takes reline's ANSI IO
+  # gate and never loads that file. Derived from install_irb because fiddle exists only
+  # to serve irb and, being a C extension, could not install where irb is not.
+  install_fiddle = install_irb && Gem.win_platform?
+
+  # The docs toolchain is supported on MRI only. redcarpet, YARD's Markdown renderer,
+  # is also a C extension and so could not install on JRuby regardless.
+  install_docs = mri
+
+  # yard-lint requires Ruby >= 3.3.
+  install_yard_lint = install_docs && Gem.ruby_version >= Gem::Version.new('3.3.0')
+
+  # i18n 1.15+ uses Fiber.[] (Ruby 3.2 Fiber storage), which TruffleRuby < 34.0.0 does
+  # not implement, so those runtimes hold at the last release that works there.
+  pin_old_i18n = RUBY_ENGINE == 'truffleruby' &&
+                 Gem::Version.new(RUBY_ENGINE_VERSION) < Gem::Version.new('34.0.0')
+
   spec.add_development_dependency 'create_github_release', '~> 2.1'
+  spec.add_development_dependency 'fiddle', '~> 1.1' if install_fiddle
   spec.add_development_dependency 'fuubar', '~> 2.5'
+  spec.add_development_dependency 'i18n', '< 1.15' if pin_old_i18n
+  spec.add_development_dependency 'irb', '~> 1.16' if install_irb
   spec.add_development_dependency 'main_branch_shared_rubocop_config', '~> 0.1'
   spec.add_development_dependency 'parallel_tests', '~> 5.6'
   spec.add_development_dependency 'rake', '~> 13.3'
+  spec.add_development_dependency 'redcarpet', '~> 3.6' if install_docs
   spec.add_development_dependency 'rspec', '~> 3.13'
   spec.add_development_dependency 'rubocop', '~> 1.82'
   spec.add_development_dependency 'simplecov', '~> 1.0'
   spec.add_development_dependency 'simplecov-lcov', '~> 0.9'
   spec.add_development_dependency 'simplecov-rspec', '~> 1.1'
-
-  if RUBY_ENGINE == 'truffleruby' && Gem::Version.new(RUBY_ENGINE_VERSION) < Gem::Version.new('34.0.0')
-    # i18n 1.15+ uses Fiber.[] (Ruby 3.2 Fiber storage) which TruffleRuby < 34.0.0 does not implement
-    spec.add_development_dependency 'i18n', '< 1.15'
-  end
-
-  unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
-    spec.add_development_dependency 'irb', '~> 1.16'
-
-    # Ruby 4.0.0 dropped fiddle from the default gems. On Windows, irb loads
-    # reline/io/windows.rb, which requires fiddle/import for the Win32 console API,
-    # so bin/console cannot start without fiddle in the bundle. Other platforms use
-    # reline's ANSI IO gate and never load it.
-    spec.add_development_dependency 'fiddle', '~> 1.1' if Gem.win_platform?
-
-    spec.add_development_dependency 'redcarpet', '~> 3.6'
-    spec.add_development_dependency 'yard', '~> 0.9', '>= 0.9.28'
-    spec.add_development_dependency 'yard_example_test', '~> 0.2', '>= 0.2.1'
-
-    # yard-lint requires Ruby >= 3.3, so it is only installed on Ruby 3.3+.
-    spec.add_development_dependency 'yard-lint', '~> 1.8' if Gem.ruby_version >= Gem::Version.new('3.3.0')
-  end
+  spec.add_development_dependency 'yard', '~> 0.9', '>= 0.9.28' if install_docs
+  spec.add_development_dependency 'yard_example_test', '~> 0.2', '>= 0.2.1' if install_docs
+  spec.add_development_dependency 'yard-lint', '~> 1.8' if install_yard_lint
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
