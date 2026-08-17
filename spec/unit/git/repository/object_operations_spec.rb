@@ -1157,6 +1157,28 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
 
+    context 'with :perl_regexp option' do
+      subject(:result) { described_instance.grep('^.PFEL', nil, perl_regexp: true) }
+
+      it 'forwards perl_regexp to the command' do
+        expect(grep_command).to receive(:call)
+          .with('HEAD', pattern: '^.PFEL', perl_regexp: true, no_color: true, line_number: true, null: true)
+          .and_return(command_result(''))
+        result
+      end
+    end
+
+    context 'with :P alias' do
+      subject(:result) { described_instance.grep('^.PFEL', nil, P: true) }
+
+      it 'forwards :P to the command' do
+        expect(grep_command).to receive(:call)
+          .with('HEAD', pattern: '^.PFEL', P: true, no_color: true, line_number: true, null: true)
+          .and_return(command_result(''))
+        result
+      end
+    end
+
     context 'when no lines match (exit status 1, empty stderr)' do
       subject(:result) { described_instance.grep('NOMATCH') }
 

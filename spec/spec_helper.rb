@@ -10,6 +10,9 @@ $stderr.sync = true
 # before the first RSpec example produces no output at all.
 warn "[spec_helper] JRuby #{RUBY_VERSION}: beginning spec_helper load" if RUBY_ENGINE == 'jruby'
 
+require 'English'
+require 'tmpdir'
+
 # Load support files
 Dir[File.join(__dir__, 'support', '**', '*.rb')].each do |f|
   warn "[spec_helper] requiring #{f}" if RUBY_ENGINE == 'jruby'
@@ -145,6 +148,99 @@ def unless_command(command, feature)
 end
 
 def ci_build? = ENV.fetch('GITHUB_ACTIONS', 'false') == 'true'
+
+# Returns `false` if the installed git was built with PCRE, otherwise a skip-reason
+# string. Use as the `skip:` metadata value for tests that pass `--perl-regexp` to
+# git.
+#
+# `--perl-regexp` is not universally available: git only accepts it when compiled
+# with `USE_LIBPCRE`, and fails with "cannot use Perl-compatible regexes..." when it
+# was not. Git for Windows and the mainstream Linux and macOS packages all ship it,
+# but a self-built git may not.
+#
+# The probe runs `git grep --perl-regexp` with `--no-index` in an empty temporary
+# directory, so it needs no repository and has no files to scan. A git that accepted
+# the flag reports a normal grep status: 0 (matched) or 1 (did not match). Every other
+# status means the flag was not honored — 128 for the fatal "cannot use
+# Perl-compatible regexes" error, 127 when the binary could not be executed at all —
+# and is treated as unsupported so the affected examples skip rather than fail.
+#
+# @param feature [String] the feature name to include in the skip reason
+#
+# @return [false, String] `false` if git supports `--perl-regexp`; otherwise a
+#   human-readable skip reason string
+#
+# @example Skip an example group when git lacks PCRE support
+#   RSpec.describe MyFeature, skip: unless_pcre('PCRE grep') do
+#     it 'works' do
+#       # ...
+#     end
+#   end
+#
+def unless_pcre(feature)
+  return false if git_supports_pcre?
+
+  "#{feature} requires a git built with PCRE support (USE_LIBPCRE), which this git lacks"
+end
+
+# Whether the installed git accepts `--perl-regexp`
+#
+# Memoized because the probe shells out and every `unless_pcre` call site would
+# otherwise pay for it again.
+#
+# @return [Boolean] true if git was built with PCRE support
+#
+def git_supports_pcre? = GitPcreProbe.supported?
+
+# Runs and caches the one-off probe behind {#git_supports_pcre?}
+#
+# @api private
+#
+module GitPcreProbe
+  # Exit statuses that prove git ran the probe and honored `--perl-regexp`
+  #
+  # These are `git grep`'s normal "matched" and "did not match" statuses. Anything
+  # else — the 128 fatal for a git without PCRE, the 127 from a binary that could not
+  # be executed, a usage error — means the flag was not honored.
+  #
+  ACCEPTED_EXIT_STATUSES = [0, 1].freeze
+
+  # Whether the installed git accepts `--perl-regexp`, running the probe at most once
+  #
+  # @return [Boolean] true if git was built with PCRE support
+  #
+  def self.supported?
+    return @supported unless @supported.nil?
+
+    @supported = probe
+  end
+
+  # Runs `git grep --perl-regexp` where there is nothing to match and reads the status
+  #
+  # @return [Boolean] true if git accepted the flag
+  #
+  def self.probe
+    Dir.mktmpdir do |dir|
+      # Only an accepted status counts, so every ambiguous outcome — including a git
+      # that could not be executed — reports unsupported and skips rather than fails.
+      ACCEPTED_EXIT_STATUSES.include?(run_probe(dir)&.exitstatus)
+    end
+  end
+
+  # Invokes the probe command in the given directory, discarding its output
+  #
+  # @param dir [String] an empty directory to run in, so there are no files to scan
+  #
+  # @return [Process::Status, nil] the probe's exit status, or nil if git did not run
+  #
+  def self.run_probe(dir)
+    system(
+      Git.config.binary_path, 'grep', '--perl-regexp', '--no-index', '--quiet', '-e', 'x', '--', '.',
+      chdir: dir, out: File::NULL, err: File::NULL
+    )
+    $CHILD_STATUS
+  end
+end
 
 # The value ruby-git pins `LC_ALL` to on this host
 #

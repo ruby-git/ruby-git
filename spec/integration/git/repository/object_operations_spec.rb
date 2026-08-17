@@ -428,6 +428,17 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
     end
 
+    context 'with :perl_regexp option', skip: unless_pcre('Git::Repository#grep with perl_regexp') do
+      it 'matches using Perl-compatible regular expressions' do
+        result = described_instance.grep('TODO(?=: fix)', nil, perl_regexp: true)
+        expect(result.keys).to contain_exactly('HEAD:src/foo.rb')
+      end
+
+      it 'treats a PCRE-only construct as a literal without the option' do
+        expect(described_instance.grep('TODO(?=: fix)')).to be_empty
+      end
+    end
+
     context 'with :object option pointing to a specific commit' do
       it 'searches in that commit instead of HEAD' do
         sha = repo.rev_parse('HEAD')
