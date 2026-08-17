@@ -24,6 +24,12 @@ require 'spec_helper'
 # Windows is the one platform that does need a gate, and it is a statement about git
 # rather than about the locale — see {#skip_on_git_for_windows}.
 #
+# The `with perl_regexp` groups cover the supported workaround for that platform and
+# are deliberately *not* gated on Windows: PCRE matches characters everywhere, which is
+# the whole reason those surfaces expose the selector. They are gated on whether git was
+# built with PCRE at all. `config` has no such group because `git config` value patterns
+# are POSIX extended regular expressions with no PCRE mode — there is nothing to select.
+#
 RSpec.describe 'non-ASCII regex matching', :integration do
   include_context 'in an empty repository'
 
@@ -75,6 +81,12 @@ RSpec.describe 'non-ASCII regex matching', :integration do
     it 'folds case across non-ASCII characters when ignore_case is given' do
       expect(repo.grep('äpfel sind gut', nil, ignore_case: true)).to eq('HEAD:w.txt' => [[1, text]])
     end
+
+    context 'with perl_regexp', skip: unless_pcre('Git::Repository#grep with perl_regexp') do
+      it 'matches a metacharacter against a non-ASCII character on every platform' do
+        expect(repo.grep(metacharacter_pattern, nil, perl_regexp: true)).to eq('HEAD:w.txt' => [[1, text]])
+      end
+    end
   end
 
   describe 'Git::Repository#log' do
@@ -86,6 +98,12 @@ RSpec.describe 'non-ASCII regex matching', :integration do
       skip_on_git_for_windows
 
       expect(repo.log.grep(metacharacter_pattern).execute.size).to eq(1)
+    end
+
+    context 'with perl_regexp', skip: unless_pcre('Git::Log#perl_regexp') do
+      it 'matches a metacharacter against a non-ASCII character on every platform' do
+        expect(repo.log.perl_regexp.grep(metacharacter_pattern).execute.size).to eq(1)
+      end
     end
   end
 
