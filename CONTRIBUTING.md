@@ -10,6 +10,7 @@
 - [How to report an issue or request a feature](#how-to-report-an-issue-or-request-a-feature)
 - [Local development setup](#local-development-setup)
   - [Prerequisites](#prerequisites)
+    - [A note for Windows contributors](#a-note-for-windows-contributors)
   - [Bootstrap the project](#bootstrap-the-project)
   - [Verify the toolchain](#verify-the-toolchain)
   - [Contributor validation policy](#contributor-validation-policy)
@@ -96,6 +97,18 @@ prerequisite is missing.
 | Bundler | Any 2.x or 4.x | Install with `gem install bundler`. |
 | git | `>= 2.28.0` (matches `git.gemspec` `requirements`) | Older git versions are not supported and the test suite will not pass against them. |
 | Node.js / npm | Optional | Required only to install the local Conventional Commit `commit-msg` hook (Husky + commitlint). If npm is missing, `bin/setup` will warn and continue — CI will still validate commit messages. |
+
+#### A note for Windows contributors
+
+A few unit specs create real symlinks, which on Windows requires
+`SeCreateSymbolicLinkPrivilege`. A non-elevated process only holds that privilege
+when Developer Mode is enabled (Settings → System → For developers). Without it
+those specs skip rather than fail, so `bundle exec rake` still passes — but the
+behavior they cover goes unverified locally.
+
+The same privilege decides whether Git for Windows materializes the committed
+`.claude/skills` symlink, so enabling Developer Mode fixes both at once. See
+[Agent configuration](#agent-configuration).
 
 ### Bootstrap the project
 
@@ -967,9 +980,21 @@ below either threshold.
 
 This is enforceable without being onerous because unit coverage in this project is
 deterministic: `lib/` has no Ruby-version, Ruby-engine, or platform conditionals, and
-no unit spec is conditionally skipped. Every supported MRI runtime measures exactly
-the same lines and branches, so a coverage failure is always something the pull
-request introduced.
+the handful of unit specs that are conditionally skipped are redundant for coverage —
+every `lib/` line and branch they reach is also reached by a spec that always runs.
+Every supported MRI runtime therefore measures exactly the same lines and branches, so
+a coverage failure is always something the pull request introduced.
+
+A new conditional skip in `spec/unit/` must preserve that property. Verify it on a
+host where the guard actually skips: run the full unit suite there and confirm it
+still reports 100% line and branch coverage. A conditionally skipped unit spec that
+is the only thing covering a line would turn this gate into a platform-dependent
+failure, which is exactly what the policy exists to prevent.
+
+Write the guard the same way the rest of the suite does: a reusable predicate in
+`spec/spec_helper.rb` (`unless_git`, `unless_command`, `unless_pcre`,
+`unless_ci_build`) used as `skip:` metadata, or — for a one-off capability that the
+`before` block is already exercising — a `rescue` in that block that calls `skip`.
 
 What the policy does and does not cover:
 
