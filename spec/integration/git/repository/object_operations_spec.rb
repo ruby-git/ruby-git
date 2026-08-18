@@ -301,7 +301,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
       context 'when the archive command fails' do
         it 'leaves the existing destination file intact' do
-          File.write(tmpfile.path, 'original content')
+          File.write(tmpfile.path, 'original content', mode: 'wb')
           expect { described_instance.archive('invalid-sha-does-not-exist', tmpfile.path) }
             .to raise_error(Git::FailedError)
           expect(File.read(tmpfile.path)).to eq('original content')

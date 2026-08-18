@@ -70,7 +70,7 @@ RSpec.describe Git::Repository::Staging, :integration do
       repo.commit('Initial commit')
       write_file('hello.txt', "hello world\n")
       patch_content = execution_context.command_capturing('diff', 'HEAD', chomp: false, chdir: repo_dir).stdout
-      File.write(patch_file, patch_content)
+      File.write(patch_file, patch_content, mode: 'wb')
       write_file('hello.txt', "hello\n") # restore original content
     end
 
@@ -106,7 +106,7 @@ RSpec.describe Git::Repository::Staging, :integration do
       mbox_content = execution_context.command_capturing(
         'format-patch', '-1', 'HEAD', '--stdout', chomp: false, chdir: repo_dir
       ).stdout
-      File.write(mbox_file, mbox_content)
+      File.write(mbox_file, mbox_content, mode: 'wb')
       repo.reset('HEAD~1', hard: true)
     end
 

@@ -34,7 +34,7 @@ RSpec.describe Git::Commands::Pull, :integration do
       second_clone.config_set('user.email', 'test@example.com')
       second_clone.config_set('user.name', 'Test User')
       second_clone.config_set('commit.gpgsign', 'false')
-      File.write(File.join(second_clone_dir, 'new_file.txt'), 'New content')
+      File.write(File.join(second_clone_dir, 'new_file.txt'), 'New content', mode: 'wb')
       second_clone.add('new_file.txt')
       second_clone.commit('Second commit')
       second_clone.push('origin', 'main')

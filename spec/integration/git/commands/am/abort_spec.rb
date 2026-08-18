@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Am::Abort, :integration do
 
         mbox_content = execution_context.command_capturing('format-patch', '--stdout', 'HEAD~1').stdout
         mbox_file = File.join(repo_dir, 'patches.mbox')
-        File.write(mbox_file, mbox_content)
+        File.write(mbox_file, mbox_content, mode: 'wb')
 
         repo.reset('HEAD~1', hard: true)
 

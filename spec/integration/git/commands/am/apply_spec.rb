@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Am::Apply, :integration do
         result = execution_context.command_capturing(
           'format-patch', '--stdout', 'HEAD~1', chdir: repo_dir, raise_on_failure: false
         )
-        File.write(mbox_file, result.stdout)
+        File.write(mbox_file, result.stdout, mode: 'wb')
 
         repo.reset('HEAD~1', hard: true)
       end
@@ -46,7 +46,7 @@ RSpec.describe Git::Commands::Am::Apply, :integration do
 
       it 'raises FailedError for an invalid mbox file' do
         bad_mbox = File.join(repo_dir, 'bad.mbox')
-        File.write(bad_mbox, "This is not a valid mbox\n")
+        File.write(bad_mbox, "This is not a valid mbox\n", mode: 'wb')
 
         expect { command.call(bad_mbox, chdir: repo_dir) }.to raise_error(Git::FailedError, /bad\.mbox/)
       end

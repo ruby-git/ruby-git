@@ -35,10 +35,17 @@ module Git
     # @example Create a file in a subdirectory (auto-creates parent)
     #   write_file('lib/git/version.rb', 'VERSION = "1.0.0"')
     #
+    # `mode: 'wb'` is required, not stylistic. On Windows, Ruby's text mode
+    # translates every "\n" written into "\r\n", so `write_file('f', "a\n")` would put
+    # "a\r\n" on disk and a spec asserting "a\n" would fail on that content coming
+    # back through git. Binary mode writes the bytes given. The `encoding:` argument
+    # still transcodes as documented above -- binary mode disables newline
+    # translation, not encoding conversion.
+    #
     def write_file(name, content = '', encoding: 'UTF-8')
       path = File.join(repo_dir, name)
       FileUtils.mkdir_p(File.dirname(path))
-      File.write(path, content, encoding: encoding)
+      File.write(path, content, mode: 'wb', encoding: encoding)
     end
 
     # Create an empty file if it doesn't exist, or update timestamps if it does
@@ -341,6 +348,12 @@ RSpec.shared_context 'in an empty repository' do
     repo.config_set('user.name', 'Test User')
     repo.config_set('commit.gpgsign', 'false')
     repo.config_set('core.editor', 'false') # fail fast if editor is invoked
+
+    # Pin the line-ending policy instead of inheriting it. Git for Windows ships
+    # core.autocrlf=true in its system config, so without this a test repository
+    # translates line endings on the way in and out of the object database, and
+    # whether a spec passes depends on the developer's own git configuration.
+    repo.config_set('core.autocrlf', 'false')
   end
 
   after do

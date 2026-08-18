@@ -18,7 +18,7 @@ RSpec.describe Git::Commands::Clone, :integration do
 
   before do
     source_repo = init_test_repo(source_dir)
-    File.write(File.join(source_dir, 'file.txt'), "content\n")
+    File.write(File.join(source_dir, 'file.txt'), "content\n", mode: 'wb')
     source_repo.add('file.txt')
     source_repo.commit('Initial commit')
   end

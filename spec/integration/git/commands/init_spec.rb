@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::Init, :integration do
     describe 'when the command fails' do
       it 'raises FailedError when the path is a file' do
         file_path = File.join(init_dir, 'not-a-directory')
-        File.write(file_path, 'content')
+        File.write(file_path, 'content', mode: 'wb')
 
         expect { command.call(file_path) }.to raise_error(Git::FailedError)
       end

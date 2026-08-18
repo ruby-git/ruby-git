@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Am::Retry, :integration,
           'format-patch', '--stdout', 'HEAD~1', raise_on_failure: false
         ).stdout
         mbox_file = File.join(repo_dir, 'patches.mbox')
-        File.write(mbox_file, mbox_content)
+        File.write(mbox_file, mbox_content, mode: 'wb')
 
         # Reset to initial state, then create a conflicting commit so the apply fails
         repo.reset('HEAD~1', hard: true)

@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Apply, :integration do
         repo.commit('Add line2')
 
         patch_content = repo.diff_full('HEAD~1', 'HEAD')
-        File.write(patch_file, "#{patch_content}\n")
+        File.write(patch_file, "#{patch_content}\n", mode: 'wb')
 
         repo.reset('HEAD~1', hard: true)
       end
@@ -39,7 +39,7 @@ RSpec.describe Git::Commands::Apply, :integration do
     context 'when the command fails' do
       it 'raises FailedError for an invalid patch' do
         bad_patch = File.join(repo_dir, 'bad.patch')
-        File.write(bad_patch, "This is not a valid patch\n")
+        File.write(bad_patch, "This is not a valid patch\n", mode: 'wb')
 
         expect { command.call(bad_patch, chdir: repo_dir) }
           .to raise_error(Git::FailedError, /bad\.patch/)
