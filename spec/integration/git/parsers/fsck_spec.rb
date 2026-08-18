@@ -59,8 +59,8 @@ RSpec.describe Git::Parsers::Fsck, :integration do
         repo.commit('First root commit')
 
         repo.branch('orphan-branch').checkout
-        `cd #{repo_dir} && git checkout --orphan another-root >/dev/null 2>&1 && \
-git commit --allow-empty -m "Another root" >/dev/null 2>&1`
+        repo.checkout('another-root', orphan: true)
+        repo.commit('Another root', allow_empty: true)
       end
 
       it 'reports root commits' do
