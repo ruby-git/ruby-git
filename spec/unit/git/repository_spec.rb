@@ -144,9 +144,12 @@ RSpec.describe Git::Repository do
 
       before do
         File.write(outside_file, 'y' * 9999)
-        File.symlink(outside_file, symlink)
-      rescue NotImplementedError, SystemCallError
-        skip 'Symlinks are not supported or not permitted on this platform'
+
+        begin
+          File.symlink(outside_file, symlink)
+        rescue NotImplementedError, SystemCallError
+          skip 'Symlinks are not supported or not permitted on this platform'
+        end
       end
 
       after { FileUtils.rm_rf(outside_dir) }
@@ -165,9 +168,12 @@ RSpec.describe Git::Repository do
 
       before do
         File.write(outside_file, 'y' * 9999)
-        File.symlink(outside_dir, linked_dir)
-      rescue NotImplementedError, SystemCallError
-        skip 'Symlinks are not supported or not permitted on this platform'
+
+        begin
+          File.symlink(outside_dir, linked_dir)
+        rescue NotImplementedError, SystemCallError
+          skip 'Symlinks are not supported or not permitted on this platform'
+        end
       end
 
       after { FileUtils.rm_rf(outside_dir) }
