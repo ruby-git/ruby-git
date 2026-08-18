@@ -41,7 +41,7 @@ module Git
 
       # Option keys accepted by {#checkout}
       #
-      CHECKOUT_ALLOWED_OPTS = %i[force f new_branch b start_point].freeze
+      CHECKOUT_ALLOWED_OPTS = %i[force f new_branch b start_point orphan].freeze
       private_constant :CHECKOUT_ALLOWED_OPTS
 
       # Option keys accepted by {#checkout_index}
@@ -130,6 +130,9 @@ module Git
       # @example Create a new branch with a name different from the start point
       #   repo.checkout('main', new_branch: 'new-feature')
       #
+      # @example Create and check out an unborn branch with no history
+      #   repo.checkout('gh-pages', orphan: true)
+      #
       # @example Force checkout discarding local changes
       #   repo.checkout('main', force: true)
       #
@@ -151,12 +154,24 @@ module Git
       #
       # @option opts [Boolean, nil] :f (nil) alias for `:force`
       #
+      # @option opts [Boolean, String, nil] :orphan (nil) when `true`, creates a
+      #   new unborn branch named `branch` whose first commit has no parents
+      #
+      #   When a `String`, creates an unborn branch with that name, using
+      #   `branch` as the start point for the working tree and index.
+      #
+      #   `false` and `nil` are both treated as unset. A blank branch name is
+      #   rejected rather than ignored.
+      #
       # @option opts [String, nil] :start_point (nil) the commit or branch to
-      #   start the new branch from; used together with `new_branch: true`
+      #   start the new branch from; used together with `new_branch: true` or
+      #   `orphan: true`
       #
       # @return [String] git's stdout from the checkout
       #
       # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [ArgumentError] if `:orphan` is given a blank or missing branch name
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
@@ -680,19 +695,24 @@ module Git
           :unborn
         end
 
-        # Translates legacy checkout options to the new command interface
+        # Translates {#checkout} options to the new command interface
         #
         # Legacy callers passed combinations like:
         #   checkout('branch', new_branch: true, start_point: 'main')
         # which should map to:
         #   checkout('main', b: 'branch')
         #
+        # `orphan: true` follows the same shape, naming the unborn branch:
+        #   checkout('branch', orphan: true, start_point: 'main')
+        # maps to:
+        #   checkout('main', orphan: 'branch')
+        #
         # @param branch [String, nil] the branch argument passed to {#checkout}
         #
         # @param checkout_options [Hash] the raw options passed to {#checkout}
         #
-        # @return [Array] a two-element tuple `[target, options]` containing the
-        #   translated checkout arguments
+        # @return [Array((String, nil), Hash)] a two-element tuple
+        #   `[target, options]` containing the translated checkout arguments
         #
         #   `target` (`String` or `nil`) is the branch or commit to check out.
         #   `options` is a `Hash` of keyword arguments for
@@ -701,13 +721,67 @@ module Git
         # @api private
         #
         def translate_checkout_opts(branch, checkout_options)
+          checkout_options = normalize_orphan_option(checkout_options)
+
           if checkout_options[:new_branch] == true || checkout_options[:b] == true
             [checkout_options[:start_point], checkout_options.except(:new_branch, :b, :start_point).merge(b: branch)]
           elsif checkout_options[:new_branch].is_a?(String)
             [branch, checkout_options.except(:new_branch).merge(b: checkout_options[:new_branch])]
+          elsif checkout_options[:orphan] == true
+            translate_orphan_opts(branch, checkout_options)
           else
             [branch, checkout_options]
           end
+        end
+
+        # Normalizes the `:orphan` option, rejecting names that git would never see
+        #
+        # `:orphan` is a value option on the underlying command, so a literal
+        # `false` would be emitted as `--orphan false` and create a branch named
+        # "false". Flag options such as `:force` already ignore `false`; this
+        # gives `:orphan` the same behavior.
+        #
+        # A blank name is rejected rather than dropped: the argument DSL omits
+        # empty values, so `orphan: ''` would otherwise degrade silently into a
+        # plain checkout.
+        #
+        # @param checkout_options [Hash] the raw options passed to {#checkout}
+        #
+        # @return [Hash] the options with a `false` `:orphan` key removed
+        #
+        # @raise [ArgumentError] if `:orphan` is given a blank branch name
+        #
+        # @api private
+        #
+        def normalize_orphan_option(checkout_options)
+          orphan = checkout_options[:orphan]
+          return checkout_options.except(:orphan) if orphan == false
+          raise ArgumentError, 'orphan requires a non-empty branch name' if orphan.is_a?(String) && orphan.strip.empty?
+
+          checkout_options
+        end
+
+        # Translates `orphan: true` into the command's `:orphan` value option
+        #
+        # `orphan: true` names the unborn branch from the positional argument and
+        # takes its start point from `:start_point`, mirroring `new_branch: true`.
+        #
+        # @param branch [String, nil] the branch argument passed to {#checkout}
+        #
+        # @param checkout_options [Hash] the raw options passed to {#checkout}
+        #
+        # @return [Array((String, nil), Hash)] a two-element tuple
+        #   `[target, options]` containing the translated checkout arguments
+        #
+        # @raise [ArgumentError] if `branch` is blank (`nil`, empty, or whitespace
+        #   only), since the unborn branch would otherwise have no name
+        #
+        # @api private
+        #
+        def translate_orphan_opts(branch, checkout_options)
+          raise ArgumentError, 'orphan: true requires a branch name' if branch.to_s.strip.empty?
+
+          [checkout_options[:start_point], checkout_options.except(:start_point).merge(orphan: branch)]
         end
 
         # Normalizes path specifications for Git commands

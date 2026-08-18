@@ -270,6 +270,74 @@ RSpec.describe Git::Repository::Branching do
       end
     end
 
+    context 'with orphan: true' do
+      subject(:result) { described_instance.checkout('gh-pages', orphan: true) }
+
+      it 'translates to call(nil, orphan: branch)' do
+        expect(checkout_branch_command)
+          .to receive(:call).with(nil, orphan: 'gh-pages').and_return(checkout_branch_result)
+        result
+      end
+    end
+
+    context 'with orphan: true and start_point option' do
+      subject(:result) { described_instance.checkout('gh-pages', orphan: true, start_point: 'main') }
+
+      it 'translates to call(start_point, orphan: branch)' do
+        expect(checkout_branch_command)
+          .to receive(:call).with('main', orphan: 'gh-pages').and_return(checkout_branch_result)
+        result
+      end
+    end
+
+    context 'with orphan: String option' do
+      subject(:result) { described_instance.checkout('main', orphan: 'gh-pages') }
+
+      it 'translates to call(branch, orphan: orphan_branch_name)' do
+        expect(checkout_branch_command)
+          .to receive(:call).with('main', orphan: 'gh-pages').and_return(checkout_branch_result)
+        result
+      end
+    end
+
+    context 'with orphan: false' do
+      subject(:result) { described_instance.checkout('gh-pages', orphan: false) }
+
+      it 'treats the option as unset rather than passing it to the command' do
+        expect(checkout_branch_command).to receive(:call).with('gh-pages').and_return(checkout_branch_result)
+        result
+      end
+    end
+
+    context 'with orphan: true and no branch name' do
+      subject(:result) { described_instance.checkout(orphan: true) }
+
+      it 'raises ArgumentError' do
+        expect { result }.to raise_error(ArgumentError, /orphan: true requires a branch name/)
+      end
+
+      it 'does not call the command' do
+        expect(checkout_branch_command).not_to receive(:call)
+        expect { result }.to raise_error(ArgumentError, /orphan: true requires a branch name/)
+      end
+    end
+
+    context 'with orphan: true and an empty branch name' do
+      subject(:result) { described_instance.checkout('', orphan: true) }
+
+      it 'raises ArgumentError' do
+        expect { result }.to raise_error(ArgumentError, /orphan: true requires a branch name/)
+      end
+    end
+
+    context 'with orphan: an empty String' do
+      subject(:result) { described_instance.checkout('main', orphan: '') }
+
+      it 'raises ArgumentError' do
+        expect { result }.to raise_error(ArgumentError, /orphan requires a non-empty branch name/)
+      end
+    end
+
     context 'with options passed as the first argument' do
       it 'treats the hash as options and delegates without a branch' do
         expect(checkout_branch_command)
