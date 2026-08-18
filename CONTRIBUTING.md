@@ -194,7 +194,7 @@ Before moving a pull request out of draft or requesting a review, confirm:
 - [ ] `bundle exec rake` passes locally on your branch (see
   [Local development setup](#local-development-setup)).
 - [ ] New or changed code has accompanying tests under `spec/`
-  (see [Unit tests](#unit-tests)).
+  (see [Unit tests vs Integration tests](#unit-tests-vs-integration-tests)).
 - [ ] Every commit message follows [Conventional Commits](#commit-message-guidelines).
 - [ ] User-facing changes are documented in `README.md` and/or YARD as appropriate.
 
