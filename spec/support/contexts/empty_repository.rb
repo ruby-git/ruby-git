@@ -313,10 +313,42 @@ module Git
       File.directory?(File.join(repo_dir, name))
     end
 
+    # The config pinned on every test repository
+    #
+    # Pinned rather than inherited so that a spec's outcome depends on neither the
+    # developer's nor the system's git configuration. `core.autocrlf` is the one that
+    # bites on Windows: Git for Windows ships `autocrlf=true` in its system config,
+    # which translates line endings on the way in and out of the object database, so
+    # without pinning it a spec passes or fails according to whether the developer
+    # happened to override that setting.
+    #
+    # This lives in one place because both `init_test_repo` and the 'in an empty
+    # repository' shared context need exactly the same values, and two hand-maintained
+    # copies drift.
+    #
+    TEST_REPO_CONFIG = {
+      'user.email' => 'test@example.com',
+      'user.name' => 'Test User',
+      'commit.gpgsign' => 'false',
+      'core.editor' => 'false', # fail fast if editor is invoked
+      'core.autocrlf' => 'false'
+    }.freeze
+
+    # Apply {TEST_REPO_CONFIG} to an already-initialized repository
+    #
+    # @param repo [Git::Repository] the repository to configure
+    #
+    # @return [Git::Repository] the same repository, so callers can chain
+    #
+    def pin_test_repo_config(repo)
+      TEST_REPO_CONFIG.each { |key, value| repo.config_set(key, value) }
+      repo
+    end
+
     # Initialize a Git repository configured for integration testing
     #
-    # Sets the same four config keys used by the 'in an empty repository' shared
-    # context: user.email, user.name, commit.gpgsign, and core.editor.
+    # Applies {TEST_REPO_CONFIG}, the same values the 'in an empty repository' shared
+    # context applies, through the same helper so the two cannot diverge.
     #
     # @param dir [String] path to the directory to initialize
     #
@@ -325,12 +357,7 @@ module Git
     # @return [Git::Repository] the initialized repository
     #
     def init_test_repo(dir, initial_branch: 'main')
-      repo = Git.init(dir, initial_branch:)
-      repo.config_set('user.email', 'test@example.com')
-      repo.config_set('user.name', 'Test User')
-      repo.config_set('commit.gpgsign', 'false')
-      repo.config_set('core.editor', 'false')
-      repo
+      pin_test_repo_config(Git.init(dir, initial_branch:))
     end
   end
 end
@@ -343,18 +370,7 @@ RSpec.shared_context 'in an empty repository' do
   let(:repo) { Git.init(repo_dir, initial_branch:) }
   let(:execution_context) { repo.execution_context }
 
-  before do
-    repo.config_set('user.email', 'test@example.com')
-    repo.config_set('user.name', 'Test User')
-    repo.config_set('commit.gpgsign', 'false')
-    repo.config_set('core.editor', 'false') # fail fast if editor is invoked
-
-    # Pin the line-ending policy instead of inheriting it. Git for Windows ships
-    # core.autocrlf=true in its system config, so without this a test repository
-    # translates line endings on the way in and out of the object database, and
-    # whether a spec passes depends on the developer's own git configuration.
-    repo.config_set('core.autocrlf', 'false')
-  end
+  before { pin_test_repo_config(repo) }
 
   after do
     FileUtils.rm_rf(repo_dir)
