@@ -5,6 +5,30 @@
 
 # Change Log
 
+## [5.1.0](https://github.com/ruby-git/ruby-git/compare/v5.0.5...v5.1.0) (2026-08-18)
+
+
+### Features
+
+* **grep:** Expose perl_regexp on the Git::Repository#grep facade ([759436f](https://github.com/ruby-git/ruby-git/commit/759436f7b59ac5028e38a2158a9a354720640415))
+* **log:** Expose perl_regexp on the log path ([df8ea33](https://github.com/ruby-git/ruby-git/commit/df8ea33bb7d019d1a52fbb99370d9ffd67bf279f))
+
+
+### Other Changes
+
+* Add fiddle as a Windows development dependency ([1847989](https://github.com/ruby-git/ruby-git/commit/18479892529bd1f992596cbc055a9a42be326680))
+* Bound the locale job's apt step so a stalled mirror fails fast ([3a5d83b](https://github.com/ruby-git/ruby-git/commit/3a5d83b7685091a4abbde2c84c0136214fa66e5d))
+* Cover the perl_regexp escape hatch for non-ASCII regex matching ([55e2ded](https://github.com/ruby-git/ruby-git/commit/55e2ded4563a39a0389dbbd52f8425da9a1e3aea))
+* Document the Git for Windows byte-matching regex limitation ([9aaedbd](https://github.com/ruby-git/ruby-git/commit/9aaedbd94488bcfeef05cc56dfce61ce69f529fc))
+* Document the windows symlink privilege requirement ([696dff3](https://github.com/ruby-git/ruby-git/commit/696dff3cbf09647bbfa51279f7e35fc8a85eaab4))
+* Express development dependency conditions as named predicates ([acca20a](https://github.com/ruby-git/ruby-git/commit/acca20a43a6fb79f6b36de900ac8aa8c2488d87f))
+* Fix a broken section link in the pre-review checklist ([719f595](https://github.com/ruby-git/ruby-git/commit/719f595af69c1afcf6b025d1a2bb920963738f80))
+* Make integration fixtures independent of git and platform settings ([c2a1592](https://github.com/ruby-git/ruby-git/commit/c2a159287ec007793c125929029303707669c8ad))
+* Pin rubocop to lf line endings ([7f40413](https://github.com/ruby-git/ruby-git/commit/7f40413c3eded1af7a3dede02e1d94d7dc9c829b))
+* Pin test repository config from a single source ([6e227b7](https://github.com/ruby-git/ruby-git/commit/6e227b70f59f4bbaf2bbc1d30a4b1b86ffbe6afc))
+* Scope the symlink rescue to the symlink call ([c2bed8f](https://github.com/ruby-git/ruby-git/commit/c2bed8fefdd8bdf2efa84432c318b2b39ba223d2))
+* Skip the symlink specs when the host cannot create symlinks ([8e9b667](https://github.com/ruby-git/ruby-git/commit/8e9b667daeb6a179a02df7c946a495c7b7e6fce5))
+
 ## [5.0.5](https://github.com/ruby-git/ruby-git/compare/v5.0.4...v5.0.5) (2026-08-09)
 
 
