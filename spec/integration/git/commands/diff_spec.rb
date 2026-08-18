@@ -47,13 +47,13 @@ RSpec.describe Git::Commands::Diff, :integration do
         check_repo.config_set('commit.gpgsign', 'false')
 
         # Initial commit with clean content
-        File.write(File.join(@check_repo_dir, 'file.txt'), "clean content\n")
+        File.write(File.join(@check_repo_dir, 'file.txt'), "clean content\n", mode: 'wb')
         check_repo.add('file.txt')
         check_repo.commit('Initial commit')
         check_repo.tag_add('check_clean')
 
         # Commit that introduces trailing whitespace
-        File.write(File.join(@check_repo_dir, 'file.txt'), "trailing whitespace   \n")
+        File.write(File.join(@check_repo_dir, 'file.txt'), "trailing whitespace   \n", mode: 'wb')
         check_repo.add('file.txt')
         check_repo.commit('Add trailing whitespace')
         check_repo.tag_add('check_dirty')

@@ -50,7 +50,7 @@ RSpec.describe Git, :integration do
 
         let(:submodule_repo) do
           submodule = init_test_repo(submodule_dir)
-          File.write(File.join(submodule_dir, 'README.md'), '# Submodule')
+          File.write(File.join(submodule_dir, 'README.md'), '# Submodule', mode: 'wb')
           submodule.add('README.md')
           submodule.commit('Add README.md')
           submodule
@@ -59,7 +59,7 @@ RSpec.describe Git, :integration do
         before do
           submodule_repo
           main = init_test_repo(main_repo_dir)
-          File.write(File.join(main_repo_dir, 'README.md'), '# Main Repository')
+          File.write(File.join(main_repo_dir, 'README.md'), '# Main Repository', mode: 'wb')
           main.add('README.md')
           main.commit('Add README.md')
 
@@ -86,12 +86,12 @@ RSpec.describe Git, :integration do
         before do
           submodule = init_test_repo(submodule_dir)
           FileUtils.mkdir_p(File.join(submodule_dir, 'subdir'))
-          File.write(File.join(submodule_dir, 'subdir', 'README.md'), '# Submodule')
+          File.write(File.join(submodule_dir, 'subdir', 'README.md'), '# Submodule', mode: 'wb')
           submodule.add('subdir/README.md')
           submodule.commit('Add README.md')
 
           main = init_test_repo(main_repo_dir)
-          File.write(File.join(main_repo_dir, 'README.md'), '# Main Repository')
+          File.write(File.join(main_repo_dir, 'README.md'), '# Main Repository', mode: 'wb')
           main.add('README.md')
           main.commit('Add README.md')
 
@@ -143,7 +143,7 @@ RSpec.describe Git, :integration do
 
     before do
       source = init_test_repo(source_dir)
-      File.write(File.join(source_dir, 'README.md'), '# Test')
+      File.write(File.join(source_dir, 'README.md'), '# Test', mode: 'wb')
       source.add('README.md')
       source.commit('Initial commit')
     end

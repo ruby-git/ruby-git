@@ -59,7 +59,7 @@ RSpec.describe Git::Repository, :integration do
       let(:config_file) { File.join(repo_dir, 'custom.config') }
 
       it 'returns a Hash of all entries in the given config file' do
-        File.write(config_file, "[section]\n\tkey = value\n")
+        File.write(config_file, "[section]\n\tkey = value\n", mode: 'wb')
         result = described_instance.config(file: config_file)
         expect(result).to be_a(Hash)
         expect(result['section.key']).to eq('value')
@@ -106,7 +106,7 @@ RSpec.describe Git::Repository, :integration do
     def with_isolated_global_config
       saved = ENV.fetch('GIT_CONFIG_GLOBAL', nil)
       global_config = File.join(repo_dir, 'global.config')
-      File.write(global_config, '')
+      File.write(global_config, '', mode: 'wb')
       ENV['GIT_CONFIG_GLOBAL'] = global_config
       yield
     ensure

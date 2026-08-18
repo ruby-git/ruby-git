@@ -11,7 +11,7 @@ RSpec.describe Git::Commands::Remote::Add, :integration do
   let(:remote_dir) { Dir.mktmpdir }
   let(:remote_repo) do
     test_repo = init_test_repo(remote_dir, initial_branch:)
-    File.write(File.join(remote_dir, 'README.md'), "seed\n")
+    File.write(File.join(remote_dir, 'README.md'), "seed\n", mode: 'wb')
     test_repo.add('README.md')
     test_repo.commit('Initial commit')
     test_repo

@@ -26,7 +26,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetAll, :integration do
     context 'when the command fails' do
       it 'raises FailedError when given a malformed config file' do
         malformed_config = File.join(repo_dir, 'malformed.config')
-        File.write(malformed_config, "[incomplete-section\n")
+        File.write(malformed_config, "[incomplete-section\n", mode: 'wb')
 
         expect { command.call('user.name', file: malformed_config) }
           .to raise_error(Git::FailedError, /malformed\.config/)
