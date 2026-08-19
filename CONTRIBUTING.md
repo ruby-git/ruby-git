@@ -43,6 +43,7 @@
   - [Testing guidelines](#testing-guidelines)
     - [Test coverage policy](#test-coverage-policy)
     - [Unit tests vs Integration tests](#unit-tests-vs-integration-tests)
+  - [What ships in the gem](#what-ships-in-the-gem)
 - [Building a specific version of the Git command-line](#building-a-specific-version-of-the-git-command-line)
   - [Install pre-requisites](#install-pre-requisites)
   - [Obtain Git source code](#obtain-git-source-code)
@@ -250,6 +251,9 @@ materializes symlinks when `core.symlinks` is enabled (which requires Developer 
 or an elevated shell). Without it, Windows contributors get a plain text file there
 and Claude Code silently loads no skills; either enable symlinks or point your agent
 at [`.github/skills/`](.github/skills/) directly. Copilot is unaffected.
+
+The symlink stays out of the published gem, so it never reaches users — see
+[What ships in the gem](#what-ships-in-the-gem).
 
 ### Agent skills
 
@@ -1136,6 +1140,32 @@ $ bundle exec rspec spec/unit/git/commands/add_spec.rb
 # Run tests with a different version of the git command line:
 $ GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bundle exec rake spec
 ```
+
+### What ships in the gem
+
+`spec.files` in [`git.gemspec`](git.gemspec) is an **allowlist**: the released gem
+contains `lib/`, the documents [`.yardopts`](.yardopts) names as extra files, plus
+`UPGRADING.md` and the gemspec itself. Nothing else in the repository is published.
+
+It used to be a denylist, which meant every new path was published by default. That
+shipped `.github/`, `redesign/`, and the Husky hooks to users, and — the reason it
+changed — the `.claude/skills` symlink. Extracting a symlink requires a privilege
+Windows grants only under Developer Mode or an elevated shell, so `gem install git`
+either failed there or, on RubyGems new enough to fall back to a copy, quietly
+duplicated the whole skills tree into the installed gem.
+
+What this means when you add a file:
+
+- **Under `lib/`** — nothing to do; it ships automatically.
+- **A new top-level document** — add it to `doc_files` in the gemspec if users should
+  get it, and to `.yardopts` if rubydoc.info should render it. The two lists are
+  checked against each other, so a file in `.yardopts` but not the gem fails the
+  suite rather than becoming a broken documentation link.
+- **Anything else** — it stays out of the gem, which is almost always what you want.
+
+[`spec/unit/gemspec_spec.rb`](spec/unit/gemspec_spec.rb) enforces all of this: every
+tracked file under `lib/` is present, no symlink is, and nothing outside `lib/` and
+the project root is.
 
 ## Building a specific version of the Git command-line
 
