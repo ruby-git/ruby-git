@@ -101,8 +101,40 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'yard-lint', '~> 1.8' if install_yard_lint
 
   # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
+  #
+  # This is an allowlist rather than a denylist. A denylist admitted every new
+  # development-only path by default, so the gem shipped `.github/`, `redesign/`, the
+  # husky hooks, and -- the reason this became an allowlist -- the `.claude/skills`
+  # symlink. Extracting a symlink needs a privilege that Windows grants only under
+  # Developer Mode or an elevated shell, so installing the gem there either failed
+  # outright or, on RubyGems new enough to fall back to a copy, silently duplicated
+  # the whole skills tree into the installed gem.
+  #
+  # spec/unit/gemspec_spec.rb guards both directions: nothing in the list may be a
+  # symlink, and every tracked file under lib/ must be present, so the allowlist
+  # cannot quietly drop runtime code.
+  #
+  # doc_files must stay in sync with the extra files named in .yardopts -- those are
+  # what rubydoc.info renders for the published documentation, so a file listed there
+  # but absent from the gem becomes a broken link.
+  doc_files = %w[
+    AI_POLICY.md
+    CHANGELOG.md
+    CODE_OF_CONDUCT.md
+    CONTRIBUTING.md
+    GOVERNANCE.md
+    LICENSE
+    MAINTAINERS.md
+    README.md
+    UPGRADING.md
+  ]
+
+  # .yardopts drives the rubydoc.info build; the gemspec is included by convention.
+  build_files = %w[.yardopts git.gemspec]
+
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
-    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(tests|spec|features|bin)/}) }
+    `git ls-files -z`.split("\x0").select do |f|
+      f.start_with?('lib/') || doc_files.include?(f) || build_files.include?(f)
+    end
   end
 end
