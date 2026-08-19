@@ -11,7 +11,6 @@ require 'process_executer'
 require 'stringio'
 require 'tempfile'
 require 'zlib'
-require 'open3'
 
 module Git
   # Internal git operations

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'logger'
-require 'open3'
 
 module Git
   # The main public interface for interacting with Git commands
@@ -41,21 +40,14 @@ module Git
     end
 
     def self.binary_version(binary_path)
-      result, status = execute_git_version(binary_path)
-
-      raise "Failed to get git version: #{status}\n#{result}" unless status.success?
-
-      parse_version_string(result)
+      parse_version_string(execute_git_version(binary_path))
     end
 
     private_class_method def self.execute_git_version(binary_path)
-      Open3.capture2e(
-        binary_path,
-        '-c', 'core.quotePath=true',
-        '-c', 'color.ui=false',
-        'version'
-      )
-    rescue Errno::ENOENT
+      bootstrap_command_line(binary_path).run('version', merge: true).stdout
+    rescue Git::CommandLineError => e
+      raise "Failed to get git version: #{e.result.status}\n#{e.result.stdout}"
+    rescue Errno::ENOENT, ProcessExecuter::SpawnError
       raise "Failed to get git version: #{binary_path} not found"
     end
 
@@ -98,26 +90,45 @@ module Git
     def self.root_of_worktree(working_dir)
       raise ArgumentError, "'#{working_dir}' does not exist" unless Dir.exist?(working_dir)
 
-      result, status = execute_rev_parse_toplevel(working_dir)
-      process_rev_parse_result(result, status, working_dir)
+      execute_rev_parse_toplevel(working_dir)
     end
 
     private_class_method def self.execute_rev_parse_toplevel(working_dir)
-      Open3.capture2e(
-        Git::Base.config.binary_path,
-        '-c', 'core.quotePath=true',
-        '-c', 'color.ui=false',
-        'rev-parse', '--show-toplevel',
-        chdir: File.expand_path(working_dir)
-      )
-    rescue Errno::ENOENT
+      bootstrap_command_line(Git::Base.config.binary_path).run(
+        'rev-parse', '--show-toplevel', chdir: File.expand_path(working_dir), merge: true, chomp: true
+      ).stdout
+    rescue Git::CommandLineError
+      raise ArgumentError, "'#{working_dir}' is not in a git working tree"
+    rescue Errno::ENOENT, ProcessExecuter::SpawnError
       raise ArgumentError, 'Failed to find the root of the worktree: git binary not found'
     end
 
-    private_class_method def self.process_rev_parse_result(result, status, working_dir)
-      raise ArgumentError, "'#{working_dir}' is not in a git working tree" unless status.success?
-
-      result.chomp
+    # A command line for the git commands that run before a repository is known
+    #
+    # `Open3` is deliberately not used here. Windows has no fork, so
+    # `Process.spawn` implements a redirect of the child's stdin by redirecting
+    # the *parent's* stdin and restoring it afterward, which replaces the
+    # process's stdin handle. That leaves a console REPL such as irb or pry
+    # unable to read input for the rest of the session. `Git::CommandLine`
+    # redirects only stdout and stderr, so stdin is never disturbed.
+    #
+    # @see https://github.com/ruby-git/ruby-git/issues/840 issue 840
+    #
+    # @param binary_path [String] the path to the git binary to run
+    #
+    # @return [Git::CommandLine] a command line that runs `binary_path` with
+    #   `-c core.quotePath=true -c color.ui=false`
+    #
+    #   Those are the options the `Open3` calls this replaced passed, kept as they were
+    #   so these two commands behave exactly as before. Neither `git version` nor
+    #   `git rev-parse --show-toplevel` emits colored output, so the remaining `color.*`
+    #   settings in {Git::Lib}'s `STATIC_GLOBAL_OPTS` are not needed here.
+    #
+    # @api private
+    #
+    private_class_method def self.bootstrap_command_line(binary_path)
+      Git::CommandLine.new({}, binary_path, ['-c', 'core.quotePath=true', '-c', 'color.ui=false'],
+                           Logger.new(nil))
     end
 
     # (see Git.open)
