@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [4.4.2](https://github.com/ruby-git/ruby-git/compare/v4.4.1...v4.4.2) (2026-08-19)
+
+
+### Bug Fixes
+
+* Run the Git.open bootstrap commands without redirecting stdin ([65de0fe](https://github.com/ruby-git/ruby-git/commit/65de0fe88bca34ad3de366ee9a212653de37fc6d)), closes [#840](https://github.com/ruby-git/ruby-git/issues/840)
+
 ## [4.4.1](https://github.com/ruby-git/ruby-git/compare/v4.4.0...v4.4.1) (2026-08-09)
 
 
