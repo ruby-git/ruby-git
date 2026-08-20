@@ -12,8 +12,8 @@ live in topic modules under `lib/git/repository/<topic>.rb` (e.g.
 A facade method is the public-API entry point that orchestrates one or more
 `Git::Commands::*` calls, optional argument pre-processing, and optional output
 parsing into rich Ruby return values. See
-[redesign/2_architecture_redesign.md §2.1](../../../redesign/2_architecture_redesign.md)
-for the five facade responsibilities this layer is designed around.
+[The five facade responsibilities checklist](REFERENCE.md#the-five-facade-responsibilities-checklist)
+for the responsibilities this layer is designed around.
 
 ## Contents
 
@@ -151,9 +151,11 @@ This skill supports three modes. Determine which mode applies before starting:
      would be awkward to place in any existing module. The deciding factor is
      topic fit, not method count; a single method that is genuinely distinct
      can start its own module.
-   - New module names follow the two-tier convention: gerund (`Staging`, `Logging`,
+   - New module names follow the three-tier convention: gerund (`Staging`, `Logging`,
      `Diffing`) for single-action modules; `Noun + Operations` (`RemoteOperations`,
-     `ObjectOperations`) for mixed-bag modules. See
+     `ObjectOperations`) for mixed-bag modules; descriptive utility names
+     (`ContextHelpers`, `Maintenance`) for cross-cutting helpers and housekeeping
+     APIs. See
      [REFERENCE.md §Naming a new topic module](REFERENCE.md#naming-a-new-topic-module).
 
 3. **For the facade method**, repeat steps 3a–3e:

@@ -123,13 +123,8 @@ Execute and report results for:
 
 ## 6. Review Documentation
 
-- [ ] Architecture docs updated if new patterns introduced (redesign/*.md)
-- [ ] If command migration work is included, `redesign/3_architecture_implementation.md`
-  is synchronized (checklist status, Phase 2 count, and "Next Task")
-- [ ] Run a stale-doc audit for command migration docs by comparing unchecked
-  `Git::Commands::*` entries against files in `lib/git/commands/`
-- [ ] Verify command spec references in redesign docs point to `spec/unit/...` or
-  `spec/integration/...` as applicable (not `spec/git/...`)
+- [ ] If a new pattern was introduced, the skill that documents that pattern is
+  updated in the same PR (`.github/skills/`)
 - [ ] README.md updated if public API changed
 - [ ] Examples are clear and demonstrate common use cases
 - [ ] All `@param`, `@return`, `@raise` tags are accurate

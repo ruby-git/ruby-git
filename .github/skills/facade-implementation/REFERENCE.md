@@ -104,14 +104,16 @@ organization when more methods join it.
 
 ### Naming a new topic module
 
-Topic modules follow a **two-tier** convention (documented in
-[redesign/3_architecture_implementation.md §Facade module naming convention](../../../redesign/3_architecture_implementation.md#facade-module-naming-convention)):
+Topic modules follow a **three-tier** convention:
 
 - **Gerund** (`verb-ing`) when a single action word clearly names the whole module:
-  `Staging`, `Committing`, `Branching`, `Merging`, `Logging`, `Diffing`, `Stashing`.
+  `Staging`, `Committing`, `Branching`, `Merging`, `Logging`, `Diffing`, `Stashing`,
+  `Inspecting`.
 - **Noun + `Operations`** when the module groups a mixed bag of methods by git
   concept rather than a single action: `RemoteOperations`, `ObjectOperations`,
   `StatusOperations`, `WorktreeOperations`.
+- **Descriptive utility names** for cross-cutting helpers or housekeeping APIs that
+  are not domain-object names: `ContextHelpers`, `Maintenance`.
 
 Additional rules:
 
@@ -325,8 +327,8 @@ end
 
 ## The five facade responsibilities checklist
 
-From [redesign/2_architecture_redesign.md §2.1](../../../redesign/2_architecture_redesign.md).
-For each facade method, confirm whether each responsibility applies and is handled:
+These are the five responsibilities the facade layer is designed around. For each
+facade method, confirm whether each responsibility applies and is handled:
 
 - [ ] **Manage execution context** — calls `Git::Commands::*.new(@execution_context)`,
   never builds CLI argv directly and never bypasses the execution context.
@@ -552,26 +554,37 @@ end
 
 ### Naming rules
 
-**Topic modules** (those `include`d in `Git::Repository`) follow the two-tier
+**Topic modules** (those `include`d in `Git::Repository`) follow the three-tier
 naming convention in [Naming a new topic module](#naming-a-new-topic-module):
-gerund for single-action modules, `Noun + Operations` for mixed-bag modules.
+gerund for single-action modules, `Noun + Operations` for mixed-bag modules, and
+descriptive utility names for cross-cutting helpers and housekeeping APIs.
 
 **Internal helper modules** (those **not** `include`d) use descriptive nouns,
-never generic role-suffixes like `*Helpers`, `*Utils`, or `*Support`. The
-`*Operations` suffix is a topic-module convention — it is not a generic role
-suffix and is not prohibited here:
+never generic role-suffixes like `*Helpers`, `*Utils`, or `*Support`. That
+prohibition applies to internal helpers only — `Git::Repository::ContextHelpers`
+is an `include`d topic module in the third tier above, not a violation of this
+rule. The `*Operations` suffix is likewise a topic-module convention, not a
+generic role suffix, and is not prohibited here:
 
-| Module                                             | Distinguished by                                   |
-| -------------------------------------------------- | -------------------------------------------------- |
-| `Git::Repository::Staging`                         | `include`d, `@api public` (gerund topic module)    |
-| `Git::Repository::Branching`                       | `include`d, `@api public` (gerund topic module)    |
-| `Git::Repository::RemoteOperations`                | `include`d, `@api public` (`*Operations` topic module) |
-| `Git::Repository::SharedPrivate`                   | not `include`d, `@api private`, `private_constant` |
-| `Git::Repository::SharedPrivate::OptionValidation` | nested under `SharedPrivate`, `@api private`       |
+| Module                                             | Distinguished by                                       |
+| -------------------------------------------------- | ------------------------------------------------------ |
+| `Git::Repository::Staging`                         | `include`d (gerund topic module)                        |
+| `Git::Repository::Branching`                       | `include`d (gerund topic module)                        |
+| `Git::Repository::RemoteOperations`                | `include`d (`*Operations` topic module)                 |
+| `Git::Repository::ContextHelpers`                  | `include`d (utility-name topic module)                  |
+| `Git::Repository::SharedPrivate`                   | not `include`d, `private_constant`                      |
+| `Git::Repository::SharedPrivate::OptionValidation` | nested under `SharedPrivate` — hypothetical, see [Growth path](#growth-path) |
+
+**The `@api` tag does not distinguish these.** Every module under
+`lib/git/repository/` carries `@api private` at the module level, topic modules
+included — the namespace itself is not public API even when the methods it
+contributes to `Git::Repository` are. What separates a topic module from an
+internal helper is the `include` line in `lib/git/repository.rb`, and for
+`SharedPrivate` additionally `private_constant`.
 
 Reasons:
 
-- The location (`lib/git/repository/`) plus the `@api` tag and absence of an
+- The location (`lib/git/repository/`) plus the presence or absence of an
   `include` line in `lib/git/repository.rb` already convey API status. A
   `*Helpers` suffix is redundant signage.
 - Symmetry with topic modules keeps the directory listing readable.
