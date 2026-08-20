@@ -36,6 +36,7 @@ is loaded by subagents during the [Facade Implementation](SKILL.md) workflow.
   - [Why not `ActiveSupport::Concern`?](#why-not-activesupportconcern)
 - [Parser vs. raw stdout](#parser-vs-raw-stdout)
 - [Result-class factory methods](#result-class-factory-methods)
+- [Migrating an ActiveRecord-style class to a `*Info` value object](#migrating-an-activerecord-style-class-to-a-info-value-object)
 - [Common failures](#common-failures)
   - [One-line delegation when orchestration is needed](#one-line-delegation-when-orchestration-is-needed)
   - [Leaking command-class types into the public API](#leaking-command-class-types-into-the-public-api)
@@ -762,6 +763,71 @@ end
 
 This keeps result-object construction in one place per type and makes parsers
 reusable across facade methods.
+
+## Migrating an ActiveRecord-style class to a `*Info` value object
+
+Several older classes predate the current design and mix data with operations while
+holding a repository reference. The tell is a `def initialize(base, ...)` constructor on
+a class that also performs git operations. `Git::Branch`, `Git::Remote`, `Git::Stash`,
+and `Git::Worktree` are the ones on this path. Each is being replaced by an immutable
+value object plus name-based facade operations, following the route `Git::BranchInfo`
+and `Git::RemoteInfo` already took.
+
+The tell over-matches, so check what you have found before starting. Thirteen classes
+take a `base`. The collections (`Git::Branches`, `Git::Stashes`, `Git::Worktrees`) go
+with their element class under step 4 rather than getting their own value object.
+`Git::Diff`, `Git::Log`, and `Git::DiffStats` hold a repository because they defer the
+query until something asks for a result, which is a different design and not this
+migration. `Git::Object::Commit`, `Tree`, and `Blob` are the exception recorded in
+ADR-0002; `Git::Object::Tag` is not exempt and is still a target.
+
+`Git::Status` is a target too, despite looking like the query objects above. Its
+constructor calls `StatusFileFactory#construct_files` immediately, so it is eager rather
+than deferred. Issue #1636 tracks it and the rest of the remaining candidates.
+
+Four steps, in order:
+
+1. **Value object** — an immutable `Data.define` named `*Info` in the top-level `Git::`
+   namespace, holding only parsed metadata. No repository reference, no operations.
+
+   Add a `#to_s` only when the type has a single canonical string git accepts back: a
+   refname for `Git::BranchInfo`, a selector for `Git::StashInfo`. Most `*Info` types
+   have no such string and inherit the default, `Git::RemoteInfo` and the diff types
+   among them. Do not invent one to satisfy step 3.
+2. **Parser** — a `Git::Parsers::*` class that builds `*Info` objects from raw git
+   output. Prefer a porcelain format git promises to keep stable.
+
+   Cardinality follows the facade method the parser feeds rather than a rule of its own.
+   A list method wants `Array<*Info>`. A single-object lookup wants one `*Info`, which
+   is the shape the planned `CommitInfo` path behind `gcommit` needs. Several existing
+   parsers do both in the same class.
+3. **Facade** — `Git::Repository::*` methods that return the value objects, and
+   operation methods that take a name or anything whose `#to_s` is a valid git
+   argument. Accepting both is what lets callers migrate one call site at a time.
+
+   A `*Info` qualifies only when step 1 gave it a `#to_s`. `Git::BranchInfo` did, so
+   `merge(branch_info)` works. `Git::RemoteInfo` did not, so passing one hands git the
+   string `#<data Git::RemoteInfo name="origin", ...>`. For types without a `#to_s`,
+   callers pass the field: `remote_info.name`.
+4. **Deprecation** — deprecate the legacy class, its collection, and the facade methods
+   that return them in one major; remove them in the next. Steps 1 through 3 are purely
+   additive, so the deprecation is the first step that a caller can notice.
+
+Only the methods that *return* AR objects are deprecation targets. The topic modules
+themselves (`Git::Repository::Branching`, `RemoteOperations`, `WorktreeOperations`) are
+the replacement, and their operation methods stay.
+
+**Guardrail:** do not add a *new* public facade method that returns an AR-style object
+already destined for deprecation. When you touch one of these areas, add the
+value-object-returning method instead.
+
+Tags are where this bites. `Git::TagInfo` and its parser exist, but no facade method
+returns one yet: `tag`, `add_tag`, and the rest all hand back `Git::Object::Tag`. So
+following the guardrail for a tag means writing the missing facade method first, not
+reaching for one that is already there.
+
+`Git::Object::Commit`, `Tree`, and `Blob` are a deliberate exception to step 4. See
+[ADR-0002](../../../docs/adr/0002-commit-tree-and-blob-become-hollow-shells.md).
 
 ## Common failures
 
