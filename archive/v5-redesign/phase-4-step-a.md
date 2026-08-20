@@ -106,7 +106,7 @@ Move the git-version cache out of `Git::Lib` to a module-level cache on `Git`
   (used by tests) as class methods on `Git`. Mark both `@api private`.
 - **Rewire the caller.** In `lib/git.rb`, change `Git.git_version` to call
   `Git.cached_git_version` instead of `Git::Lib.cached_git_version`
-  ([lib/git.rb#L512](../lib/git.rb#L512)).
+  ([lib/git.rb#L512](../../lib/git.rb#L512)).
 - The instance method `Git::Lib#git_version` and the class methods on
   `Git::Lib` are deleted wholesale in PR 4, so they need no rewiring here; do
   not leave a second live cache behind.

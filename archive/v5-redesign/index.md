@@ -1,6 +1,6 @@
 # Architectural Redesign Project
 
-[This project was announced in the project's README](../README.md#2025-07-09-architectural-redesign)
+[This project was announced in the project's README](../../README.md#2025-07-09-architectural-redesign)
 
 The git gem is undergoing a significant architectural redesign for the upcoming
 v5.0.0 release. The current architecture has several design challenges that make it

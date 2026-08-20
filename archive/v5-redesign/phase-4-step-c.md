@@ -81,8 +81,8 @@ Source of truth in the implementation tracker:
 [`3_architecture_implementation.md`](3_architecture_implementation.md) →
 "Phase 4 → Step C — Update documentation".
 
-This is the final step of Phase 4, following [Step A](Phase%204%20-%20Step%20A.md)
-(remove old code) and [Step B](Phase%204%20-%20Step%20B.md) (finalize test suite).
+This is the final step of Phase 4, following [Step A](phase-4-step-a.md)
+(remove old code) and [Step B](phase-4-step-b.md) (finalize test suite).
 All breaking changes are complete; this step documents them for users.
 
 ---
@@ -162,13 +162,13 @@ Dependencies (remaining): C3 only. (C1a–C1d, C2a, and C2b are all complete.)
 
 **Documentation skill requirements:** Any remaining PR that touches YARD
 comments must apply the
-[yard-documentation](../.github/skills/yard-documentation/SKILL.md) skill to all
+[yard-documentation](../../.github/skills/yard-documentation/SKILL.md) skill to all
 YARD comments changed or added. Additionally:
 
 - For `Git::Commands::*` classes, also apply the
-  [command-yard-documentation](../.github/skills/command-yard-documentation/SKILL.md) skill
+  [command-yard-documentation](../../.github/skills/command-yard-documentation/SKILL.md) skill
 - For `Git::Repository::*` facade methods, also apply the
-  [facade-yard-documentation](../.github/skills/facade-yard-documentation/SKILL.md) skill
+  [facade-yard-documentation](../../.github/skills/facade-yard-documentation/SKILL.md) skill
 
 ```mermaid
 graph LR
@@ -382,11 +382,11 @@ the key public-API classes is therefore verified manually in C3b, not gated by
 `yard-lint`.
 
 **Documentation conventions:** Every YARD comment added or changed in this PR MUST
-follow the [yard-documentation](../.github/skills/yard-documentation/SKILL.md) skill.
+follow the [yard-documentation](../../.github/skills/yard-documentation/SKILL.md) skill.
 For `Git::Repository::*` facade methods also apply
-[facade-yard-documentation](../.github/skills/facade-yard-documentation/SKILL.md); for
+[facade-yard-documentation](../../.github/skills/facade-yard-documentation/SKILL.md); for
 `Git::Commands::*` also apply
-[command-yard-documentation](../.github/skills/command-yard-documentation/SKILL.md).
+[command-yard-documentation](../../.github/skills/command-yard-documentation/SKILL.md).
 
 **Important:** Methods are documented where they are defined, even if in a private topic module.
 
@@ -617,7 +617,7 @@ remain outside historical context.
 **Goal:** Final comprehensive check that all documentation is complete and correct.
 Step C ends here at **docs-complete + CI green**. The actual v5.0.0 gem release
 (tagging, `gem build`/`push`, publishing) is **out of scope** and handled by a
-separate release process (see the [release-management](../.github/skills/release-management/SKILL.md)
+separate release process (see the [release-management](../../.github/skills/release-management/SKILL.md)
 skill).
 
 **Input:** finalized `redesign/c1a-public-api-scope.tsv` (C1a–C1d) and the updated
@@ -774,7 +774,7 @@ integration tests if possible.
 The actual v5.0.0 release (CHANGELOG finalization, `v5.0.0` git tag, `gem build`,
 `gem push`, GitHub release notes) is **not part of Step C**. It is handled
 separately via the
-[release-management](../.github/skills/release-management/SKILL.md) skill once
+[release-management](../../.github/skills/release-management/SKILL.md) skill once
 Step C reaches docs-complete + CI green.
 
 ---

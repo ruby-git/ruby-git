@@ -49,6 +49,24 @@ impact and plan migration.
    gh search code "Git::Repository#method_name language:ruby"
    ```
 
+3. **Downstream gems:** `reverse-dependencies.sql` in this directory lists every gem
+   that depends on `git`, one row per gem, showing only its most recent version.
+
+   Code search finds call sites; this finds the projects that would have to react to a
+   release. Each row gives the dependent gem's name, its latest version and release
+   date, the version requirement it declares against `git`, and its source or homepage
+   URL. The results are ordered newest release first, so gems still under active
+   maintenance — the ones a deprecation notice can actually reach — sort to the top.
+
+   The `WHERE` clause selects the requirements that a new major would affect: `~> 4.%`
+   pins, which stop receiving updates, and open-ended `>= ` requirements, which pick up
+   the new major immediately whether or not the gem is ready for it. **Edit those
+   patterns to match the series you are changing** — they are pinned to the v4.x
+   analysis they were written for.
+
+   Run it against a restored copy of the public RubyGems.org database dump
+   (<https://rubygems.org/pages/data>); the table names are that schema's.
+
 ## Step 3: Assess and Document Impact
 
 Produce an impact assessment:

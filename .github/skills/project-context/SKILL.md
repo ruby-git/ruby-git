@@ -66,8 +66,10 @@ coding standard details, or implementation constraints.
 - `spec/unit/` — RSpec unit tests (mocked execution context)
 - `spec/integration/` — RSpec integration tests (real git repositories)
 - `spec/support/` — Shared test contexts and helpers
-- `redesign/` — Record of the completed v5.x architectural redesign. History, not
-  current policy; current standards live in `.github/skills/`
+- `archive/` — Frozen records of completed projects, such as
+  `archive/v5-redesign/`. History, not current policy; current standards live in
+  `.github/skills/`
+- `docs/adr/` — Architecture decision records: why something was decided
 
 ## Layer Responsibilities
 

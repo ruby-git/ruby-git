@@ -120,7 +120,7 @@ All Phase 4 steps are now complete:
 
 The architectural redesign is now **fully complete**. The codebase is ready for the
 v5.0.0 release process (see the
-[release-management](../.github/skills/release-management/SKILL.md) skill).
+[release-management](../../.github/skills/release-management/SKILL.md) skill).
 
 The following earlier prerequisites are all ✅ complete:
 
@@ -1599,12 +1599,12 @@ gem build successful. W6 (remove stale `Git::Base`/`Git::Lib` skill references f
 active skills) is complete — both plan ([PR #1506](https://github.com/ruby-git/ruby-git/pull/1506)) and execution ([PR #1509](https://github.com/ruby-git/ruby-git/pull/1509)) have merged.
 
 See the detailed execution plan in
-[Phase 4 - Step B.md](Phase%204%20-%20Step%20B.md).
+[Phase 4 — Step B](phase-4-step-b.md).
 
 #### Step C — Update documentation
 
 **Status: 🚧 Partial.** See detailed execution plan in
-[Phase 4 - Step C.md](Phase%204%20-%20Step%20C.md).
+[Phase 4 — Step C](phase-4-step-c.md).
 
 - ✅ Thoroughly document the new public API (`Git`, `Git::Repository`, etc.) and all
   of `lib/` — **done**: every file passes `yard-lint` (which replaced the retired
@@ -1615,7 +1615,7 @@ See the detailed execution plan in
   breaking changes for v5.0.0.
 
 **Done when**: the criteria in the Step C execution plan
-([Phase 4 - Step C.md](Phase%204%20-%20Step%20C.md) → "Done-When Criteria") are all
+([Phase 4 — Step C](phase-4-step-c.md) → "Done-When Criteria") are all
 met. In brief: documentation coverage is complete and enforced by `yard-lint`
 (`.yard-lint.yml`; `rake yard:lint` passes with no offenses) — already done — the
 `@api`-visibility tags are correct, `UPGRADING.md` covers all breaking changes,

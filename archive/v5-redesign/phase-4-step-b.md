@@ -30,7 +30,7 @@ Source of truth in the implementation tracker:
 [`3_architecture_implementation.md`](3_architecture_implementation.md) →
 "Phase 4 → Step B — Finalize test suite".
 
-This is the second half of Phase 4. [Step A](Phase%204%20-%20Step%20A.md) removed
+This is the second half of Phase 4. [Step A](phase-4-step-a.md) removed
 the old `Git::Base` / `Git::Lib` code; Step B removes the old test framework that
 those classes were originally written against.
 

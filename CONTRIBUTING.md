@@ -1163,7 +1163,7 @@ contains `lib/`, the documents [`.yardopts`](.yardopts) names as extra files, pl
 `UPGRADING.md` and the gemspec itself. Nothing else in the repository is published.
 
 It used to be a denylist, which meant every new path was published by default. That
-shipped `.github/`, `redesign/`, and the Husky hooks to users, and — the reason it
+shipped `.github/`, `tasks/`, and the Husky hooks to users, and — the reason it
 changed — the `.claude/skills` symlink. Extracting a symlink requires a privilege
 Windows grants only under Developer Mode or an elevated shell, so `gem install git`
 either failed there or, on RubyGems new enough to fall back to a copy, quietly

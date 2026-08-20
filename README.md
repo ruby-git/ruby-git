@@ -459,36 +459,26 @@ setting clear expectations.
 
 ### 2025-07-09: Architectural Redesign
 
-The git gem is undergoing a significant architectural redesign for the upcoming
-v5.0.0 release. The current architecture has several design challenges that make it
-difficult to maintain and evolve. This redesign aims to address these issues by
-introducing a clearer, more robust, and more testable structure.
+On this date we announced a significant architectural redesign of the git gem. The
+architecture at the time had several design challenges that made it difficult to
+maintain and evolve; the redesign replaced it with a clearer, more testable
+three-layer structure of commands, parsers, and a `Git::Repository` facade.
 
-We have prepared detailed documents outlining the analysis of the current
-architecture and the proposed changes. We encourage our community and contributors to
-review them:
+**The redesign shipped in v5.0.0 and is complete.** `Git::Base` and `Git::Lib` are
+gone, along with the `g.lib` accessor. See [UPGRADING.md](UPGRADING.md) for what
+changed and how to migrate.
 
-1. [Analysis of the Current Architecture](redesign/1_architecture_existing.md): A
-   breakdown of the existing design and its challenges.
-2. [The Proposed Redesign](redesign/2_architecture_redesign.md): An overview of the
-   new three-layered architecture.
-3. [Implementation Plan](redesign/3_architecture_implementation.md): The step-by-step
-   plan for implementing the redesign.
+The three documents written to plan it are kept as a historical record in
+[`archive/v5-redesign/`](archive/v5-redesign/). They describe the state of the code
+before and during the migration and are **not** current policy — the standards that
+apply to new code live in [`.github/skills/`](.github/skills/).
 
-Your feedback is welcome! Please feel free to open an issue to discuss the proposed
-changes.
-
-> **DON'T PANIC!**
->
-> While this is a major internal refactoring, our goal is to keep the primary public
-API on the main repository object as stable as possible. Most users who rely on
-documented methods like `g.commit`, `g.add`, and `g.status` should find the
-transition to v5.0.0 straightforward.
->
-> The breaking changes will primarily affect users who have been relying on the
-internal g.lib accessor, which will be removed as part of this cleanup. For more
-details, please see the "Impact on Users" section in [the redesign
-document](redesign/2_architecture_redesign.md).
+1. [Analysis of the Current Architecture](archive/v5-redesign/1_architecture_existing.md):
+   a breakdown of the v4.x design and its challenges.
+2. [The Proposed Redesign](archive/v5-redesign/2_architecture_redesign.md): an overview
+   of the three-layer architecture.
+3. [Implementation Plan](archive/v5-redesign/3_architecture_implementation.md): the
+   step-by-step plan that was followed.
 
 ### 2025-07-07: We Now Use RuboCop
 
