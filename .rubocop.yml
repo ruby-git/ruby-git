@@ -42,3 +42,10 @@ AllCops:
   # sets 3.1, which is older than this gem supports, and a value inherited through
   # inherit_gem takes precedence over inference from the gemspec.
   TargetRubyVersion: 3.2
+
+  Exclude:
+    # archive/ holds frozen records of completed projects. The Ruby in there is
+    # design sketches, not code that ships or runs, and it is meant to read the way
+    # it read when it was written. Linting it would mean editing a historical record
+    # every time a cop's defaults change.
+    - "archive/**/*"

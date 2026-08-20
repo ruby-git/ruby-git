@@ -103,7 +103,7 @@ Gem::Specification.new do |spec|
   # Specify which files should be added to the gem when it is released.
   #
   # This is an allowlist rather than a denylist. A denylist admitted every new
-  # development-only path by default, so the gem shipped `.github/`, `redesign/`, the
+  # development-only path by default, so the gem shipped `.github/`, `tasks/`, the
   # husky hooks, and -- the reason this became an allowlist -- the `.claude/skills`
   # symlink. Extracting a symlink needs a privilege that Windows grants only under
   # Developer Mode or an elevated shell, so installing the gem there either failed

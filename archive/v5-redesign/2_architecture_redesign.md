@@ -256,7 +256,7 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
 
     The DSL supports several option types (`flag_option`, `value_option`, `flag_or_value_option`, `literal`,
     `custom_option`, `execution_option`) and positional arguments, each with various modifiers. See
-    [Git::Commands::Arguments](../lib/git/commands/arguments.rb) for full documentation.
+    [Git::Commands::Arguments](../../lib/git/commands/arguments.rb) for full documentation.
 
     **Interface Convention**: With the `Base` pattern, all commands use
     `def call(...) = super` as a YARD documentation shim. `Base#call` handles
