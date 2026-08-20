@@ -88,7 +88,7 @@ the helper after **what** it does, not **how**:
 # Before
 def call(*, **)
   bound = args_definition.bind(*, **)
-  objects = Array(bound.objects).map { |o| "#{o}\n" }.join
+  objects = Array(bound.object).map { |o| "#{o}\n" }.join
   with_stdin(objects) { |r| run_batch(bound, r) }
 end
 
@@ -101,7 +101,7 @@ end
 private
 
 def stdin_content(bound)
-  Array(bound.objects).map { |o| "#{o}\n" }.join
+  Array(bound.object).map { |o| "#{o}\n" }.join
 end
 ```
 

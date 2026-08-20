@@ -453,7 +453,7 @@ module Git
       #
       # @example Feed bound object names to a git batch command
       #   bound = args_definition.bind(*args, **kwargs)
-      #   stdin_content = Array(bound.objects).map { |object| "#{object}\n" }.join
+      #   stdin_content = Array(bound.object).map { |object| "#{object}\n" }.join
       #   with_stdin(stdin_content) do |reader|
       #     @execution_context.command_capturing('cat-file', '--batch-check', in: reader, raise_on_failure: false)
       #   end

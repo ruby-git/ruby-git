@@ -110,7 +110,8 @@ When a parser requires specific output flags (e.g. `--pretty=raw`, `--numstat`),
 declare those flags in the DSL with `flag_option` or `value_option`, and pass them
 explicitly from the `Git::Repository::*` facade. Never hardcode them as `literal` entries inside the
 command class — that hides the parser contract and prevents the facade from choosing
-the format. See Insight 16 in `redesign/3_architecture_implementation.md`.
+the format. See
+[Command Implementation — Do NOT split by output format / output mode](../command-implementation/REFERENCE.md#do-not-split-by-output-format--output-mode).
 
 ## 2. Verify DSL method per option type
 
@@ -751,19 +752,28 @@ not flag the absence of `conflicts`, `requires`, `requires_one_of`,
 `requires_exactly_one_of`, `forbid_values`, or `allowed_values` as a completeness
 issue. Command classes use per-argument validation parameters (`required:`,
 `allow_nil:`, etc.) and operand format validation. Git validates its own option
-semantics. There are two narrow exceptions:
+semantics. The authority for this policy is
+[Project Context — Validation Boundaries](../project-context/SKILL.md#validation-boundaries);
+the summary below must not drift from it. There are two narrow exceptions:
 
 1. **Arguments git cannot observe in its argv** — the test is: does this argument
-   appear in git's argv? If no (e.g., `skip_cli: true` operands routed via stdin),
-   git cannot detect incompatibilities and constraint declarations are appropriate
-   and should not be flagged as policy violations. Example: `cat-file --batch`
-   declares `conflicts :objects, :batch_all_objects` and `requires_one_of :objects,
-   :batch_all_objects` because `:objects` is `skip_cli: true`.
+   appear in git's argv? If no — `skip_cli: true` operands, `execution_option`
+   entries, anything consumed entirely on the Ruby side — git cannot detect
+   incompatibilities and constraint declarations are appropriate and should not be
+   flagged as policy violations. Both shapes are in the tree: `cat-file --batch`
+   declares `conflicts :object, :batch_all_objects` and `requires_one_of :object,
+   :batch_all_objects` because `:object` is `skip_cli: true`; `archive` declares
+   `conflicts :output, :out` because `:out` is an `execution_option`.
 2. **Git-visible arguments that cause silent data loss** — if a combination of
    git-visible arguments causes git to silently discard data (no error, wrong
    result), a `conflicts` declaration MAY be added with: a code comment explaining
    why, a reference to the git version(s) where the behavior was verified, and a
-   test. As of this writing, no such case has been identified.
+   test.
+
+**Known deviation — do not flag it as new.** `Git::Commands::CatFile::Raw` declares
+`requires_one_of :t, :s, when: :allow_unknown_type` on a git-visible `flag_option`
+(`lib/git/commands/cat_file/raw.rb:78`). It predates the policy and is documented as
+such; report it only if the review is specifically about removing it.
 
 ## 7. Check class-level declarations
 

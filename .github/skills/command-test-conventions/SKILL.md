@@ -99,12 +99,14 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
   options, `required:` violations, `type:` mismatches, etc. Command classes generally
   do **not** declare cross-argument constraint methods (`conflicts`, `requires`,
   `requires_one_of`, `requires_exactly_one_of`, `forbid_values`, `allowed_values`,
-  etc.) — git validates its own option semantics. The narrow exception is **arguments
-  git cannot observe in its argv**: if an argument is `skip_cli: true`, it never
-  reaches git's argv and git cannot detect incompatibilities — constraint
-  declarations are appropriate and the resulting `ArgumentError` should be tested.
-  See the validation delegation policy in `redesign/3_architecture_implementation.md`
-  Insight 6.
+  etc.) — git validates its own option semantics. Two narrow exceptions allow a
+  constraint, and a declared constraint of either kind gets an `ArgumentError` test.
+  The first is **arguments git cannot observe in its argv** — `skip_cli: true`
+  operands, `execution_option` entries, anything consumed entirely on the Ruby side.
+  The second is **git-visible combinations that make git silently discard data**, for
+  which the policy requires a test as a condition of adding the constraint at all.
+  See [Project Context — Validation Boundaries](../project-context/SKILL.md#validation-boundaries)
+  for the full policy.
 
 #### Expectations for command invocation
 
@@ -134,10 +136,11 @@ Commands that use `Base#with_stdin` pass an `IO` pipe read end as `in:` to
 assert its content. Use a block form on the `expect` to intercept keyword arguments:
 
 ```ruby
-# Helper defined in the spec file:
-def expect_batch_command(*extra_args, stdin_content: nil, **extra_opts) # rubocop:disable Metrics/AbcSize
+# Helper defined in the spec file. The mode flag is an ordinary option on the class,
+# so it is passed in by the caller rather than baked into the helper:
+def expect_batch_command(*expected_cli_args, stdin_content: nil, **extra_opts)
   expect(execution_context).to receive(:command_capturing) do |*args, **kwargs|
-    expect(args).to eq(['cat-file', '--batch-check', *extra_args])
+    expect(args).to eq(['cat-file', *expected_cli_args])
     expect(kwargs).to include(raise_on_failure: false, **extra_opts)
     expect(kwargs[:in].read).to eq(stdin_content) if stdin_content
     command_result
@@ -146,26 +149,27 @@ end
 
 # Usage:
 it 'passes the object via stdin and runs --batch-check' do
-  expect_batch_command(stdin_content: "HEAD\n")
-  command.call('HEAD')
+  expect_batch_command('--batch-check', stdin_content: "HEAD\n")
+  command.call('HEAD', batch_check: true)
 end
 
 it 'writes each object on its own line to stdin' do
-  expect_batch_command(stdin_content: "HEAD\nv1.0\nabc123\n")
-  command.call('HEAD', 'v1.0', 'abc123')
+  expect_batch_command('--batch-check', stdin_content: "HEAD\nv1.0\nabc123\n")
+  command.call('HEAD', 'v1.0', 'abc123', batch_check: true)
 end
 
 it 'includes --batch-all-objects and writes nothing to stdin' do
-  expect_batch_command('--batch-all-objects', stdin_content: '')
-  command.call(batch_all_objects: true)
+  expect_batch_command('--batch-check', '--batch-all-objects', stdin_content: '')
+  command.call(batch_all_objects: true, batch_check: true)
 end
 
-# git-invisible argument exception: :objects is skip_cli: true, so git never sees
-# it in argv and cannot detect these incompatibilities. Ruby must enforce them.
+# argv-invisible argument exception: :object is skip_cli: true, so it reaches git
+# over stdin and never in argv. Git has no token to detect these incompatibilities
+# with, so Ruby must enforce them.
 # conflicts: can't pass objects AND bypass stdin; requires_one_of: must choose one.
 it 'raises when mutually exclusive DSL inputs are combined' do
-  expect { command.call('HEAD', batch_all_objects: true) }
-    .to raise_error(ArgumentError, /cannot specify :objects and :batch_all_objects/)
+  expect { command.call('HEAD', batch_all_objects: true, batch_check: true) }
+    .to raise_error(ArgumentError, /cannot specify :object and :batch_all_objects/)
 end
 ```
 
@@ -313,10 +317,15 @@ Unit tests are organized under `describe '#call'` with three sections:
    the range raise `FailedError`.
 3. **`context 'input validation'`** — only for commands with validation rules. Covers
    unsupported options and required arguments that raise `ArgumentError`.
-   Cross-argument constraints for git-visible arguments are not tested because
-   command classes do not declare them. The exception is constraints on `skip_cli:
-   true` arguments (e.g., `conflicts :objects, :batch_all_objects` and
-   `requires_one_of :objects, :batch_all_objects`), which should be tested.
+   Cross-argument constraints are usually absent, so there is usually nothing to
+   test here. Test whatever constraints a command *does* declare — both permitted
+   kinds require it:
+
+   - Arguments that never reach git's argv (e.g. `conflicts :object,
+     :batch_all_objects` and `requires_one_of :object, :batch_all_objects` in
+     `cat-file --batch`, or `conflicts :output, :out` in `archive`).
+   - Git-visible combinations that make git silently discard data, for which the
+     policy makes a test a precondition of adding the constraint at all.
 
 The exit code and input validation blocks are optional — include them only when the
 command has those behaviors. They always appear at the end of `#call`, in that order.

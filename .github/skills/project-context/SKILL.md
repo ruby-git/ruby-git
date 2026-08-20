@@ -66,10 +66,8 @@ coding standard details, or implementation constraints.
 - `spec/unit/` — RSpec unit tests (mocked execution context)
 - `spec/integration/` — RSpec integration tests (real git repositories)
 - `spec/support/` — Shared test contexts and helpers
-- `redesign/` — Architecture redesign documentation
-  - `redesign/3_architecture_implementation.md` is a living migration tracker.
-    When command migrations land, keep checklist states, "Next Task", and Phase 2
-    progress counts synchronized with `lib/git/commands/` and current spec paths.
+- `redesign/` — Record of the completed v5.x architectural redesign. History, not
+  current policy; current standards live in `.github/skills/`
 
 ## Layer Responsibilities
 
@@ -122,14 +120,17 @@ The execution layer (`GIT_EDITOR='true'`) is an unconditional safety net.
 
 ### Validation Boundaries
 
+This section is the authority on what command classes validate and what they delegate
+to git. Skills that need the rule link here.
+
 Command classes use per-argument validation parameters (`required:`, `type:`,
 `allow_nil:`, etc.) and operand format validation. They generally do **not** declare
 cross-argument constraint methods (`conflicts`, `requires`, `requires_one_of`,
-`requires_exactly_one_of`, `forbid_values`, `allowed_values`) — git is the single source of truth for its
-own option semantics. The narrow exception is **arguments git cannot observe in
-its argv**: if an argument is `skip_cli: true`, git never sees it and cannot detect
-incompatibilities — `conflicts` and/or `requires_one_of` are appropriate. Example:
-`cat-file --batch` uses both because `:objects` is `skip_cli: true`:
+`requires_exactly_one_of`, `forbid_values`, `allowed_values`) — git is the single source
+of truth for its own option semantics. There are two narrow exceptions — **arguments
+git cannot observe in its argv**, and **git-visible combinations that make git silently
+discard data** — both spelled out under
+[Exception criteria for constraint declarations](#exception-criteria-for-constraint-declarations).
 
 | Validated by Commands | Mechanism |
 | --- | --- |
@@ -147,10 +148,78 @@ incompatibilities — `conflicts` and/or `requires_one_of` are appropriate. Exam
 | Forbidden value combinations | `Git::FailedError` |
 
 The constraint DSL infrastructure (`conflicts`, `requires`, `requires_one_of`,
-`requires_exactly_one_of`, `forbid_values`, `allowed_values`) remains available in `Git::Commands::Arguments`
-and is used only for `skip_cli: true` argument constraints, and in narrow documented cases for
-git-visible arguments whose combination causes silent data loss (no error, wrong result).
-See `redesign/3_architecture_implementation.md` Insight 6 for the full policy and exception criteria.
+`requires_exactly_one_of`, `forbid_values`, `allowed_values`) remains available in
+`Git::Commands::Arguments` and is kept intact, but command classes reach for it only
+under the exception criteria below.
+
+#### Exception criteria for constraint declarations
+
+The test: **does this argument appear in git's argv?**
+
+- **Yes** (normal `flag_option`, `value_option`, etc.) — git can observe it and report
+  the error, so do not declare a constraint.
+- **No** — the argument is consumed entirely on the Ruby side and has no argv
+  representation at all: `skip_cli: true` operands, `execution_option` entries, and
+  anything else that never becomes a token git can see. Git has no mechanism to detect
+  incompatibilities, so Ruby must enforce them with a constraint declaration.
+
+This is about *presence in argv*, not about transformation. Every DSL entry transforms
+something — `flag_option :force` turns `force: true` into `--force` — and those still
+belong to the **Yes** branch, because `--force` reaches git and git can object to it.
+
+The canonical case is `skip_cli: true` operands routed via stdin. `cat-file --batch`
+commands declare both `conflicts :object, :batch_all_objects` and
+`requires_one_of :object, :batch_all_objects`. `:object` is `skip_cli: true`, so it
+reaches git over stdin rather than in argv — git does receive the object names, but it
+has no argv token to reason about them with, and `--batch-all-objects` makes it discard
+stdin unread. Both failure modes are therefore silent:
+
+| Passed | What git does | Exit |
+| --- | --- | --- |
+| both | ignores stdin, dumps the entire object database | 0 |
+| neither | reads nothing from stdin, emits nothing | 0 |
+
+Neither is an error git can report, so Ruby must enforce those constraints.
+
+The distinction matters when reasoning about a new command: `skip_cli: true` means
+*absent from argv*, not *invisible to git*. A stdin-fed value git still reads is covered
+by this exception because git cannot correlate it with the argv flags, not because git
+never receives it.
+
+`Git::Commands::Archive` is the other shape: it declares `conflicts :output, :out`
+because `:out` is an `execution_option` naming a Ruby IO object to stream into. Only
+`--output` reaches argv, so git cannot see that both were requested.
+
+A secondary exception: if a combination of **git-visible** arguments causes git to
+**silently discard data** (no error, wrong result), a `conflicts` declaration MAY be
+added with a code comment explaining why, a reference to the git version(s) where the
+behavior was verified, and a test.
+
+One command deviates from the argv-visibility rule above (not from this secondary
+exception). `Git::Commands::CatFile::Raw` declares
+`requires_one_of :t, :s, when: :allow_unknown_type` on a git-visible `flag_option`
+that git already rejects in other modes. It predates this policy and is not a
+template — see the note in
+[Command Implementation](../command-implementation/REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).
+
+#### Why the semantic checks are delegated
+
+1. **Git is the single source of truth.** Git validates its own option interactions and
+   reports clear errors via stderr, surfaced as `Git::FailedError`. Ruby-side constraints
+   duplicate that validation and risk going stale — potentially blocking valid usage when
+   git relaxes a restriction in a newer version.
+2. **Partial coverage is worse than none.** Inconsistent constraint coverage creates a
+   false promise of safety: users cannot tell whether the absence of an `ArgumentError`
+   means "this combination is valid" or "this command has no constraints."
+3. **Constraint violations are programming errors.** A developer who passes conflicting
+   options must stop and fix their code either way, so the cost difference between
+   `ArgumentError` and `Git::FailedError` is negligible.
+4. **Uniform error semantics.** Every *semantic* rejection in the delegated table
+   above surfaces the same way — `Git::FailedError` carrying git's actual message —
+   rather than as a mix of Ruby constraint errors and git rejections. The
+   per-argument checks in the first table still raise `ArgumentError`; the split is
+   between "this call is malformed" and "git says no", not between two arbitrary
+   error classes.
 
 ## Coding Standards
 
