@@ -18,7 +18,7 @@ detailed design for its area.
 - [Issue index](#issue-index)
 - [Versioning and sequencing](#versioning-and-sequencing)
 - [Key decisions](#key-decisions)
-- [Open threads / not yet tracked](#open-threads--not-yet-tracked)
+- [Open threads](#open-threads)
 
 ## Motivation
 

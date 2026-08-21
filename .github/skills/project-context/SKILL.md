@@ -265,7 +265,7 @@ template — see the note in
 
 ## Design Philosophy
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for authoritative, complete guidelines.
+See [CONTRIBUTING.md](../../../CONTRIBUTING.md) for authoritative, complete guidelines.
 
 **Summary:**
 

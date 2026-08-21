@@ -17,11 +17,11 @@ class. The git subcommand is determined by the first (or first few) arguments to
 - [Input](#input)
 - [Workflow](#workflow)
   - [Branch setup](#branch-setup)
-  - [Step 1 — Identify the `#command` call](#step-1-identify-the-command-call)
-  - [Step 2 — Plan the migration and get approval](#step-2-plan-the-migration-and-get-approval)
-  - [Step 3 — Ensure adequate legacy tests](#step-3-ensure-adequate-legacy-tests)
-  - [Step 4 — Ensure the `Git::Commands::*` class exists](#step-4-ensure-the-gitcommands-class-exists)
-  - [Step 5 — Update `Git::Lib` to delegate to the command class](#step-5-update-gitlib-to-delegate-to-the-command-class)
+  - [Step 1 — Identify the `#command` call](#step-1--identify-the-command-call)
+  - [Step 2 — Plan the migration and get approval](#step-2--plan-the-migration-and-get-approval)
+  - [Step 3 — Ensure adequate legacy tests](#step-3--ensure-adequate-legacy-tests)
+  - [Step 4 — Ensure the `Git::Commands::*` class exists](#step-4--ensure-the-gitcommands-class-exists)
+  - [Step 5 — Update `Git::Lib` to delegate to the command class](#step-5--update-gitlib-to-delegate-to-the-command-class)
 - [Commit discipline](#commit-discipline)
 - [Create a pull request](#create-a-pull-request)
 - [Quality gates (run at every step)](#quality-gates-run-at-every-step)
@@ -70,7 +70,7 @@ Run or reference these skills during the workflow:
 - [Command Test Conventions](../../skills/command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
 - [Command YARD Documentation](../../skills/command-yard-documentation/SKILL.md) — documentation completeness for command classes
 - [Review Cross-Command Consistency](../../skills/review-cross-command-consistency/SKILL.md) — sibling consistency within a command family
-- [Review Backward Compatibility](../../skills/review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
+- [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
 - [Extract Facade from Base/Lib](../extract-facade-from-base-lib/SKILL.md) — the
   follow-on extraction that moves the public method from `Git::Base` /
   `Git::Lib` into a `Git::Repository::*` facade method (Phase 4 deletes both
