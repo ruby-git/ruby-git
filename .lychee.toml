@@ -1,0 +1,29 @@
+# Configuration for lychee, the markdown link checker. See https://lychee.cli.rs.
+
+# Check only what this repository controls. Every link in these files is either a
+# relative path into the repository or an anchor within one of its documents, and
+# both break silently when a file moves or a heading is renamed -- which is exactly
+# what this checker exists to catch.
+#
+# External URLs are deliberately not requested. They fail for reasons that have
+# nothing to do with the commit under test: rate limits, redirects behind a login,
+# and sites that reject datacenter IPs. A gate that goes red on someone else's outage
+# gets ignored, and an ignored gate stops catching the internal breakage it was added
+# for.
+offline = true
+
+# Verify heading anchors, not just file paths. Half the links this repository writes
+# point at a section rather than a whole file, so path-only checking would still let
+# a renamed heading rot unnoticed.
+#
+# This key is version-sensitive: it took a bare boolean before lychee 0.24 and takes
+# one of none/anchor-only/text-only/full from 0.24 on. If this file stops parsing,
+# check the current lychee docs for the accepted form before changing anything else.
+include_fragments = "anchor-only"
+
+no_progress = true
+
+# Include .github, where the agent skills live. Generated and vendored trees --
+# doc/, coverage/, pkg/, node_modules/, tmp/ -- need no exclusions here: lychee honors
+# .gitignore, and every one of them is listed there.
+hidden = true

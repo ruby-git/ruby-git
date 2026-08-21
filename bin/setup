@@ -7,6 +7,7 @@
 #   * installs Ruby gem dependencies via Bundler
 #   * installs the optional Node.js tooling used for the Conventional Commit
 #     commit-msg hook (Husky + commitlint)
+#   * verifies that the lychee link checker is installed and new enough
 #   * verifies the toolchain by listing the available rake tasks
 #
 # Run this from the project root after cloning the repository.
@@ -126,6 +127,44 @@ install_npm_tooling() {
   fi
 }
 
+# The minimum lychee version is set by .lychee.toml rather than by this project:
+# `include_fragments` takes an enum string from 0.24 on and took a bare boolean before
+# that, so an older binary cannot parse the config. Checking here turns a confusing TOML
+# parse error during `rake markdown:links` into a clear message. Keep this in sync with
+# the note on `include_fragments` in .lychee.toml.
+REQUIRED_LYCHEE_VERSION="0.24.0"
+
+# lychee is a Rust binary rather than a gem, so bundler cannot supply it and this script
+# cannot install it. It is still required: `rake markdown:links` is part of the default
+# task, and a link check that silently no-ops would make a green `bundle exec rake` mean
+# less than it says. Every platform this project supports has a packaged lychee.
+check_lychee() {
+  local required="$1"
+  if ! command -v lychee >/dev/null 2>&1; then
+    red "ERROR: lychee is not installed or not on PATH."
+    red "       ruby-git requires lychee >= ${required} for 'rake markdown:links',"
+    red "       which runs as part of the default task."
+    red "       Install with one of:"
+    red "         macOS    brew install lychee"
+    red "         Ubuntu   snap install lychee"
+    red "         Arch     pacman -S lychee"
+    red "         Windows  winget install --id lycheeverse.lychee"
+    red "       Others: https://github.com/lycheeverse/lychee#installation"
+    exit 1
+  fi
+
+  local lychee_version
+  # `lychee --version` prints e.g. "lychee 0.24.2".
+  lychee_version=$(lychee --version | awk '{print $2}')
+  if ! version_ge "${lychee_version}" "${required}"; then
+    red "ERROR: lychee ${lychee_version} is too old."
+    red "       ruby-git requires lychee >= ${required}: .lychee.toml uses the enum form"
+    red "       of 'include_fragments', which older releases cannot parse."
+    exit 1
+  fi
+  green "✓ lychee ${lychee_version} (>= ${required})"
+}
+
 verify_toolchain() {
   info ""
   info "Verifying the toolchain (bundle exec rake --tasks)..."
@@ -145,10 +184,11 @@ fi
 REQUIRED_RUBY_VERSION=$(required_ruby_version)
 REQUIRED_GIT_VERSION=$(required_git_version)
 
-info "Checking prerequisites (minimums read from ${GEMSPEC})..."
+info "Checking prerequisites (Ruby and git minimums read from ${GEMSPEC})..."
 check_ruby "${REQUIRED_RUBY_VERSION}"
 check_git "${REQUIRED_GIT_VERSION}"
 check_bundler
+check_lychee "${REQUIRED_LYCHEE_VERSION}"
 
 install_gems
 install_npm_tooling
