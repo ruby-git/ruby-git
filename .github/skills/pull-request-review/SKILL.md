@@ -33,7 +33,7 @@ confirms.
    before formal review
 - [CI/CD Troubleshooting](../ci-cd-troubleshooting/SKILL.md) — investigate failed
    checks discovered during review
-- [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) —
+- [Review Backward Compatibility](../../skills-deprecated/review-backward-compatibility/SKILL.md) —
    deeper audit when API compatibility concerns surface
 
 ## Step 1: Fetch the PR

@@ -290,7 +290,7 @@ Also state:
   When extracting one method at a time, scan `Git::Base` / `Git::Lib` for
   siblings on the same git topic and check
   `redesign/3_architecture_implementation.md` before deciding — see
-  [One-at-a-time extraction](../../skills/facade-implementation/REFERENCE.md#one-at-a-time-extraction-from-gitbase--gitlib).
+  [Choosing a module for a new facade method](../../skills/facade-implementation/REFERENCE.md#choosing-a-module-for-a-new-facade-method).
 - The delegation strategy for `Git::Base` and/or `Git::Lib` (Step 6) — both
   remain in place during the migration window and delegate to the new facade.
 - For Pattern B: explicit note that `g.lib.foo` callers will need to migrate

@@ -46,9 +46,9 @@ Replace `branch` with the specific git command(s) you want to audit (e.g.,
 
 ## Related skills
 
-- [Refactor Command to CommandLineResult](../refactor-command-to-commandlineresult/SKILL.md) — migrating command classes to Base;
+- [Refactor Command to CommandLineResult](../../skills/refactor-command-to-commandlineresult/SKILL.md) — migrating command classes to Base;
   the counterpart to this skill's `Git::Lib` facade focus
-- [Command Implementation](../command-implementation/SKILL.md) — class structure, phased rollout gates, and
+- [Command Implementation](../../skills/command-implementation/SKILL.md) — class structure, phased rollout gates, and
   internal compatibility contracts
 
 ## Objective
