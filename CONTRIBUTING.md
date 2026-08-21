@@ -98,6 +98,7 @@ prerequisite is missing.
 | Bundler | Any 2.x or 4.x | Install with `gem install bundler`. |
 | git | `>= 2.28.0` (matches `git.gemspec` `requirements`) | Older git versions are not supported and the test suite will not pass against them. |
 | Node.js / npm | Optional | Required only to install the local Conventional Commit `commit-msg` hook (Husky + commitlint). If npm is missing, `bin/setup` will warn and continue — CI will still validate commit messages. |
+| [lychee](https://lychee.cli.rs) | `>= 0.24.0` | Runs the markdown link check (`rake markdown:links`), which is part of the default task. The floor comes from [`.lychee.toml`](.lychee.toml): older releases cannot parse the enum form of `include_fragments`. Install with `brew install lychee` (macOS), `snap install lychee` (Ubuntu), `pacman -S lychee` (Arch), `winget install --id lycheeverse.lychee` (Windows), or see the [install docs](https://github.com/lycheeverse/lychee#installation). |
 
 #### A note for Windows contributors
 
@@ -130,6 +131,12 @@ bin/setup
    protected branches (`main`, `4.x`).
 4. Verify the toolchain by running `bundle exec rake --tasks`.
 
+`bin/setup` checks for [lychee](https://lychee.cli.rs) alongside Ruby, git, and
+Bundler, and exits non-zero when it is missing or too old. lychee is a Rust binary
+rather than a gem, so `bundle install` cannot supply it and `bin/setup` cannot
+install it for you — but every platform this project supports has a packaged
+build, and the error message names the command for yours.
+
 ### Verify the toolchain
 
 Once `bin/setup` succeeds, confirm the full test and lint suite passes locally:
@@ -138,8 +145,16 @@ Once `bin/setup` succeeds, confirm the full test and lint suite passes locally:
 bundle exec rake
 ```
 
-This is the same default task that runs in CI and is the canonical way to
-validate a change before requesting review.
+This runs everything CI checks — specs, RuboCop, the markdown link check, YARD,
+and the gem build — and is the canonical way to validate a change before
+requesting review.
+
+One caveat on the `links` task: passing locally does not guarantee the CI job
+passes, and the gap is the environment rather than the tool. A link whose
+capitalization is wrong resolves on a case-insensitive filesystem such as macOS and
+404s on the Linux runner, so `](docs/README.MD)` against a file named `README.md`
+looks fine locally and fails in CI. [`tasks/markdown.rake`](tasks/markdown.rake) lists
+this and the other differences. CI remains the authoritative link check.
 
 ### Contributor validation policy
 

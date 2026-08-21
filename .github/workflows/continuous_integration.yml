@@ -50,6 +50,49 @@ jobs:
         run: bundle exec rake rubocop yard
         timeout-minutes: 15
 
+  # Ensure that local links in markdown docs are valid.
+  #
+  # The checker is configured in .lychee.toml. Run the same check locally with:
+  #
+  #     rake markdown:links
+  #
+  links:
+    name: Markdown Links
+
+    # Skip this job if triggered by a release PR
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      # Track the newest lychee release rather than pinning one. Without this the
+      # action installs whatever version its own default names, which moves when the
+      # `@v2` tag moves -- pinned, but pinned by someone else and bumped without a
+      # commit here. `latest` at least makes the choice ours and keeps the checker
+      # current. The action accepts `latest`, `nightly`, or an exact tag; there is no
+      # major-version form, and lychee is 0.x, so a "compatible range" is not on offer.
+      #
+      # This can break the build on a release nobody here asked for. .lychee.toml is
+      # coupled to the lychee version -- `include_fragments` took a bare boolean before
+      # 0.24 and an enum string from 0.24 on -- and a future release is free to change
+      # a key again. That trade is deliberate: an occasional known-cause failure is
+      # cheaper than a checker that silently ages.
+      #
+      # When it does break, read the parse error, fix .lychee.toml against the current
+      # lychee docs, and commit that. Pin `lycheeVersion` to the last good tag only to
+      # unblock an unrelated PR, and open an issue to unpin.
+      - name: Check Markdown Links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          lycheeVersion: latest
+          args: --config .lychee.toml .
+          fail: true
+
   build:
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
 
