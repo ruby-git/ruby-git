@@ -692,15 +692,18 @@ for the policy this follows. There are two narrow exceptions:
    code comment explaining why, a reference to the git version(s) where the
    behavior was verified, and a test.
 
-**Git accepting a flag and silently ignoring it is NOT the second exception.**
-Git's option parsing is deliberately lenient: mode-scoped flags are accepted in
-every mode and consulted only where they apply, and git even retires flags by
-turning them into accepted no-ops (`--allow-unknown-type` does nothing anywhere on
-git 2.50+). A no-op flag produces no wrong answer, and guarding every ignored
-combination is the partial-coverage trap the delegation policy exists to avoid.
-Delegate it. `Git::Commands::CatFile::Raw` once declared
-`requires_one_of :t, :s, when: :allow_unknown_type` on exactly this basis; the
-constraint was removed and the flag passes through.
+**A flag that is invalid in the selected mode is still not the second exception.**
+Whether git rejects the combination loudly (delegation's normal case — the caller
+gets `Git::FailedError` with git's message) or accepts the flag and silently
+ignores it (a no-op produces no wrong answer), no constraint is warranted, and
+guarding every such combination is the partial-coverage trap the delegation policy
+exists to avoid. `Git::Commands::CatFile::Raw` once declared
+`requires_one_of :t, :s, when: :allow_unknown_type`, duplicating a check git
+2.28-2.49 performs itself (`cat-file` dies with "use with -s or -t" in any other
+mode) and git 2.50 removed along with the whole unknown-type feature, leaving the
+flag an accepted no-op everywhere. The constraint was removed and the flag passes
+through. The decision record for the policy and its exceptions is
+[ADR-0003](../../../docs/adr/0003-validation-of-git-semantics-is-delegated-to-git.md).
 
 This step is required. A command class that only exposes the options that happen to
 be used today in the `Git::Repository::*` facade is incomplete — callers of the future API should not need
