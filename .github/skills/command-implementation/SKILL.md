@@ -76,8 +76,13 @@ Skip this step when scaffolding a new command (the file does not exist yet).
 - **Minimum-version online command documentation**
 
   Read the **entire** official git documentation online man page for the command for
-  the `Git::MINIMUM_GIT_VERSION` version of git. This will be used only for
-  command-introduction and `requires_git_version` decisions. Fetch this version from
+  the `Git::MINIMUM_GIT_VERSION` version of git. This serves two purposes:
+  command-introduction and `requires_git_version` decisions, and option-surface
+  reconciliation — an option these docs describe that the latest-version docs no
+  longer do has been retired by git and is still included in the DSL with a
+  version-split comment (see
+  [Options completeness](REFERENCE.md#options-completeness--consult-the-latest-version-docs-first)).
+  Fetch this version from
   URL `https://git-scm.com/docs/git-{command}/{version}`.
 
 Do **not** scaffold from local `git <command> -h` output — the installed Git

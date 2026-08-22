@@ -629,6 +629,26 @@ on an older git installation, git itself will produce its native "unknown option
 error. This is acceptable and expected; the ruby-git library does not gate individual
 options by version.
 
+The same rule applies at the other edge. An option git has retired — whether removed
+outright or kept as an accepted no-op, like `--allow-unknown-type` on git 2.50+ —
+stays in the DSL while any git version in the supported range still honors it; newer
+git reports or ignores it, and the option's comment documents the version split.
+Scaffolding reconciles both endpoints of the range: the latest-version docs are the
+primary authority, and the `Git::MINIMUM_GIT_VERSION` docs (already fetched during
+the [Input](SKILL.md#git-documentation-for-the-git-command) phase) are diffed against
+them — an option the floor docs describe that the latest docs no longer do has been
+retired and is included with a version-split comment, not omitted. One case escapes
+the endpoint diff: an option both introduced and retired strictly between the two
+endpoints appears in neither document, and is added when a caller on an affected git
+version reports the gap. When git retires an option out from under an already-shipped
+class, keep it under this rule rather than deleting it. Support is removed
+only when a `Git::MINIMUM_GIT_VERSION` raise leaves the option meaningless across the
+whole range — a floor raise carries an audit for exactly that, and removal follows
+the normal deprecation cadence (deprecate in that major, remove in the next). Both
+edges are one decision: the option surface is the union of the supported git range,
+recorded in
+[ADR-0004](../../../docs/adr/0004-the-option-surface-is-the-union-of-the-supported-git-range.md).
+
 For each option, make one of three decisions:
 
 | Decision | Reason | Action |
