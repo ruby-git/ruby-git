@@ -23,6 +23,7 @@
 - [5. Verify modifiers](#5-verify-modifiers)
   - [`execution_option` usage](#execution_option-usage)
 - [6. Check completeness](#6-check-completeness)
+  - [Option surface spans the supported git range](#option-surface-spans-the-supported-git-range)
   - [YARD documentation ↔ DSL parity](#yard-documentation--dsl-parity)
   - [Repeatable boolean flags](#repeatable-boolean-flags)
   - [Operand naming](#operand-naming)
@@ -621,6 +622,25 @@ The one exception is action-option-with-optional-value commands (see
 
 ## 6. Check completeness
 
+### Option surface spans the supported git range
+
+The latest-version docs are the primary completeness authority, but not the whole
+surface. Per
+[ADR-0004](../../../docs/adr/0004-the-option-surface-is-the-union-of-the-supported-git-range.md),
+the DSL carries the union of the supported git range:
+
+- An option the `Git::MINIMUM_GIT_VERSION` docs describe that the latest docs no
+  longer do belongs in the DSL with a comment noting the version split — flag its
+  absence from a newly scaffolded class, and flag any suggestion to delete it from
+  an existing class while the floor still honors it. Also flag a version-split
+  comment whose claims are not backed by the versioned docs, the git release
+  notes, or the upstream source — the endpoint diff shows that the option's status
+  changed, not when or how (newer git may reject it, hide it while still honoring
+  it, or accept it as a no-op).
+- An option added after the floor needs no per-option version gating; an older git
+  rejects it as an unknown option (see the
+  [`requires_git_version` convention](../command-implementation/REFERENCE.md#requires_git_version-convention)).
+
 ### YARD documentation ↔ DSL parity
 
 Every keyword/positional parameter documented for `call` must correspond to a DSL
@@ -764,16 +784,14 @@ the summary below must not drift from it. There are two narrow exceptions:
    declares `conflicts :object, :batch_all_objects` and `requires_one_of :object,
    :batch_all_objects` because `:object` is `skip_cli: true`; `archive` declares
    `conflicts :output, :out` because `:out` is an `execution_option`.
-2. **Git-visible arguments that cause silent data loss** — if a combination of
-   git-visible arguments causes git to silently discard data (no error, wrong
-   result), a `conflicts` declaration MAY be added with: a code comment explaining
-   why, a reference to the git version(s) where the behavior was verified, and a
-   test.
-
-**Known deviation — do not flag it as new.** `Git::Commands::CatFile::Raw` declares
-`requires_one_of :t, :s, when: :allow_unknown_type` on a git-visible `flag_option`
-(`lib/git/commands/cat_file/raw.rb:78`). It predates the policy and is documented as
-such; report it only if the review is specifically about removing it.
+2. **Git-visible arguments that cause silent data loss or a wrong result** — if a combination of
+   git-visible arguments causes git to silently discard data or produce a wrong
+   result (no error, wrong answer), a constraint declaration MAY be added with: a
+   code comment explaining why, a reference to the git version(s) where the
+   behavior was verified, and a test. A flag git accepts and silently ignores in an
+   inapplicable mode is neither silent data loss nor a wrong result — flag a
+   constraint that guards a merely ignored flag, and flag a constraint claiming
+   this exception without its code comment, verified git version, and spec.
 
 ## 7. Check class-level declarations
 
