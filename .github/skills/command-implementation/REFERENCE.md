@@ -629,6 +629,26 @@ on an older git installation, git itself will produce its native "unknown option
 error. This is acceptable and expected; the ruby-git library does not gate individual
 options by version.
 
+The same rule applies at the other edge. An option git has retired — whether removed
+outright or kept as an accepted no-op, like `--allow-unknown-type` on git 2.50+ —
+stays in the DSL while any git version in the supported range still honors it; newer
+git reports or ignores it, and the option's comment documents the version split.
+Scaffolding reconciles both endpoints of the range: the latest-version docs are the
+primary authority, and the `Git::MINIMUM_GIT_VERSION` docs (already fetched during
+the [Input](SKILL.md#git-documentation-for-the-git-command) phase) are diffed against
+them — an option the floor docs describe that the latest docs no longer do has been
+retired and is included with a version-split comment, not omitted. One case escapes
+the endpoint diff: an option both introduced and retired strictly between the two
+endpoints appears in neither document, and is added when a caller on an affected git
+version reports the gap. When git retires an option out from under an already-shipped
+class, keep it under this rule rather than deleting it. Support is removed
+only when a `Git::MINIMUM_GIT_VERSION` raise leaves the option meaningless across the
+whole range — a floor raise carries an audit for exactly that, and removal follows
+the normal deprecation cadence (deprecate in that major, remove in the next). Both
+edges are one decision: the option surface is the union of the supported git range,
+recorded in
+[ADR-0004](../../../docs/adr/0004-the-option-surface-is-the-union-of-the-supported-git-range.md).
+
 For each option, make one of three decisions:
 
 | Decision | Reason | Action |
@@ -687,21 +707,23 @@ for the policy this follows. There are two narrow exceptions:
    `Git::Commands::Archive`, which declares `conflicts :output, :out` because `:out`
    is an `execution_option` naming a Ruby IO object.
 2. **Git-visible arguments that cause silent data loss** — if a combination of
-   git-visible arguments causes git to silently discard data (no error, wrong
-   result), a `conflicts` declaration MAY be added with: a code comment explaining
-   why, a reference to the git version(s) where the behavior was verified, and a
-   test.
+   git-visible arguments causes git to silently discard data or produce a wrong
+   result (no error, wrong answer), a constraint declaration MAY be added with: a
+   code comment explaining why, a reference to the git version(s) where the
+   behavior was verified, and a test.
 
-**One existing deviation, which is not a third exception.**
-`Git::Commands::CatFile::Raw` declares `requires_one_of :t, :s, when: :allow_unknown_type`
-(`lib/git/commands/cat_file/raw.rb:78`). `:allow_unknown_type` is an ordinary
-`flag_option`, so it does reach git's argv and git does reject it in any other mode —
-which is exactly the case the policy above says to delegate. It predates the policy.
-
-Do not use it as a template, and do not add mode-scoped constraints for
-git-visible flags on the strength of it. Whether it should be removed is a
-behavior question, not a documentation one: dropping it changes an `ArgumentError`
-into a `Git::FailedError` for callers who pass the invalid combination.
+**A flag that is invalid in the selected mode is still not the second exception.**
+Whether git rejects the combination loudly (delegation's normal case — the caller
+gets `Git::FailedError` with git's message) or accepts the flag and silently
+ignores it (a no-op produces no wrong answer), no constraint is warranted, and
+guarding every such combination is the partial-coverage trap the delegation policy
+exists to avoid. `Git::Commands::CatFile::Raw` once declared
+`requires_one_of :t, :s, when: :allow_unknown_type`, duplicating a check git
+2.28-2.49 performs itself (`cat-file` dies with "use with -s or -t" in any other
+mode) and git 2.50 removed along with the whole unknown-type feature, leaving the
+flag an accepted no-op everywhere. The constraint was removed and the flag passes
+through. The decision record for the policy and its exceptions is
+[ADR-0003](../../../docs/adr/0003-validation-of-git-semantics-is-delegated-to-git.md).
 
 This step is required. A command class that only exposes the options that happen to
 be used today in the `Git::Repository::*` facade is incomplete — callers of the future API should not need

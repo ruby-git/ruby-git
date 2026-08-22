@@ -81,6 +81,13 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
         command.call('HEAD', t: true, allow_unknown_type: true)
       end
+
+      it 'passes --allow-unknown-type through in other modes and lets git respond' do
+        expect_command_capturing('cat-file', '-e', '--allow-unknown-type', '--', 'HEAD')
+          .and_return(command_result(''))
+
+        command.call('HEAD', e: true, allow_unknown_type: true)
+      end
     end
 
     context 'with out: execution option (streaming)' do
@@ -138,11 +145,6 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
       it 'raises ArgumentError when the required object argument is missing' do
         expect { command.call }.to raise_error(ArgumentError, /object is required/)
-      end
-
-      it 'raises ArgumentError when allow_unknown_type is used without -t or -s' do
-        expect { command.call('HEAD', e: true, allow_unknown_type: true) }
-          .to raise_error(ArgumentError, /:allow_unknown_type requires/)
       end
     end
   end
