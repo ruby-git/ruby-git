@@ -131,7 +131,7 @@ cross-argument constraint methods (`conflicts`, `requires`, `requires_one_of`,
 `requires_exactly_one_of`, `forbid_values`, `allowed_values`) — git is the single source
 of truth for its own option semantics. There are two narrow exceptions — **arguments
 git cannot observe in its argv**, and **git-visible combinations that make git silently
-discard data** — both spelled out under
+discard data or produce a wrong result** — both spelled out under
 [Exception criteria for constraint declarations](#exception-criteria-for-constraint-declarations).
 
 | Validated by Commands | Mechanism |
@@ -197,31 +197,30 @@ A secondary exception: if a combination of **git-visible** arguments causes git 
 constraint declaration MAY be added with a code comment explaining why, a reference
 to the git version(s) where the behavior was verified, and a test.
 
-Git accepting a flag and silently ignoring it in a mode where it does not apply is
-not this exception — that leniency is deliberate git behavior, and a no-op flag
-produces no wrong answer. Delegate it. `Git::Commands::CatFile::Raw` once declared
-`requires_one_of :t, :s, when: :allow_unknown_type` on that basis; the constraint
-was removed and the flag now passes through — see the note in
+A flag that is invalid in the selected mode is still not this exception, whether
+git rejects the combination loudly (delegation's normal case) or accepts the flag
+and silently ignores it (a no-op produces no wrong answer). Delegate both.
+`Git::Commands::CatFile::Raw` once declared
+`requires_one_of :t, :s, when: :allow_unknown_type`, duplicating a check git
+2.28-2.49 performs itself and git 2.50 removed along with the unknown-type
+feature; the constraint was removed and the flag now passes through — see the note
+in
 [Command Implementation](../command-implementation/REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).
 
 #### Why the semantic checks are delegated
 
-1. **Git is the single source of truth.** Git validates its own option interactions and
-   reports clear errors via stderr, surfaced as `Git::FailedError`. Ruby-side constraints
-   duplicate that validation and risk going stale — potentially blocking valid usage when
-   git relaxes a restriction in a newer version.
-2. **Partial coverage is worse than none.** Inconsistent constraint coverage creates a
-   false promise of safety: users cannot tell whether the absence of an `ArgumentError`
-   means "this combination is valid" or "this command has no constraints."
-3. **Constraint violations are programming errors.** A developer who passes conflicting
-   options must stop and fix their code either way, so the cost difference between
-   `ArgumentError` and `Git::FailedError` is negligible.
-4. **Uniform error semantics.** Every *semantic* rejection in the delegated table
-   above surfaces the same way — `Git::FailedError` carrying git's actual message —
-   rather than as a mix of Ruby constraint errors and git rejections. The
-   per-argument checks in the first table still raise `ArgumentError`; the split is
-   between "this call is malformed" and "git says no", not between two arbitrary
-   error classes.
+The decision and its rationale are recorded in
+[ADR-0003](../../../docs/adr/0003-validation-of-git-semantics-is-delegated-to-git.md):
+duplicated rules go stale under git's moving semantics, partial coverage creates a
+false promise of safety, and a constraint violation is a programming error the
+developer must fix whichever exception reports it.
+
+The operational consequence: every *semantic* rejection in the delegated table
+above surfaces the same way — `Git::FailedError` carrying git's actual message —
+rather than as a mix of Ruby constraint errors and git rejections. The
+per-argument checks in the first table still raise `ArgumentError`; the split is
+between "this call is malformed" and "git says no", not between two arbitrary
+error classes.
 
 ## Coding Standards
 
