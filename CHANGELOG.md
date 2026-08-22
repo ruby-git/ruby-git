@@ -5,6 +5,28 @@
 
 # Change Log
 
+## [5.2.0](https://github.com/ruby-git/ruby-git/compare/v5.1.0...v5.2.0) (2026-08-22)
+
+
+### Features
+
+* **checkout:** Support the :orphan option in Repository#checkout ([265a997](https://github.com/ruby-git/ruby-git/commit/265a997ca972868a392ee71489b0e34e42ff70ec))
+
+
+### Bug Fixes
+
+* Exclude the .claude/skills symlink and other dev files from the gem ([ae4ef0e](https://github.com/ruby-git/ruby-git/commit/ae4ef0e6185285ee325fabdc9bc9214527a80ac5))
+
+
+### Other Changes
+
+* Add a markdown link checker ([8000810](https://github.com/ruby-git/ruby-git/commit/80008103ea7c3ad71404b75f0c04f8e81fd226f9))
+* Archive the v5.x redesign documents ([4bed4ce](https://github.com/ruby-git/ruby-git/commit/4bed4ce1a520dda9cea9336ea4f8784f48cba306))
+* Fix broken relative links and heading anchors ([0bf31b8](https://github.com/ruby-git/ruby-git/commit/0bf31b85877f30746c51a6af765b4c707fcfe9ed))
+* Fold the remaining plan documents into issues and adrs ([74944d9](https://github.com/ruby-git/ruby-git/commit/74944d9909e4a35f1fc7a88841e82b93e16a7e21))
+* **fsck:** Build the second root commit through the public API ([3a7f083](https://github.com/ruby-git/ruby-git/commit/3a7f083b00498ace343622c8e7e20af6d498f247))
+* Make command-class policy self-contained in the skills ([8158d2a](https://github.com/ruby-git/ruby-git/commit/8158d2ae8c1e0d108f2ad978056669dc95be6035))
+
 ## [5.1.0](https://github.com/ruby-git/ruby-git/compare/v5.0.5...v5.1.0) (2026-08-18)
 
 
