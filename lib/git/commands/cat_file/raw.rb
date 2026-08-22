@@ -49,9 +49,10 @@ module Git
           # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--s
           flag_option :s
 
-          # Allow -t and -s to query broken or corrupt objects of unknown type;
-          # rejected by git in any other mode — enforced by constraint below
-          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---allow-unknown-type
+          # Allow -t and -s to query broken or corrupt objects of unknown type.
+          # Git 2.28-2.49 rejects this flag in other modes; git 2.50+ accepts and
+          # ignores it everywhere (the unknown-type feature was removed; see issue 1709).
+          # See https://git-scm.com/docs/git-cat-file/2.49.0#Documentation/git-cat-file.txt---allow-unknown-type
           flag_option :allow_unknown_type
 
           # Map committer/author identities through the mailmap before reporting size
@@ -74,8 +75,6 @@ module Git
 
           # Object name: SHA, ref, `HEAD`, treeish path reference, etc.
           operand :object, required: true
-
-          requires_one_of :t, :s, when: :allow_unknown_type
         end
 
         # Execute `git cat-file` for a single object.
@@ -114,7 +113,8 @@ module Git
         #   @param options [Hash] command options
         #
         #   @option options [Boolean, nil] :allow_unknown_type (nil) allow querying broken or corrupt objects of
-        #     unknown type
+        #     unknown type on git 2.28-2.49; git 2.50 removed the unknown-type feature
+        #     and accepts this flag as a no-op
         #
         #   @option options [Boolean, nil] :use_mailmap (nil) remap identities via mailmap (`--use-mailmap`)
         #
@@ -138,7 +138,8 @@ module Git
         #   @param options [Hash] command options
         #
         #   @option options [Boolean, nil] :allow_unknown_type (nil) allow querying broken or corrupt objects of
-        #     unknown type
+        #     unknown type on git 2.28-2.49; git 2.50 removed the unknown-type feature
+        #     and accepts this flag as a no-op
         #
         #   @option options [Boolean, nil] :use_mailmap (nil) remap identities via mailmap (`--use-mailmap`)
         #

@@ -687,21 +687,20 @@ for the policy this follows. There are two narrow exceptions:
    `Git::Commands::Archive`, which declares `conflicts :output, :out` because `:out`
    is an `execution_option` naming a Ruby IO object.
 2. **Git-visible arguments that cause silent data loss** — if a combination of
-   git-visible arguments causes git to silently discard data (no error, wrong
-   result), a `conflicts` declaration MAY be added with: a code comment explaining
-   why, a reference to the git version(s) where the behavior was verified, and a
-   test.
+   git-visible arguments causes git to silently discard data or produce a wrong
+   result (no error, wrong answer), a constraint declaration MAY be added with: a
+   code comment explaining why, a reference to the git version(s) where the
+   behavior was verified, and a test.
 
-**One existing deviation, which is not a third exception.**
-`Git::Commands::CatFile::Raw` declares `requires_one_of :t, :s, when: :allow_unknown_type`
-(`lib/git/commands/cat_file/raw.rb:78`). `:allow_unknown_type` is an ordinary
-`flag_option`, so it does reach git's argv and git does reject it in any other mode —
-which is exactly the case the policy above says to delegate. It predates the policy.
-
-Do not use it as a template, and do not add mode-scoped constraints for
-git-visible flags on the strength of it. Whether it should be removed is a
-behavior question, not a documentation one: dropping it changes an `ArgumentError`
-into a `Git::FailedError` for callers who pass the invalid combination.
+**Git accepting a flag and silently ignoring it is NOT the second exception.**
+Git's option parsing is deliberately lenient: mode-scoped flags are accepted in
+every mode and consulted only where they apply, and git even retires flags by
+turning them into accepted no-ops (`--allow-unknown-type` does nothing anywhere on
+git 2.50+). A no-op flag produces no wrong answer, and guarding every ignored
+combination is the partial-coverage trap the delegation policy exists to avoid.
+Delegate it. `Git::Commands::CatFile::Raw` once declared
+`requires_one_of :t, :s, when: :allow_unknown_type` on exactly this basis; the
+constraint was removed and the flag passes through.
 
 This step is required. A command class that only exposes the options that happen to
 be used today in the `Git::Repository::*` facade is incomplete — callers of the future API should not need

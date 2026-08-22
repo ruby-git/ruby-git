@@ -193,15 +193,15 @@ because `:out` is an `execution_option` naming a Ruby IO object to stream into. 
 `--output` reaches argv, so git cannot see that both were requested.
 
 A secondary exception: if a combination of **git-visible** arguments causes git to
-**silently discard data** (no error, wrong result), a `conflicts` declaration MAY be
-added with a code comment explaining why, a reference to the git version(s) where the
-behavior was verified, and a test.
+**silently discard data** or produce a wrong result (no error, wrong answer), a
+constraint declaration MAY be added with a code comment explaining why, a reference
+to the git version(s) where the behavior was verified, and a test.
 
-One command deviates from the argv-visibility rule above (not from this secondary
-exception). `Git::Commands::CatFile::Raw` declares
-`requires_one_of :t, :s, when: :allow_unknown_type` on a git-visible `flag_option`
-that git already rejects in other modes. It predates this policy and is not a
-template — see the note in
+Git accepting a flag and silently ignoring it in a mode where it does not apply is
+not this exception — that leniency is deliberate git behavior, and a no-op flag
+produces no wrong answer. Delegate it. `Git::Commands::CatFile::Raw` once declared
+`requires_one_of :t, :s, when: :allow_unknown_type` on that basis; the constraint
+was removed and the flag now passes through — see the note in
 [Command Implementation](../command-implementation/REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).
 
 #### Why the semantic checks are delegated
