@@ -103,8 +103,9 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
   constraint, and a declared constraint of either kind gets an `ArgumentError` test.
   The first is **arguments git cannot observe in its argv** — `skip_cli: true`
   operands, `execution_option` entries, anything consumed entirely on the Ruby side.
-  The second is **git-visible combinations that make git silently discard data**, for
-  which the policy requires a test as a condition of adding the constraint at all.
+  The second is **git-visible combinations that make git silently discard data or
+  produce a wrong result**, for which the policy requires a test as a condition of
+  adding the constraint at all.
   See [Project Context — Validation Boundaries](../project-context/SKILL.md#validation-boundaries)
   for the full policy.
 
@@ -324,8 +325,9 @@ Unit tests are organized under `describe '#call'` with three sections:
    - Arguments that never reach git's argv (e.g. `conflicts :object,
      :batch_all_objects` and `requires_one_of :object, :batch_all_objects` in
      `cat-file --batch`, or `conflicts :output, :out` in `archive`).
-   - Git-visible combinations that make git silently discard data, for which the
-     policy makes a test a precondition of adding the constraint at all.
+   - Git-visible combinations that make git silently discard data or produce a
+     wrong result, for which the policy makes a test a precondition of adding the
+     constraint at all.
 
 The exit code and input validation blocks are optional — include them only when the
 command has those behaviors. They always appear at the end of `#call`, in that order.
