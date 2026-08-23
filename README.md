@@ -36,6 +36,7 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
   - [Ruby Version Support Policy](#ruby-version-support-policy)
   - [Git Version Support Policy](#git-version-support-policy)
 - [Project Announcements](#project-announcements)
+  - [2026-08-23: v5.x Deprecations and the v6.0.0 Roadmap](#2026-08-23-v5x-deprecations-and-the-v600-roadmap)
   - [2026-07-28: v5.0.0 Released](#2026-07-28-v500-released)
   - [2026-01-07: AI Policy Introduced](#2026-01-07-ai-policy-introduced)
   - [2025-07-09: Architectural Redesign](#2025-07-09-architectural-redesign)
@@ -420,6 +421,23 @@ impractical. Such changes will be clearly documented in the CHANGELOG and releas
 notes.
 
 ## Project Announcements
+
+### 2026-08-23: v5.x Deprecations and the v6.0.0 Roadmap
+
+The road to v6.0.0 is now planned and public: the remaining ActiveRecord-style
+classes (`Git::Branch`, `Git::Remote`, `Git::Stash`, `Git::Worktree`,
+`Git::Object::Tag`, `Git::Status`, `Git::Author`, and their collections) will be
+deprecated during the v5.x series in favor of the immutable `*Info` value-object
+APIs. v6.0.0 will remove each deprecated class that passes the project's
+removal gate — a mandated deprecation soak period plus a proven-safe check —
+and any that do not pass carry forward, still deprecated. v6.0.0 also raises
+the version floors: git ≥ 2.42.0, Ruby ≥ 3.4.
+
+The living roadmap — scope, sequencing, and status — is
+[issue #1717](https://github.com/ruby-git/ruby-git/issues/1717). If your code
+uses the classes above, you can start migrating now; each deprecation names its
+replacement, and [UPGRADING.md](UPGRADING.md) carries the migration guide as
+releases ship.
 
 ### 2026-07-28: v5.0.0 Released
 
