@@ -8,9 +8,9 @@ A Ruby gem providing an interface to Git repositories by wrapping system calls t
 Read the "Project Context" skill (`.github/skills/project-context/SKILL.md`) for
 design philosophy, technical details, and compatibility requirements.
 
-Architectural decisions are recorded as ADRs in `docs/adr/`. Read the ADRs covering
-an area before changing it, and flag any contradiction between a change and an ADR
-rather than silently overriding the decision.
+Durable decisions (design, policy, process) are recorded as ADRs in `docs/adr/`.
+Read the ADRs covering an area before changing it, and flag any contradiction
+between a change and an ADR rather than silently overriding the decision.
 
 This project enforces Conventional Commits. See `.commitlintrc.yml` for allowed types
 and scopes. Never use `#` in the commit message body. Doing so will cause

@@ -1,4 +1,4 @@
-# Architecture decision records
+# Decision records (ADRs)
 
 Each file here records one decision and the reason for it. A plan says what we intend to
 do next, and goes stale the moment reality diverges from it. A decision stays true even
