@@ -16,6 +16,7 @@ or modifying default behavior.
 - [Step 1: Identify the Change Scope](#step-1-identify-the-change-scope)
 - [Step 2: Find All Usages](#step-2-find-all-usages)
 - [Step 3: Assess and Document Impact](#step-3-assess-and-document-impact)
+  - [Prove the safety claim](#prove-the-safety-claim)
 - [Step 4: Plan Migration Path](#step-4-plan-migration-path)
 
 ## How to use this skill
@@ -91,9 +92,24 @@ Produce an impact assessment:
 - Severity: [High/Medium/Low]
 - Migration difficulty: [Easy/Medium/Hard]
 
+### Safety Proof
+[The single fact each "safe" verdict rests on, and the code that was run to prove it]
+
 ### Migration Path
 [How users should update their code]
 ```
+
+### Prove the safety claim
+
+Every "this looks risky but is actually safe" verdict in the assessment rests on some
+single fact — an option no caller passes, output no parser depends on, behavior
+identical across the supported git range. Isolate that fact, then prove it by running
+real code: a spec exercising the old and new behavior, a console session against a
+fixture repository, or a query against the RubyGems dump showing no dependent gem is
+affected. Record the fact and its proof in the **Safety Proof** section of the
+assessment. A safety claim backed only by reasoning is an open question, not a
+finding — the step is complete when every such claim names its fact and the code that
+proved it.
 
 ## Step 4: Plan Migration Path
 
