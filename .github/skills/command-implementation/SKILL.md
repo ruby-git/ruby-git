@@ -16,6 +16,7 @@ integration tests, and YARD docs.
   - [Command source code](#command-source-code)
   - [Command test code](#command-test-code)
   - [Git documentation for the git command](#git-documentation-for-the-git-command)
+  - [Policy authorities](#policy-authorities)
 - [Reference](#reference)
 - [Workflow](#workflow)
 - [Output](#output)
@@ -78,19 +79,31 @@ Skip this step when scaffolding a new command (the file does not exist yet).
   Read the **entire** official git documentation online man page for the command for
   the `Git::MINIMUM_GIT_VERSION` version of git. This serves two purposes:
   command-introduction and `requires_git_version` decisions, and option-surface
-  reconciliation — an option these docs describe that the latest-version docs no
-  longer do stays in the DSL with a version-split comment (see
-  [Options completeness](REFERENCE.md#options-completeness--consult-the-latest-version-docs-first)).
-  The diff only signals that the option's status changed. Before writing the
-  comment, establish when and how — newer git may reject the option, hide it from
-  the docs while still honoring it, or accept it as a no-op — from the versioned
-  docs at intermediate releases, the git release notes, or the upstream source.
+  reconciliation. Diff these docs against the latest-version docs; an option they
+  describe that the latest-version docs no longer describe stays in the DSL with a
+  version-split comment, and before writing that comment, establish its
+  when-and-how claims from the versioned docs at intermediate releases, the git
+  release notes, or the upstream source. What the endpoint diff can and cannot
+  establish is defined in
+  [Options completeness](REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).
   Fetch this version from
   URL `https://git-scm.com/docs/git-{command}/{version}`.
 
 Do **not** scaffold from local `git <command> -h` output — the installed Git
 version is unknown and may differ from the latest supported version. Local help should
 NOT be used even as a supplemental check.
+
+### Policy authorities
+
+Read
+[Project Context — Validation Boundaries](../project-context/SKILL.md#validation-boundaries),
+including its
+[exception criteria for constraint declarations](../project-context/SKILL.md#exception-criteria-for-constraint-declarations),
+and
+[Options completeness — consult the latest-version docs first](REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).
+The Input phase above and the workflow reference these policies by link; load
+both authorities now so option-surface reconciliation and constraint decisions
+are made with the criteria in context, not from memory.
 
 ## Reference
 

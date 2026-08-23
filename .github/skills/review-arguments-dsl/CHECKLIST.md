@@ -625,18 +625,17 @@ The one exception is action-option-with-optional-value commands (see
 ### Option surface spans the supported git range
 
 The latest-version docs are the primary completeness authority, but not the whole
-surface. Per
-[ADR-0004](../../../docs/adr/0004-the-option-surface-is-the-union-of-the-supported-git-range.md),
-the DSL carries the union of the supported git range:
+surface. The option-surface rule, its scaffolding mechanics, and what the endpoint
+diff can and cannot establish are defined in
+[Options completeness — consult the latest-version docs first](../command-implementation/REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).
+Review flags:
 
 - An option the `Git::MINIMUM_GIT_VERSION` docs describe that the latest docs no
-  longer do belongs in the DSL with a comment noting the version split — flag its
+  longer describe belongs in the DSL with a comment noting the version split — flag its
   absence from a newly scaffolded class, and flag any suggestion to delete it from
-  an existing class while the floor still honors it. Also flag a version-split
-  comment whose claims are not backed by the versioned docs, the git release
-  notes, or the upstream source — the endpoint diff shows that the option's status
-  changed, not when or how (newer git may reject it, hide it while still honoring
-  it, or accept it as a no-op).
+  an existing class while the floor still honors it.
+- Flag a version-split comment whose when-and-how claims are not backed by the
+  versioned docs, the git release notes, or the upstream source.
 - An option added after the floor needs no per-option version gating; an older git
   rejects it as an unknown option (see the
   [`requires_git_version` convention](../command-implementation/REFERENCE.md#requires_git_version-convention)).
@@ -771,27 +770,23 @@ constraint exists for that argument — omitting them is correct in that case.
 not flag the absence of `conflicts`, `requires`, `requires_one_of`,
 `requires_exactly_one_of`, `forbid_values`, or `allowed_values` as a completeness
 issue. Command classes use per-argument validation parameters (`required:`,
-`allow_nil:`, etc.) and operand format validation. Git validates its own option
-semantics. The authority for this policy is
-[Project Context — Validation Boundaries](../project-context/SKILL.md#validation-boundaries);
-the summary below must not drift from it. There are two narrow exceptions:
+`allow_nil:`, etc.) and operand format validation; git validates its own option
+semantics. The two narrow exceptions that permit a constraint, and the criteria for
+each, are defined in
+[Project Context — Exception criteria for constraint declarations](../project-context/SKILL.md#exception-criteria-for-constraint-declarations).
+Review flags:
 
-1. **Arguments git cannot observe in its argv** — the test is: does this argument
-   appear in git's argv? If no — `skip_cli: true` operands, `execution_option`
-   entries, anything consumed entirely on the Ruby side — git cannot detect
-   incompatibilities and constraint declarations are appropriate and should not be
-   flagged as policy violations. Both shapes are in the tree: `cat-file --batch`
-   declares `conflicts :object, :batch_all_objects` and `requires_one_of :object,
-   :batch_all_objects` because `:object` is `skip_cli: true`; `archive` declares
-   `conflicts :output, :out` because `:out` is an `execution_option`.
-2. **Git-visible arguments that cause silent data loss or a wrong result** — if a combination of
-   git-visible arguments causes git to silently discard data or produce a wrong
-   result (no error, wrong answer), a constraint declaration MAY be added with: a
-   code comment explaining why, a reference to the git version(s) where the
-   behavior was verified, and a test. A flag git accepts and silently ignores in an
-   inapplicable mode is neither silent data loss nor a wrong result — flag a
-   constraint that guards a merely ignored flag, and flag a constraint claiming
-   this exception without its code comment, verified git version, and spec.
+- Do **not** flag a constraint that meets the
+  [argv-invisible exception](../project-context/SKILL.md#the-argv-invisible-exception)
+  — such as one on `skip_cli: true` operands or `execution_option` entries — as a
+  policy violation.
+- Flag a constraint on git-visible arguments that does not meet the
+  [silent-wrong-result exception](../project-context/SKILL.md#the-silent-wrong-result-exception).
+- Flag a constraint claiming the
+  [silent-wrong-result exception](../project-context/SKILL.md#the-silent-wrong-result-exception)
+  without its code comment, verified git version(s), and spec.
+- Flag a constraint that guards a flag git accepts and silently ignores in an
+  inapplicable mode — the linked criteria exclude it.
 
 ## 7. Check class-level declarations
 

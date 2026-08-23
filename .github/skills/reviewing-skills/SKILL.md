@@ -140,6 +140,19 @@ Match instruction specificity to task fragility:
 - [ ] Consistent terminology throughout (one term per concept, not synonyms)
 - [ ] Named thresholds, modes, phases, or terms are defined before first use and
       have one authoritative definition
+- [ ] Policy definitions (what a policy is, its exceptions, their criteria) are
+      stated only in their designated authority section; every other file or
+      section links to the authority by anchor instead of restating it. **A
+      policy definition restated outside its authority section is a defect —
+      flag it and point the restating file at the authority.** Restated
+      definitions silently rot when the authority changes (PR #1708 spent most
+      of seven review rounds on exactly this), while a link cannot drift and an
+      instruction stated in only one place cannot drift
+- [ ] Role-specific operational instructions (what to do, flag, or test) stay
+      inline in the document whose role they serve — do not flag them as
+      restatements, and flag consolidation that removes them. A reader executing
+      a checklist or workflow must never need the linked definition to perform
+      an action; they follow the link only to understand why
 - [ ] Examples are concrete, not abstract
 - [ ] Examples and domain facts are technically accurate; repo-specific skills
       use real project patterns where practical
