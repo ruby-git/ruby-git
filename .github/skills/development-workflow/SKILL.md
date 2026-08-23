@@ -164,7 +164,12 @@ clean baseline, and create a clear implementation plan before writing any code.
 4. **Verify Clean Baseline:** Ensure that all existing tests and linters pass by
    running `bundle exec rake default`.
 5. **Analyze and Plan:** Understand the requirements, identify edge cases and
-   potential challenges, and break the work into small, isolated tasks. Consider what
+   potential challenges, and break the work into small, isolated tasks. Each task
+   must end in a verifiable state: tests passing, linters clean, its behavior
+   demonstrable on its own. Order the tasks so the sequence proves itself to a
+   reviewer — each commit builds only on work already verified before it. When an
+   effort spans multiple PRs, apply the same rule one level up: slice it into
+   independently releasable PRs, each leaving the gem shippable. Consider what
    tests will be needed and in what order they should be written.
 6. **Consider Refactoring:** Look for ways to make the implementation of the feature
    or bug fix easier by performing one or more refactorings. If any are found,
