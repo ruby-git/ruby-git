@@ -116,6 +116,9 @@ proved it.
 **Project versioning policy:**
 - Breaking changes are batched for major releases
 - Use deprecation warnings in the current major series before removal in the next major release
+- Whether a specific removal may land in the next major is governed by the removal
+  gate in
+  [ADR-0006](../../../docs/adr/0006-removals-require-proven-safety-and-calendar-soak.md)
 
 **Deprecation approach:**
 
