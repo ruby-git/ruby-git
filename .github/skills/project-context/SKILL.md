@@ -69,7 +69,7 @@ coding standard details, or implementation constraints.
 - `archive/` — Frozen records of completed projects, such as
   `archive/v5-redesign/`. History, not current policy; current standards live in
   `.github/skills/`
-- `docs/adr/` — Architecture decision records: why something was decided
+- `docs/adr/` — decision records (ADRs): why something was decided
 
 ## Layer Responsibilities
 
