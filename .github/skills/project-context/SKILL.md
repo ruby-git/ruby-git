@@ -123,15 +123,16 @@ The execution layer (`GIT_EDITOR='true'`) is an unconditional safety net.
 ### Validation Boundaries
 
 This section is the authority on what command classes validate and what they delegate
-to git. Skills that need the rule link here.
+to git. Skills that need the rule link here. Because multiple skills depend on this
+section by link, editing it changes their meaning without touching their files —
+after edits, rerun `bundle exec rake markdown:links` and audit the linking skills
+with the [Reviewing Skills](../reviewing-skills/SKILL.md) skill.
 
 Command classes use per-argument validation parameters (`required:`, `type:`,
 `allow_nil:`, etc.) and operand format validation. They generally do **not** declare
 cross-argument constraint methods (`conflicts`, `requires`, `requires_one_of`,
 `requires_exactly_one_of`, `forbid_values`, `allowed_values`) — git is the single source
-of truth for its own option semantics. There are two narrow exceptions — **arguments
-git cannot observe in its argv**, and **git-visible combinations that make git silently
-discard data or produce a wrong result** — both spelled out under
+of truth for its own option semantics, subject only to the two exceptions defined under
 [Exception criteria for constraint declarations](#exception-criteria-for-constraint-declarations).
 
 | Validated by Commands | Mechanism |
@@ -155,6 +156,13 @@ The constraint DSL infrastructure (`conflicts`, `requires`, `requires_one_of`,
 under the exception criteria below.
 
 #### Exception criteria for constraint declarations
+
+Two exceptions, each defined in its own subsection below, permit a constraint
+declaration: the [argv-invisible exception](#the-argv-invisible-exception) and the
+[silent-wrong-result exception](#the-silent-wrong-result-exception). Skills that
+reference an individual exception link to it by these names and anchors.
+
+##### The argv-invisible exception
 
 The test: **does this argument appear in git's argv?**
 
@@ -192,7 +200,9 @@ never receives it.
 because `:out` is an `execution_option` naming a Ruby IO object to stream into. Only
 `--output` reaches argv, so git cannot see that both were requested.
 
-A secondary exception: if a combination of **git-visible** arguments causes git to
+##### The silent-wrong-result exception
+
+If a combination of **git-visible** arguments causes git to
 **silently discard data or produce a wrong result** (no error, wrong answer), a
 constraint declaration MAY be added with a code comment explaining why, a reference
 to the git version(s) where the behavior was verified, and a test.

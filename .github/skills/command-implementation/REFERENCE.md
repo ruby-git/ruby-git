@@ -411,15 +411,15 @@ adds no behavior and conflicts with the `@!method` directive.
 1. **Input validation the DSL cannot express** — per-argument validation parameters
    (`required:`, `type:`, `allow_nil:`, etc.) and operand format validation belong
    in `arguments do`. Cross-argument constraint methods are generally **not** declared;
-   git validates its own option semantics. There are two narrow exceptions, both
-   defined in
-   [Project Context — Validation Boundaries](../project-context/SKILL.md#validation-boundaries).
-   The one you will actually meet is **arguments git cannot observe in its argv** —
-   `skip_cli: true` operands, `execution_option` entries, anything consumed entirely
-   on the Ruby side. Git cannot detect incompatibilities it never sees, so use
-   `conflicts` and/or `requires_one_of` in the DSL (e.g., `cat-file --batch` uses
-   both because `:object` is `skip_cli: true`). Do not raise `ArgumentError` manually
-   for things the DSL can express via a constraint declaration.
+   git validates its own option semantics. The two narrow exceptions are defined in
+   [Project Context — Exception criteria for constraint declarations](../project-context/SKILL.md#exception-criteria-for-constraint-declarations);
+   the one you will actually meet is the
+   [argv-invisible exception](../project-context/SKILL.md#the-argv-invisible-exception)
+   (e.g., `cat-file --batch` declares both `conflicts` and `requires_one_of` because
+   `:object` is `skip_cli: true`). When a constraint is warranted under the linked
+   criteria (each exception states whether it requires or merely permits one),
+   express it as a constraint declaration in the DSL — do not raise `ArgumentError`
+   manually for things the DSL can express via a constraint declaration.
 2. **stdin feeding** — batch protocols (`--batch`, `--batch-check`) via
    `Base#with_stdin`
 3. **Non-trivial option routing** — build different argument sets based on
@@ -611,6 +611,12 @@ end
 [Input](SKILL.md#git-documentation-for-the-git-command) phase and enumerate every
 option the latest-version docs describe.
 
+This section is the authority on the option-surface policy (the union of the
+supported git range). Because multiple skills depend on it by link, editing it
+changes their meaning without touching their files — after edits, rerun
+`bundle exec rake markdown:links` and audit the linking skills with the
+[Reviewing Skills](../reviewing-skills/SKILL.md) skill.
+
 ### `requires_git_version` convention
 
 `requires_git_version` is a **class-level** declaration only. Individual options do
@@ -698,35 +704,21 @@ the expected inline form (`--option=value`). Check every `value_option` and
 
 **Constraint declarations are generally not used in command classes.** Do not add
 `conflicts`, `requires`, `requires_one_of`, `requires_exactly_one_of`,
-`forbid_values`, or `allowed_values` declarations to command classes. Git is the
-single source of truth for its own option semantics. See
-[Project Context — Validation Boundaries](../project-context/SKILL.md#validation-boundaries)
-for the policy this follows. There are two narrow exceptions:
-
-1. **Arguments with no argv representation** — `skip_cli: true` operands,
-   `execution_option` entries, and anything else consumed entirely on the Ruby side.
-   Git never sees a token for it, so it cannot detect incompatibilities and
-   constraint declarations are appropriate. Two shapes in the tree: the
-   `cat-file --batch` example above, where `:object` is `skip_cli: true`; and
-   `Git::Commands::Archive`, which declares `conflicts :output, :out` because `:out`
-   is an `execution_option` naming a Ruby IO object.
-2. **Git-visible arguments that cause silent data loss or a wrong result** — if a combination of
-   git-visible arguments causes git to silently discard data or produce a wrong
-   result (no error, wrong answer), a constraint declaration MAY be added with: a
-   code comment explaining why, a reference to the git version(s) where the
-   behavior was verified, and a test.
-
-**A flag that is invalid in the selected mode is still not the second exception.**
-Whether git rejects the combination loudly (delegation's normal case — the caller
-gets `Git::FailedError` with git's message) or accepts the flag and silently
-ignores it (a no-op produces no wrong answer), no constraint is warranted, and
-guarding every such combination is the partial-coverage trap the delegation policy
-exists to avoid. `Git::Commands::CatFile::Raw` once declared
-`requires_one_of :t, :s, when: :allow_unknown_type`, duplicating a check git
-2.28-2.49 performs itself (`cat-file` dies with "use with -s or -t" in any other
-mode) and git 2.50 removed along with the whole unknown-type feature, leaving the
-flag an accepted no-op everywhere. The constraint was removed and the flag passes
-through. The decision record for the policy and its exceptions is
+`forbid_values`, or `allowed_values` declarations to command classes — git is the
+single source of truth for its own option semantics. The two narrow exceptions,
+and what claiming each of them requires, are defined in
+[Project Context — Exception criteria for constraint declarations](../project-context/SKILL.md#exception-criteria-for-constraint-declarations).
+The scaffolding consequences: whenever the DSL contains a `skip_cli: true` operand
+(like `:object` in the `cat-file --batch` example above) or an `execution_option`
+entry, consult the exception criteria before deciding the class needs no
+constraints — the
+[argv-invisible exception](../project-context/SKILL.md#the-argv-invisible-exception)
+is the usual reason one is warranted. Conversely, do **not** add a constraint for
+a flag that is merely invalid in the selected mode — whether git rejects the
+combination loudly or accepts the flag as an ignored no-op, delegate it; the
+[silent-wrong-result exception](../project-context/SKILL.md#the-silent-wrong-result-exception)
+does not cover it. The worked example of removing exactly such a constraint
+(`CatFile::Raw` and `--allow-unknown-type`) is in
 [ADR-0003](../../../docs/adr/0003-validation-of-git-semantics-is-delegated-to-git.md).
 
 This step is required. A command class that only exposes the options that happen to

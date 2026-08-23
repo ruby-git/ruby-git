@@ -17,6 +17,7 @@ methods and modifiers.
   - [Command source code](#command-source-code)
   - [Command test code](#command-test-code)
   - [Git documentation for the git command](#git-documentation-for-the-git-command)
+  - [Policy authorities](#policy-authorities)
 - [Reference](#reference)
   - [Architecture Context (Base Pattern)](#architecture-context-base-pattern)
   - [DSL to CLI Mapping](#dsl-to-cli-mapping)
@@ -64,19 +65,32 @@ argument → expected git CLI). Coverage completeness is assessed by the
   Read the **entire** official git documentation online man page for the command for
   the `Git::MINIMUM_GIT_VERSION` version of git. This serves two purposes:
   command-introduction and `requires_git_version` decisions, and option-surface
-  reconciliation — an option these docs describe that the latest-version docs no
-  longer do belongs in the DSL with a version-split comment (see
-  [Option surface spans the supported git range](CHECKLIST.md#option-surface-spans-the-supported-git-range)).
-  The diff only signals that the option's status changed. Before accepting the
-  comment's claims, confirm when and how — newer git may reject the option, hide
-  it from the docs while still honoring it, or accept it as a no-op — against the
-  versioned docs at intermediate releases, the git release notes, or the upstream
-  source. Fetch this version from
+  reconciliation. Diff these docs against the latest-version docs; an option they
+  describe that the latest-version docs no longer describe belongs in the DSL with a
+  version-split comment (the review flags are in
+  [Option surface spans the supported git range](CHECKLIST.md#option-surface-spans-the-supported-git-range)),
+  and before accepting that comment's when-and-how claims, confirm them against
+  the versioned docs at intermediate releases, the git release notes, or the
+  upstream source. What the endpoint diff can and cannot establish is defined in
+  [Options completeness](../command-implementation/REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).
+  Fetch this version from
   URL `https://git-scm.com/docs/git-{command}/{version}`.
 
 Do **not** scaffold from local `git <command> -h` output alone — the installed Git
 version is unknown and may differ from the latest supported version. Local help should
 NOT be used even as a supplemental check.
+
+### Policy authorities
+
+Read
+[Project Context — Validation Boundaries](../project-context/SKILL.md#validation-boundaries),
+including its
+[exception criteria for constraint declarations](../project-context/SKILL.md#exception-criteria-for-constraint-declarations),
+and
+[Options completeness — consult the latest-version docs first](../command-implementation/REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).
+The review flags in [CHECKLIST.md](CHECKLIST.md) reference these policies by
+link; load both authorities now so the flags are applied with the criteria in
+context, not from memory.
 
 ## Reference
 

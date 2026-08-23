@@ -129,6 +129,15 @@ examples with consistent labels.
 Define named thresholds, modes, phases, or terms before first use, and keep one
 authoritative definition for each concept.
 
+State each policy definition (what the policy is, its exceptions, their criteria)
+once, in a single designated authority section, and link to that authority by
+anchor from every other skill or section that needs the policy. Keep role-specific
+operational instructions (what to do, flag, or test) inline in the document whose
+role they serve. Restated definitions silently rot when the authority changes,
+while a link cannot drift and an instruction stated in only one place cannot
+drift. A reader executing a workflow or checklist must never need the linked
+definition to perform an action — they follow the link only to understand why.
+
 Use real markdown headings for durable rule sections. Avoid bold paragraphs as
 pseudo-headings when the section may need a table-of-contents entry, deep link,
 or review reference.
@@ -207,6 +216,8 @@ my-awesome-skill/
 - [ ] Always-needed workflow and review rules remain in `SKILL.md`
 - [ ] Situational details are split into reference files with clear load conditions
 - [ ] Named thresholds, modes, phases, or terms are defined before first use
+- [ ] Policy definitions are stated once in a designated authority section and
+      linked from everywhere else; role-specific instructions stay inline
 - [ ] Standards/review rules are mandatory unless explicitly marked `Optional`
 - [ ] Deep links, TOC anchors, and referenced files resolve after heading changes
 - [ ] Bundled assets are under 5MB each
