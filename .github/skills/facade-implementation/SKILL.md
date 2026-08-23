@@ -222,7 +222,8 @@ This skill supports three modes. Determine which mode applies before starting:
      internals
    - is explicitly classified as `legacy-contract` (legacy predecessor exists)
      or `5.x-native` (new facade API), and signature shape matches that
-     classification
+     classification (why the call shape is preserved:
+     [ADR-0005](../../../docs/adr/0005-the-facade-keeps-the-v4x-call-shape.md))
    - has tests that verify call-shape compatibility when classification is
      `legacy-contract` (positional hash and/or keyword-arg / `**opts` forms where required)
 
