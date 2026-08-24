@@ -232,7 +232,7 @@ module Git
       #
       # @api private
       #
-      # rubocop:disable Metrics/ParameterLists
+      # rubocop:disable-next Metrics/ParameterLists
       def command_line_result(command, result, processed_out, processed_err, timeout, raise_on_failure)
         Git::CommandLine::Result.new(command, result, processed_out, processed_err).tap do |processed_result|
           raise Git::TimeoutError.new(processed_result, timeout) if result.timed_out?
@@ -242,7 +242,6 @@ module Git
           raise Git::FailedError, processed_result if raise_on_failure && !result.success?
         end
       end
-      # rubocop:enable Metrics/ParameterLists
     end
   end
 end

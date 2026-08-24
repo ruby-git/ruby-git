@@ -4,7 +4,7 @@
 #
 # Extracted to keep shared context block size manageable.
 #
-# rubocop:disable Metrics/ModuleLength
+# rubocop:disable-next Metrics/ModuleLength
 module DiffTestRepositorySetup
   # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   def setup_diff_test_history
@@ -167,7 +167,6 @@ module DiffTestRepositorySetup
   end
   # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 end
-# rubocop:enable Metrics/ModuleLength
 
 # Shared context providing a repository with a rich git history for diff testing.
 #
