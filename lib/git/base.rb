@@ -306,6 +306,7 @@ module Git
       branch_names.include?(branch)
     end
 
+    # @deprecated Use {#local_branch?} instead
     def is_local_branch?(branch) # rubocop:disable Naming/PredicatePrefix
       Git::Deprecation.warn(
         'Git::Base#is_local_branch? is deprecated and will be removed in a future version. ' \
@@ -320,6 +321,7 @@ module Git
       branch_names.include?(branch)
     end
 
+    # @deprecated Use {#remote_branch?} instead
     def is_remote_branch?(branch) # rubocop:disable Naming/PredicatePrefix
       Git::Deprecation.warn(
         'Git::Base#is_remote_branch? is deprecated and will be removed in a future version. ' \
@@ -334,6 +336,7 @@ module Git
       branch_names.include?(branch)
     end
 
+    # @deprecated Use {#branch?} instead
     def is_branch?(branch) # rubocop:disable Naming/PredicatePrefix
       Git::Deprecation.warn(
         'Git::Base#is_branch? is deprecated and will be removed in a future version. ' \
@@ -710,11 +713,9 @@ module Git
     #   @example Check specific objects
     #     result = git.fsck('abc1234', 'def5678')
     #
-    # rubocop:disable Style/ArgumentsForwarding
-    def fsck(*objects, **opts)
-      lib.fsck(*objects, **opts)
+    def fsck(*objects, **opts) # rubocop:disable Style/ArgumentsForwarding
+      lib.fsck(*objects, **opts) # rubocop:disable Style/ArgumentsForwarding
     end
-    # rubocop:enable Style/ArgumentsForwarding
 
     def apply(file)
       return unless File.exist?(file)
