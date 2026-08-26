@@ -798,7 +798,7 @@ module Git
     end
 
     def branch_contains(commit, branch_name = '')
-      command('branch',  branch_name, '--contains', commit)
+      command('branch', branch_name, '--contains', commit)
     end
 
     GREP_OPTION_MAP = [
