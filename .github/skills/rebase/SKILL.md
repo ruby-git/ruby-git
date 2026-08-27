@@ -30,7 +30,7 @@ branch needs to be rebased onto `origin/main` and pushed.
 
 ## Related skills
 
-- [Resolve PR Feedback](../resolve-pr-feedback/SKILL.md) — follow-up workflow for
+- [Address PR Feedback](../address-pr-feedback/SKILL.md) — follow-up workflow for
   addressing PR review comments after rebasing
 - [PR Readiness Review](../pr-readiness-review/SKILL.md) — final validation
   before opening or updating a pull request
