@@ -5,6 +5,51 @@
 
 # Change Log
 
+## [5.2.0](https://github.com/ruby-git/ruby-git/compare/v5.1.0...v5.2.0) (2026-08-30)
+
+
+### Features
+
+* **checkout:** Support the :orphan option in Repository#checkout ([265a997](https://github.com/ruby-git/ruby-git/commit/265a997ca972868a392ee71489b0e34e42ff70ec))
+
+
+### Bug Fixes
+
+* Exclude the .claude/skills symlink and other dev files from the gem ([ae4ef0e](https://github.com/ruby-git/ruby-git/commit/ae4ef0e6185285ee325fabdc9bc9214527a80ac5))
+* Remove the cat-file raw constraint that duplicated a git check ([ea52fc7](https://github.com/ruby-git/ruby-git/commit/ea52fc7515b24669ab6f5371df2cabd2a08e357c))
+
+
+### Other Changes
+
+* Add a markdown link checker ([8000810](https://github.com/ruby-git/ruby-git/commit/80008103ea7c3ad71404b75f0c04f8e81fd226f9))
+* Address suppressed copilot comments in the resolve-feedback skill ([9677f33](https://github.com/ruby-git/ruby-git/commit/9677f33103f926271be5da8f4406f532f47b3ef3))
+* Announce the v5.x deprecations and the v6.0.0 roadmap ([68380f2](https://github.com/ruby-git/ruby-git/commit/68380f24f48e3bbe6b3983e6272a58e838c72b39))
+* Archive the v5.x redesign documents ([4bed4ce](https://github.com/ruby-git/ruby-git/commit/4bed4ce1a520dda9cea9336ea4f8784f48cba306))
+* Configure the mattpocock engineering skills for this repo ([ff03315](https://github.com/ruby-git/ruby-git/commit/ff033152209bf82e97073845de61f04ee3ecc47f))
+* Copyedit CONTRIBUTING.md for plain, direct language ([7756ad1](https://github.com/ruby-git/ruby-git/commit/7756ad1b0615fd1a7dc40cbdbba52822f2329d5a))
+* **deps:** Update process_executer to ~&gt; 4.1 ([7f01af4](https://github.com/ruby-git/ruby-git/commit/7f01af4ed0fdfc1894a10c01a7df34367559ac79))
+* Fix broken relative links and heading anchors ([0bf31b8](https://github.com/ruby-git/ruby-git/commit/0bf31b85877f30746c51a6af765b4c707fcfe9ed))
+* Fold the remaining plan documents into issues and adrs ([74944d9](https://github.com/ruby-git/ruby-git/commit/74944d9909e4a35f1fc7a88841e82b93e16a7e21))
+* **fsck:** Build the second root commit through the public API ([3a7f083](https://github.com/ruby-git/ruby-git/commit/3a7f083b00498ace343622c8e7e20af6d498f247))
+* Make command-class policy self-contained in the skills ([8158d2a](https://github.com/ruby-git/ruby-git/commit/8158d2ae8c1e0d108f2ad978056669dc95be6035))
+* Name maintainer and contributors in the LICENSE copyright notice ([ddb33c0](https://github.com/ruby-git/ruby-git/commit/ddb33c004d82fdeaee90a36cea32e73e3b36211a))
+* Point agents at the adr directory before they change covered areas ([ad8a20d](https://github.com/ruby-git/ruby-git/commit/ad8a20dc3cbddc81cb2e09a8b22e276ea6095907))
+* Port the roadmap-tickets conventions into a project skill ([74a4e69](https://github.com/ruby-git/ruby-git/commit/74a4e696ba61595674501d02eaf49c7190fd4438))
+* Record any durable decision as an adr, not only architectural ones ([455a28c](https://github.com/ruby-git/ruby-git/commit/455a28ca92d59eb83f448767547441701dbae3dc))
+* Record the option surface rule as adr 0004 ([d37beed](https://github.com/ruby-git/ruby-git/commit/d37beeddb3f0b98dd71f6dd89a70cd5d4ef9cab0))
+* Record the removal gate as adr 0006 ([b76d54e](https://github.com/ruby-git/ruby-git/commit/b76d54e8be59c07de848c944af7dc8e961e7c6f1))
+* Record the v4.x call-shape rule as adr 0005 ([3cd68cd](https://github.com/ruby-git/ruby-git/commit/3cd68cde2d6e73b05425c6485619ca7fa92aa177))
+* Record the validation delegation rationale as adr 0003 ([8c224f5](https://github.com/ruby-git/ruby-git/commit/8c224f561b0eebb77e8be1967df563ad977c7017))
+* Reduce the resolve-feedback skill to a pointer plus ruby-git deltas ([4a4c361](https://github.com/ruby-git/ruby-git/commit/4a4c361715b585148a37115818d64a90b8088b5a))
+* Remove ai writing tells from the readme ([e9c782e](https://github.com/ruby-git/ruby-git/commit/e9c782ea6aed6eb73265fcc3dea043fa916d2cc3))
+* Remove the iteratively-address-copilot-reviews prompt and its command ([fdaed6f](https://github.com/ruby-git/ruby-git/commit/fdaed6f857dec93768c8f5be6e5cce0132a5103a))
+* Rename the resolve-pr-feedback skill to address-pr-feedback ([d5e8700](https://github.com/ruby-git/ruby-git/commit/d5e8700736a4c6bd8899b558befb915056c5ff6d))
+* Require executed proof for safety claims in breaking-change-analysis ([859ed31](https://github.com/ruby-git/ruby-git/commit/859ed31ecabc94f8cacd81ea5df8a273fa896fa9))
+* Require verifiable, reviewer-provable task sequencing in development-workflow ([d4a7191](https://github.com/ruby-git/ruby-git/commit/d4a7191f49703f214748f19643242c9474bb8060))
+* Satisfy the new Style/DirectiveScope cop ([354057e](https://github.com/ruby-git/ruby-git/commit/354057e32f9a0bec19bef50b07d037235bd73976))
+* State each policy definition once and link everywhere else ([0023d54](https://github.com/ruby-git/ruby-git/commit/0023d54a252c567546b3097b5caf094a1a38b516)), closes [#1710](https://github.com/ruby-git/ruby-git/issues/1710)
+* Stop restating gemspec version constraints in the project-context skill ([595a53c](https://github.com/ruby-git/ruby-git/commit/595a53c1b03919240d3997166b7606f9d1471345))
+
 ## [5.1.0](https://github.com/ruby-git/ruby-git/compare/v5.0.5...v5.1.0) (2026-08-18)
 
 
