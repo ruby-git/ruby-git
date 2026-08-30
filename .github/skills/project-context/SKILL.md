@@ -324,10 +324,12 @@ swallow exceptions silently.
 
 ### Dependencies
 
-- `activesupport` (≥ 5.0) — utilities and deprecation handling
-- `addressable` (~> 2.8) — URI parsing
-- `process_executer` (~> 4.0) — subprocess execution with timeout
-- `rchardet` (~> 1.9) — character encoding detection
+Version constraints live in `git.gemspec`; do not restate them here.
+
+- `activesupport` — utilities and deprecation handling
+- `addressable` — URI parsing
+- `process_executer` — subprocess execution with timeout
+- `rchardet` — character encoding detection
 
 ## Compatibility
 
