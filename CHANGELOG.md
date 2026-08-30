@@ -5,6 +5,17 @@
 
 # Change Log
 
+## [4.4.3](https://github.com/ruby-git/ruby-git/compare/v4.4.2...v4.4.3) (2026-08-30)
+
+
+### Other Changes
+
+* **deps:** Update process_executer to ~&gt; 4.1 ([6f41964](https://github.com/ruby-git/ruby-git/commit/6f41964e400c7fa5a79ef9ec848144aaf56e8d06))
+* Fix rubocop offenses on the 4.x branch ([0361cf5](https://github.com/ruby-git/ruby-git/commit/0361cf521895fb722cd3e1fdb42006ce6d0a6d3c))
+* Ignore the git-versions directory ([2cc1bf5](https://github.com/ruby-git/ruby-git/commit/2cc1bf5f2cca6854d647634d2fef58e681fd90e3))
+* Name maintainer and contributors in the LICENSE copyright notice ([9d0ac3c](https://github.com/ruby-git/ruby-git/commit/9d0ac3ca56c49e1d78deb6e869aaddcb30362cb6))
+* Skip the rubocop rake task on JRuby and TruffleRuby ([da527c2](https://github.com/ruby-git/ruby-git/commit/da527c2314d5a81441b2590609cdadce9d394e17))
+
 ## [4.4.2](https://github.com/ruby-git/ruby-git/compare/v4.4.1...v4.4.2) (2026-08-19)
 
 
