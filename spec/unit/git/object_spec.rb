@@ -525,6 +525,10 @@ RSpec.describe Git::Object::Commit do
     it 'returns the commit author with correct name and email' do
       expect(result).to have_attributes(name: 'A U Thor', email: 'author@example.com')
     end
+
+    it 'returns an immutable Git::AuthorInfo' do
+      expect(result).to be_a(Git::AuthorInfo)
+    end
   end
 
   describe '#author_date' do
@@ -540,6 +544,10 @@ RSpec.describe Git::Object::Commit do
 
     it 'returns the committer with correct name and email' do
       expect(result).to have_attributes(name: 'A U Thor', email: 'author@example.com')
+    end
+
+    it 'returns an immutable Git::AuthorInfo' do
+      expect(result).to be_a(Git::AuthorInfo)
     end
   end
 
@@ -770,6 +778,10 @@ RSpec.describe Git::Object::Tag do
 
       it 'returns the tag creator with correct name and email' do
         expect(result).to have_attributes(name: 'A U Thor', email: 'author@example.com')
+      end
+
+      it 'returns an immutable Git::AuthorInfo' do
+        expect(result).to be_a(Git::AuthorInfo)
       end
     end
   end
