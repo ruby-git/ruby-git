@@ -46,6 +46,7 @@ module Git
 end
 
 require 'git/author'
+require 'git/author_info'
 require 'git/branch'
 require 'git/branch_info'
 require 'git/branches'

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'git/author_info'
 
 RSpec.describe Git::AuthorInfo do
   describe '#initialize' do

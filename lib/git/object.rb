@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/author'
+require 'git/author_info'
 require 'git/diff'
 require 'git/errors'
 require 'git/log'
@@ -438,7 +438,10 @@ module Git
         @parents
       end
 
-      # git author
+      # Returns the commit author identity
+      #
+      # @return [Git::AuthorInfo] the author name, email, and author date
+      #
       def author
         check_commit
         @author
@@ -452,7 +455,10 @@ module Git
         author.date
       end
 
-      # git author
+      # Returns the commit committer identity
+      #
+      # @return [Git::AuthorInfo] the committer name, email, and commit date
+      #
       def committer
         check_commit
         @committer
@@ -499,8 +505,8 @@ module Git
       #
       def from_data(data)
         @sha ||= data['sha']
-        @committer = Git::Author.new(data['committer'])
-        @author = Git::Author.new(data['author'])
+        @committer = Git::AuthorInfo.parse(data['committer'])
+        @author = Git::AuthorInfo.parse(data['author'])
         @tree = Git::Object::Tree.new(@base, data['tree'])
         @parents = data['parent'].map { |sha| Git::Object::Commit.new(@base, sha) }
         @message = data['message'].chomp
@@ -593,7 +599,7 @@ module Git
 
       # Returns the tagger identity
       #
-      # @return [Git::Author, nil] the tagger for an annotated tag, or `nil`
+      # @return [Git::AuthorInfo, nil] the tagger for an annotated tag, or `nil`
       #   for a lightweight tag
       #
       def tagger
@@ -613,7 +619,7 @@ module Git
         if annotated?
           tdata = object_repository.cat_file_tag(@name)
           @message = tdata['message'].chomp
-          @tagger = Git::Author.new(tdata['tagger'])
+          @tagger = Git::AuthorInfo.parse(tdata['tagger'])
         else
           @message = @tagger = nil
         end

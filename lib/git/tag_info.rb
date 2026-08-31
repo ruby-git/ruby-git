@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-require 'git/author'
+require 'time'
+
+require 'git/author_info'
 
 module Git
   # Value object representing tag metadata from git tag output
@@ -88,19 +90,17 @@ module Git
       oid.nil?
     end
 
-    # Return the tagger as an Author object
+    # Return the tagger as an immutable Git::AuthorInfo object
     #
-    # @return [Git::Author, nil] the tagger as an Author object, or nil for lightweight tags
+    # @return [Git::AuthorInfo, nil] the tagger, or nil for lightweight tags
     def tagger
       return nil unless annotated? && tagger_name && tagger_email
 
-      # Git::Author expects format "Name <email> timestamp timezone"
-      # We construct a minimal format that will parse correctly
-      author = Git::Author.new('')
-      author.name = tagger_name
-      # Remove angle brackets if present
-      author.email = tagger_email.gsub(/\A<|>\z/, '')
-      author
+      Git::AuthorInfo.new(
+        name: tagger_name,
+        email: tagger_email.gsub(/\A<|>\z/, ''), # remove angle brackets if present
+        date: tagger_date && Time.iso8601(tagger_date)
+      )
     end
   end
 end

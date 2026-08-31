@@ -3,6 +3,9 @@
 module Git
   # An author in a Git commit
   #
+  # @deprecated Use {Git::AuthorInfo} instead; this mutable class will be
+  #   removed in v6.0.0
+  #
   # @api public
   #
   class Author
@@ -24,7 +27,15 @@ module Git
     #
     # @return [void]
     #
+    # @deprecated Use {Git::AuthorInfo.parse} instead
+    #
     def initialize(author_string)
+      if defined?(Git::Deprecation)
+        Git::Deprecation.warn(
+          'Git::Author is deprecated and will be removed in v6.0.0. Use Git::AuthorInfo instead.'
+        )
+      end
+
       return unless (m = /(.*?) <(.*?)> (\d+) (.*)/.match(author_string))
 
       @name = m[1]
