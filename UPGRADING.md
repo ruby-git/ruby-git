@@ -17,6 +17,7 @@ to update your code when upgrading from the preceding major version.
     - [Facade method renames](#facade-method-renames)
     - [v4.x-style configuration methods](#v4x-style-configuration-methods)
     - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
+    - [`Git::Author` deprecated](#gitauthor-deprecated)
 
 ## Upgrading to v5.x
 
@@ -361,5 +362,26 @@ as bare methods is deprecated:
 | `include Git; global_config(name)` | `Git.config_get(name, global: true)` |
 | `include Git; global_config(name, value)` | `Git.config_set(name, value, global: true)` |
 | `include Git; global_config` | `Git.config_list(global: true)` |
+
+#### `Git::Author` deprecated
+
+Starting in v5.3.0, methods that return author, committer, or tagger data —
+`Git::Object::Commit#author`, `Git::Object::Commit#committer`,
+`Git::Object::Tag#tagger`, and `Git::TagInfo#tagger` — return an immutable
+`Git::AuthorInfo` value object instead of the mutable `Git::Author`.
+
+`Git::AuthorInfo` exposes the same `name`, `email`, and `date` readers, so code
+that only reads these attributes needs no changes. Code that mutated a
+`Git::Author` (via `name=`, `email=`, or `date=`) must be updated:
+`Git::AuthorInfo` is frozen, and `#with` returns a modified copy rather than
+updating in place (e.g. `info = info.with(name: 'New Name')`).
+
+Constructing `Git::Author` directly emits a deprecation warning naming
+`Git::AuthorInfo` as the replacement. The class is removed in v6.0.0.
+
+| Deprecated usage | Replacement |
+|-----------------|-------------|
+| `Git::Author.new('Name <email> 1627849923 +0200')` | `Git::AuthorInfo.parse('Name <email> 1627849923 +0200')` |
+| `author.name = 'New Name'` | `author = author.with(name: 'New Name')` (returns a new object) |
 
 ---
