@@ -171,8 +171,8 @@ RSpec.describe Git::TagInfo do
         )
       end
 
-      it 'returns a Git::Author object' do
-        expect(tag_info.tagger).to be_a(Git::Author)
+      it 'returns an immutable Git::AuthorInfo object' do
+        expect(tag_info.tagger).to be_a(Git::AuthorInfo)
       end
 
       it 'has the correct name' do
@@ -181,6 +181,29 @@ RSpec.describe Git::TagInfo do
 
       it 'has the correct email' do
         expect(tag_info.tagger.email).to eq('john@example.com')
+      end
+
+      it 'carries the tag date parsed from tagger_date' do
+        expect(tag_info.tagger.date).to eq(Time.iso8601('2024-01-15T10:30:00-08:00'))
+      end
+
+      context 'when tagger_date is nil' do
+        subject(:tag_info) do
+          described_class.new(
+            name: 'v1.0.0',
+            oid: 'abc123',
+            target_oid: 'def456',
+            objecttype: 'tag',
+            tagger_name: 'John Doe',
+            tagger_email: '<john@example.com>',
+            tagger_date: nil,
+            message: 'Release'
+          )
+        end
+
+        it 'has a nil date' do
+          expect(tag_info.tagger.date).to be_nil
+        end
       end
     end
 
