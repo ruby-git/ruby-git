@@ -8,14 +8,12 @@ require 'git/tag_info'
 RSpec.describe Git::TagDeleteResult do
   let(:tag_v1) do
     Git::TagInfo.new(
-      name: 'v1.0.0', oid: nil, target_oid: 'abc123', objecttype: 'commit',
-      tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
+      name: 'v1.0.0', oid: nil, target_oid: 'abc123', objecttype: 'commit', tagger: nil, message: nil
     )
   end
   let(:tag_v2) do
     Git::TagInfo.new(
-      name: 'v2.0.0', oid: nil, target_oid: 'def456', objecttype: 'commit',
-      tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
+      name: 'v2.0.0', oid: nil, target_oid: 'def456', objecttype: 'commit', tagger: nil, message: nil
     )
   end
   let(:failure1) { Git::TagDeleteFailure.new(name: 'nonexistent', error_message: "tag 'nonexistent' not found.") }

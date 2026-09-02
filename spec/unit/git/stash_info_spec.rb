@@ -4,6 +4,22 @@ require 'spec_helper'
 require 'git/stash_info'
 
 RSpec.describe Git::StashInfo do
+  let(:author) do
+    Git::AuthorInfo.new(
+      name: 'Test Author',
+      email: 'author@test.com',
+      date: Time.iso8601('2026-01-24T10:00:00-08:00')
+    )
+  end
+
+  let(:committer) do
+    Git::AuthorInfo.new(
+      name: 'Test Committer',
+      email: 'committer@test.com',
+      date: Time.iso8601('2026-01-24T11:00:00-08:00')
+    )
+  end
+
   # Default attributes for creating test StashInfo objects
   let(:default_attrs) do
     {
@@ -13,31 +29,23 @@ RSpec.describe Git::StashInfo do
       short_oid: 'abc1234',
       branch: 'main',
       message: 'WIP on main: abc123 Initial commit',
-      author_name: 'Test Author',
-      author_email: 'author@test.com',
-      author_date: '2026-01-24T10:00:00-08:00',
-      committer_name: 'Test Committer',
-      committer_email: 'committer@test.com',
-      committer_date: '2026-01-24T10:00:00-08:00'
+      author: author,
+      committer: committer
     }
   end
 
-  describe '.new' do
-    it 'creates a stash info with all attributes' do
-      info = described_class.new(**default_attrs)
+  describe '#initialize' do
+    subject(:info) { described_class.new(**default_attrs) }
 
-      expect(info.index).to eq(0)
-      expect(info.name).to eq('stash@{0}')
-      expect(info.oid).to eq('abc1234567890abcdef1234567890abcdef123456')
-      expect(info.short_oid).to eq('abc1234')
-      expect(info.branch).to eq('main')
-      expect(info.message).to eq('WIP on main: abc123 Initial commit')
-      expect(info.author_name).to eq('Test Author')
-      expect(info.author_email).to eq('author@test.com')
-      expect(info.author_date).to eq('2026-01-24T10:00:00-08:00')
-      expect(info.committer_name).to eq('Test Committer')
-      expect(info.committer_email).to eq('committer@test.com')
-      expect(info.committer_date).to eq('2026-01-24T10:00:00-08:00')
+    it 'stores all members' do
+      expect(info).to have_attributes(**default_attrs)
+    end
+
+    it 'exposes the author and committer as Git::AuthorInfo values whose dates are Time' do
+      expect(info.author).to be_a(Git::AuthorInfo)
+      expect(info.author.date).to be_a(Time)
+      expect(info.committer).to be_a(Git::AuthorInfo)
+      expect(info.committer.date).to be_a(Time)
     end
   end
 
@@ -82,10 +90,12 @@ RSpec.describe Git::StashInfo do
     it 'returns all attributes for pattern matching' do
       # Data.define provides #deconstruct that returns all attribute values
       values = info.deconstruct
-      expect(values.length).to eq(12)
+      expect(values.length).to eq(8)
       expect(values[0]).to eq(0) # index
       expect(values[1]).to eq('stash@{0}') # name
       expect(values[5]).to eq('WIP on main: abc123 Initial commit') # message
+      expect(values[6]).to eq(author)
+      expect(values[7]).to eq(committer)
     end
 
     it 'supports Ruby pattern matching with all attributes' do
@@ -97,7 +107,7 @@ RSpec.describe Git::StashInfo do
         expect(short_oid).to eq('abc1234')
         expect(branch).to eq('main')
         expect(message).to eq('WIP on main: abc123 Initial commit')
-        expect(rest.length).to eq(6) # remaining author/committer fields
+        expect(rest).to eq([author, committer])
       end
     end
   end

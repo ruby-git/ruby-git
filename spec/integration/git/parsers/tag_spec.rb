@@ -43,14 +43,12 @@ RSpec.describe Git::Parsers::Tag, :integration do
         expect(result.first.annotated?).to be false
       end
 
-      it 'has nil oid and tagger fields for lightweight tags' do
+      it 'has nil oid, tagger, and message for lightweight tags' do
         output = git_tag_output
         result = described_class.parse_list(output)
         tag = result.first
         expect(tag.oid).to be_nil
-        expect(tag.tagger_name).to be_nil
-        expect(tag.tagger_email).to be_nil
-        expect(tag.tagger_date).to be_nil
+        expect(tag.tagger).to be_nil
         expect(tag.message).to be_nil
       end
     end
@@ -81,14 +79,21 @@ RSpec.describe Git::Parsers::Tag, :integration do
         expect(result.first.lightweight?).to be false
       end
 
-      it 'has tagger fields populated for annotated tags' do
+      it 'has the tagger populated as a Git::AuthorInfo for annotated tags' do
         output = git_tag_output
         result = described_class.parse_list(output)
         tag = result.first
-        expect(tag.tagger_name).not_to be_nil
-        expect(tag.tagger_email).not_to be_nil
-        expect(tag.tagger_date).to match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([-+]\d{2}:\d{2}|Z)$/)
+        expect(tag.tagger).to be_a(Git::AuthorInfo)
+        expect(tag.tagger.name).to be_a(String)
+        expect(tag.tagger.name).not_to be_empty
+        expect(tag.tagger.date).to be_a(Time)
         expect(tag.message).to eq('Release version 2.0.0')
+      end
+
+      it 'strips the angle brackets git emits around the tagger email' do
+        output = git_tag_output
+        result = described_class.parse_list(output)
+        expect(result.first.tagger.email).to match(/\A[^<>\s]+@[^<>\s]+\z/)
       end
     end
 

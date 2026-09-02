@@ -27,11 +27,35 @@ RSpec.describe Git::Parsers::Tag do
       expect(result[0].oid).to eq('abc123def456789012345678901234567890abcdef')
       expect(result[0].target_oid).to eq('def456789012345678901234567890abcdef012345')
       expect(result[0].objecttype).to eq('tag')
-      expect(result[0].tagger_name).to eq('John Doe')
-      expect(result[0].tagger_email).to eq('<john@example.com>')
-      expect(result[0].tagger_date).to eq('2024-01-15T10:30:00-08:00')
+      expect(result[0].tagger).to eq(
+        Git::AuthorInfo.new(
+          name: 'John Doe', email: 'john@example.com', date: Time.iso8601('2024-01-15T10:30:00-08:00')
+        )
+      )
       expect(result[0].message).to eq('Release version 1.0.0')
       expect(result[0].annotated?).to be true
+    end
+
+    it 'strips the angle brackets git emits around the tagger email' do
+      record = [
+        'v1.0.0', 'abc123', 'def456', 'tag', 'John Doe', '<john@example.com>', '2024-01-15T10:30:00-08:00', 'Msg'
+      ].join(field_sep) + record_sep
+
+      result = described_class.parse_list(record)
+
+      expect(result[0].tagger.email).to eq('john@example.com')
+    end
+
+    it 'parses the tagger date into a Time that preserves the UTC offset' do
+      record = [
+        'v1.0.0', 'abc123', 'def456', 'tag', 'John Doe', '<john@example.com>', '2024-01-15T10:30:00-08:00', 'Msg'
+      ].join(field_sep) + record_sep
+
+      result = described_class.parse_list(record)
+
+      expect(result[0].tagger.date).to be_a(Time)
+      expect(result[0].tagger.date).to eq(Time.iso8601('2024-01-15T10:30:00-08:00'))
+      expect(result[0].tagger.date.utc_offset).to eq(-8 * 3600)
     end
 
     it 'parses a lightweight tag' do
@@ -53,9 +77,7 @@ RSpec.describe Git::Parsers::Tag do
       expect(result[0].oid).to be_nil
       expect(result[0].target_oid).to eq('abc123def456789012345678901234567890abcdef')
       expect(result[0].objecttype).to eq('commit')
-      expect(result[0].tagger_name).to be_nil
-      expect(result[0].tagger_email).to be_nil
-      expect(result[0].tagger_date).to be_nil
+      expect(result[0].tagger).to be_nil
       expect(result[0].message).to be_nil
       expect(result[0].lightweight?).to be true
     end
@@ -91,7 +113,7 @@ RSpec.describe Git::Parsers::Tag do
     end
 
     it 'handles leading whitespace from previous records' do
-      tag_fields = ['v1.0.0', 'abc', 'def', 'tag', 'J', '<j@e.com>', '2024-01-15', 'Msg']
+      tag_fields = ['v1.0.0', 'abc', 'def', 'tag', 'J', '<j@e.com>', '2024-01-15T10:30:00Z', 'Msg']
       records = "\n#{tag_fields.join(field_sep)}#{record_sep}"
       result = described_class.parse_list(records)
 
@@ -106,11 +128,55 @@ RSpec.describe Git::Parsers::Tag do
         described_class.parse_list(malformed_record)
       end.to raise_error(Git::UnexpectedResultError, /Expected 8 fields/)
     end
+
+    it 'raises UnexpectedResultError when the tagger date is not a valid ISO 8601 date' do
+      record = [
+        'v1.0.0', 'abc123', 'def456', 'tag', 'John Doe', '<john@example.com>', 'not-a-date', 'Msg'
+      ].join(field_sep) + record_sep
+
+      expect do
+        described_class.parse_list(record)
+      end.to raise_error(Git::UnexpectedResultError, /not-a-date/)
+    end
+
+    it 'builds the tagger from the remaining fields when only the tagger name is empty' do
+      record = [
+        'v1.0.0', 'abc123', 'def456', 'tag', '', '<john@example.com>', '2024-01-15T10:30:00Z', 'Msg'
+      ].join(field_sep) + record_sep
+
+      result = described_class.parse_list(record)
+
+      expect(result[0].tagger).to eq(
+        Git::AuthorInfo.new(name: '', email: 'john@example.com', date: Time.iso8601('2024-01-15T10:30:00Z'))
+      )
+    end
+
+    it 'preserves an empty tagger date as nil when the name or email is present' do
+      record = [
+        'v1.0.0', 'abc123', 'def456', 'tag', 'John Doe', '<john@example.com>', '', 'Msg'
+      ].join(field_sep) + record_sep
+
+      result = described_class.parse_list(record)
+
+      expect(result[0].tagger).to eq(Git::AuthorInfo.new(name: 'John Doe', email: 'john@example.com', date: nil))
+    end
+
+    it 'raises UnexpectedResultError when the tagger name is empty and the date is invalid' do
+      record = [
+        'v1.0.0', 'abc123', 'def456', 'tag', '', '<john@example.com>', 'not-a-date', 'Msg'
+      ].join(field_sep) + record_sep
+
+      expect do
+        described_class.parse_list(record)
+      end.to raise_error(Git::UnexpectedResultError, /not-a-date/)
+    end
   end
 
   describe '.parse_tag_record' do
     it 'parses annotated tag record' do
-      record = ['v1.0.0', 'abc123', 'def456', 'tag', 'John', '<john@ex.com>', '2024-01-15', 'Msg'].join(field_sep)
+      record = [
+        'v1.0.0', 'abc123', 'def456', 'tag', 'John', '<john@ex.com>', '2024-01-15T10:30:00Z', 'Msg'
+      ].join(field_sep)
       result = described_class.parse_tag_record(record, 0, [record])
 
       expect(result.name).to eq('v1.0.0')
@@ -130,13 +196,15 @@ RSpec.describe Git::Parsers::Tag do
 
   describe '.build_tag_info' do
     it 'builds TagInfo for annotated tag' do
-      parts = ['v1.0.0', 'abc123', 'def456', 'tag', 'John', '<john@ex.com>', '2024-01-15', 'Message']
+      parts = ['v1.0.0', 'abc123', 'def456', 'tag', 'John', '<john@ex.com>', '2024-01-15T10:30:00Z', 'Message']
       result = described_class.build_tag_info(parts)
 
       expect(result.name).to eq('v1.0.0')
       expect(result.oid).to eq('abc123')
       expect(result.target_oid).to eq('def456')
-      expect(result.tagger_name).to eq('John')
+      expect(result.tagger).to eq(
+        Git::AuthorInfo.new(name: 'John', email: 'john@ex.com', date: Time.iso8601('2024-01-15T10:30:00Z'))
+      )
     end
 
     it 'builds TagInfo for lightweight tag' do
@@ -145,7 +213,7 @@ RSpec.describe Git::Parsers::Tag do
 
       expect(result.oid).to be_nil
       expect(result.target_oid).to eq('abc123')
-      expect(result.tagger_name).to be_nil
+      expect(result.tagger).to be_nil
     end
   end
 
@@ -255,9 +323,7 @@ RSpec.describe Git::Parsers::Tag do
         oid: 'abc123',
         target_oid: 'def456',
         objecttype: 'tag',
-        tagger_name: 'John',
-        tagger_email: '<john@ex.com>',
-        tagger_date: '2024-01-15',
+        tagger: Git::AuthorInfo.new(name: 'John', email: 'john@ex.com', date: Time.iso8601('2024-01-15T10:30:00Z')),
         message: 'Release'
       )
     end

@@ -59,24 +59,26 @@ RSpec.describe Git::Parsers::Stash, :integration do
         expect(result.first.message).to include('WIP on feature')
       end
 
-      it 'parses author information (verifies format string includes author)' do
+      it 'parses author information into a Git::AuthorInfo (verifies format string includes author)' do
         output = git_stash_output
         result = described_class.parse_list(output)
 
-        expect(result.first.author_name).to be_a(String)
-        expect(result.first.author_name).not_to be_empty
-        expect(result.first.author_email).to match(/@/)
-        expect(result.first.author_date).to be_a(String)
+        expect(result.first.author).to be_a(Git::AuthorInfo)
+        expect(result.first.author.name).to be_a(String)
+        expect(result.first.author.name).not_to be_empty
+        expect(result.first.author.email).to match(/@/)
+        expect(result.first.author.date).to be_a(Time)
       end
 
-      it 'parses committer information (verifies format string includes committer)' do
+      it 'parses committer information into a Git::AuthorInfo (verifies format string includes committer)' do
         output = git_stash_output
         result = described_class.parse_list(output)
 
-        expect(result.first.committer_name).to be_a(String)
-        expect(result.first.committer_name).not_to be_empty
-        expect(result.first.committer_email).to match(/@/)
-        expect(result.first.committer_date).to be_a(String)
+        expect(result.first.committer).to be_a(Git::AuthorInfo)
+        expect(result.first.committer.name).to be_a(String)
+        expect(result.first.committer.name).not_to be_empty
+        expect(result.first.committer.email).to match(/@/)
+        expect(result.first.committer.date).to be_a(Time)
       end
     end
 
