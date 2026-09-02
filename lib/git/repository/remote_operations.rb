@@ -589,7 +589,20 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @deprecated Use {#remote_list} instead
+      #
+      #   {#remote_list} returns `Array<Git::RemoteInfo>` (immutable value
+      #   objects) rather than `Array<Git::Remote>`. Call the corresponding
+      #   {Git::Repository} method (e.g. {#fetch}, {#remote_remove}) for
+      #   operations on a remote.
+      #
+      # @see #remote_list
+      #
       def remotes
+        Git::Deprecation.warn(
+          'Git::Repository#remotes is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#remote_list instead.'
+        )
         result = Git::Commands::Remote::List.new(@execution_context).call
         result.stdout.split("\n").map { |name| Git::Remote.new(self, name) }
       end
