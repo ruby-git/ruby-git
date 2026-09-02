@@ -415,6 +415,17 @@ RSpec.describe Git::Repository::Branching, :integration do
       end
     end
 
+    context 'on an unborn branch that shares its name with a tag' do
+      before do
+        repo.tag_add('scratch')
+        repo.checkout('scratch', orphan: true)
+      end
+
+      it 'returns HeadState with state :unborn (the tag does not stand in for the branch)' do
+        expect(described_instance.current_branch_state).to have_attributes(state: :unborn, name: 'scratch')
+      end
+    end
+
     context 'on an unborn branch (repository initialized with no commits)' do
       let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
       let(:unborn_repo) { Git.init(unborn_repo_dir) }
@@ -532,6 +543,19 @@ RSpec.describe Git::Repository::Branching, :integration do
 
     context 'when HEAD is on an unborn branch' do
       before do
+        repo.checkout('scratch', orphan: true)
+      end
+
+      it 'raises Git::Error and leaves HEAD on the unborn branch' do
+        expect { described_instance.in_branch('feature') { true } }
+          .to raise_error(Git::Error, /unborn branch 'scratch'/)
+        expect(described_instance.current_branch_state).to have_attributes(state: :unborn, name: 'scratch')
+      end
+    end
+
+    context 'when HEAD is on an unborn branch that shares its name with a tag' do
+      before do
+        repo.tag_add('scratch')
         repo.checkout('scratch', orphan: true)
       end
 

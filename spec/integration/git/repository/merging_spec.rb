@@ -143,6 +143,19 @@ RSpec.describe Git::Repository::Merging, :integration do
         expect(described_instance.current_branch_state).to have_attributes(state: :unborn, name: 'scratch')
       end
     end
+
+    context 'when HEAD is on an unborn branch that shares its name with a tag' do
+      before do
+        repo.tag_add('scratch')
+        repo.checkout('scratch', orphan: true)
+      end
+
+      it 'raises Git::Error and leaves HEAD on the unborn branch' do
+        expect { described_instance.merge_into('main', 'feature') }
+          .to raise_error(Git::Error, /unborn branch 'scratch'/)
+        expect(described_instance.current_branch_state).to have_attributes(state: :unborn, name: 'scratch')
+      end
+    end
   end
 
   # ---------------------------------------------------------------------------

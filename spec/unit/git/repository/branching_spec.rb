@@ -95,7 +95,7 @@ RSpec.describe Git::Repository::Branching do
       before do
         allow(show_current_command).to receive(:call).and_return(command_result("main\n"))
         allow(rev_parse_command)
-          .to receive(:call).with('main', verify: true, quiet: true)
+          .to receive(:call).with('refs/heads/main', verify: true, quiet: true)
           .and_return(command_result('abc123'))
       end
 
@@ -112,7 +112,7 @@ RSpec.describe Git::Repository::Branching do
       before do
         allow(show_current_command).to receive(:call).and_return(command_result("main\n"))
         allow(rev_parse_command)
-          .to receive(:call).with('main', verify: true, quiet: true)
+          .to receive(:call).with('refs/heads/main', verify: true, quiet: true)
           .and_raise(Git::FailedError.new(unborn_result))
       end
 
@@ -146,7 +146,7 @@ RSpec.describe Git::Repository::Branching do
       before do
         allow(show_current_command).to receive(:call).and_return(command_result("main\n"))
         allow(rev_parse_command)
-          .to receive(:call).with('main', verify: true, quiet: true)
+          .to receive(:call).with('refs/heads/main', verify: true, quiet: true)
           .and_raise(Git::FailedError.new(error_result))
       end
 
