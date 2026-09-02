@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'time'
+
+require 'git/author_info'
 require 'git/tag_info'
 require 'git/tag_delete_result'
 require 'git/tag_delete_failure'
@@ -114,7 +117,7 @@ module Git
       # where <FS> is the unit separator character ("\x1f").
       #
       # For lightweight tags, Git emits empty strings for the tagger fields and message;
-      # these are converted to nil by {#parse_optional_field} and {#parse_message}.
+      # these are converted to nil by {#parse_tagger} and {#parse_message}.
       #
       # @param record [String] a single tag record from git tag --format output
       #
@@ -183,19 +186,62 @@ module Git
       def build_tag_info_object(parts, oid, target_oid)
         Git::TagInfo.new(
           name: parts[0], oid: oid, target_oid: target_oid, objecttype: parts[3],
-          tagger_name: parse_optional_field(parts[4]), tagger_email: parse_optional_field(parts[5]),
-          tagger_date: parse_optional_field(parts[6]), message: parse_message(parts[3], parts[7])
+          tagger: parse_tagger(parts[4], parts[5], parts[6]), message: parse_message(parts[3], parts[7])
         )
       end
 
-      # Parse an optional field, returning nil if empty
+      # Build the tagger identity from the tagger name, email, and date fields
       #
-      # @param value [String] the field value
+      # Git emits empty strings for all three fields when there is no tag object
+      # (lightweight tags) or the tag object has no tagger header, in which case
+      # the tagger is nil. Otherwise the angle brackets git wraps around
+      # `%(taggeremail)` are stripped and the strict ISO 8601
+      # `%(taggerdate:iso8601-strict)` value is parsed into a `Time` that
+      # preserves the UTC offset. A partially populated identity (for example an
+      # empty name with an email and date) is kept as emitted rather than dropped,
+      # and an empty date becomes `nil`.
       #
-      # @return [String, nil] the value or nil if empty
+      # @example An annotated tag's tagger
+      #   parse_tagger('John Doe', '<john@example.com>', '2024-01-15T10:30:00-08:00')
+      #   #=> #<data Git::AuthorInfo name="John Doe", email="john@example.com", ...>
       #
-      def parse_optional_field(value)
-        value.empty? ? nil : value
+      # @example A lightweight tag has no tagger
+      #   parse_tagger('', '', '') #=> nil
+      #
+      # @param name [String] the `%(taggername)` field
+      #
+      # @param email [String] the `%(taggeremail)` field, including angle brackets
+      #
+      # @param date [String] the `%(taggerdate:iso8601-strict)` field
+      #
+      # @return [Git::AuthorInfo, nil] the tagger, or nil when all three fields are empty
+      #
+      # @raise [Git::UnexpectedResultError] if a non-empty date is not a valid ISO 8601
+      #   date
+      #
+      def parse_tagger(name, email, date)
+        return nil if [name, email, date].all?(&:empty?)
+
+        Git::AuthorInfo.new(
+          name: name,
+          email: email.delete_prefix('<').delete_suffix('>'),
+          date: date.empty? ? nil : parse_date(date)
+        )
+      end
+
+      # Parse a `%(taggerdate:iso8601-strict)` field into a Time
+      #
+      # @param date [String] the date field in strict ISO 8601 format
+      #
+      # @return [Time] the parsed time, preserving the UTC offset
+      #
+      # @raise [Git::UnexpectedResultError] if the field is not a valid ISO 8601 date
+      #
+      def parse_date(date)
+        Time.iso8601(date)
+      rescue ArgumentError => e
+        raise Git::UnexpectedResultError,
+              "Unexpected tagger date #{date.inspect} in output from `git tag --list`: #{e.message}"
       end
 
       # Parse message field, returning nil for lightweight tags or empty messages

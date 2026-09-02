@@ -217,16 +217,6 @@ RSpec.describe Git::Parsers::Tag do
     end
   end
 
-  describe '.parse_optional_field' do
-    it 'returns value for non-empty string' do
-      expect(described_class.parse_optional_field('John Doe')).to eq('John Doe')
-    end
-
-    it 'returns nil for empty string' do
-      expect(described_class.parse_optional_field('')).to be_nil
-    end
-  end
-
   describe '.parse_message' do
     it 'returns message for annotated tag' do
       expect(described_class.parse_message('tag', 'Release notes')).to eq('Release notes')

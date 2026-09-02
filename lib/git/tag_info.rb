@@ -11,19 +11,25 @@ module Git
   # commands. It contains only the data parsed from git output without any
   # repository context or operations.
   #
+  # The tagger identity is a nested {Git::AuthorInfo}. Its `date` is a `Time`
+  # parsed from git's strict ISO 8601 output, not an ISO 8601 string.
+  #
   # @example Annotated tag
   #   info = Git::TagInfo.new(
   #     name: 'v1.0.0',
   #     oid: 'abc123def456',        # tag object's ID
   #     target_oid: 'def456abc789', # commit it points to
   #     objecttype: 'tag',
-  #     tagger_name: 'John Doe',
-  #     tagger_email: '<john@example.com>',
-  #     tagger_date: '2024-01-15T10:30:00-08:00',
+  #     tagger: Git::AuthorInfo.new(
+  #       name: 'John Doe',
+  #       email: 'john@example.com',
+  #       date: Time.iso8601('2024-01-15T10:30:00-08:00')
+  #     ),
   #     message: 'Release version 1.0.0'
   #   )
   #   info.annotated?   #=> true
   #   info.tagger.name  #=> 'John Doe'
+  #   info.tagger.date  #=> 2024-01-15 10:30:00 -0800
   #
   # @example Lightweight tag
   #   info = Git::TagInfo.new(
@@ -31,9 +37,7 @@ module Git
   #     oid: nil,                   # no tag object exists
   #     target_oid: 'def456abc789', # commit ID
   #     objecttype: 'commit',
-  #     tagger_name: nil,
-  #     tagger_email: nil,
-  #     tagger_date: nil,
+  #     tagger: nil,
   #     message: nil
   #   )
   #   info.lightweight?  #=> true
@@ -42,6 +46,8 @@ module Git
   # @see Git::Tag for the full-featured tag object with operations
   #
   # @see Git::Commands::Tag::List for the command that produces these
+  #
+  # @see Git::AuthorInfo for the nested tagger identity
   #
   # @api public
   #
@@ -67,19 +73,18 @@ module Git
   # @!attribute [r] objecttype
   #   @return [String] 'tag' for annotated tags, 'commit' for lightweight tags
   #
-  # @!attribute [r] tagger_name
-  #   @return [String, nil] the tagger's name, or nil for lightweight tags
+  # @!attribute [r] tagger
+  #   The identity of the person who created the tag object.
   #
-  # @!attribute [r] tagger_email
-  #   @return [String, nil] the tagger's email, or nil for lightweight tags
+  #   Lightweight tags have no tag object and therefore no tagger. The nested
+  #   `email` has no angle brackets and the nested `date` is a `Time`.
   #
-  # @!attribute [r] tagger_date
-  #   @return [String, nil] the tag date in ISO 8601 format, or nil for lightweight tags
+  #   @return [Git::AuthorInfo, nil] the tagger, or nil for lightweight tags
   #
   # @!attribute [r] message
   #   @return [String, nil] the tag message, or nil for lightweight tags
   #
-  TagInfo = Data.define(:name, :oid, :target_oid, :objecttype, :tagger_name, :tagger_email, :tagger_date, :message) do
+  TagInfo = Data.define(:name, :oid, :target_oid, :objecttype, :tagger, :message) do
     # @return [Boolean] true if this is an annotated tag (oid is present)
     def annotated?
       !oid.nil?
@@ -88,19 +93,6 @@ module Git
     # @return [Boolean] true if this is a lightweight tag (oid is nil)
     def lightweight?
       oid.nil?
-    end
-
-    # Return the tagger as an immutable Git::AuthorInfo object
-    #
-    # @return [Git::AuthorInfo, nil] the tagger, or nil for lightweight tags
-    def tagger
-      return nil unless annotated? && tagger_name && tagger_email
-
-      Git::AuthorInfo.new(
-        name: tagger_name,
-        email: tagger_email.gsub(/\A<|>\z/, ''), # remove angle brackets if present
-        date: tagger_date && Time.iso8601(tagger_date)
-      )
     end
   end
 end

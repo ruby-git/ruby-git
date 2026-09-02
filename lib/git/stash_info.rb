@@ -1,13 +1,19 @@
 # frozen_string_literal: true
 
+require 'time'
+
+require 'git/author_info'
+
 module Git
   # Immutable value object representing stash entry information
   #
   # StashInfo encapsulates the parsed data from `git stash list` output.
   # Each entry contains comprehensive information about the stash including
-  # its index, reference name, commit SHA, branch, message, author/committer
-  # details, and timestamps.
+  # its index, reference name, commit SHA, branch, message, and the author and
+  # committer identities.
   #
+  # The author and committer are nested {Git::AuthorInfo} values. Their `date`
+  # is a `Time` parsed from git's ISO 8601 output, not an ISO 8601 string.
   #
   # @example Create a StashInfo from parsed stash list output
   #   info = Git::StashInfo.new(
@@ -17,12 +23,16 @@ module Git
   #     short_oid: 'abc123d',
   #     branch: 'main',
   #     message: 'WIP on main: abc123 Initial commit',
-  #     author_name: 'Jane Doe',
-  #     author_email: 'jane@example.com',
-  #     author_date: '2026-01-24T10:30:00-08:00',
-  #     committer_name: 'Jane Doe',
-  #     committer_email: 'jane@example.com',
-  #     committer_date: '2026-01-24T10:30:00-08:00'
+  #     author: Git::AuthorInfo.new(
+  #       name: 'Jane Doe',
+  #       email: 'jane@example.com',
+  #       date: Time.iso8601('2026-01-24T10:30:00-08:00')
+  #     ),
+  #     committer: Git::AuthorInfo.new(
+  #       name: 'Jane Doe',
+  #       email: 'jane@example.com',
+  #       date: Time.iso8601('2026-01-24T10:30:00-08:00')
+  #     )
   #   )
   #
   #   info.index           # => 0
@@ -31,12 +41,12 @@ module Git
   #   info.short_oid       # => 'abc123d'
   #   info.branch          # => 'main'
   #   info.message         # => 'WIP on main: abc123 Initial commit'
-  #   info.author_name     # => 'Jane Doe'
-  #   info.author_email    # => 'jane@example.com'
-  #   info.author_date     # => '2026-01-24T10:30:00-08:00'
-  #   info.committer_name  # => 'Jane Doe'
-  #   info.committer_email # => 'jane@example.com'
-  #   info.committer_date  # => '2026-01-24T10:30:00-08:00'
+  #   info.author.name     # => 'Jane Doe'
+  #   info.author.email    # => 'jane@example.com'
+  #   info.author.date     # => 2026-01-24 10:30:00 -0800
+  #   info.committer.name  # => 'Jane Doe'
+  #
+  # @see Git::AuthorInfo for the nested author and committer identities
   #
   # @api public
   #
@@ -59,23 +69,15 @@ module Git
   # @!attribute [r] message
   #   @return [String] the stash message (e.g., 'WIP on main: abc123 commit msg')
   #
-  # @!attribute [r] author_name
-  #   @return [String] the name of the stash author
+  # @!attribute [r] author
+  #   The identity of the stash author; the nested `date` is a `Time`.
   #
-  # @!attribute [r] author_email
-  #   @return [String] the email of the stash author
+  #   @return [Git::AuthorInfo] the author of the stash commit
   #
-  # @!attribute [r] author_date
-  #   @return [String] the author date in ISO 8601 format
+  # @!attribute [r] committer
+  #   The identity of the stash committer; the nested `date` is a `Time`.
   #
-  # @!attribute [r] committer_name
-  #   @return [String] the name of the stash committer
-  #
-  # @!attribute [r] committer_email
-  #   @return [String] the email of the stash committer
-  #
-  # @!attribute [r] committer_date
-  #   @return [String] the committer date in ISO 8601 format
+  #   @return [Git::AuthorInfo] the committer of the stash commit
   #
   StashInfo = Data.define(
     :index,
@@ -84,12 +86,8 @@ module Git
     :short_oid,
     :branch,
     :message,
-    :author_name,
-    :author_email,
-    :author_date,
-    :committer_name,
-    :committer_email,
-    :committer_date
+    :author,
+    :committer
   ) do
     # Returns the stash reference name
     #

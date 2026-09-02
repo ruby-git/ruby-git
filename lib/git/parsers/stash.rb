@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'time'
+
+require 'git/author_info'
 require 'git/stash_info'
 
 module Git
@@ -45,10 +48,10 @@ module Git
       # %gs = reflog subject (the stash message)
       # %an = author name
       # %ae = author email
-      # %aI = author date (ISO 8601 format)
+      # %aI = author date (ISO 8601 format, parsed into a Time)
       # %cn = committer name
       # %ce = committer email
-      # %cI = committer date (ISO 8601 format)
+      # %cI = committer date (ISO 8601 format, parsed into a Time)
       STASH_FORMAT = [
         '%H',  # 0: full SHA
         '%h',  # 1: short SHA
@@ -163,7 +166,7 @@ module Git
       # @return [Hash] attributes for StashInfo.new
       #
       def stash_info_attrs(parts, index)
-        core_attrs(parts, index).merge(author_attrs(parts)).merge(committer_attrs(parts))
+        core_attrs(parts, index).merge(author: author_info(parts), committer: committer_info(parts))
       end
 
       # Build core StashInfo attributes from parsed fields
@@ -182,30 +185,60 @@ module Git
         }
       end
 
-      # Build author-related StashInfo attributes from parsed fields
+      # Build the author identity from the parsed fields
       #
       # @param parts [Array<String>] the parsed format fields
       #
-      # @return [Hash<Symbol, String>] author attributes for StashInfo.new
+      # @return [Git::AuthorInfo] the stash author; its `date` is a `Time`
       #
-      def author_attrs(parts)
-        {
-          author_name: parts[Fields::AUTHOR_NAME], author_email: parts[Fields::AUTHOR_EMAIL],
-          author_date: parts[Fields::AUTHOR_DATE]
-        }
+      def author_info(parts)
+        build_author_info(parts[Fields::AUTHOR_NAME], parts[Fields::AUTHOR_EMAIL], parts[Fields::AUTHOR_DATE])
       end
 
-      # Build committer-related StashInfo attributes from parsed fields
+      # Build the committer identity from the parsed fields
       #
       # @param parts [Array<String>] the parsed format fields
       #
-      # @return [Hash<Symbol, String>] committer attributes for StashInfo.new
+      # @return [Git::AuthorInfo] the stash committer; its `date` is a `Time`
       #
-      def committer_attrs(parts)
-        {
-          committer_name: parts[Fields::COMMITTER_NAME], committer_email: parts[Fields::COMMITTER_EMAIL],
-          committer_date: parts[Fields::COMMITTER_DATE]
-        }
+      def committer_info(parts)
+        build_author_info(
+          parts[Fields::COMMITTER_NAME], parts[Fields::COMMITTER_EMAIL], parts[Fields::COMMITTER_DATE]
+        )
+      end
+
+      # Build a Git::AuthorInfo from identity fields
+      #
+      # The date is parsed with `Time.iso8601`, so the UTC offset git emits for
+      # `%aI` and `%cI` is preserved in the resulting `Time`.
+      #
+      # @param name [String] the `%an` or `%cn` field
+      #
+      # @param email [String] the `%ae` or `%ce` field
+      #
+      # @param date [String] the `%aI` or `%cI` field in ISO 8601 format
+      #
+      # @return [Git::AuthorInfo] the identity with `date` as a `Time`
+      #
+      # @raise [Git::UnexpectedResultError] if the date is not a valid ISO 8601 date
+      #
+      def build_author_info(name, email, date)
+        Git::AuthorInfo.new(name: name, email: email, date: parse_date(date))
+      end
+
+      # Parse a `%aI` or `%cI` field into a Time
+      #
+      # @param date [String] the date field in ISO 8601 format
+      #
+      # @return [Time] the parsed time, preserving the UTC offset
+      #
+      # @raise [Git::UnexpectedResultError] if the field is not a valid ISO 8601 date
+      #
+      def parse_date(date)
+        Time.iso8601(date)
+      rescue ArgumentError => e
+        raise Git::UnexpectedResultError,
+              "Unexpected date #{date.inspect} in output from `git stash list`: #{e.message}"
       end
 
       # Extract the stash index from a reflog selector
