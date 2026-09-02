@@ -19,6 +19,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
     - [`Git::Author` deprecated](#gitauthor-deprecated)
     - [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated)
+    - [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated)
 
 ## Upgrading to v5.x
 
@@ -242,7 +243,7 @@ shim cannot forward them). Update call sites directly:
 
 | v4.x call | Notes |
 |-----------|-------|
-| `g.lib.list_files(ref_dir)` | Walked `.git/refs/` directly. Use `g.branches`, `g.tags`, or `g.remotes` instead. |
+| `g.lib.list_files(ref_dir)` | Walked `.git/refs/` directly. Use `g.branches`, `g.tags`, or `g.remote_list` instead. |
 
 ##### Internal plumbing methods (no replacement)
 
@@ -417,5 +418,44 @@ conversion.
 | `g.branch(name).stashes.apply` | `g.stash_apply` |
 | `g.branch(name).stashes.apply(i)` (`0` = newest) | `g.stash_apply(i)` |
 | `g.branch(name).stashes.clear` | `g.stash_clear` |
+#### `Git::Repository#remotes` deprecated
+
+`Git::Repository#remotes` is deprecated in favor of `Git::Repository#remote_list`
+and is removed in v6.0.0. Calling `remotes` emits a deprecation warning; its
+return value is unchanged.
+
+> **Return type change:** `remotes` returns `Array<Git::Remote>` — mutable
+> objects with `name`, `url`, and `fetch_opts` accessors and `fetch`, `merge`,
+> `branch`, and `remove` operations. `remote_list` returns
+> `Array<Git::RemoteInfo>` — immutable value objects read from the repository's
+> git config, with fields such as `name`, `url`, `push_url`, `fetch`, and `push`.
+> Because a remote may carry more than one URL or refspec, `url`, `push_url`,
+> `fetch`, and `push` are always frozen `Array<String>`. When a remote has more
+> than one URL, git fetches from the first; the legacy `Git::Remote#url` returned
+> the last one configured, so use `r.url.last` to reproduce that exact value.
+> Likewise, `Git::Remote#fetch_opts` returned only the last configured fetch
+> refspec, while `fetch` holds all of them. Operations that lived on
+> `Git::Remote` are called on the repository with the remote name instead.
+>
+> **Order change:** `remotes` lists remotes in the order `git remote` prints
+> them, while `remote_list` keeps the order in which remotes first appear in the
+> config. When the legacy order matters, iterate `g.remote_names` (the same
+> `git remote` order) or sort `g.remote_list` explicitly.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.remotes` | `g.remote_list` — returns `Array<Git::RemoteInfo>` |
+| `g.remotes.map(&:name)` | `g.remote_list.map(&:name)` or `g.remote_names` |
+| `g.remotes.map(&:to_s)` | `g.remote_list.map(&:name)` — `Git::RemoteInfo#to_s` is not the name |
+| `g.remotes.map(&:url)` | `g.remote_list.map { \|r\| r.url.first }` — `url` is an `Array<String>` |
+| `g.remotes.map(&:fetch_opts)` | `g.remote_list.map { \|r\| r.fetch.last }` — `fetch` holds every refspec |
+| `g.remotes.each(&:fetch)` | `g.remote_names.each { \|name\| g.fetch(name) }` — same order as `remotes` |
+| `remote.fetch` | `g.fetch(remote.name)` |
+| `remote.fetch(opts)` | `g.fetch(remote.name, opts)` — same options hash |
+| `remote.merge` | `g.merge("#{remote.name}/#{g.current_branch}")` |
+| `remote.merge(branch)` | `g.merge("#{remote.name}/#{branch}")` |
+| `remote.branch` | `g.branch("#{remote.name}/#{g.current_branch}")` |
+| `remote.branch(name)` | `g.branch("#{remote.name}/#{name}")` |
+| `remote.remove` | `g.remote_remove(remote.name)` |
 
 ---
