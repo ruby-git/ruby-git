@@ -244,6 +244,150 @@ RSpec.describe Git::Repository::Merging do
   end
 
   # ---------------------------------------------------------------------------
+  # #merge_into
+  # ---------------------------------------------------------------------------
+  #
+  # merge_into orchestrates sibling facade methods (current_branch_state,
+  # rev_parse, checkout, merge) rather than a command class directly, so the
+  # sibling methods are stubbed on the repository instance (a verified partial
+  # double) and the contract asserted is the sequence and arguments of those
+  # calls. merge_into validates its own options (a stricter whitelist than
+  # #merge) before any checkout, and that validation is covered below.
+
+  describe '#merge_into' do
+    subject(:result) { described_instance.merge_into(*merge_into_args) }
+
+    let(:merge_into_args) { %w[main feature] }
+    let(:head_state) { Git::Repository::Branching::HeadState.new(state: :active, name: 'work') }
+    let(:merge_stdout) { "Merge made by the 'ort' strategy.\n" }
+
+    before do
+      allow(described_instance).to receive(:local_branch?).with('main').and_return(true)
+      allow(described_instance).to receive(:current_branch_state).and_return(head_state)
+      allow(described_instance).to receive(:checkout).and_return('')
+      allow(described_instance).to receive(:merge).and_return(merge_stdout)
+    end
+
+    it 'verifies the target exists, checks it out, merges, then restores the original branch' do
+      expect(described_instance).to receive(:local_branch?).with('main').and_return(true).ordered
+      expect(described_instance).to receive(:checkout).with('main').and_return('').ordered
+      expect(described_instance).to receive(:merge).with('feature', nil, {}).and_return(merge_stdout).ordered
+      expect(described_instance).to receive(:checkout).with('work').and_return('').ordered
+      result
+    end
+
+    context 'with a message and options' do
+      let(:merge_into_args) { ['main', 'feature', 'Merge feature into main', { no_ff: true }] }
+
+      it 'forwards the message and options to #merge' do
+        expect(described_instance)
+          .to receive(:merge).with('feature', 'Merge feature into main', { no_ff: true }).and_return(merge_stdout)
+        result
+      end
+    end
+
+    context 'with an Array of branches' do
+      let(:merge_into_args) { ['main', %w[feature-a feature-b]] }
+
+      it 'forwards the Array unchanged to #merge' do
+        expect(described_instance).to receive(:merge).with(%w[feature-a feature-b], nil, {}).and_return(merge_stdout)
+        result
+      end
+    end
+
+    it "returns git's stdout from the merge" do
+      expect(result).to eq(merge_stdout)
+    end
+
+    context 'when HEAD is detached' do
+      let(:head_state) { Git::Repository::Branching::HeadState.new(state: :detached, name: 'HEAD') }
+
+      before do
+        allow(described_instance).to receive(:rev_parse).with('HEAD').and_return("abc123\n")
+      end
+
+      it 'restores the original commit by SHA rather than by branch name' do
+        expect(described_instance).to receive(:checkout).with('main').and_return('').ordered
+        expect(described_instance).to receive(:merge).and_return(merge_stdout).ordered
+        expect(described_instance).to receive(:checkout).with('abc123').and_return('').ordered
+        result
+      end
+    end
+
+    context 'when HEAD is on an unborn branch' do
+      let(:head_state) { Git::Repository::Branching::HeadState.new(state: :unborn, name: 'work') }
+
+      it 'raises Git::Error without checking out the target branch' do
+        expect(described_instance).not_to receive(:checkout)
+        expect { result }.to raise_error(Git::Error, /unborn branch 'work'/)
+      end
+    end
+
+    context 'when the merge fails' do
+      let(:merge_error) { Git::FailedError.new(command_result('', stderr: 'CONFLICT (content)', exitstatus: 1)) }
+
+      before do
+        allow(described_instance).to receive(:merge).and_raise(merge_error)
+      end
+
+      it 'propagates the error without restoring the original branch' do
+        expect(described_instance).not_to receive(:checkout).with('work')
+        expect { result }.to raise_error(Git::FailedError, /CONFLICT/)
+      end
+    end
+
+    context 'with an empty Array of branches' do
+      let(:merge_into_args) { ['main', []] }
+
+      it 'raises ArgumentError without checking anything out or merging' do
+        expect(described_instance).not_to receive(:checkout)
+        expect(described_instance).not_to receive(:merge)
+        expect { result }.to raise_error(ArgumentError, /at least one branch to merge is required/)
+      end
+    end
+
+    context 'with a nil branch' do
+      let(:merge_into_args) { ['main', nil] }
+
+      it 'raises ArgumentError without checking anything out or merging' do
+        expect(described_instance).not_to receive(:checkout)
+        expect(described_instance).not_to receive(:merge)
+        expect { result }.to raise_error(ArgumentError, /at least one branch to merge is required/)
+      end
+    end
+
+    context 'when target_branch is not an existing local branch' do
+      before do
+        allow(described_instance).to receive(:local_branch?).with('main').and_return(false)
+      end
+
+      it 'raises ArgumentError without checking anything out or merging' do
+        expect(described_instance).not_to receive(:checkout)
+        expect(described_instance).not_to receive(:merge)
+        expect { result }.to raise_error(ArgumentError, /'main' is not an existing local branch/)
+      end
+    end
+
+    context 'with an unknown option' do
+      let(:merge_into_args) { ['main', 'feature', nil, { bogus: true }] }
+
+      it 'raises ArgumentError without checking out the target branch' do
+        expect(described_instance).not_to receive(:checkout)
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+    end
+
+    context 'with no_commit: true' do
+      let(:merge_into_args) { ['main', 'feature', nil, { no_commit: true }] }
+
+      it 'raises ArgumentError without checking out the target branch' do
+        expect(described_instance).not_to receive(:checkout)
+        expect { result }.to raise_error(ArgumentError, /Unknown options: no_commit/)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #merge_base
   # ---------------------------------------------------------------------------
 

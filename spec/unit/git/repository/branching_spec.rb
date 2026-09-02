@@ -1382,4 +1382,154 @@ RSpec.describe Git::Repository::Branching do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #in_branch
+  # ---------------------------------------------------------------------------
+  #
+  # in_branch orchestrates sibling facade methods (current_branch_state,
+  # rev_parse, checkout, commit_all, reset) rather than a command class
+  # directly, so the sibling methods are stubbed on the repository instance (a
+  # verified partial double) and the contract asserted is the sequence and
+  # arguments of those calls.
+
+  describe '#in_branch' do
+    subject(:result) { described_instance.in_branch(*in_branch_args, &in_branch_block) }
+
+    let(:in_branch_args) { ['feature', 'my message'] }
+    let(:in_branch_block) { proc { true } }
+    let(:head_state) { Git::Repository::Branching::HeadState.new(state: :active, name: 'main') }
+    let(:restore_stdout) { "Switched to branch 'main'\n" }
+
+    before do
+      allow(described_instance).to receive(:local_branch?).with('feature').and_return(true)
+      allow(described_instance).to receive(:current_branch_state).and_return(head_state)
+      allow(described_instance).to receive(:checkout).and_return('')
+      allow(described_instance).to receive(:checkout).with('main').and_return(restore_stdout)
+      allow(described_instance).to receive(:commit_all).and_return('')
+      allow(described_instance).to receive(:reset).and_return('')
+    end
+
+    context 'when the block returns a truthy value' do
+      it 'commits all changes with the given message' do
+        expect(described_instance).to receive(:commit_all).with('my message').and_return('')
+        result
+      end
+
+      it 'does not reset the working tree' do
+        expect(described_instance).not_to receive(:reset)
+        result
+      end
+
+      context 'when the commit fails' do
+        let(:commit_error) { Git::FailedError.new(command_result('', stderr: 'fatal: commit failed', exitstatus: 1)) }
+
+        before do
+          allow(described_instance).to receive(:commit_all).and_raise(commit_error)
+        end
+
+        it 'propagates the error without restoring the original branch' do
+          expect(described_instance).not_to receive(:checkout).with('main')
+          expect { result }.to raise_error(Git::FailedError, /commit failed/)
+        end
+      end
+    end
+
+    context 'when the block returns a falsy value' do
+      let(:in_branch_block) { proc { false } }
+
+      it 'hard-resets the working tree' do
+        expect(described_instance).to receive(:reset).with(nil, hard: true).and_return('')
+        result
+      end
+
+      it 'does not commit' do
+        expect(described_instance).not_to receive(:commit_all)
+        result
+      end
+
+      context 'when the reset fails' do
+        let(:reset_error) { Git::FailedError.new(command_result('', stderr: 'fatal: reset failed', exitstatus: 1)) }
+
+        before do
+          allow(described_instance).to receive(:reset).and_raise(reset_error)
+        end
+
+        it 'propagates the error without restoring the original branch' do
+          expect(described_instance).not_to receive(:checkout).with('main')
+          expect { result }.to raise_error(Git::FailedError, /reset failed/)
+        end
+      end
+    end
+
+    context 'when the block raises' do
+      let(:in_branch_block) { proc { raise 'block failed' } }
+
+      it 'propagates the error without committing, resetting, or restoring the original branch' do
+        expect(described_instance).not_to receive(:commit_all)
+        expect(described_instance).not_to receive(:reset)
+        expect(described_instance).not_to receive(:checkout).with('main')
+        expect { result }.to raise_error(RuntimeError, /block failed/)
+      end
+    end
+
+    context 'with no message argument' do
+      let(:in_branch_args) { ['feature'] }
+
+      it "commits with the default message 'in branch work'" do
+        expect(described_instance).to receive(:commit_all).with('in branch work').and_return('')
+        result
+      end
+    end
+
+    it 'verifies the branch exists, checks it out, yields, then restores the original branch' do
+      expect(described_instance).to receive(:local_branch?).with('feature').and_return(true).ordered
+      expect(described_instance).to receive(:checkout).with('feature').and_return('').ordered
+      expect(described_instance).to receive(:commit_all).with('my message').and_return('').ordered
+      expect(described_instance).to receive(:checkout).with('main').and_return(restore_stdout).ordered
+      result
+    end
+
+    it 'yields control to the block once' do
+      expect { |b| described_instance.in_branch('feature', 'my message', &b) }.to yield_control.once
+    end
+
+    it "returns git's stdout from the checkout back to the original branch" do
+      expect(result).to eq(restore_stdout)
+    end
+
+    context 'when HEAD is detached' do
+      let(:head_state) { Git::Repository::Branching::HeadState.new(state: :detached, name: 'HEAD') }
+
+      before do
+        allow(described_instance).to receive(:rev_parse).with('HEAD').and_return("abc123\n")
+      end
+
+      it 'restores the original commit by SHA rather than by branch name' do
+        expect(described_instance).to receive(:checkout).with('feature').and_return('').ordered
+        expect(described_instance).to receive(:checkout).with('abc123').and_return('').ordered
+        result
+      end
+    end
+
+    context 'when HEAD is on an unborn branch' do
+      let(:head_state) { Git::Repository::Branching::HeadState.new(state: :unborn, name: 'main') }
+
+      it 'raises Git::Error without checking out the target branch' do
+        expect(described_instance).not_to receive(:checkout)
+        expect { result }.to raise_error(Git::Error, /unborn branch 'main'/)
+      end
+    end
+
+    context 'when the branch is not an existing local branch' do
+      before do
+        allow(described_instance).to receive(:local_branch?).with('feature').and_return(false)
+      end
+
+      it 'raises ArgumentError without checking anything out' do
+        expect(described_instance).not_to receive(:checkout)
+        expect { result }.to raise_error(ArgumentError, /'feature' is not an existing local branch/)
+      end
+    end
+  end
 end

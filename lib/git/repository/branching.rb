@@ -187,6 +187,73 @@ module Git
         Git::Commands::Checkout::Branch.new(@execution_context).call(target, **translated_opts).stdout
       end
 
+      # Run a block with the given branch checked out, then restore the original branch
+      #
+      # Records the current branch (or the current commit when HEAD is detached),
+      # checks out `branch`, and yields to the block. If the block returns a truthy
+      # value, all pending changes are committed with `message` (see
+      # {#commit_all}); if it returns a falsy value, the index and working tree are
+      # hard-reset instead (see {#reset}). The original branch or commit is then
+      # checked out again. The hard reset discards changes to tracked files only;
+      # untracked files created by the block are left in place.
+      #
+      # Unlike `Git::Branch#in_branch`, this method does not create `branch`. The
+      # branch must be an existing local branch. Unlike {#checkout}, a commit SHA,
+      # tag, or remote-tracking branch is rejected before any checkout happens:
+      # those detach HEAD, and a commit made there would be left dangling once the
+      # original branch is restored. HEAD must
+      # be on a branch with at least one commit, or detached: an unborn branch (no
+      # commits yet) cannot be checked out again by name, so it is rejected before
+      # any checkout happens.
+      #
+      # **Note:** the restore checkout is not wrapped in `ensure`. If the block,
+      # the commit, or the reset raises an exception, the repository is left
+      # checked out on `branch` rather than restored to the original branch.
+      #
+      # @example Commit a new file on a feature branch
+      #   repo.in_branch('feature', 'Add README') do
+      #     File.write('README.md', '# Hello')
+      #     repo.add('README.md')
+      #     true  # commit and return to the original branch
+      #   end
+      #
+      # @example Discard experimental changes to a tracked file
+      #   repo.in_branch('scratch') do
+      #     File.write('README.md', '# Try something')
+      #     false  # hard-reset and return to the original branch
+      #   end
+      #
+      # @param branch [String] the name of an existing local branch to check out
+      #
+      # @param message [String] the commit message used when the block returns a
+      #   truthy value
+      #
+      # @return [String] git's stdout from the final checkout back to the original
+      #   branch or commit
+      #
+      # @raise [ArgumentError] if `branch` is not an existing local branch
+      #
+      # @raise [Git::Error] if HEAD is on an unborn branch
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @yield executes the block with `branch` checked out
+      #
+      # @yieldreturn [Object] a truthy value to commit all changes, a falsy value to
+      #   hard-reset
+      #
+      def in_branch(branch, message = 'in branch work')
+        SharedPrivate.assert_local_branch!(self, branch)
+        restore_point = SharedPrivate.head_restore_point(self)
+        checkout(branch)
+        if yield
+          commit_all(message)
+        else
+          reset(nil, hard: true)
+        end
+        checkout(restore_point)
+      end
+
       # Populate the working tree from the index
       #
       # @example Check out all files from the index

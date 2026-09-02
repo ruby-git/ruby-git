@@ -436,4 +436,110 @@ RSpec.describe Git::Repository::Branching, :integration do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #in_branch
+  # ---------------------------------------------------------------------------
+  #
+  # in_branch is a multi-command orchestration (checkout, yield, commit or reset,
+  # checkout back), so integration tests confirm the documented end state of the
+  # repository against real git: where HEAD ends up and what landed on the target
+  # branch.
+
+  describe '#in_branch' do
+    before do
+      repo.branch_new('feature')
+    end
+
+    context 'when the block returns a truthy value' do
+      it 'creates a commit on the target branch with the given message' do
+        described_instance.in_branch('feature', 'Add feature file') do
+          write_file('feature.txt', "feature content\n")
+          repo.add('feature.txt')
+          true
+        end
+
+        expect(repo.gcommit('feature').message).to eq('Add feature file')
+        expect(repo.revparse('feature')).not_to eq(repo.revparse('main'))
+      end
+
+      it 'leaves HEAD on the original branch' do
+        described_instance.in_branch('feature', 'Add feature file') do
+          write_file('feature.txt', "feature content\n")
+          repo.add('feature.txt')
+          true
+        end
+
+        expect(described_instance.current_branch).to eq('main')
+      end
+    end
+
+    context 'when the block returns a falsy value' do
+      it 'discards the working tree change' do
+        described_instance.in_branch('feature') do
+          write_file('README.md', "# Changed\n")
+          false
+        end
+
+        expect(read_file('README.md')).to eq("# Hello\n")
+      end
+
+      it 'does not create a commit on the target branch' do
+        described_instance.in_branch('feature') do
+          write_file('README.md', "# Changed\n")
+          false
+        end
+
+        expect(repo.revparse('feature')).to eq(repo.revparse('main'))
+      end
+
+      it 'leaves HEAD on the original branch' do
+        described_instance.in_branch('feature') do
+          write_file('README.md', "# Changed\n")
+          false
+        end
+
+        expect(described_instance.current_branch).to eq('main')
+      end
+    end
+
+    context 'when HEAD is detached' do
+      let!(:original_sha) { repo.revparse('HEAD') }
+
+      before do
+        repo.checkout(original_sha)
+      end
+
+      it 'restores the detached HEAD to the original commit' do
+        described_instance.in_branch('feature', 'Add feature file') do
+          write_file('feature.txt', "feature content\n")
+          repo.add('feature.txt')
+          true
+        end
+
+        expect(described_instance.current_branch).to eq('HEAD')
+        expect(repo.revparse('HEAD')).to eq(original_sha)
+      end
+    end
+
+    context 'when branch is a commit SHA rather than a local branch' do
+      it 'raises ArgumentError and leaves HEAD on the original branch' do
+        expect { described_instance.in_branch(repo.revparse('feature')) { true } }
+          .to raise_error(ArgumentError, /is not an existing local branch/)
+        expect(described_instance.current_branch).to eq('main')
+      end
+    end
+
+    context 'when HEAD is on an unborn branch' do
+      before do
+        repo.checkout('scratch', orphan: true)
+      end
+
+      it 'raises Git::Error and leaves HEAD on the unborn branch' do
+        expect { described_instance.in_branch('feature') { true } }
+          .to raise_error(Git::Error, /unborn branch 'scratch'/)
+        expect(described_instance.current_branch_state).to have_attributes(state: :unborn, name: 'scratch')
+      end
+    end
+  end
 end

@@ -54,6 +54,98 @@ RSpec.describe Git::Repository::Merging, :integration do
   end
 
   # ---------------------------------------------------------------------------
+  # #merge_into
+  # ---------------------------------------------------------------------------
+  #
+  # merge_into is a multi-command orchestration (checkout, merge, checkout back),
+  # so integration tests confirm the documented end state against real git: the
+  # target branch receives the merge and HEAD is restored to the original branch.
+
+  describe '#merge_into' do
+    before do
+      # A commit on feature that main does not have
+      repo.branch_new('feature')
+      repo.checkout('feature')
+      write_file('feature.txt', "feature content\n")
+      repo.add('feature.txt')
+      repo.commit('Add feature.txt')
+
+      # Do the merge from a third branch so the restore is observable
+      repo.checkout('main')
+      repo.branch_new('work')
+      repo.checkout('work')
+    end
+
+    it 'merges the source branch into the target branch' do
+      described_instance.merge_into('main', 'feature')
+
+      expect(repo.revparse('main')).to eq(repo.revparse('feature'))
+    end
+
+    it 'leaves the original branch checked out' do
+      described_instance.merge_into('main', 'feature')
+
+      expect(described_instance.current_branch).to eq('work')
+    end
+
+    it 'does not bring the merged content into the original branch' do
+      described_instance.merge_into('main', 'feature')
+
+      expect(file_exist?('feature.txt')).to be(false)
+    end
+
+    it "returns git's stdout from the merge" do
+      expect(described_instance.merge_into('main', 'feature')).to be_a(String)
+    end
+
+    context 'with a message and no_ff: true' do
+      it 'records a merge commit with the message on the target branch' do
+        described_instance.merge_into('main', 'feature', 'Merge feature into main', no_ff: true)
+
+        expect(repo.gcommit('main').message).to eq('Merge feature into main')
+      end
+    end
+
+    context 'when HEAD is detached' do
+      let!(:original_sha) { repo.revparse('HEAD') }
+
+      before do
+        repo.checkout(original_sha)
+      end
+
+      it 'merges into the target and restores the detached HEAD to the original commit' do
+        described_instance.merge_into('main', 'feature')
+
+        expect(repo.revparse('main')).to eq(repo.revparse('feature'))
+        expect(described_instance.current_branch).to eq('HEAD')
+        expect(repo.revparse('HEAD')).to eq(original_sha)
+      end
+    end
+
+    context 'when target_branch is a commit SHA rather than a local branch' do
+      it 'raises ArgumentError, leaves the target unchanged, and stays on the original branch' do
+        main_sha = repo.revparse('main')
+        expect { described_instance.merge_into(main_sha, 'feature') }
+          .to raise_error(ArgumentError, /is not an existing local branch/)
+        expect(repo.revparse('main')).to eq(main_sha)
+        expect(described_instance.current_branch).to eq('work')
+      end
+    end
+
+    context 'when HEAD is on an unborn branch' do
+      before do
+        repo.checkout('scratch', orphan: true)
+      end
+
+      it 'raises Git::Error and leaves HEAD on the unborn branch' do
+        expect { described_instance.merge_into('main', 'feature') }
+          .to raise_error(Git::Error, /unborn branch 'scratch'/)
+        expect(described_instance.current_branch_state).to have_attributes(state: :unborn, name: 'scratch')
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #merge_base — basic ancestor lookup
   # ---------------------------------------------------------------------------
 
