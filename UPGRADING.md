@@ -18,6 +18,7 @@ to update your code when upgrading from the preceding major version.
     - [v4.x-style configuration methods](#v4x-style-configuration-methods)
     - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
     - [`Git::Author` deprecated](#gitauthor-deprecated)
+    - [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated)
 
 ## Upgrading to v5.x
 
@@ -383,5 +384,38 @@ Constructing `Git::Author` directly emits a deprecation warning naming
 |-----------------|-------------|
 | `Git::Author.new('Name <email> 1627849923 +0200')` | `Git::AuthorInfo.parse('Name <email> 1627849923 +0200')` |
 | `author.name = 'New Name'` | `author = author.with(name: 'New Name')` (returns a new object) |
+
+#### `Git::Branch#stashes` deprecated
+
+`Git::Branch#stashes` ignores the branch it is called on and returns every stash
+in the repository, so `g.branch('feature').stashes` and `g.branch('main').stashes`
+return the same entries. Call `Git::Repository#stashes_all` instead; it is the
+query `Git::Branch#stashes` was already running.
+
+> **Return type change:** `Git::Branch#stashes` returns a `Git::Stashes`
+> collection of `Git::Stash` objects, newest first. `g.stashes_all` returns an
+> array of `[index, message]` pairs, oldest first. Code that read `stash.message`
+> from each entry should read the second element of each pair instead. Code that
+> iterated or indexed the collection must reverse the order first, because
+> `Git::Stashes` yields and indexes newest first while `g.stashes_all` is oldest
+> first.
+
+`Git::Stashes` also exposes `save`, `apply`, and `clear`. Those map to the
+repository's `stash_save`, `stash_apply`, and `stash_clear`, which are not
+deprecated. `Git::Stashes#apply(i)` already passed `i` to git as `stash@{i}`
+(`0` = newest), and `g.stash_apply(i)` does the same, so that index needs no
+conversion.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.branch(name).stashes` | `g.stashes_all` — returns `[[index, message], ...]` |
+| `g.branch(name).stashes.each { \|s\| puts s.message }` | `g.stashes_all.reverse_each { \|_index, message\| puts message }` |
+| `g.branch(name).stashes.all` | `g.stashes_all` |
+| `g.branch(name).stashes.size` | `g.stashes_all.size` |
+| `g.branch(name).stashes[i].message` (`0` = newest, `i` coerced with `to_i`) | `g.stashes_all.reverse[i.to_i][1]` |
+| `g.branch(name).stashes.save(message)` | `g.stash_save(message)` |
+| `g.branch(name).stashes.apply` | `g.stash_apply` |
+| `g.branch(name).stashes.apply(i)` (`0` = newest) | `g.stash_apply(i)` |
+| `g.branch(name).stashes.clear` | `g.stash_clear` |
 
 ---

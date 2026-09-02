@@ -437,11 +437,19 @@ RSpec.describe Git::Branch do
     end
 
     it 'returns a Git::Stashes for the branch repository' do
+      allow(Git::Deprecation).to receive(:warn)
       expect(branch.stashes).to be_a(Git::Stashes)
     end
 
     it 'memoizes the result' do
+      allow(Git::Deprecation).to receive(:warn)
       expect(branch.stashes).to be(branch.stashes)
+    end
+
+    it 'emits the deprecation warning on every call, including memoized calls' do
+      expect(Git::Deprecation).to receive(:warn).with(a_string_including('Git::Branch#stashes')).twice
+      branch.stashes
+      branch.stashes
     end
   end
 
