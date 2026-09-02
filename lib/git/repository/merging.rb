@@ -10,8 +10,8 @@ require 'git/repository/shared_private'
 
 module Git
   class Repository
-    # Facade methods for merge operations: merging branches into the current branch,
-    # and finding common ancestors between commits
+    # Facade methods for merge operations: merging branches into the current branch
+    # or into another branch, and finding common ancestors between commits
     #
     # Included by {Git::Repository}.
     #
@@ -95,6 +95,100 @@ module Git
 
         branches = Array(branch).map(&:to_s)
         Git::Commands::Merge::Start.new(@execution_context).call(*branches, no_edit: true, **opts).stdout
+      end
+
+      # Option keys accepted by {#merge_into}
+      #
+      # The keys accepted by {#merge} except `:no_commit`. A merge stopped before
+      # its commit leaves `target_branch` unchanged, and the restore checkout would
+      # carry the staged merge result onto the original branch instead.
+      MERGE_INTO_ALLOWED_OPTS = %i[no_ff m message].freeze
+      private_constant :MERGE_INTO_ALLOWED_OPTS
+
+      # Merge one or more branches into another branch without leaving the current branch
+      #
+      # Records the current branch (or the current commit when HEAD is detached),
+      # checks out `target_branch`, merges `branch` into it with {#merge}, then
+      # checks out the original branch or commit again. Use {#merge} directly when
+      # the target is the currently checked-out branch.
+      #
+      # `target_branch` must be an existing local branch. Unlike {#checkout}, a
+      # commit SHA, tag, or remote-tracking branch is rejected before any checkout
+      # happens: those detach HEAD, and the merge commit made there would be left
+      # dangling once the original branch is restored while the named ref stayed
+      # unchanged.
+      #
+      # HEAD must be on a branch with at least one commit, or detached: an unborn
+      # branch (no commits yet) cannot be checked out again by name, so it is
+      # rejected before any checkout happens.
+      #
+      # Option keys, the source list, and `target_branch` are checked before any
+      # branch is checked out, so those failures never leave the repository on
+      # `target_branch`. Anything rejected later, such as an option value that is
+      # not accepted or a source ref that does not exist, surfaces inside {#merge}
+      # after the checkout and follows the Note below.
+      #
+      # The `:no_commit` option is not accepted: a merge stopped before its commit
+      # would leave `target_branch` unchanged and the restore checkout would carry
+      # the staged result onto the original branch. To merge without committing,
+      # call {#checkout} and {#merge} directly.
+      #
+      # **Note:** the restore checkout is not wrapped in `ensure`. If the merge
+      # fails (for example, on a conflict), the repository is left checked out on
+      # `target_branch` with the merge in progress rather than restored to the
+      # original branch.
+      #
+      # @example Merge a feature branch into main while staying on the current branch
+      #   repo.merge_into('main', 'feature')
+      #
+      # @example Merge with a no-fast-forward commit message
+      #   repo.merge_into('main', 'feature', 'Merge feature into main', no_ff: true)
+      #
+      # @example Octopus merge of multiple branches into main
+      #   repo.merge_into('main', %w[feature-a feature-b])
+      #
+      # @param target_branch [String] the name of an existing local branch to
+      #   merge into
+      #
+      # @param branch [#to_s, Array<#to_s>] the branch or branches to merge into
+      #   `target_branch`; accepts the same forms as {#merge}, but must name at
+      #   least one branch
+      #
+      # @param message [String, nil] optional commit message for the merge commit;
+      #   see {#merge} for how it interacts with the `:message` and `:m` options
+      #
+      # @param opts [Hash] additional options forwarded to {#merge}
+      #
+      # @option opts [Boolean, nil] :no_ff (nil) create a merge commit even when
+      #   fast-forward is possible (`--no-ff`)
+      #
+      # @option opts [String] :message (nil) commit message; prefer the `:m` option
+      #
+      # @option opts [String] :m (nil) commit message (`-m` flag)
+      #
+      # @return [String] git's stdout from the merge command
+      #
+      # @raise [ArgumentError] when unsupported options (including `:no_commit`)
+      #   are provided
+      #
+      # @raise [ArgumentError] when `branch` is `nil` or an empty Array
+      #
+      # @raise [ArgumentError] when `target_branch` is not an existing local branch
+      #
+      # @raise [Git::Error] when HEAD is on an unborn branch
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def merge_into(target_branch, branch, message = nil, opts = {})
+        SharedPrivate.assert_valid_opts!(MERGE_INTO_ALLOWED_OPTS, **opts)
+        raise ArgumentError, 'at least one branch to merge is required' if Array(branch).empty?
+
+        SharedPrivate.assert_local_branch!(self, target_branch)
+        restore_point = SharedPrivate.head_restore_point(self)
+        checkout(target_branch)
+        output = merge(branch, message, opts)
+        checkout(restore_point)
+        output
       end
 
       # Find common ancestor commit(s) for use in a merge
