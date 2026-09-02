@@ -30,12 +30,31 @@ RSpec.describe Git::Parsers::Stash do
       expect(result[0].short_oid).to eq('abc123d')
       expect(result[0].branch).to eq('main')
       expect(result[0].message).to eq('WIP on main: def456 Initial commit')
-      expect(result[0].author_name).to eq('Jane Doe')
-      expect(result[0].author_email).to eq('jane@example.com')
-      expect(result[0].author_date).to eq('2026-01-24T10:30:00-08:00')
-      expect(result[0].committer_name).to eq('Jane Doe')
-      expect(result[0].committer_email).to eq('jane@example.com')
-      expect(result[0].committer_date).to eq('2026-01-24T10:30:00-08:00')
+      expect(result[0].author).to eq(
+        Git::AuthorInfo.new(
+          name: 'Jane Doe', email: 'jane@example.com', date: Time.iso8601('2026-01-24T10:30:00-08:00')
+        )
+      )
+      expect(result[0].committer).to eq(
+        Git::AuthorInfo.new(
+          name: 'Jane Doe', email: 'jane@example.com', date: Time.iso8601('2026-01-24T10:30:00-08:00')
+        )
+      )
+    end
+
+    it 'parses the author and committer dates into Time values that preserve the UTC offset' do
+      line = [
+        'abc123', 'abc', 'stash@{0}', 'WIP on main: msg',
+        'Jane', 'jane@ex.com', '2026-01-24T10:30:00-08:00',
+        'John', 'john@ex.com', '2026-01-24T19:30:00+01:00'
+      ].join(field_sep)
+
+      result = described_class.parse_list(line)
+
+      expect(result[0].author.date).to be_a(Time)
+      expect(result[0].author.date.utc_offset).to eq(-8 * 3600)
+      expect(result[0].committer.date).to be_a(Time)
+      expect(result[0].committer.date.utc_offset).to eq(3600)
     end
 
     it 'parses multiple stash entries' do
@@ -85,6 +104,18 @@ RSpec.describe Git::Parsers::Stash do
       expect do
         described_class.parse_list(malformed_line)
       end.to raise_error(Git::UnexpectedResultError, /Expected 10 fields/)
+    end
+
+    it 'raises UnexpectedResultError when a date field is not a valid ISO 8601 date' do
+      line = [
+        'abc123', 'abc', 'stash@{0}', 'WIP on main: msg',
+        'Jane', 'jane@ex.com', 'not-a-date',
+        'Jane', 'jane@ex.com', '2026-01-24T10:30:00Z'
+      ].join(field_sep)
+
+      expect do
+        described_class.parse_list(line)
+      end.to raise_error(Git::UnexpectedResultError, /not-a-date/)
     end
   end
 
@@ -152,12 +183,12 @@ RSpec.describe Git::Parsers::Stash do
       expect(result[:short_oid]).to eq('short')
       expect(result[:branch]).to eq('feature')
       expect(result[:message]).to eq('WIP on feature: msg')
-      expect(result[:author_name]).to eq('Author')
-      expect(result[:author_email]).to eq('author@ex.com')
-      expect(result[:author_date]).to eq('2026-01-24T10:00:00Z')
-      expect(result[:committer_name]).to eq('Committer')
-      expect(result[:committer_email]).to eq('committer@ex.com')
-      expect(result[:committer_date]).to eq('2026-01-24T11:00:00Z')
+      expect(result[:author]).to eq(
+        Git::AuthorInfo.new(name: 'Author', email: 'author@ex.com', date: Time.iso8601('2026-01-24T10:00:00Z'))
+      )
+      expect(result[:committer]).to eq(
+        Git::AuthorInfo.new(name: 'Committer', email: 'committer@ex.com', date: Time.iso8601('2026-01-24T11:00:00Z'))
+      )
     end
   end
 
@@ -217,23 +248,21 @@ RSpec.describe Git::Parsers::Stash do
     context 'with field separator in message' do
       it 'documents known limitation with \\x1f in stash message' do
         # This documents a known limitation: if a stash message contains the
-        # field separator (\x1f), parsing will produce incorrect field alignment
-        # because split() with a limit will keep exactly 10 parts, but the message
-        # gets split causing all subsequent fields to shift. This is extremely
-        # rare in practice since \x1f is a non-printable control character.
+        # field separator (\x1f), split() with a limit still keeps exactly 10
+        # parts, but the message gets split causing all subsequent fields to
+        # shift. The shifted author date field then holds the author email,
+        # which is not a valid ISO 8601 date, so parsing fails with the
+        # parser's usual error. This is extremely rare in practice since \x1f
+        # is a non-printable control character.
         field_sep = described_class::FIELD_SEPARATOR
         line = "abc123#{field_sep}abc#{field_sep}stash@{0}#{field_sep}" \
                "Message with #{field_sep} inside#{field_sep}" \
                "author#{field_sep}email@example.com#{field_sep}2024-01-15T10:00:00Z#{field_sep}" \
                "committer#{field_sep}cemail@example.com#{field_sep}2024-01-15T10:00:00Z"
 
-        # Parse succeeds but produces misaligned data
-        result = described_class.parse_stash_line(line, 0, [line])
-
-        # The message field gets split at the separator
-        expect(result.message).to eq('Message with ')
-        # Subsequent fields are shifted: 'inside' appears where author_name should be
-        expect(result.author_name).to eq(' inside')
+        expect do
+          described_class.parse_stash_line(line, 0, [line])
+        end.to raise_error(Git::UnexpectedResultError, /email@example\.com/)
       end
     end
   end

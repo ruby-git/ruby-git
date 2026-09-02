@@ -4,226 +4,106 @@ require 'spec_helper'
 require 'git/tag_info'
 
 RSpec.describe Git::TagInfo do
-  describe 'attributes' do
-    context 'for annotated tags' do
-      subject(:tag_info) do
-        described_class.new(
+  let(:tagger) do
+    Git::AuthorInfo.new(
+      name: 'John Doe',
+      email: 'john@example.com',
+      date: Time.iso8601('2024-01-15T10:30:00-08:00')
+    )
+  end
+
+  let(:annotated_tag) do
+    described_class.new(
+      name: 'v1.0.0',
+      oid: 'abc123def456',
+      target_oid: 'def456abc789',
+      objecttype: 'tag',
+      tagger: tagger,
+      message: 'Release version 1.0.0'
+    )
+  end
+
+  let(:lightweight_tag) do
+    described_class.new(
+      name: 'v1.0.0-beta',
+      oid: nil,
+      target_oid: 'def456abc789',
+      objecttype: 'commit',
+      tagger: nil,
+      message: nil
+    )
+  end
+
+  describe '#initialize' do
+    context 'with an annotated tag' do
+      subject(:tag_info) { annotated_tag }
+
+      it 'stores all members' do
+        expect(tag_info).to have_attributes(
           name: 'v1.0.0',
           oid: 'abc123def456',
           target_oid: 'def456abc789',
           objecttype: 'tag',
-          tagger_name: 'John Doe',
-          tagger_email: '<john@example.com>',
-          tagger_date: '2024-01-15T10:30:00-08:00',
+          tagger: tagger,
           message: 'Release version 1.0.0'
         )
       end
 
-      it 'has a name' do
-        expect(tag_info.name).to eq('v1.0.0')
+      it 'exposes the tagger as a Git::AuthorInfo whose date is a Time' do
+        expect(tag_info.tagger).to be_a(Git::AuthorInfo)
+        expect(tag_info.tagger.date).to be_a(Time)
       end
 
-      it 'has an oid (tag object ID)' do
-        expect(tag_info.oid).to eq('abc123def456')
-      end
-
-      it 'has a target_oid (commit ID)' do
-        expect(tag_info.target_oid).to eq('def456abc789')
-      end
-
-      it 'has an objecttype' do
-        expect(tag_info.objecttype).to eq('tag')
-      end
-
-      it 'has tagger_name' do
-        expect(tag_info.tagger_name).to eq('John Doe')
-      end
-
-      it 'has tagger_email' do
-        expect(tag_info.tagger_email).to eq('<john@example.com>')
-      end
-
-      it 'has tagger_date' do
-        expect(tag_info.tagger_date).to eq('2024-01-15T10:30:00-08:00')
-      end
-
-      it 'has a message' do
-        expect(tag_info.message).to eq('Release version 1.0.0')
+      it 'creates an immutable object' do
+        expect(tag_info).to be_frozen
       end
     end
 
-    context 'for lightweight tags' do
-      subject(:tag_info) do
-        described_class.new(
+    context 'with a lightweight tag' do
+      subject(:tag_info) { lightweight_tag }
+
+      it 'stores nil for the oid, tagger, and message' do
+        expect(tag_info).to have_attributes(
           name: 'v1.0.0-beta',
           oid: nil,
           target_oid: 'def456abc789',
           objecttype: 'commit',
-          tagger_name: nil,
-          tagger_email: nil,
-          tagger_date: nil,
+          tagger: nil,
           message: nil
         )
-      end
-
-      it 'has nil oid' do
-        expect(tag_info.oid).to be_nil
-      end
-
-      it 'has a target_oid (commit ID)' do
-        expect(tag_info.target_oid).to eq('def456abc789')
       end
     end
   end
 
   describe '#annotated?' do
-    context 'when oid is present (annotated tag)' do
-      subject(:tag_info) do
-        described_class.new(
-          name: 'v1.0.0',
-          oid: 'abc123',
-          target_oid: 'def456',
-          objecttype: 'tag',
-          tagger_name: 'John Doe',
-          tagger_email: '<john@example.com>',
-          tagger_date: '2024-01-15T10:30:00-08:00',
-          message: 'Release'
-        )
-      end
+    subject(:result) { tag_info.annotated? }
 
-      it 'returns true' do
-        expect(tag_info.annotated?).to be true
-      end
+    context 'when oid is present (annotated tag)' do
+      let(:tag_info) { annotated_tag }
+
+      it { is_expected.to be true }
     end
 
     context 'when oid is nil (lightweight tag)' do
-      subject(:tag_info) do
-        described_class.new(
-          name: 'v1.0.0',
-          oid: nil,
-          target_oid: 'def456',
-          objecttype: 'commit',
-          tagger_name: nil,
-          tagger_email: nil,
-          tagger_date: nil,
-          message: nil
-        )
-      end
+      let(:tag_info) { lightweight_tag }
 
-      it 'returns false' do
-        expect(tag_info.annotated?).to be false
-      end
+      it { is_expected.to be false }
     end
   end
 
   describe '#lightweight?' do
-    context 'when oid is nil (lightweight tag)' do
-      subject(:tag_info) do
-        described_class.new(
-          name: 'v1.0.0',
-          oid: nil,
-          target_oid: 'def456',
-          objecttype: 'commit',
-          tagger_name: nil,
-          tagger_email: nil,
-          tagger_date: nil,
-          message: nil
-        )
-      end
+    subject(:result) { tag_info.lightweight? }
 
-      it 'returns true' do
-        expect(tag_info.lightweight?).to be true
-      end
+    context 'when oid is nil (lightweight tag)' do
+      let(:tag_info) { lightweight_tag }
+
+      it { is_expected.to be true }
     end
 
     context 'when oid is present (annotated tag)' do
-      subject(:tag_info) do
-        described_class.new(
-          name: 'v1.0.0',
-          oid: 'abc123',
-          target_oid: 'def456',
-          objecttype: 'tag',
-          tagger_name: 'John Doe',
-          tagger_email: '<john@example.com>',
-          tagger_date: '2024-01-15T10:30:00-08:00',
-          message: 'Release'
-        )
-      end
+      let(:tag_info) { annotated_tag }
 
-      it 'returns false' do
-        expect(tag_info.lightweight?).to be false
-      end
-    end
-  end
-
-  describe '#tagger' do
-    context 'for annotated tags' do
-      subject(:tag_info) do
-        described_class.new(
-          name: 'v1.0.0',
-          oid: 'abc123',
-          target_oid: 'def456',
-          objecttype: 'tag',
-          tagger_name: 'John Doe',
-          tagger_email: '<john@example.com>',
-          tagger_date: '2024-01-15T10:30:00-08:00',
-          message: 'Release'
-        )
-      end
-
-      it 'returns an immutable Git::AuthorInfo object' do
-        expect(tag_info.tagger).to be_a(Git::AuthorInfo)
-      end
-
-      it 'has the correct name' do
-        expect(tag_info.tagger.name).to eq('John Doe')
-      end
-
-      it 'has the correct email' do
-        expect(tag_info.tagger.email).to eq('john@example.com')
-      end
-
-      it 'carries the tag date parsed from tagger_date' do
-        expect(tag_info.tagger.date).to eq(Time.iso8601('2024-01-15T10:30:00-08:00'))
-      end
-
-      context 'when tagger_date is nil' do
-        subject(:tag_info) do
-          described_class.new(
-            name: 'v1.0.0',
-            oid: 'abc123',
-            target_oid: 'def456',
-            objecttype: 'tag',
-            tagger_name: 'John Doe',
-            tagger_email: '<john@example.com>',
-            tagger_date: nil,
-            message: 'Release'
-          )
-        end
-
-        it 'has a nil date' do
-          expect(tag_info.tagger.date).to be_nil
-        end
-      end
-    end
-
-    context 'for lightweight tags' do
-      subject(:tag_info) do
-        described_class.new(
-          name: 'v1.0.0',
-          oid: nil,
-          target_oid: 'def456',
-          objecttype: 'commit',
-          tagger_name: nil,
-          tagger_email: nil,
-          tagger_date: nil,
-          message: nil
-        )
-      end
-
-      it 'returns nil' do
-        expect(tag_info.tagger).to be_nil
-      end
+      it { is_expected.to be false }
     end
   end
 end
