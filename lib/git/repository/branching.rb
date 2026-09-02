@@ -744,6 +744,11 @@ module Git
         # @param execution_context [Git::ExecutionContext::Repository] the
         #   execution context for git commands
         #
+        # The full `refs/heads/<name>` ref is verified rather than the bare name.
+        # A bare name follows the gitrevisions search order, in which
+        # `refs/tags/<name>` is tried before `refs/heads/<name>`, so an unborn
+        # branch that shares its name with a tag would be reported as `:active`.
+        #
         # @param branch_name [String] the branch name to verify
         #
         # @return [:active, :unborn] the branch ref state
@@ -754,7 +759,7 @@ module Git
         # @api private
         #
         def get_branch_state(execution_context, branch_name)
-          Git::Commands::RevParse.new(execution_context).call(branch_name, verify: true, quiet: true)
+          Git::Commands::RevParse.new(execution_context).call("refs/heads/#{branch_name}", verify: true, quiet: true)
           :active
         rescue Git::FailedError => e
           raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
