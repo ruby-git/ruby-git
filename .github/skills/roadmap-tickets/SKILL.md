@@ -34,9 +34,10 @@ maintainer approves the breakdown before anything is published.
 
 - [Development Workflow](../development-workflow/SKILL.md) — implements a
   published ticket (triage through PR)
-- [Breaking Change Analysis](../breaking-change-analysis/SKILL.md) — the Safety
-  Proof step that removal tickets gate on, per
-  [ADR-0006](../../../docs/adr/0006-removals-require-proven-safety-and-calendar-soak.md)
+- [Breaking Change Analysis](../breaking-change-analysis/SKILL.md) — the
+  [deprecation policy](../breaking-change-analysis/SKILL.md#step-4-deprecation-policy)
+  that removal tickets follow, recorded in
+  [ADR-0007](../../../docs/adr/0007-removals-require-one-normal-release-of-deprecation-not-calendar-soak.md)
 - [Project Context](../project-context/SKILL.md) — domain vocabulary for ticket
   titles and bodies
 

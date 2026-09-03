@@ -14,6 +14,8 @@ This workflow describes how releases are managed for the ruby-git gem.
 - [How Releases Work](#how-releases-work)
 - [Developer Responsibilities](#developer-responsibilities)
 - [Checking Release Readiness](#checking-release-readiness)
+- [Major release readiness](#major-release-readiness)
+- [After a major release](#after-a-major-release)
 - [What NOT to Do](#what-not-to-do)
 - [Useful Commands](#useful-commands)
 
@@ -53,8 +55,10 @@ Key config files:
 | `lib/git/version.rb` | Version constant (updated automatically by release-please) |
 | `CHANGELOG.md` | Release history (updated automatically by release-please) |
 
-The versioning strategy is `prerelease` with `beta` as the prerelease type. The
-config also sets `bump-minor-pre-major: true` and `bump-patch-for-minor-pre-major: true`.
+`prerelease` is `false`, so release-please never proposes a beta and every release is
+a normal release. The config also sets `bump-minor-pre-major: true` and
+`bump-patch-for-minor-pre-major: true`, which affect version bumps only while the major
+version is 0.
 
 ## Developer Responsibilities
 
@@ -92,6 +96,45 @@ Before a maintainer merges a release PR:
 
 4. **Review the release PR** — verify the auto-generated changelog and version
    bump look correct.
+
+## Major release readiness
+
+Before merging the release PR for a major version, run
+[Checking Release Readiness](#checking-release-readiness), then confirm each item
+below. The per-PR removal gate lives in
+[Breaking Change Analysis, Step 4](../breaking-change-analysis/SKILL.md#step-4-deprecation-policy)
+and is checked when each removal PR merges, not here.
+
+- [ ] Version floors are updated everywhere they are set: `required_ruby_version` in
+      `git.gemspec`, `TargetRubyVersion` in `.rubocop.yml`, the CI workflow matrices
+      under `.github/workflows/`, `Git::MINIMUM_GIT_VERSION` in `lib/git.rb`, the
+      README "Ruby version support policy" and "Git version support policy"
+      subsections, and the Compatibility list in
+      [Project Context](../project-context/SKILL.md#compatibility). Include any RuboCop
+      cleanup a `TargetRubyVersion` bump triggers.
+- [ ] ADR-0004 audit: the options the new git floor kills are deprecated in this major
+      ([ADR-0004](../../../docs/adr/0004-the-option-surface-is-the-union-of-the-supported-git-range.md)).
+- [ ] Carried deprecations, if any, have their warning text, `@deprecated` YARD tag,
+      and `UPGRADING.md` entry updated to name the major the roadmap decided for them,
+      or "a future major release" while that is undecided, and the horizon passed to
+      `ActiveSupport::Deprecation.new` in `lib/git.rb` is bumped to the next major.
+- [ ] The "Upgrading to vN.0.0" section of `UPGRADING.md` is complete.
+- [ ] README examples use no removed APIs.
+- [ ] The changelog preview in the release PR reads correctly and every removal commit
+      carries a `BREAKING CHANGE` footer.
+
+## After a major release
+
+- [ ] Add a README announcement entry dated the release day.
+- [ ] Create the maintenance branch for the previous major (e.g. `5.x`) from its last
+      tag and apply branch protection.
+- [ ] Replace the retired maintenance branch with the new one everywhere it is named:
+      the push triggers in `release.yml`, `continuous_integration.yml`, and
+      `enforce_conventional_commits.yml` under `.github/workflows/`, the branch tables
+      in `.github/copilot-instructions.md` and `CONTRIBUTING.md`, and the skills that
+      list the protected branches. `grep -rn '4\.x' .github CONTRIBUTING.md` finds
+      them all.
+- [ ] Close the milestone and update the roadmap issue.
 
 ## What NOT to Do
 
