@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::Branch::Delete, :integration do
 
     describe 'when the command succeeds' do
       it 'returns exit code 0 when all branches deleted' do
-        repo.branch('feature').create
+        repo.branch_new('feature')
 
         result = command.call('feature')
 

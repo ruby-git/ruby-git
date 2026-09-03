@@ -19,7 +19,7 @@ RSpec.describe Git::Branches, :integration do
   context 'when initialized via Git::Repository (Git::Repository passed to constructor)' do
     let(:execution_context) { repo.execution_context }
     let(:repository) { Git::Repository.new(execution_context: execution_context) }
-    let(:branches) { repository.branches }
+    let(:branches) { Git::Deprecation.silence { repository.branches } }
 
     describe '#local' do
       it 'includes the current local branch' do

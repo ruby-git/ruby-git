@@ -18,7 +18,7 @@ RSpec.describe Git::Commands::UpdateRef::Update, :integration do
     context 'when the command succeeds' do
       it 'updates a ref to a new commit' do
         repo.rev_parse('HEAD')
-        repo.branch('test-branch').create
+        repo.branch_new('test-branch')
 
         write_file('file.txt', "updated\n")
         repo.add('file.txt')
@@ -34,7 +34,7 @@ RSpec.describe Git::Commands::UpdateRef::Update, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError when oldvalue does not match' do
-        repo.branch('test-branch').create
+        repo.branch_new('test-branch')
         new_sha = repo.rev_parse('HEAD')
 
         expect { command.call('refs/heads/test-branch', new_sha, 'bad0' * 10) }

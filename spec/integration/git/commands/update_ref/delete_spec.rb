@@ -13,7 +13,7 @@ RSpec.describe Git::Commands::UpdateRef::Delete, :integration do
       write_file('file.txt', "content\n")
       repo.add('file.txt')
       repo.commit('Initial commit')
-      repo.branch('doomed').create
+      repo.branch_new('doomed')
     end
 
     context 'when the command succeeds' do

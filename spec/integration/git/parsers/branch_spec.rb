@@ -26,7 +26,7 @@ RSpec.describe Git::Parsers::Branch, :integration do
         write_file('file.txt')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.branch('feature-branch').create
+        repo.branch_new('feature-branch')
       end
 
       it 'parses all branches' do
@@ -66,8 +66,8 @@ RSpec.describe Git::Parsers::Branch, :integration do
         write_file('file.txt')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.branch('feature/with-slash').create
-        repo.branch('feature/日本語').create
+        repo.branch_new('feature/with-slash')
+        repo.branch_new('feature/日本語')
       end
 
       it 'parses branch names with slashes' do

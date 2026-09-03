@@ -18,7 +18,7 @@ RSpec.describe Git::Commands::Merge::Quit, :integration do
     describe 'when the command succeeds' do
       context 'when a merge is in progress' do
         before do
-          repo.branch('feature').checkout
+          repo.checkout('feature', new_branch: true)
           write_file('file.txt', "feature change\n")
           repo.add('file.txt')
           repo.commit('Feature commit')

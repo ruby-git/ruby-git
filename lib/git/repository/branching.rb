@@ -697,7 +697,31 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @deprecated Use `branch_list(name).first` and the name-based branch
+      #   operations instead
+      #
+      #   {#branch_list} returns immutable {Git::BranchInfo} value objects
+      #   rather than {Git::Branch}. It takes `git branch --list` patterns, so
+      #   pass the short name of a local branch or `"#{remote}/#{name}"` for a
+      #   remote-tracking branch; the `remotes/` and `refs/` prefixes this
+      #   method accepts match nothing. A `"#{remote}/#{name}"` pattern also
+      #   matches a local branch of that name, so take `find(&:remote?)` rather
+      #   than `first` for a remote-tracking branch. With no argument this
+      #   method wraps {#current_branch}, which is `'HEAD'` when HEAD is
+      #   detached; {#branch_list} has no entry for a detached or unborn HEAD,
+      #   so use {#current_branch_state} in those states. Call the
+      #   corresponding {Git::Repository} method (e.g. {#checkout},
+      #   {#branch_new}, {#branch_delete}) for operations on a branch.
+      #
+      # @see #branch_list
+      #
       def branch(branch_name = current_branch)
+        Git::Deprecation.warn(
+          'Git::Repository#branch is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#branch_list(name).first for a local branch, ' \
+          'Git::Repository#branch_list("remote/name").find(&:remote?) for a remote-tracking branch, ' \
+          'and the name-based branch operations instead.'
+        )
         Git::Branch.new(self, branch_name)
       end
 
@@ -724,7 +748,21 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @deprecated Use {#branch_list} instead
+      #
+      #   {#branch_list} returns `Array<Git::BranchInfo>` (immutable value
+      #   objects) rather than a {Git::Branches} collection. Filter it with
+      #   `select(&:remote?)` or `reject(&:remote?)` in place of
+      #   `branches.remote` and `branches.local`, and look a branch up by name
+      #   with `branch_list(name).first` in place of `branches[name]`.
+      #
+      # @see #branch_list
+      #
       def branches
+        Git::Deprecation.warn(
+          'Git::Repository#branches is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#branch_list instead.'
+        )
         Git::Branches.new(self)
       end
 

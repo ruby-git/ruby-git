@@ -155,7 +155,7 @@ module DiffTestRepositorySetup
   def setup_feature_branch
     # Create feature branch from after_add
     repo.checkout('after_add')
-    repo.branch('feature').checkout
+    repo.checkout('feature', new_branch: true)
 
     write_file('lib/feature.rb', "# frozen_string_literal: true\n\nmodule Feature\nend\n")
     repo.add('lib/feature.rb')

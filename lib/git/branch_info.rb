@@ -70,7 +70,7 @@ module Git
   #   info.remote_name  #=> 'origin'
   #   info.short_name   #=> 'main'
   #
-  # @see Git::Branch for the full-featured branch object with operations
+  # @see Git::Repository::Branching#branch_list for the repository method that returns these
   #
   # @see Git::Commands::Branch::List for the command that produces these
   #

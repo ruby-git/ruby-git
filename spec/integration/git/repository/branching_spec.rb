@@ -120,9 +120,9 @@ RSpec.describe Git::Repository::Branching, :integration do
         repo.push('origin', 'main')
         # Push a second branch to the remote, then delete it locally so it only
         # exists as a remote-tracking branch
-        repo.branch('remote-only').create
+        repo.branch_new('remote-only')
         repo.push('origin', 'remote-only')
-        repo.branch('remote-only').delete
+        repo.branch_delete('remote-only')
       end
 
       it 'returns true' do
@@ -148,9 +148,9 @@ RSpec.describe Git::Repository::Branching, :integration do
 
     context '4.x backward-compatibility: local branch with slashes' do
       before do
-        repo.branch('topic/main').create
+        repo.branch_new('topic/main')
         repo.checkout('topic/main')
-        repo.branch('main').delete
+        repo.branch_delete('main')
       end
 
       it 'returns false for main when only topic/main exists (exact-name matching, no suffix matching)' do
@@ -175,9 +175,9 @@ RSpec.describe Git::Repository::Branching, :integration do
 
   describe '#branch_delete' do
     before do
-      repo.branch('to-delete').create
-      repo.branch('branch-1').create
-      repo.branch('branch-2').create
+      repo.branch_new('to-delete')
+      repo.branch_new('branch-1')
+      repo.branch_new('branch-2')
     end
 
     context 'when deleting a single merged branch' do
@@ -360,7 +360,7 @@ RSpec.describe Git::Repository::Branching, :integration do
       before do
         Git.init(bare_dir, bare: true)
         repo.remote_add('origin', bare_dir)
-        repo.branch('foo').create
+        repo.branch_new('foo')
         repo.checkout('foo')
         repo.push('origin', 'foo:bar')
         repo.config_set('branch.foo.remote', 'origin')
