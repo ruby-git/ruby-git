@@ -4,6 +4,7 @@ This document covers breaking changes and migration steps when upgrading the
 `git` gem to a new major version. Each section describes what changed and how
 to update your code when upgrading from the preceding major version.
 
+- [Upgrading to v6.0.0](#upgrading-to-v600)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -23,6 +24,25 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Remote` deprecated](#gitremote-deprecated)
     - [`Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated)
     - [`Git::Branch` and `Git::Branches` deprecated](#gitbranch-and-gitbranches-deprecated)
+
+## Upgrading to v6.0.0
+
+v6.0.0 is not yet released. This section will be completed when it ships.
+
+v6.0.0 removes the APIs deprecated during v5.x under the project's
+[deprecation policy](README.md#deprecation-policy).
+[Issue 1717](https://github.com/ruby-git/ruby-git/issues/1717) tracks its scope.
+
+To prepare:
+
+1. Upgrade to the latest v5.x release.
+2. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
+   your test suite and, if possible, staging.
+3. Fix each deprecation using the entries under
+   [Deprecated methods](#deprecated-methods) until the suite is clean.
+4. Upgrade to v6.0.0.
+
+---
 
 ## Upgrading to v5.x
 
