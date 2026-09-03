@@ -76,17 +76,18 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
 
   describe '#config_remote' do
     it 'includes the url key' do
-      result = described_instance.config_remote('origin')
+      result = Git::Deprecation.silence { described_instance.config_remote('origin') }
       expect(result).to have_key('url')
     end
 
     it 'includes the fetch key' do
-      result = described_instance.config_remote('origin')
+      result = Git::Deprecation.silence { described_instance.config_remote('origin') }
       expect(result).to have_key('fetch')
     end
 
     it 'returns an empty hash for an unknown remote name' do
-      expect(described_instance.config_remote('nonexistent-remote')).to eq({})
+      result = Git::Deprecation.silence { described_instance.config_remote('nonexistent-remote') }
+      expect(result).to eq({})
     end
   end
 
@@ -128,6 +129,9 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#remotes' do
+    # Each Git::Remote that #remotes builds emits its own deprecation warning
+    before { allow(Git::Deprecation).to receive(:warn) }
+
     it 'emits a deprecation warning' do
       expect(Git::Deprecation).to receive(:warn).with(
         'Git::Repository#remotes is deprecated and will be removed in v6.0.0. ' \
@@ -137,7 +141,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
     end
 
     it 'includes each configured remote by name' do
-      allow(Git::Deprecation).to receive(:warn)
       described_instance.remote_add('upstream', bare_dir)
       expect(described_instance.remotes.map(&:name)).to contain_exactly('origin', 'upstream')
     end
@@ -146,7 +149,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       before { described_instance.remote_remove('origin') }
 
       it 'returns an empty array' do
-        allow(Git::Deprecation).to receive(:warn)
         expect(described_instance.remotes).to eq([])
       end
     end
@@ -199,7 +201,8 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
 
     it 'updates the fetch URL for the named remote' do
       described_instance.remote_set_url('origin', other_dir)
-      expect(described_instance.config_remote('origin')['url']).to eq(other_dir)
+      origin = described_instance.remote_list.find { |r| r.name == 'origin' }
+      expect(origin.url).to eq([other_dir])
     end
   end
 
@@ -210,7 +213,8 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   describe '#remote_set_branches' do
     it 'replaces the tracked branches for the remote' do
       described_instance.remote_set_branches('origin', 'main')
-      expect(described_instance.config_remote('origin')['fetch']).to include('main')
+      origin = described_instance.remote_list.find { |r| r.name == 'origin' }
+      expect(origin.fetch).to include(a_string_including('main'))
     end
 
     it 'appends tracked branches when add: true' do

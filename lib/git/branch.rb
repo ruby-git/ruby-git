@@ -443,7 +443,9 @@ module Git
     #
     def initialize_from_branch_info(branch_info)
       @name = branch_info.short_name
-      @remote = branch_info.remote_name ? Git::Remote.new(@base, branch_info.remote_name) : nil
+      remote_name = branch_info.remote_name
+      # Silenced because Git::Branch is not deprecated until issue 1639
+      @remote = remote_name ? Git::Deprecation.silence { Git::Remote.new(@base, remote_name) } : nil
       @full = @remote ? "remotes/#{@remote.name}/#{@name}" : @name
     end
 
@@ -482,7 +484,9 @@ module Git
     def parse_name(name)
       # Expect this will always match
       match = name.match(BRANCH_NAME_REGEXP)
-      remote = match[:remote_name] ? Git::Remote.new(@base, match[:remote_name]) : nil
+      remote_name = match[:remote_name]
+      # Silenced because Git::Branch is not deprecated until issue 1639
+      remote = remote_name ? Git::Deprecation.silence { Git::Remote.new(@base, remote_name) } : nil
       branch_name = match[:branch_name]
       [remote, branch_name]
     end
