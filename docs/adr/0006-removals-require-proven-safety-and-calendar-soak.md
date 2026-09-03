@@ -1,5 +1,7 @@
 # Removals require proven safety and calendar soak
 
+Superseded by [ADR-0007](0007-removals-require-one-normal-release-of-deprecation-not-calendar-soak.md)
+
 A major release deletes a deprecated API only when two conditions both hold. First, a
 Safety Proof per the breaking-change-analysis skill: the single fact the removal is
 safe because of, proven by running real code — reverse-dependency evidence, not
