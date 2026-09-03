@@ -10,6 +10,14 @@ module Git
   #   branches = repo.branches
   #   branches.each { |b| puts b.name }
   #
+  # @deprecated Use {Git::Repository::Branching#branch_list} instead
+  #
+  #   {Git::Repository::Branching#branch_list} returns `Array<Git::BranchInfo>`
+  #   (immutable value objects). Filter it with `select(&:remote?)` or
+  #   `reject(&:remote?)` in place of {#remote} and {#local}, and look a
+  #   branch up by name with `branch_list(name).first` in place of {#[]}.
+  #   Constructing a `Git::Branches` emits a deprecation warning.
+  #
   # @api public
   #
   class Branches
@@ -24,18 +32,21 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @deprecated Use {Git::Repository::Branching#branch_list} instead
+    #
+    # @see Git::Repository::Branching#branch_list
+    #
     def initialize(base)
+      Git::Deprecation.warn(
+        'Git::Branches is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#branch_list instead.'
+      )
       @branches = {}
       @lookup = {}
 
       @base = base
 
-      branch_repository.branch_list.each do |branch_info|
-        branch = Git::Branch.new(base, branch_info)
-
-        @branches[branch_info.refname] = branch
-        index_branch_lookup(branch, refname: branch_info.refname)
-      end
+      load_branches
     end
 
     # Returns all local (non-remote-tracking) branches
@@ -127,12 +138,29 @@ module Git
     def to_s
       out = +''
       @branches.each_value do |b|
-        out << (b.current ? '* ' : '  ') << b.to_s << "\n"
+        # Git::Branch#current is deprecated too; silence it so one to_s call emits one warning
+        current = Git::Deprecation.silence { b.current }
+        out << (current ? '* ' : '  ') << b.to_s << "\n"
       end
       out
     end
 
     private
+
+    # Builds a Git::Branch for every branch in the repository and indexes it
+    #
+    # @return [void]
+    #
+    # @api private
+    #
+    def load_branches
+      branch_repository.branch_list.each do |branch_info|
+        branch = Git::Branch.new(@base, branch_info)
+
+        @branches[branch_info.refname] = branch
+        index_branch_lookup(branch, refname: branch_info.refname)
+      end
+    end
 
     # @return [Git::Repository] the repository used to enumerate branches
     #

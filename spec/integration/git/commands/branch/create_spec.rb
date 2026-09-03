@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Branch::Create, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError when the branch already exists' do
-        repo.branch('existing-branch').create
+        repo.branch_new('existing-branch')
 
         expect { command.call('existing-branch') }.to raise_error(Git::FailedError, /existing-branch/)
       end

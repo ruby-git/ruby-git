@@ -17,6 +17,17 @@ module Git
   # @example Listing branches
   #   git.branches.each { |b| puts b.name }
   #
+  # @deprecated Use {Git::Repository::Branching#branch_list} and the
+  #   name-based branch operations on {Git::Repository} instead
+  #
+  #   {Git::Repository::Branching#branch_list} returns immutable
+  #   {Git::BranchInfo} value objects. Operations that lived on this class are
+  #   called on the repository with the branch name instead (for example
+  #   {Git::Repository::Branching#checkout} and
+  #   {Git::Repository::Branching#branch_delete}). Every operation on a
+  #   `Git::Branch` emits a deprecation warning; the `full`, `name`, `remote`,
+  #   `to_s`, and `to_a` readers do not.
+  #
   # @api public
   #
   class Branch
@@ -94,7 +105,20 @@ module Git
     #
     # @return [Git::Object] the commit at the tip of this branch
     #
+    # @deprecated Use {Git::Repository::ObjectOperations#gcommit} with the branch name instead
+    #
+    #   Pass the branch name for a local branch, or `"remotes/#{remote}/#{name}"`
+    #   (the value of {#full}) for a remote-tracking branch; the shorter
+    #   `"#{remote}/#{name}"` can resolve a local branch of that name.
+    #
+    # @see Git::Repository::ObjectOperations#gcommit
+    #
     def gcommit
+      Git::Deprecation.warn(
+        'Git::Branch#gcommit is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#gcommit(name) or, for a remote-tracking branch, ' \
+        'Git::Repository#gcommit("remotes/remote/name") instead.'
+      )
       @gcommit ||= branch_repository.gcommit(@full)
       @gcommit
     end
@@ -145,7 +169,30 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @deprecated Use {Git::Repository::Branching#checkout} with the branch name instead
+    #
+    #   {Git::Repository::Branching#checkout} does not create a missing local
+    #   branch, apart from the guess git makes on its own: with no `:no_guess`
+    #   option, git creates a tracking branch when exactly one remote has a
+    #   branch of that name. To reproduce the create-or-checkout behavior of
+    #   this method, call {Git::Repository::Branching#branch_new} when
+    #   {Git::Repository::Branching#local_branch?} is false, then
+    #   {Git::Repository::Branching#checkout}. Pass `"remotes/#{remote}/#{name}"`
+    #   (the value of {#full}) for a remote-tracking branch; the shorter
+    #   `"#{remote}/#{name}"` can resolve a local branch of that name.
+    #
+    # @see Git::Repository::Branching#checkout
+    #
+    # @see Git::Repository::Branching#branch_new
+    #
     def checkout
+      Git::Deprecation.warn(
+        'Git::Branch#checkout is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#checkout(name) or, for a remote-tracking branch, ' \
+        'Git::Repository#checkout("remotes/remote/name") instead. Git::Repository#checkout does not ' \
+        'create a missing local branch (beyond the guess git makes from a unique remote-tracking ' \
+        'branch); call Git::Repository#branch_new first unless Git::Repository#local_branch? is true.'
+      )
       check_if_create
       branch_repository.checkout(@full)
     end
@@ -186,7 +233,20 @@ module Git
     #
     # @raise [Git::FailedError] if `git archive` fails
     #
+    # @deprecated Use {Git::Repository::ObjectOperations#archive} with the branch name instead
+    #
+    #   Pass the branch name for a local branch, or `"remotes/#{remote}/#{name}"`
+    #   (the value of {#full}) for a remote-tracking branch; the shorter
+    #   `"#{remote}/#{name}"` can resolve a local branch of that name.
+    #
+    # @see Git::Repository::ObjectOperations#archive
+    #
     def archive(file, opts = {})
+      Git::Deprecation.warn(
+        'Git::Branch#archive is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#archive(name, file, opts) or, for a remote-tracking branch, ' \
+        'Git::Repository#archive("remotes/remote/name", file, opts) instead.'
+      )
       branch_repository.archive(@full, file, opts)
     end
 
@@ -217,14 +277,27 @@ module Git
     #
     # @yieldreturn [Object] return a truthy value to commit all changes, a falsy value to hard-reset
     #
+    # @deprecated Use {Git::Repository::Branching#in_branch} with the branch name instead
+    #
+    #   {Git::Repository::Branching#in_branch} does not create the branch and
+    #   restores a detached HEAD to its original commit.
+    #   It takes an existing local branch, so a remote-tracking `Git::Branch` has
+    #   no direct replacement: this method checked out the remote-tracking ref,
+    #   detaching HEAD. Create a local branch from that ref with
+    #   {Git::Repository::Branching#branch_new} first.
+    #
+    # @see Git::Repository::Branching#in_branch
+    #
     def in_branch(message = 'in branch work')
+      Git::Deprecation.warn(
+        'Git::Branch#in_branch is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#in_branch(name, message) instead. It takes an existing local ' \
+        'branch; for a remote-tracking branch, create a local branch from it first.'
+      )
       old_current = branch_repository.current_branch
-      checkout
-      if yield
-        branch_repository.commit_all(message)
-      else
-        branch_repository.reset(nil, hard: true)
-      end
+      # checkout is deprecated too; silence it so one in_branch call emits one warning
+      Git::Deprecation.silence { checkout }
+      yield ? branch_repository.commit_all(message) : branch_repository.reset(nil, hard: true)
       branch_repository.checkout(old_current)
     end
 
@@ -238,7 +311,18 @@ module Git
     #
     # @return [nil]
     #
+    # @deprecated Use {Git::Repository::Branching#branch_new} instead
+    #
+    #   {Git::Repository::Branching#branch_new} raises {Git::FailedError} when
+    #   the branch already exists rather than ignoring the error.
+    #
+    # @see Git::Repository::Branching#branch_new
+    #
     def create
+      Git::Deprecation.warn(
+        'Git::Branch#create is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#branch_new instead.'
+      )
       check_if_create
     end
 
@@ -254,7 +338,19 @@ module Git
     #
     # @raise [Git::Error] if the branch cannot be deleted
     #
+    # @deprecated Use {Git::Repository::Branching#branch_delete} instead
+    #
+    #   Pass the branch name for a local branch, or `"#{remote}/#{name}"` with
+    #   `remotes: true` for a remote-tracking branch.
+    #
+    # @see Git::Repository::Branching#branch_delete
+    #
     def delete
+      Git::Deprecation.warn(
+        'Git::Branch#delete is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#branch_delete(name) or, for a remote-tracking branch, ' \
+        'Git::Repository#branch_delete("remote/name", remotes: true) instead.'
+      )
       if @remote
         branch_repository.branch_delete("#{@remote.name}/#{@name}", remotes: true)
       else
@@ -277,7 +373,16 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @deprecated Compare {Git::Repository::Branching#current_branch} with the
+    #   branch name instead
+    #
+    # @see Git::Repository::Branching#current_branch
+    #
     def current # rubocop:disable Naming/PredicateMethod
+      Git::Deprecation.warn(
+        'Git::Branch#current is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#current_branch == name instead.'
+      )
       branch_repository.current_branch == @name
     end
 
@@ -297,7 +402,19 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @deprecated Use {Git::Repository::Branching#branch_contains} with the
+    #   commit and branch name instead
+    #
+    #   {Git::Repository::Branching#branch_contains} returns the matching
+    #   branch names as a String; test it with `empty?`.
+    #
+    # @see Git::Repository::Branching#branch_contains
+    #
     def contains?(commit)
+      Git::Deprecation.warn(
+        'Git::Branch#contains? is deprecated and will be removed in v6.0.0. ' \
+        'Use !Git::Repository#branch_contains(commit, name).empty? instead.'
+      )
       !branch_repository.branch_contains(commit, name).empty?
     end
 
@@ -332,16 +449,27 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @deprecated Use {Git::Repository::Merging#merge_into} in place of
+    #   `merge(branch)` and {Git::Repository::Merging#merge} with the branch
+    #   name in place of `merge()`
+    #
+    #   {Git::Repository::Merging#merge_into} returns the merge's stdout, does
+    #   not hard-reset after the merge, and restores a detached HEAD to its
+    #   original commit.
+    #   It takes an existing local branch, so a remote-tracking `Git::Branch` has
+    #   no direct replacement: `merge(branch)` checked out the remote-tracking ref,
+    #   detaching HEAD. Create a local branch from that ref with
+    #   {Git::Repository::Branching#branch_new} first.
+    #
+    # @see Git::Repository::Merging#merge_into
+    #
+    # @see Git::Repository::Merging#merge
+    #
     def merge(branch = nil, message = nil)
       if branch
-        in_branch do
-          branch_repository.merge(branch, message)
-          false
-        end
-        # merge a branch into this one
+        merge_into_this_branch(branch, message)
       else
-        # merge this branch into the current one
-        branch_repository.merge(@name)
+        merge_into_current_branch
       end
     end
 
@@ -365,7 +493,19 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @deprecated Use {Git::Repository::Branching#update_ref} instead
+    #
+    #   Pass the branch name for a local branch, or
+    #   `"remotes/#{remote}/#{name}"` for a remote-tracking branch.
+    #
+    # @see Git::Repository::Branching#update_ref
+    #
     def update_ref(commit)
+      Git::Deprecation.warn(
+        'Git::Branch#update_ref is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#update_ref(name, commit) or, for a remote-tracking branch, ' \
+        'Git::Repository#update_ref("remotes/remote/name", commit) instead.'
+      )
       if @remote
         branch_repository.update_ref("remotes/#{@remote.name}/#{@name}", commit)
       else
@@ -444,7 +584,7 @@ module Git
     def initialize_from_branch_info(branch_info)
       @name = branch_info.short_name
       remote_name = branch_info.remote_name
-      # Silenced because Git::Branch is not deprecated until issue 1639
+      # Git::Remote is deprecated too; silence it so one Git::Branch call emits one warning
       @remote = remote_name ? Git::Deprecation.silence { Git::Remote.new(@base, remote_name) } : nil
       @full = @remote ? "remotes/#{@remote.name}/#{@name}" : @name
     end
@@ -485,10 +625,47 @@ module Git
       # Expect this will always match
       match = name.match(BRANCH_NAME_REGEXP)
       remote_name = match[:remote_name]
-      # Silenced because Git::Branch is not deprecated until issue 1639
+      # Git::Remote is deprecated too; silence it so one Git::Branch call emits one warning
       remote = remote_name ? Git::Deprecation.silence { Git::Remote.new(@base, remote_name) } : nil
       branch_name = match[:branch_name]
       [remote, branch_name]
+    end
+
+    # Merges the given branch into this branch, then restores the original branch
+    #
+    # @param branch [String] the name of the branch to merge into this one
+    #
+    # @param message [String, nil] commit message for the merge commit
+    #
+    # @return [String] git's stdout from the final checkout back to the original branch
+    #
+    # @api private
+    #
+    def merge_into_this_branch(branch, message)
+      Git::Deprecation.warn(
+        'Git::Branch#merge(branch) is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#merge_into(name, branch, message) instead. It takes an existing ' \
+        'local branch; for a remote-tracking branch, create a local branch from it first.'
+      )
+      # in_branch is deprecated too; silence it so one merge call emits one warning.
+      # The falsy block value makes in_branch hard-reset instead of committing.
+      Git::Deprecation.silence do
+        in_branch { branch_repository.merge(branch, message) && false }
+      end
+    end
+
+    # Merges this branch into the currently checked-out branch
+    #
+    # @return [String] git's stdout from the merge command
+    #
+    # @api private
+    #
+    def merge_into_current_branch
+      Git::Deprecation.warn(
+        'Git::Branch#merge with no arguments is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#merge(name) instead.'
+      )
+      branch_repository.merge(@name)
     end
 
     # Creates the branch if it does not already exist, ignoring errors

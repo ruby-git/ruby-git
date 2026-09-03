@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::Checkout::Branch, :integration do
   describe '#call' do
     describe 'when the command succeeds' do
       it 'returns a CommandLineResult when switching branches' do
-        repo.branch('feature').create
+        repo.branch_new('feature')
 
         result = command.call('feature')
 

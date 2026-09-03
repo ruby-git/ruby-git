@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::Merge::Start, :integration do
   describe '#call' do
     describe 'when the command succeeds' do
       before do
-        repo.branch('feature').checkout
+        repo.checkout('feature', new_branch: true)
         write_file('feature.txt', "feature\n")
         repo.add('feature.txt')
         repo.commit('Feature commit')

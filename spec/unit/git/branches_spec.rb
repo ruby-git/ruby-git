@@ -43,9 +43,18 @@ RSpec.describe Git::Branches do
       let(:base) { instance_double(Git::Repository) }
 
       before do
+        allow(Git::Deprecation).to receive(:warn)
         allow(base).to receive(:branch_list).and_return([local_info, remote_info])
         allow(Git::Branch).to receive(:new).with(base, local_info).and_return(local_branch)
         allow(Git::Branch).to receive(:new).with(base, remote_info).and_return(remote_branch)
+      end
+
+      it 'emits a deprecation warning via Git::Deprecation.warn' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Branches is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#branch_list instead.'
+        )
+        described_class.new(base)
       end
 
       it 'calls branch_list directly on the base' do
@@ -70,6 +79,7 @@ RSpec.describe Git::Branches do
   let(:described_instance) { described_class.new(repo_base) }
 
   before do
+    allow(Git::Deprecation).to receive(:warn)
     allow(repo_base).to receive(:branch_list).and_return(branch_infos)
     allow(Git::Branch).to receive(:new).with(repo_base, local_info).and_return(local_branch)
     allow(Git::Branch).to receive(:new).with(repo_base, remote_info).and_return(remote_branch)
@@ -228,6 +238,33 @@ RSpec.describe Git::Branches do
 
     it 'marks non-current branches with two spaces' do
       expect(result).to include('  remotes/origin/main')
+    end
+
+    context 'when the branches are real Git::Branch objects' do
+      let(:branch_infos) { [local_info] }
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence around the nested
+      # deprecated call is exercised instead of bypassed by the stubbed
+      # Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(Git::Branch).to receive(:new).with(repo_base, local_info).and_call_original
+        allow(repo_base).to receive(:current_branch).and_return('main')
+      end
+
+      it 'lets only the Git::Branches warning escape' do
+        expect(result).to eq("* main\n")
+        expect(messages).to contain_exactly(a_string_including('Git::Branches is deprecated'))
+      end
     end
   end
 end

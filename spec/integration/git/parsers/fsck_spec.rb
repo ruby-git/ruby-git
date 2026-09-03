@@ -58,7 +58,7 @@ RSpec.describe Git::Parsers::Fsck, :integration do
         repo.add('file.txt')
         repo.commit('First root commit')
 
-        repo.branch('orphan-branch').checkout
+        repo.checkout('orphan-branch', new_branch: true)
         repo.checkout('another-root', orphan: true)
         repo.commit('Another root', allow_empty: true)
       end

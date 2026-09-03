@@ -13,13 +13,15 @@ RSpec.describe Git::Branch, :integration do
   end
 
   before do
+    allow(Git::Deprecation).to receive(:warn)
+
     write_file('README.md', "# Hello\n")
     repo.add('README.md')
     repo.commit('Initial commit')
 
     Git.init(bare_dir, bare: true)
     repo.remote_add('origin', bare_dir)
-    repo.branch('feature').create
+    repo.branch_new('feature')
     repo.push('origin', 'feature')
   end
 

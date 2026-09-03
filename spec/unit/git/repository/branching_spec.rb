@@ -1180,10 +1180,21 @@ RSpec.describe Git::Repository::Branching do
     before do
       allow(Git::Commands::Branch::ShowCurrent)
         .to receive(:new).with(execution_context).and_return(show_current_command)
+      allow(Git::Deprecation).to receive(:warn)
     end
 
     context 'with an explicit branch name' do
       subject(:result) { described_instance.branch('feature') }
+
+      it 'emits a deprecation warning via Git::Deprecation.warn' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Repository#branch is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#branch_list(name).first for a local branch, ' \
+          'Git::Repository#branch_list("remote/name").find(&:remote?) for a remote-tracking branch, ' \
+          'and the name-based branch operations instead.'
+        )
+        result
+      end
 
       it 'returns a Git::Branch for the given name' do
         expect(result).to be_a(Git::Branch)
@@ -1226,6 +1237,19 @@ RSpec.describe Git::Repository::Branching do
     subject(:result) { described_instance.branches }
 
     let(:branches_collection) { instance_double(Git::Branches) }
+
+    before do
+      allow(Git::Branches).to receive(:new).with(described_instance).and_return(branches_collection)
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning via Git::Deprecation.warn' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#branches is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#branch_list instead.'
+      )
+      result
+    end
 
     it 'constructs Git::Branches with self and returns the collection' do
       expect(Git::Branches).to receive(:new).with(described_instance).and_return(branches_collection)

@@ -22,6 +22,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated)
     - [`Git::Remote` deprecated](#gitremote-deprecated)
     - [`Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated)
+    - [`Git::Branch` and `Git::Branches` deprecated](#gitbranch-and-gitbranches-deprecated)
 
 ## Upgrading to v5.x
 
@@ -245,7 +246,7 @@ shim cannot forward them). Update call sites directly:
 
 | v4.x call | Notes |
 |-----------|-------|
-| `g.lib.list_files(ref_dir)` | Walked `.git/refs/` directly. Use `g.branches`, `g.tags`, or `g.remote_list` instead. |
+| `g.lib.list_files(ref_dir)` | Walked `.git/refs/` directly. Use `g.branch_list`, `g.tags`, or `g.remote_list` instead. |
 
 ##### Internal plumbing methods (no replacement)
 
@@ -529,5 +530,102 @@ that constructs the command class directly is affected.
 |-----------------------------------------------------|-------------|
 | `Git::Commands::CatFile::Raw.new(ctx).call(sha, t: true, allow_unknown_type: true)` | `Git::Commands::CatFile::Raw.new(ctx).call(sha, t: true)` |
 | `Git::Commands::CatFile::Raw.new(ctx).call(sha, s: true, allow_unknown_type: true)` | `Git::Commands::CatFile::Raw.new(ctx).call(sha, s: true)` |
+
+#### `Git::Branch` and `Git::Branches` deprecated
+
+`Git::Branch`, `Git::Branches`, `Git::Repository#branch`, and
+`Git::Repository#branches` are deprecated and are removed in v6.0.0. Read branch
+data through `Git::Repository#branch_list`, which returns one `Git::BranchInfo`
+value object per local and remote-tracking branch, and call the repository-level
+operations (`checkout`, `branch_new`, `branch_delete`, `merge`, `merge_into`,
+`in_branch`, and so on) with the branch name. Calling `g.branch` or `g.branches`,
+constructing a `Git::Branches`, and calling any operation on a `Git::Branch` each
+emit a deprecation warning; their return values are unchanged. The `full`,
+`name`, `remote`, `to_s`, and `to_a` readers on `Git::Branch` do not warn.
+
+> **Return shape change:** `Git::Branch` exposes `full` (`main` or
+> `remotes/origin/main`), `name`, and `remote` (a `Git::Remote`, or `nil`).
+> `Git::BranchInfo` exposes `refname` (always the full ref: `refs/heads/main` or
+> `refs/remotes/origin/main`), `short_name` (`main` for both), `remote_name` (a
+> `String`, or `nil`), `remote?`, `current?`, `target_oid`, `upstream`,
+> `worktree_path`, and `symref`. `Git::BranchInfo#to_s` is the full ref, not the
+> `remotes/origin/main` form `Git::Branch#to_s` returned. `branch_list` takes
+> `git branch --list` patterns: `'main'` matches the local branch and
+> `'origin/main'` matches the remote-tracking branch. The `remotes/origin/main`
+> and `refs/...` forms that `g.branches[...]` accepted match nothing.
+>
+> **`checkout` no longer creates the branch:** `g.branch('x').checkout` created
+> `x` when it did not exist, ignoring any error from that attempt, and then
+> checked it out. `g.checkout('x')` does not create a missing local branch,
+> with one exception that is git's own: when exactly one remote has a branch
+> named `x`, git creates a local tracking branch from it (its default guess
+> behavior). Otherwise the checkout fails. To reproduce create-or-checkout,
+> call `g.branch_new('x') unless g.local_branch?('x')` and then
+> `g.checkout('x')`. Use `g.checkout('x', new_branch: true)` only when `x` is
+> known not to exist; like `g.branch_new('x')`, it fails when `x` already
+> exists. Likewise `g.branch('x').create` ignored every error, while
+> `g.branch_new('x')` raises `Git::FailedError` when `x` already exists.
+>
+> **`in_branch` and `merge_into` differences:**
+>
+> 1. **Branch creation.** `g.branch('x').in_branch { ... }` created `x` if it did
+>    not exist. `g.in_branch('x') { ... }` raises `ArgumentError` unless `x` is an
+>    existing local branch, so call `g.branch_new('x')` first. A commit SHA, tag,
+>    or remote-tracking name is also rejected before any checkout.
+> 2. **Detached HEAD.** `Git::Branch#in_branch` recorded the literal `HEAD` and
+>    could not restore a detached HEAD to its original commit. `g.in_branch` and
+>    `g.merge_into` record the SHA and restore it.
+> 3. **Unborn HEAD.** Both new methods raise `Git::Error` before checking anything
+>    out when HEAD is on a branch with no commits. The old methods failed later,
+>    mid-flow.
+> 4. **Merge overload.** `g.branch('main').merge('feature')` returned stdout from
+>    the final restore checkout and ran a hard reset after the merge.
+>    `g.merge_into('main', 'feature')` returns the merge's stdout and does no
+>    reset. It also rejects the `:no_commit` option; callers who need
+>    `--no-commit` use `checkout` and `merge` directly.
+> 5. **Remote-tracking receivers.** Called on a remote-tracking `Git::Branch`,
+>    `in_branch` and `merge(branch)` checked out the remote-tracking ref,
+>    detaching HEAD, and any commit made there was left dangling. `g.in_branch`
+>    and `g.merge_into` take an existing local branch only. Create one from the
+>    remote-tracking ref first, with
+>    `g.branch_new(name, "remotes/#{remote}/#{name}")`, and pass that branch.
+
+In the table, `name` is the branch name (`g.branch` defaults it to the current
+branch), `remote` is the remote name of a remote-tracking branch, `b` is a
+`Git::Branch`, and `info` is the `Git::BranchInfo` that replaces it. Where a
+row says to pass `info.refname` for a remote-tracking branch, `b.full` (the
+`remotes/<remote>/<name>` form) works too; the shorter `"#{remote}/#{name}"`
+can resolve a local branch of that name and is only used where git expects it
+(`branch_delete` with `remotes: true`).
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.branch(name)` | `g.branch_list(name).first` for a local branch, or `g.branch_list("#{remote}/#{name}").find(&:remote?)` for a remote-tracking one — a `Git::BranchInfo`, or `nil` when the branch does not exist; the `remotes/` and `refs/` forms match nothing |
+| `g.branch` | `g.branch_list(g.current_branch).first` — `nil` when HEAD is detached or unborn; use `g.current_branch_state` there |
+| `g.branches` | `g.branch_list` — returns `Array<Git::BranchInfo>` |
+| `g.branches[name]` | `g.branch_list(name).first`, or `g.branch_list("#{remote}/#{name}").find(&:remote?)` for a remote-tracking branch |
+| `g.branches.local` | `g.branch_list.reject(&:remote?)` |
+| `g.branches.remote` | `g.branch_list.select(&:remote?)` |
+| `g.branches.size` | `g.branch_list.size` |
+| `g.branches.each { \|b\| ... }` | `g.branch_list.each { \|info\| ... }` |
+| `g.branches.to_s` | `g.branch_list.map { \|i\| "#{i.current? ? '* ' : '  '}#{i.refname}\n" }.join` — full refs, not `remotes/...` |
+| `b.full`, `b.to_s` | `info.refname` — `refs/remotes/origin/main` rather than `remotes/origin/main` |
+| `b.to_a` | `[info.refname]` |
+| `b.name` | `info.short_name` |
+| `b.remote` | `info.remote_name` — a `String`, or `nil` for a local branch |
+| `b.gcommit` | `g.gcommit(name)` — pass `info.refname` for a remote-tracking branch |
+| `b.checkout` | `g.checkout(name)` — does not create the branch (see above); pass `info.refname` for a remote-tracking branch |
+| `b.create` | `g.branch_new(name)` — raises when the branch already exists |
+| `b.delete` (local) | `g.branch_delete(name)` |
+| `b.delete` (remote-tracking) | `g.branch_delete("#{remote}/#{name}", remotes: true)` |
+| `b.current` | `g.current_branch == name` |
+| `b.contains?(commit)` | `!g.branch_contains(commit, name).empty?` |
+| `b.merge` | `g.merge(name)` |
+| `b.merge(branch, message)` | `g.merge_into(name, branch, message)` — local `b` only; see the differences above |
+| `b.update_ref(commit)` (local) | `g.update_ref(name, commit)` |
+| `b.update_ref(commit)` (remote-tracking) | `g.update_ref("remotes/#{remote}/#{name}", commit)` |
+| `b.archive(file, opts)` | `g.archive(name, file, opts)` — pass `info.refname` for a remote-tracking branch |
+| `b.in_branch(message) { ... }` | `g.in_branch(name, message) { ... }` — local `b` only; see the differences above |
+| `b.stashes` | `g.stashes_all` — see [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated) |
 
 ---

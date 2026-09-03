@@ -33,7 +33,7 @@ RSpec.describe Git::Commands::UpdateRef::Batch, :integration do
     context 'when the command fails' do
       it 'raises FailedError when any instruction is invalid' do
         head_sha = repo.rev_parse('HEAD')
-        repo.branch('survive').create
+        repo.branch_new('survive')
 
         expect do
           command.call(

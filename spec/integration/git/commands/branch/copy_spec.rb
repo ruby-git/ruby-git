@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Branch::Copy, :integration do
 
     describe 'when the command fails' do
       it 'raises FailedError when target exists without force' do
-        repo.branch('existing').create
+        repo.branch_new('existing')
 
         expect { command.call('existing') }.to raise_error(Git::FailedError)
       end
