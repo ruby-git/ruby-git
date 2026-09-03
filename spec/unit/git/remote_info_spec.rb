@@ -169,5 +169,68 @@ RSpec.describe Git::RemoteInfo do
     it 'is frozen' do
       expect(info).to be_frozen
     end
+
+    context 'with array-valued fields' do
+      subject(:info) do
+        described_class.new(
+          name: 'origin',
+          url: ['https://example.com/repo.git'],
+          push_url: ['git@example.com:repo.git'],
+          fetch: ['+refs/heads/*:refs/remotes/origin/*'],
+          push: ['refs/heads/main:refs/heads/main']
+        )
+      end
+
+      it 'freezes url' do
+        expect(info.url).to be_frozen
+      end
+
+      it 'freezes push_url' do
+        expect(info.push_url).to be_frozen
+      end
+
+      it 'freezes fetch' do
+        expect(info.fetch).to be_frozen
+      end
+
+      it 'freezes push' do
+        expect(info.push).to be_frozen
+      end
+
+      it 'does not freeze the array passed by the caller' do
+        url = ['https://example.com/repo.git']
+        described_class.new(name: 'origin', url: url)
+        expect(url).not_to be_frozen
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #with
+  # ---------------------------------------------------------------------------
+
+  describe '#with' do
+    subject(:info) { described_class.new(name: 'origin', url: ['https://example.com/repo.git']) }
+
+    it 'returns a new instance with the given fields replaced' do
+      copy = info.with(url: ['https://example.com/other.git'])
+      expect(copy).to have_attributes(name: 'origin', url: ['https://example.com/other.git'])
+    end
+
+    it 'leaves the other fields unchanged' do
+      expect(info.with(prune: true)).to have_attributes(url: ['https://example.com/repo.git'], prune: true)
+    end
+
+    it 'freezes the array-valued fields of the copy' do
+      expect(info.with(url: ['https://example.com/other.git']).url).to be_frozen
+    end
+
+    it 'returns self when no fields are given' do
+      expect(info.with).to equal(info)
+    end
+
+    it 'raises ArgumentError for a field that is not a member' do
+      expect { info.with(bogus: 1) }.to raise_error(ArgumentError, /bogus/)
+    end
   end
 end

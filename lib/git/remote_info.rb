@@ -6,7 +6,11 @@ module Git
   # Each instance holds the parsed configuration for a single remote as read
   # from the repository's git config. Multi-value fields (`:url`, `:push_url`,
   # `:fetch`, `:push`) are always `Array<String>` (never `nil`; may be empty).
-  # All other fields are nilable except `:name`.
+  # Those arrays are frozen copies of the values given, so the set of URLs and
+  # refspecs cannot change after construction; use `with` to derive a modified
+  # copy. The immutability is shallow, as with any `Data` member: the strings
+  # inside those arrays and the scalar members are the objects the caller
+  # passed in, not copies. All other fields are nilable except `:name`.
   #
   # @example Minimal remote (fetch-only, one URL)
   #   info = Git::RemoteInfo.new(
@@ -88,13 +92,13 @@ module Git
     #
     # @param name [String] the name of the remote (required)
     #
-    # @param url [Array<String>] fetch URLs (default `[]`)
+    # @param url [Array<String>] fetch URLs (default `[]`); stored as a frozen copy
     #
-    # @param push_url [Array<String>] push URLs (default `[]`)
+    # @param push_url [Array<String>] push URLs (default `[]`); stored as a frozen copy
     #
-    # @param fetch [Array<String>] fetch refspecs (default `[]`)
+    # @param fetch [Array<String>] fetch refspecs (default `[]`); stored as a frozen copy
     #
-    # @param push [Array<String>] push refspecs (default `[]`)
+    # @param push [Array<String>] push refspecs (default `[]`); stored as a frozen copy
     #
     # @param mirror [Boolean, nil] mirror flag (default `nil`)
     #
@@ -118,7 +122,7 @@ module Git
     #
     # @return [Git::RemoteInfo]
     #
-    def initialize(
+    def initialize( # rubocop:disable Metrics/ParameterLists
       name:,
       url: [],
       push_url: [],
@@ -136,11 +140,64 @@ module Git
       vcs: nil
     )
       super(
-        name:, url: Array(url), push_url: Array(push_url), fetch: Array(fetch),
-        push: Array(push), mirror:, skip_default_update:, tag_opt:, prune:,
-        prune_tags:, receivepack:, uploadpack:, promisor:, partial_clone_filter:,
-        vcs:
+        name:, url: Array(url).dup.freeze, push_url: Array(push_url).dup.freeze,
+        fetch: Array(fetch).dup.freeze, push: Array(push).dup.freeze, mirror:,
+        skip_default_update:, tag_opt:, prune:, prune_tags:, receivepack:, uploadpack:,
+        promisor:, partial_clone_filter:, vcs:
       )
+    end
+
+    # Return a copy of this RemoteInfo with the given fields replaced
+    #
+    # Routes through {#initialize} so the multi-value fields of the copy are
+    # frozen copies, the same as on construction. `Data#with` bypasses
+    # `initialize` on Ruby 3.2, which would leave those arrays mutable.
+    #
+    # @example Replace the fetch URL
+    #   info.with(url: ['https://example.com/other.git']).url
+    #   # => ["https://example.com/other.git"]
+    #
+    # @param fields [Hash{Symbol => Object}] the fields to replace, keyed by
+    #   member name
+    #
+    # @option fields [String] :name the name of the remote
+    #
+    # @option fields [Array<String>] :url fetch URLs
+    #
+    # @option fields [Array<String>] :push_url push URLs
+    #
+    # @option fields [Array<String>] :fetch fetch refspecs
+    #
+    # @option fields [Array<String>] :push push refspecs
+    #
+    # @option fields [Boolean, nil] :mirror mirror flag
+    #
+    # @option fields [Boolean, nil] :skip_default_update skip-default-update flag
+    #
+    # @option fields [String, nil] :tag_opt tag-fetching option
+    #
+    # @option fields [Boolean, nil] :prune prune flag
+    #
+    # @option fields [Boolean, nil] :prune_tags prune-tags flag
+    #
+    # @option fields [String, nil] :receivepack receive-pack path
+    #
+    # @option fields [String, nil] :uploadpack upload-pack path
+    #
+    # @option fields [Boolean, nil] :promisor promisor flag
+    #
+    # @option fields [String, nil] :partial_clone_filter partial-clone filter
+    #
+    # @option fields [String, nil] :vcs VCS type
+    #
+    # @return [Git::RemoteInfo] a new instance; `self` when no fields are given
+    #
+    # @raise [ArgumentError] if a key is not a member of this Data class
+    #
+    def with(**fields)
+      return self if fields.empty?
+
+      self.class.new(**to_h, **fields)
     end
   end
 end
