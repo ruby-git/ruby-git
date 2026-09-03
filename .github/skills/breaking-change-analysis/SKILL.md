@@ -17,7 +17,7 @@ or modifying default behavior.
 - [Step 2: Find All Usages](#step-2-find-all-usages)
 - [Step 3: Assess and Document Impact](#step-3-assess-and-document-impact)
   - [Prove the safety claim](#prove-the-safety-claim)
-- [Step 4: Plan Migration Path](#step-4-plan-migration-path)
+- [Step 4: Deprecation policy](#step-4-deprecation-policy)
 
 ## How to use this skill
 
@@ -109,28 +109,61 @@ fixture repository, or a query against the RubyGems dump showing no dependent ge
 affected. Record the fact and its proof in the **Safety Proof** section of the
 assessment. A safety claim backed only by reasoning is an open question, not a
 finding — the step is complete when every such claim names its fact and the code that
-proved it.
+proved it. This proof applies to hard breaks and behavior changes that have no
+deprecation path. The deprecation policy in [Step 4](#step-4-deprecation-policy)
+governs removal of a deprecated API.
 
-## Step 4: Plan Migration Path
+## Step 4: Deprecation policy
 
-**Project versioning policy:**
-- Breaking changes are batched for major releases
-- Use deprecation warnings in the current major series before removal in the next major release
-- Whether a specific removal may land in the next major is governed by the removal
-  gate in
-  [ADR-0006](../../../docs/adr/0006-removals-require-proven-safety-and-calendar-soak.md)
+**Removal gate.** A removal PR merges to main only when its deprecation warning and
+`UPGRADING.md` entry are contained in a previous normal release. Once any removal has
+merged to main, main becomes the release line for the next major version. If another
+release of the previous major is needed, it is cut from a branch created for that major
+(e.g. `4.x` or `5.x`). "Normal release" is semver's term for a non-pre-release version.
 
-**Deprecation approach:**
+The gate sets the earliest major a removal may land in, not the one it must land in. A
+removal may land in any major after the gate is met; which one is a roadmap decision
+recorded on the API's issue.
+
+**What a deprecation ships.** All of the following land in the same minor release:
+
+- A runtime warning via `Git::Deprecation.warn` that names the replacement. A YARD tag
+  alone does not count. Do not use ActiveSupport's `deprecate_methods`; it bakes the
+  horizon into the message.
+- The replacement API.
+- An `UPGRADING.md` entry that agrees with the warning.
+- A `@deprecated` YARD tag with migration guidance.
+
+**Warning wording.** When the removing major is decided:
 
 ```ruby
-# @deprecated Use {#new_method} instead. Will be removed in the next major release.
-def old_method(*args)
-  warn "[DEPRECATION] `old_method` is deprecated. Use `new_method` instead."
-  new_method(*args)
-end
+Git::Deprecation.warn(
+  'Git::Author is deprecated and will be removed in v6.0.0. Use Git::AuthorInfo instead.'
+)
 ```
 
-**Documentation requirements:**
-- Add `@deprecated` YARD tag with migration guidance
-- Mark commits with `!` for breaking changes and include `BREAKING CHANGE:` footer
+When it is not yet decided:
+
+```ruby
+Git::Deprecation.warn(
+  'Git::Author is deprecated and will be removed in a future major release. ' \
+  'Use Git::AuthorInfo instead.'
+)
+```
+
+Deciding or changing the named major later is a documentation change that ships in a
+minor. Update the warning, the YARD tag, and the `UPGRADING.md` entry together.
+
+**When to deprecate.** Add a warning only when removal in a future major is intended.
+An API that will be kept but discouraged is documented as legacy with no warning; the
+hollow shells in
+[ADR-0002](../../../docs/adr/0002-commit-tree-and-blob-become-hollow-shells.md) are
+the precedent. Removing a warning (un-deprecating) is a non-breaking change.
+
+[ADR-0007](../../../docs/adr/0007-removals-require-one-normal-release-of-deprecation-not-calendar-soak.md)
+records the decision and its rationale.
+
+**Commit requirements:**
+
+- Mark removal commits with `!` and include a `BREAKING CHANGE:` footer
 - DO NOT update CHANGELOG.md — it is auto-generated from commit messages

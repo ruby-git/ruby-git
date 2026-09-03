@@ -340,6 +340,11 @@ Version constraints live in `git.gemspec`; do not restate them here.
 - Use `File.join` and forward slashes; avoid platform-specific paths in tests
 - Windows has different path handling, file-system behavior, and line endings; JRuby on Windows is not supported
 - Document git version requirements for features that need newer git
+- Deprecating or removing public API follows the deprecation policy in
+  [Breaking Change Analysis, Step 4](../breaking-change-analysis/SKILL.md#step-4-deprecation-policy);
+  the user-facing statements are the README's
+  [Deprecation policy](../../../README.md#deprecation-policy) and
+  [Release support policy](../../../README.md#release-support-policy) subsections
 
 ## Performance
 
