@@ -20,6 +20,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Author` deprecated](#gitauthor-deprecated)
     - [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated)
     - [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated)
+    - [`Git::Remote` deprecated](#gitremote-deprecated)
 
 ## Upgrading to v5.x
 
@@ -421,8 +422,10 @@ conversion.
 #### `Git::Repository#remotes` deprecated
 
 `Git::Repository#remotes` is deprecated in favor of `Git::Repository#remote_list`
-and is removed in v6.0.0. Calling `remotes` emits a deprecation warning; its
-return value is unchanged.
+and is removed in v6.0.0. Its return value is unchanged. Calling `remotes` emits
+one deprecation warning for itself plus one `Git::Remote` constructor warning for
+each remote it returns (see the `Git::Remote` deprecation below), so a repository
+with N remotes produces N + 1 warnings per call.
 
 > **Return type change:** `remotes` returns `Array<Git::Remote>` — mutable
 > objects with `name`, `url`, and `fetch_opts` accessors and `fetch`, `merge`,
@@ -454,8 +457,56 @@ return value is unchanged.
 | `remote.fetch(opts)` | `g.fetch(remote.name, opts)` — same options hash |
 | `remote.merge` | `g.merge("#{remote.name}/#{g.current_branch}")` |
 | `remote.merge(branch)` | `g.merge("#{remote.name}/#{branch}")` |
-| `remote.branch` | `g.branch("#{remote.name}/#{g.current_branch}")` |
-| `remote.branch(name)` | `g.branch("#{remote.name}/#{name}")` |
+| `remote.branch` | `g.branch_list("#{remote.name}/#{g.current_branch}").first` — returns a `Git::BranchInfo` |
+| `remote.branch(name)` | `g.branch_list("#{remote.name}/#{name}").first` — returns a `Git::BranchInfo` |
 | `remote.remove` | `g.remote_remove(remote.name)` |
+
+#### `Git::Remote` deprecated
+
+`Git::Remote`, `Git::Repository#remote`, and `Git::Repository#config_remote` are
+deprecated and are removed in v6.0.0. Read a remote's configuration through
+`Git::Repository#remote_list`, which returns one `Git::RemoteInfo` value object per
+remote, and call the repository-level operations (`fetch`, `merge`, `branch_list`,
+`remote_remove`) with the remote name. Return values are unchanged. Constructing a
+`Git::Remote` directly emits one deprecation warning, and so does calling
+`g.config_remote`. Calling `g.remote` emits two: one for `Git::Repository#remote`
+and one for the `Git::Remote` it constructs. Likewise `g.remotes` emits one warning
+for itself plus one per `Git::Remote` it returns (N + 1 for N remotes). The extra
+warnings from `g.remote` and `g.remotes` are expected, not a bug.
+
+> **Return type changes:** `Git::RemoteInfo#url` and `Git::RemoteInfo#fetch` are
+> frozen `Array<String>` because a remote may carry more than one URL or fetch
+> refspec. The legacy `Git::Remote#url` and `Git::Remote#fetch_opts` returned only
+> the last configured value, so `r.url.last` and `r.fetch.last` reproduce them
+> exactly; `r.url.first` is the URL git actually fetches from.
+> `config_remote` returned a flat `Hash{String => String}` in which a repeated
+> `url` or `fetch` key overwrote the earlier value, so it could not report every
+> configured URL or refspec; `remote_list` keeps all of them. In the other
+> direction, `Git::RemoteInfo` models only the remote variables git defines and
+> drops any other `remote.<name>.*` key, while `config_remote` returned every key.
+> Code that reads custom keys should filter `g.config_list` instead (see the
+> table); that yields the same `Hash{String => String}` as `config_remote`.
+> `Git::Remote#branch` returned a `Git::Branch`. Its replacement,
+> `g.branch_list("#{name}/#{branch}").first`, returns a `Git::BranchInfo` value
+> object, or `nil` when the remote-tracking branch does not exist.
+
+In the table, `name` is the remote name (`g.remote` defaults it to `'origin'`).
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.remote` | `g.remote_list.find { \|r\| r.name == 'origin' }` — returns a `Git::RemoteInfo`; the deprecated call emits two warnings |
+| `g.remote(name)` | `g.remote_list.find { \|r\| r.name == name }` — returns a `Git::RemoteInfo`; the deprecated call emits two warnings |
+| `g.config_remote(name)` for `url`, `fetch`, and the other modeled fields | `g.remote_list.find { \|r\| r.name == name }` — a `Git::RemoteInfo`, not a `Hash` |
+| `g.config_remote(name)` for every key, including custom ones | `g.config_list.select { \|e\| e.key.start_with?("remote.#{name}.") }.to_h { \|e\| [e.key.delete_prefix("remote.#{name}."), e.value] }` — the same `Hash{String => String}` |
+| `remote.name`, `remote.to_s` | `g.remote_list.find { \|r\| r.name == name }.name` or `g.remote_names` |
+| `remote.url` | `g.remote_list.find { \|r\| r.name == name }.url` — `Array<String>`; `.first` for the single-URL case |
+| `remote.fetch_opts` | `g.remote_list.find { \|r\| r.name == name }.fetch` — `Array<String>` of refspecs |
+| `remote.fetch` | `g.fetch(name)` |
+| `remote.fetch(opts)` | `g.fetch(name, opts)` — same option keys |
+| `remote.merge` | `g.merge("#{name}/#{g.current_branch}")` |
+| `remote.merge(branch)` | `g.merge("#{name}/#{branch}")` |
+| `remote.branch` | `g.branch_list("#{name}/#{g.current_branch}").first` — returns a `Git::BranchInfo` |
+| `remote.branch(branch)` | `g.branch_list("#{name}/#{branch}").first` — returns a `Git::BranchInfo` |
+| `remote.remove` | `g.remote_remove(name)` |
 
 ---

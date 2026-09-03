@@ -525,7 +525,37 @@ module Git
       #
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
+      # @deprecated Use `remote_list.find { |r| r.name == name }` for the fields
+      #   {Git::RemoteInfo} models, or filter {Git::Configuring#config_list} on
+      #   the `remote.<name>.` key prefix to keep every entry
+      #
+      #   {#remote_list} returns a {Git::RemoteInfo} per remote. Its `url` and
+      #   `fetch` members hold every configured value as `Array<String>`,
+      #   whereas this method returns a flat hash in which a repeated `url` or
+      #   `fetch` key overwrites the earlier value.
+      #
+      #   {Git::RemoteInfo} models only the remote variables git defines and
+      #   drops any other `remote.<name>.*` entry, whereas this method returns
+      #   every entry. Callers that read custom keys should filter
+      #   {Git::Configuring#config_list} instead, which returns the same hash
+      #   (shown here for the `origin` remote):
+      #
+      #     prefix = 'remote.origin.'
+      #     repo.config_list
+      #         .select { |entry| entry.key.start_with?(prefix) }
+      #         .to_h { |entry| [entry.key.delete_prefix(prefix), entry.value] }
+      #
+      # @see #remote_list
+      #
+      # @see Git::Configuring#config_list
+      #
       def config_remote(name)
+        Git::Deprecation.warn(
+          'Git::Repository#config_remote is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#remote_list.find { |r| r.name == name } for the fields ' \
+          'Git::RemoteInfo models, or filter Git::Repository#config_list on the ' \
+          '"remote.<name>." key prefix to keep every entry.'
+        )
         prefix = "remote.#{name}."
         Private.config_list(@execution_context).each_with_object({}) do |(key, value), hsh|
           hsh[key.delete_prefix(prefix)] = value if key.start_with?(prefix)
@@ -574,7 +604,19 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @deprecated Use `remote_list.find { |r| r.name == name }` instead
+      #
+      #   {#remote_list} returns immutable {Git::RemoteInfo} value objects
+      #   rather than {Git::Remote}. Call the corresponding {Git::Repository}
+      #   method (e.g. {#fetch}, {#remote_remove}) for operations on a remote.
+      #
+      # @see #remote_list
+      #
       def remote(name = 'origin')
+        Git::Deprecation.warn(
+          'Git::Repository#remote is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#remote_list.find { |r| r.name == name } instead.'
+        )
         Git::Remote.new(self, name)
       end
 
@@ -594,7 +636,9 @@ module Git
       #   {#remote_list} returns `Array<Git::RemoteInfo>` (immutable value
       #   objects) rather than `Array<Git::Remote>`. Call the corresponding
       #   {Git::Repository} method (e.g. {#fetch}, {#remote_remove}) for
-      #   operations on a remote.
+      #   operations on a remote. Each {Git::Remote} this method constructs
+      #   emits its own deprecation warning, so a call produces one warning
+      #   for this method plus one per remote returned.
       #
       # @see #remote_list
       #

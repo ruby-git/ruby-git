@@ -7,13 +7,26 @@ module Git
   # A remote in a Git repository
   #
   # Remote objects provide access to remote metadata and operations like fetch,
-  # merge, and remove. They should be obtained via `Git::Repository#remote`,
-  # not constructed directly.
+  # merge, and remove. This class and `Git::Repository#remote`, which returns
+  # it, are both deprecated: read remote configuration through
+  # {Git::Repository::RemoteOperations#remote_list} and call the
+  # repository-level operations with the remote name instead.
   #
-  # @example Getting a remote
+  # @example Reading a remote and fetching from it without Git::Remote
   #   git = Git.open('.')
-  #   remote = git.remote('origin')
-  #   remote.fetch
+  #   origin = git.remote_list.find { |r| r.name == 'origin' }  #=> Git::RemoteInfo
+  #   origin.url.first
+  #   git.fetch(origin.name)
+  #
+  # @deprecated Use {Git::Repository::RemoteOperations#remote_list} and the
+  #   repository-level remote operations instead
+  #
+  #   {Git::Repository::RemoteOperations#remote_list} returns immutable
+  #   {Git::RemoteInfo} value objects. Operations that lived on this class are
+  #   called on the repository with the remote name instead (for example
+  #   {Git::Repository::RemoteOperations#fetch} and
+  #   {Git::Repository::RemoteOperations#remote_remove}). Constructing a
+  #   `Git::Remote` emits a deprecation warning.
   #
   # @api public
   #
@@ -42,13 +55,20 @@ module Git
     #
     # @param name [String] the remote name (e.g. `'origin'`)
     #
-    # @note Use `Git::Repository#remote` instead of constructing directly
+    # @note Do not construct directly. `Git::Repository#remote` is deprecated as
+    #   well; use {Git::Repository::RemoteOperations#remote_list} and the
+    #   repository-level remote operations instead.
     #
     # @api private
     #
     def initialize(base, name)
+      Git::Deprecation.warn(
+        'Git::Remote is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#remote_list and the repository-level remote operations instead.'
+      )
       @base = base
-      config = remote_repository.config_remote(name)
+      # config_remote is deprecated too; silence it so one Git::Remote.new emits one warning
+      config = Git::Deprecation.silence { remote_repository.config_remote(name) }
       @name = name
       @url = config['url']
       @fetch_opts = config['fetch']
@@ -118,6 +138,16 @@ module Git
     # @param branch [String] the branch name on this remote (defaults to current branch)
     #
     # @return [Git::Branch] a branch object representing `<remote>/<branch>`
+    #
+    # @deprecated Use
+    #   `Git::Repository#branch_list("#{name}/#{branch || current_branch}").first`
+    #   instead
+    #
+    #   With no argument this method falls back to the current branch, so the
+    #   replacement has to supply `Git::Repository#current_branch` itself. The
+    #   replacement returns a {Git::BranchInfo} value object rather than a
+    #   {Git::Branch}, and returns `nil` when the remote-tracking branch does
+    #   not exist.
     #
     def branch(branch = nil)
       branch ||= remote_repository.current_branch
