@@ -12,6 +12,7 @@ RSpec.describe Git::Remote do
 
   before do
     allow(base).to receive(:config_remote).with('origin').and_return(remote_config)
+    allow(Git::Deprecation).to receive(:warn)
   end
 
   let(:described_instance) { described_class.new(base, 'origin') }
@@ -23,6 +24,14 @@ RSpec.describe Git::Remote do
   describe '#initialize' do
     context 'when base is a Git::Repository' do
       subject(:remote) { described_instance }
+
+      it 'emits a deprecation warning via Git::Deprecation.warn' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Remote is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#remote_list and the repository-level remote operations instead.'
+        )
+        remote
+      end
 
       it 'sets the name' do
         expect(remote.name).to eq('origin')
@@ -39,6 +48,35 @@ RSpec.describe Git::Remote do
       it 'calls config_remote on the repository' do
         expect(base).to receive(:config_remote).with('origin').and_return(remote_config)
         remote
+      end
+    end
+
+    context 'when config_remote itself emits a deprecation warning' do
+      subject(:remote) { described_instance }
+
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence in #initialize is
+      # exercised instead of bypassed by the stubbed Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(base).to receive(:config_remote).with('origin') do
+          Git::Deprecation.warn('Git::Repository#config_remote is deprecated')
+          remote_config
+        end
+      end
+
+      it 'lets only the Git::Remote warning escape' do
+        remote
+        expect(messages).to contain_exactly(a_string_including('Git::Remote is deprecated'))
       end
     end
   end
