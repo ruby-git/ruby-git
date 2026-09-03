@@ -35,6 +35,8 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 - [Project policies](#project-policies)
   - [Ruby version support policy](#ruby-version-support-policy)
   - [Git version support policy](#git-version-support-policy)
+  - [Deprecation policy](#deprecation-policy)
+  - [Release support policy](#release-support-policy)
 - [Project announcements](#project-announcements)
   - [2026-08-23: v5.x deprecations and the v6.0.0 roadmap](#2026-08-23-v5x-deprecations-and-the-v600-roadmap)
   - [2026-07-28: v5.0.0 released](#2026-07-28-v500-released)
@@ -296,9 +298,9 @@ See [the Active Support Deprecation
 documentation](https://api.rubyonrails.org/classes/ActiveSupport/Deprecation.html)
 for more details.
 
-If you silence deprecation warnings, reenable them before upgrading the git gem to
-the next major version. This makes it easier to identify changes needed for the
-upgrade.
+Before upgrading the git gem to the next major version, follow the upgrade procedure
+in [UPGRADING.md](UPGRADING.md#upgrading-to-v600). It turns the warnings into errors so
+that you cannot miss one.
 
 For the full list of deprecated methods and their replacements, see
 [UPGRADING.md](UPGRADING.md).
@@ -382,6 +384,8 @@ opening issues or pull requests.
 | [AI_POLICY](AI_POLICY.md) | AI-assisted contributions are welcome. Contributors are expected to read and apply the AI Policy, and ensure any AI-assisted work meets our quality, security, and licensing standards. |
 | [Ruby version support policy](#ruby-version-support-policy) | Supported Ruby runtimes and platforms; bump decisions and CI coverage expectations. |
 | [Git version support policy](#git-version-support-policy) | Minimum supported git version and how version bumps are communicated and enforced. |
+| [Deprecation policy](#deprecation-policy) | When an API may be removed, what a deprecation warning says, and how to upgrade across a major version. |
+| [Release support policy](#release-support-policy) | Which branch releases what, and how long each major series is supported. |
 | [GOVERNANCE](GOVERNANCE.md) | Principles-first governance defining maintainer/project lead roles, least-privilege access, consensus/majority decisions, and nomination/emeritus steps. |
 | [MAINTAINERS](MAINTAINERS.md) | Lists active maintainers (Project Lead noted) and emeritus alumni with links; see governance for role scope. |
 | [LICENSE](LICENSE) | MIT License terms for using, modifying, and redistributing this project. |
@@ -418,6 +422,42 @@ The supported git version may be increased in future major or minor releases of 
 gem as new git features are adopted or as maintaining backward compatibility becomes
 impractical. Such changes will be documented in the CHANGELOG and release notes.
 
+### Deprecation policy
+
+This gem removes an API only in a major release, and only after a normal release
+deprecated it with a runtime warning and documented its replacement in
+[UPGRADING.md](UPGRADING.md). A normal release is one that is not a pre-release. The
+warning names the major release that removes the API once that is decided. Until then
+it says the API will be removed in a future major release.
+
+The recommended way to upgrade across a major version:
+
+1. Upgrade to the latest release of the major series you are on.
+2. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
+   your test suite and, if possible, staging.
+3. Fix each deprecation using the entries in [UPGRADING.md](UPGRADING.md) until the
+   suite is clean.
+4. Upgrade to the next major release.
+
+Because every deprecation warning is present in the last release of a major series,
+this procedure finds every change the next major requires. The version-specific steps
+are in [UPGRADING.md](UPGRADING.md#upgrading-to-v600). See
+[Deprecations](#deprecations) for how to configure the warnings.
+
+### Release support policy
+
+All development happens on `main`, which releases the next version of the gem,
+including the next major version.
+
+The most recent previous major series is maintained on a branch named for that
+series, currently `4.x`. It receives bug fixes and security fixes, and
+backward-compatible features at the maintainers' discretion. Fixes land on `main`
+first and are backported, except a fix for a problem that exists only in the
+maintenance branch, which targets that branch directly.
+
+Support for a major series ends when the second major after it is released. v4.x is
+supported until v6.0.0 ships, and v5.x until v7.0.0.
+
 ## Project announcements
 
 ### 2026-08-23: v5.x deprecations and the v6.0.0 roadmap
@@ -426,10 +466,11 @@ The road to v6.0.0 is now planned and public. The remaining ActiveRecord-style
 classes (`Git::Branch`, `Git::Remote`, `Git::Stash`, `Git::Worktree`,
 `Git::Object::Tag`, `Git::Status`, `Git::Author`, and their collections) will be
 deprecated during the v5.x series in favor of the immutable `*Info` value-object
-APIs. v6.0.0 will remove each deprecated class that passes the project's removal
-gate: a mandated deprecation soak period plus a proven-safe check. Any class that
-does not pass carries forward, still deprecated. v6.0.0 also raises the version
-floors: git ≥ 2.42.0, Ruby ≥ 3.4.
+APIs. v6.0.0 will remove each deprecated class once a normal v5.x release has carried
+its deprecation warning and UPGRADING.md entry, per the
+[Deprecation policy](#deprecation-policy). v6.0.0 will not ship until every planned
+deprecation has shipped that way. v6.0.0 also raises the version floors: git ≥ 2.42.0,
+Ruby ≥ 3.4.
 
 [Issue #1717](https://github.com/ruby-git/ruby-git/issues/1717) is the living
 roadmap, tracking scope, sequencing, and status. If your code uses the classes
