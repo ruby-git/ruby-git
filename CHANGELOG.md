@@ -5,6 +5,39 @@
 
 # Change Log
 
+## [5.3.0](https://github.com/ruby-git/ruby-git/compare/v5.2.0...v5.3.0) (2026-09-03)
+
+
+### Features
+
+* **author:** Add immutable Git::AuthorInfo and deprecate Git::Author ([c08b04b](https://github.com/ruby-git/ruby-git/commit/c08b04bf25142140c626fd16354355aae26b4fba)), closes [#1721](https://github.com/ruby-git/ruby-git/issues/1721)
+* **branch:** Deprecate Git::Branch and Git::Branches in favor of Git::Repository#branch_list ([1581aa0](https://github.com/ruby-git/ruby-git/commit/1581aa00b3fc7984a2024b290b83f6f6f5e97838)), closes [#1639](https://github.com/ruby-git/ruby-git/issues/1639)
+* **branch:** Deprecate Git::Branch#stashes in favor of Git::Repository#stashes_all ([dcee889](https://github.com/ruby-git/ruby-git/commit/dcee889a63bfd38cc3073577b55e2112721c5e33)), closes [#1637](https://github.com/ruby-git/ruby-git/issues/1637)
+* **cat-file:** Deprecate the allow_unknown_type option of Git::Commands::CatFile::Raw ([95769ea](https://github.com/ruby-git/ruby-git/commit/95769ea683349c445a7a7ea7b839fc990d2d8c4b)), closes [#1709](https://github.com/ruby-git/ruby-git/issues/1709)
+* **info:** Nest Git::AuthorInfo in Git::TagInfo and Git::StashInfo ([2f44f96](https://github.com/ruby-git/ruby-git/commit/2f44f9617122c3719625cf3a56f4b263b0de4c3c)), closes [#1745](https://github.com/ruby-git/ruby-git/issues/1745)
+* **remote:** Deprecate Git::Remote and Git::Repository#remote in favor of #remote_list ([1abb585](https://github.com/ruby-git/ruby-git/commit/1abb585339c0d003622719aa5930b5bde2262502)), closes [#1643](https://github.com/ruby-git/ruby-git/issues/1643)
+* **remote:** Freeze Git::RemoteInfo array-valued members ([4d44a3d](https://github.com/ruby-git/ruby-git/commit/4d44a3dc8fed77b39c7146675eaa9d46eb12e34d))
+* **repository:** Add in_branch and merge_into facade methods ([59b58d0](https://github.com/ruby-git/ruby-git/commit/59b58d0389656051e8cd61bd856dc116139c2507)), closes [#1641](https://github.com/ruby-git/ruby-git/issues/1641)
+* **repository:** Deprecate Git::Repository#remotes in favor of #remote_list ([410095c](https://github.com/ruby-git/ruby-git/commit/410095c4d2a3065c222f9cc750a05143230801d7)), closes [#1640](https://github.com/ruby-git/ruby-git/issues/1640)
+
+
+### Bug Fixes
+
+* **branching:** Verify refs/heads when classifying the HEAD state ([bfc4d8a](https://github.com/ruby-git/ruby-git/commit/bfc4d8a2b82000906d1a398c69125fcfdc22c276)), closes [#1641](https://github.com/ruby-git/ruby-git/issues/1641)
+
+
+### Other Changes
+
+* **adr:** Supersede ADR-0006 with a release-based deprecation period ([b3b32e3](https://github.com/ruby-git/ruby-git/commit/b3b32e339f3804d022ea83cec03977039ecdcace))
+* **author:** Add failing tests for Git::AuthorInfo and Git::Author deprecation ([e0d3123](https://github.com/ruby-git/ruby-git/commit/e0d3123fadd836e301160f492e0a1303f43267b8)), closes [#1721](https://github.com/ruby-git/ruby-git/issues/1721)
+* **branch:** Add failing test for the Git::Branch#stashes deprecation ([a806808](https://github.com/ruby-git/ruby-git/commit/a806808f3e5a5a38a92646c1ab64c8906b3dc525))
+* **contributing:** Describe the release line and maintenance branch rules ([fd78c9c](https://github.com/ruby-git/ruby-git/commit/fd78c9ccd262470c9e33166ba63dc095b2060a5d))
+* **info:** Add failing tests for nested Git::AuthorInfo on TagInfo and StashInfo ([a7f5e69](https://github.com/ruby-git/ruby-git/commit/a7f5e6988beaa85bce68e6295ad23a2754338d5b)), closes [#1745](https://github.com/ruby-git/ruby-git/issues/1745)
+* **readme:** Add the deprecation and release support policies ([50ac2e2](https://github.com/ruby-git/ruby-git/commit/50ac2e28bdd6ddb9349b8980e457441a0d39f6c9))
+* **remote:** Add failing tests for the Git::Remote and Git::Repository#remote deprecations ([36af404](https://github.com/ruby-git/ruby-git/commit/36af40419603f9c0a03f424e3839a1d7337b517b))
+* **skills:** State the deprecation policy and the major release checklists ([a246cf8](https://github.com/ruby-git/ruby-git/commit/a246cf8fee93a96132f2bd1b0796899204b830a1))
+* **upgrading:** Add the v6.0.0 upgrade procedure ([4d7c58c](https://github.com/ruby-git/ruby-git/commit/4d7c58c7a0e963da6146608093e9373dade1efe4))
+
 ## [5.2.0](https://github.com/ruby-git/ruby-git/compare/v5.1.0...v5.2.0) (2026-08-30)
 
 
