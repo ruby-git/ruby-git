@@ -806,6 +806,7 @@ RSpec.describe Git::Repository::RemoteOperations do
       allow(Git::Commands::ConfigOptionSyntax::List)
         .to receive(:new).with(execution_context).and_return(list_command)
       allow(list_command).to receive(:call).and_return(list_result)
+      allow(Git::Deprecation).to receive(:warn)
     end
 
     context 'when the remote has entries in git config' do
@@ -817,6 +818,16 @@ RSpec.describe Git::Repository::RemoteOperations do
           "core.bare=false\n"
       end
       let(:list_result) { command_result(config_stdout) }
+
+      it 'emits a deprecation warning via Git::Deprecation.warn' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Repository#config_remote is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#remote_list.find { |r| r.name == name } for the fields ' \
+          'Git::RemoteInfo models, or filter Git::Repository#config_list on the ' \
+          '"remote.<name>." key prefix to keep every entry.'
+        )
+        result
+      end
 
       it 'returns a Hash' do
         expect(result).to be_a(Hash)
@@ -878,10 +889,19 @@ RSpec.describe Git::Repository::RemoteOperations do
       allow(Git::Commands::ConfigOptionSyntax::List)
         .to receive(:new).with(execution_context).and_return(config_list_command)
       allow(config_list_command).to receive(:call).and_return(command_result(config_stdout))
+      allow(Git::Deprecation).to receive(:warn)
     end
 
     context 'with an explicit remote name' do
       subject(:result) { described_instance.remote('upstream') }
+
+      it 'emits a deprecation warning via Git::Deprecation.warn' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Repository#remote is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#remote_list.find { |r| r.name == name } instead.'
+        )
+        result
+      end
 
       it 'returns a Git::Remote for the given name' do
         expect(result).to be_a(Git::Remote)
