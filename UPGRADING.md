@@ -21,6 +21,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated)
     - [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated)
     - [`Git::Remote` deprecated](#gitremote-deprecated)
+    - [`Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated)
 
 ## Upgrading to v5.x
 
@@ -508,5 +509,25 @@ In the table, `name` is the remote name (`g.remote` defaults it to `'origin'`).
 | `remote.branch` | `g.branch_list("#{name}/#{g.current_branch}").first` — returns a `Git::BranchInfo` |
 | `remote.branch(branch)` | `g.branch_list("#{name}/#{branch}").first` — returns a `Git::BranchInfo` |
 | `remote.remove` | `g.remote_remove(name)` |
+
+#### `Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated
+
+The `allow_unknown_type:` option of `Git::Commands::CatFile::Raw` is deprecated
+and is removed in v6.0.0. Passing it emits a deprecation warning; the
+`--allow-unknown-type` flag still reaches git unchanged until the option is
+removed.
+
+There is no replacement. Git 2.50 removed the unknown-type feature, so on git
+2.50 and later `--allow-unknown-type` is an accepted no-op and the option has no
+effect. On git 2.28 through 2.49 the flag still lets `t: true` and `s: true`
+report the type and size of an object whose type git does not recognize, but
+that behavior is dropped together with the option. The class is internal
+(`@api private`) and no `Git::Repository` method passes the option, so only code
+that constructs the command class directly is affected.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `Git::Commands::CatFile::Raw.new(ctx).call(sha, t: true, allow_unknown_type: true)` | `Git::Commands::CatFile::Raw.new(ctx).call(sha, t: true)` |
+| `Git::Commands::CatFile::Raw.new(ctx).call(sha, s: true, allow_unknown_type: true)` | `Git::Commands::CatFile::Raw.new(ctx).call(sha, s: true)` |
 
 ---
