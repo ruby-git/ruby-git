@@ -30,7 +30,11 @@ that major, remove them in the next.
 
 The case that prompted the rule: git 2.50 retired `--allow-unknown-type`, leaving the
 `allow_unknown_type:` option of `Git::Commands::CatFile::Raw` meaningful only below
-2.50. It stays because the floor is 2.28.0. Issue #1709 holds its deprecation trigger.
+2.50. It stays because the floor is 2.28.0. Issue #1709 then deprecated it in v5.3.0,
+ahead of the floor, as an exception the rule allows only because the option is
+private (it lives on an `@api private` command class, reachable only by constructing
+that class directly) and proven unused (the safety proof on issue #1718 found no call
+site in any dependent gem or on GitHub); the floor rule stands for public options.
 
 The scaffolding and audit mechanics live in
 [Command Implementation - Options completeness](../../.github/skills/command-implementation/REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).

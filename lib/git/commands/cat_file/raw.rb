@@ -50,8 +50,10 @@ module Git
           flag_option :s
 
           # Allow -t and -s to query broken or corrupt objects of unknown type.
-          # Git 2.28-2.49 rejects this flag in other modes; git 2.50+ accepts and
-          # ignores it everywhere (the unknown-type feature was removed; see issue 1709).
+          # Deprecated and removed in v6.0.0 (see issue 1709); passing it emits a
+          # deprecation warning. Git 2.28-2.49 honors it with -t and -s and rejects
+          # it in other modes; git 2.50+ accepts and ignores it everywhere (the
+          # unknown-type feature was removed).
           # See https://git-scm.com/docs/git-cat-file/2.49.0#Documentation/git-cat-file.txt---allow-unknown-type
           flag_option :allow_unknown_type
 
@@ -91,6 +93,13 @@ module Git
         #
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean, nil] :allow_unknown_type (nil) pass `--allow-unknown-type` through to git,
+        #     which rejects it in this mode on git 2.28-2.49 and accepts it as a no-op
+        #     on git 2.50 and later
+        #
+        #     Deprecated and removed in v6.0.0; passing it emits a deprecation
+        #     warning.
+        #
         #   @option options [Boolean, nil] :use_mailmap (nil) remap identities via mailmap (`--use-mailmap`)
         #
         #   @option options [Boolean, nil] :no_use_mailmap (nil) suppress mailmap remapping (`--no-use-mailmap`)
@@ -113,8 +122,11 @@ module Git
         #   @param options [Hash] command options
         #
         #   @option options [Boolean, nil] :allow_unknown_type (nil) allow querying broken or corrupt objects of
-        #     unknown type on git 2.28-2.49; git 2.50 removed the unknown-type feature
-        #     and accepts this flag as a no-op
+        #     unknown type on git 2.28-2.49
+        #
+        #     Deprecated and removed in v6.0.0; passing it emits a deprecation
+        #     warning. Git 2.50 removed the unknown-type feature and accepts this
+        #     flag as a no-op.
         #
         #   @option options [Boolean, nil] :use_mailmap (nil) remap identities via mailmap (`--use-mailmap`)
         #
@@ -138,8 +150,11 @@ module Git
         #   @param options [Hash] command options
         #
         #   @option options [Boolean, nil] :allow_unknown_type (nil) allow querying broken or corrupt objects of
-        #     unknown type on git 2.28-2.49; git 2.50 removed the unknown-type feature
-        #     and accepts this flag as a no-op
+        #     unknown type on git 2.28-2.49
+        #
+        #     Deprecated and removed in v6.0.0; passing it emits a deprecation
+        #     warning. Git 2.50 removed the unknown-type feature and accepts this
+        #     flag as a no-op.
         #
         #   @option options [Boolean, nil] :use_mailmap (nil) remap identities via mailmap (`--use-mailmap`)
         #
@@ -162,6 +177,13 @@ module Git
         #
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean, nil] :allow_unknown_type (nil) pass `--allow-unknown-type` through to git,
+        #     which rejects it in this mode on git 2.28-2.49 and accepts it as a no-op
+        #     on git 2.50 and later
+        #
+        #     Deprecated and removed in v6.0.0; passing it emits a deprecation
+        #     warning.
+        #
         #   @option options [Boolean, nil] :use_mailmap (nil) remap identities via mailmap (`--use-mailmap`)
         #
         #   @option options [Boolean, nil] :no_use_mailmap (nil) suppress mailmap remapping (`--no-use-mailmap`)
@@ -183,6 +205,13 @@ module Git
         #
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean, nil] :allow_unknown_type (nil) pass `--allow-unknown-type` through to git,
+        #     which rejects it in this mode on git 2.28-2.49 and accepts it as a no-op
+        #     on git 2.50 and later
+        #
+        #     Deprecated and removed in v6.0.0; passing it emits a deprecation
+        #     warning.
+        #
         #   @option options [Boolean, nil] :use_mailmap (nil) remap identities via mailmap (`--use-mailmap`)
         #
         #   @option options [Boolean, nil] :no_use_mailmap (nil) suppress mailmap remapping (`--no-use-mailmap`)
@@ -199,6 +228,7 @@ module Git
         #   @option options [Numeric, nil] :timeout (nil) abort the command after this many seconds
         #
         def call(*, **)
+          warn_allow_unknown_type_deprecated(**)
           bound = args_definition.bind(*, **)
           validate_version!(bound.execution_options)
           result = execute_command(bound)
@@ -210,6 +240,30 @@ module Git
           raise Git::FailedError, result unless allowed
 
           result
+        end
+
+        private
+
+        # Emit the deprecation warning when the `allow_unknown_type` keyword is passed
+        #
+        # Keys on the keyword being present, whatever its value: `false` and `nil`
+        # suppress the flag but still name a deprecated option.
+        #
+        # @param options [Hash] the keyword arguments passed to {#call}
+        #
+        # @option options [Boolean, nil] :allow_unknown_type the deprecated option;
+        #   any value, including `false` and `nil`, triggers the warning
+        #
+        # @return [void]
+        #
+        def warn_allow_unknown_type_deprecated(**options)
+          return unless options.key?(:allow_unknown_type)
+
+          Git::Deprecation.warn(
+            'The allow_unknown_type option of Git::Commands::CatFile::Raw is deprecated ' \
+            'and will be removed in v6.0.0. Git 2.50 removed the unknown-type feature ' \
+            'and accepts --allow-unknown-type as a no-op.'
+          )
         end
       end
     end
