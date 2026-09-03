@@ -221,16 +221,29 @@ first keeps the review cycle short.
 
 This project maintains two active branches:
 
-- **`main`**: Active development for the next major version (v5.0.0+). This branch
-  may contain breaking changes.
-- **`4.x`**: Maintenance branch for the v4.x release series. This branch receives bug
-  fixes and backward-compatible improvements only.
+- **`main`**: All development. It releases the next version of the gem, including
+  the next major version.
+- **`4.x`**: The maintenance branch for the most recent previous major series. It
+  receives bug fixes and security fixes, and backward-compatible features at the
+  maintainers' discretion.
+
+The README's [Release support policy](README.md#release-support-policy) says how long
+each major series is supported.
 
 When submitting a pull request:
 
 - **New features and breaking changes**: Target the `main` branch
 - **Bug fixes**: Target `main`, and maintainers will backport to `4.x` if applicable
 - **Security fixes**: Target both branches or `4.x` if the issue only affects v4.x
+
+Removing a deprecated API follows the
+[deprecation policy](.github/skills/breaking-change-analysis/SKILL.md#step-4-deprecation-policy):
+
+A removal PR merges to main only when its deprecation warning and `UPGRADING.md` entry
+are contained in a previous normal release. Once any removal has merged to main, main
+becomes the release line for the next major version. If another release of the
+previous major is needed, it is cut from a branch created for that major (e.g. `4.x`
+or `5.x`).
 
 ## AI-assisted contributions
 

@@ -31,4 +31,4 @@ fine to use `#` in footer values such as `Closes: #999` or `Refs: #999`.
 | Target | When |
 | --- | --- |
 | `main` | New features, breaking changes, all active development |
-| `4.x` | Security fixes and backward-compatible bug fixes for the v4.x series |
+| `4.x` | Security fixes, backward-compatible bug fixes, and backward-compatible features at the maintainers' discretion for the v4.x series |
