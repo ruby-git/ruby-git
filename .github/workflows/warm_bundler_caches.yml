@@ -13,7 +13,7 @@ name: Warm Bundler Caches
 # The matrix below must stay in sync with continuous_integration.yml: setup-ruby's
 # cache key embeds the runner OS, the resolved Ruby version, and the Gemfile.lock hash,
 # so a pair that is not warmed here still starts cold in CI. That includes the lint
-# job's Ruby 3.4 and the Windows 3.2 job, neither of which appears in CI's main matrix
+# job's Ruby 3.4 and the Windows 3.3 job, neither of which appears in CI's main matrix
 # list. The head rubies from experimental_continuous_integration.yml are deliberately
 # absent: that workflow already runs on `push: [main]` and warms its own caches.
 #
@@ -49,7 +49,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - ruby: "3.2"
+          - ruby: "3.3"
             operating-system: ubuntu-latest
 
           - # Hosts the lint and locale jobs in continuous_integration.yml
@@ -65,7 +65,7 @@ jobs:
           - ruby: "jruby-10.0.0.1"
             operating-system: ubuntu-latest
 
-          - ruby: "3.2"
+          - ruby: "3.3"
             operating-system: windows-latest
 
     steps:
