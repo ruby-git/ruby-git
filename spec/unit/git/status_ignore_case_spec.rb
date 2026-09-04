@@ -14,6 +14,7 @@ RSpec.describe Git::Status do
 
   before do
     allow(Git::Status::StatusFileFactory).to receive(:new).with(base).and_return(factory)
+    allow(Git::Deprecation).to receive(:warn)
   end
 
   describe '#changed?' do
