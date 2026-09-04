@@ -16,6 +16,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::CommandLineResult` deprecated](#gitcommandlineresult-deprecated)
   - [Deprecated methods](#deprecated-methods)
     - [Facade method renames](#facade-method-renames)
+    - [`Git::Repository` method renames](#gitrepository-method-renames)
     - [v4.x-style configuration methods](#v4x-style-configuration-methods)
     - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
     - [Module-level `Git` function deprecations](#module-level-git-function-deprecations)
@@ -354,6 +355,39 @@ The old names continue to work but emit deprecation warnings:
 | `g.set_remote_url(name, url)` | `g.remote_set_url(name, url)` |
 | `g.add_tag(name, ...)` | `g.tag_add(name, ...)` |
 | `g.delete_tag(name)` | `g.tag_delete(name)` |
+
+#### `Git::Repository` method renames
+
+Seven more `Git::Repository` methods were renamed in v5.x. The old names continue
+to work but emit deprecation warnings. Each old name returns exactly what its
+replacement returns, except `branches_all`.
+
+> **Return shape change:** `g.branches_all` returns an `Array` of 4-element
+> tuples `[refname, current, worktree, symref]`, where `refname` is the short
+> form (`main` or `remotes/origin/main`), `current` and `worktree` are booleans,
+> and `symref` is the symbolic-ref target or `nil`. `g.branch_list` returns
+> `Array<Git::BranchInfo>` with `refname` (always the full ref: `refs/heads/main`
+> or `refs/remotes/origin/main`), `short_name`, `remote_name`, `remote?`,
+> `current?`, `other_worktree?`, `symref`, `target_oid`, and `upstream`. This
+> expression reproduces the legacy tuples:
+>
+> ```ruby
+> g.branch_list.map do |i|
+>   refname = i.remote? ? "remotes/#{i.remote_name}/#{i.short_name}" : i.short_name
+>   [refname, i.current?, i.other_worktree?, i.symref]
+> end
+> ```
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.empty?` | `g.no_commits?` — `true` when the repository has no commits |
+| `g.reset_hard` | `g.reset(nil, hard: true)` — `reset` takes the commitish positionally, so pass `nil` before the options; returns git's stdout, as `reset_hard` did |
+| `g.reset_hard(commitish)` | `g.reset(commitish, hard: true)` — `reset_hard` ignored any `:hard` option passed to it and always reset with `--hard` |
+| `g.conflicts { \|file, yours, theirs\| ... }` | `g.each_conflict { \|file, yours, theirs\| ... }` — same block arguments; returns the unmerged paths |
+| `g.is_local_branch?(name)` | `g.local_branch?(name)` |
+| `g.is_remote_branch?(name)` | `g.remote_branch?(name)` |
+| `g.is_branch?(name)` | `g.branch?(name)` |
+| `g.branches_all` | `g.branch_list` — returns `Array<Git::BranchInfo>`; see the return shape change above |
 
 #### v4.x-style configuration methods
 
