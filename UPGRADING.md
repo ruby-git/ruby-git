@@ -18,6 +18,7 @@ to update your code when upgrading from the preceding major version.
     - [Facade method renames](#facade-method-renames)
     - [v4.x-style configuration methods](#v4x-style-configuration-methods)
     - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
+    - [Module-level `Git` function deprecations](#module-level-git-function-deprecations)
     - [`Git::Author` deprecated](#gitauthor-deprecated)
     - [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated)
     - [Legacy stash API deprecated](#legacy-stash-api-deprecated)
@@ -358,14 +359,20 @@ The old names continue to work but emit deprecation warnings:
 
 The v4.x `config` and `global_config` methods accepted varying argument shapes
 to read, write, or list configuration. These are replaced by separate,
-purpose-named methods.
+purpose-named methods. The same applies to the module-level
+`Git.global_config`, which is replaced by `Git.config_get`, `Git.config_set`,
+and `Git.config_list` called with `global: true`.
 
-> **Return type change:** The v4.x `g.config(name)` returned a `String` and
-> `g.config` returned a `Hash`. The v5.x replacements `config_get` and
-> `config_list` return `Git::ConfigEntryInfo` and `Array<Git::ConfigEntryInfo>`
+> **Return type change:** The v4.x `g.config(name)` and `Git.global_config(name)`
+> returned a `String`; `g.config` and `Git.global_config` returned a `Hash`. The
+> v5.x replacements `config_get` and `config_list` return `Git::ConfigEntryInfo`
+> (or `nil` when the key is not set) and `Array<Git::ConfigEntryInfo>`
 > respectively. Use `.value` to get the String value:
 > - `g.config_get(name)&.value` → String or nil
 > - `g.config_list.to_h { |e| [e.key, e.value] }` → Hash (key → value)
+>
+> The setters `g.config(name, value)` and `Git.global_config(name, value)`
+> returned the raw command result; `config_set` returns `nil`.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
@@ -375,6 +382,9 @@ purpose-named methods.
 | `g.global_config(name)` | `g.config_get(name, global: true)` |
 | `g.global_config` | `g.config_list(global: true)` |
 | `g.global_config(name, value)` | `g.config_set(name, value, global: true)` |
+| `Git.global_config(name)` | `Git.config_get(name, global: true)` — returns `Git::ConfigEntryInfo` or `nil`; use `.value` for the String |
+| `Git.global_config` | `Git.config_list(global: true)` — returns `Array<Git::ConfigEntryInfo>` |
+| `Git.global_config(name, value)` | `Git.config_set(name, value, global: true)` |
 
 #### `Git` module mixin deprecations
 
@@ -383,12 +393,42 @@ as bare methods is deprecated:
 
 | Deprecated usage | Replacement |
 |-----------------|-------------|
-| `include Git; config(name)` | `Git.open(Dir.pwd).config_get(name)` |
-| `include Git; config(name, value)` | `Git.open(Dir.pwd).config_set(name, value)` |
-| `include Git; config` | `Git.open(Dir.pwd).config_list` |
+| `include Git; config(name)` | `Git.config_get(name)` |
+| `include Git; config(name, value)` | `Git.config_set(name, value)` |
+| `include Git; config` | `Git.config_list` |
 | `include Git; global_config(name)` | `Git.config_get(name, global: true)` |
 | `include Git; global_config(name, value)` | `Git.config_set(name, value, global: true)` |
 | `include Git; global_config` | `Git.config_list(global: true)` |
+
+`Git.config_get`, `Git.config_set`, and `Git.config_list` run `git config` in
+the current directory, which is what the mixin `config` method did. The
+return types differ as described under
+[v4.x-style configuration methods](#v4x-style-configuration-methods).
+
+#### Module-level `Git` function deprecations
+
+Two module-level functions on `Git` accept a legacy call shape or return a
+legacy type that is deprecated:
+
+- `Git.ls_remote` defaults its repository argument to `'.'`. Passing `nil`
+  explicitly still works but warns; omit the argument or pass `'.'`. The
+  options hash is positional, so when you pass options you must also pass the
+  repository: `Git.ls_remote('.', opts)`, not `Git.ls_remote(opts)`.
+- `Git.binary_version` is replaced by `Git.git_version`, which keeps the
+  optional binary path argument.
+
+> **Return type change:** `Git.binary_version` returned an `Array<Integer>` of
+> `[major, minor, patch]`. `Git.git_version` returns a `Git::Version`, which
+> supports comparison and exposes `major`, `minor`, and `patch`.
+> `Git.git_version.to_a` reproduces the legacy array. The return value of
+> `Git.ls_remote` is unchanged.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `Git.ls_remote(nil)` | `Git.ls_remote` or `Git.ls_remote('.')` |
+| `Git.ls_remote(nil, opts)` | `Git.ls_remote('.', opts)` |
+| `Git.binary_version` | `Git.git_version` — returns `Git::Version`; use `.to_a` for the `[major, minor, patch]` Array |
+| `Git.binary_version(binary_path)` | `Git.git_version(binary_path)` |
 
 #### `Git::Author` deprecated
 
