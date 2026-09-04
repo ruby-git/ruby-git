@@ -45,7 +45,7 @@ branch needs to be rebased onto `origin/main` and pushed.
 
 These rules are mandatory:
 
-- Never run this workflow on `main` or `4.x`.
+- Never run this workflow on `main`, `5.x`, or `4.x`.
 - Always fetch `origin` immediately before rebasing.
 - Always run rebase commands with `GIT_EDITOR=:` and `GIT_SEQUENCE_EDITOR=:` so
   no editor opens.
@@ -67,8 +67,8 @@ git status --short --branch
 git fetch --prune origin
 ```
 
-If the current branch is `main` or `4.x`, stop and ask the user to switch to a
-topic branch first.
+If the current branch is `main`, `5.x`, or `4.x`, stop and ask the user to switch to
+a topic branch first.
 
 If `git status --short --branch` shows uncommitted changes, stop and ask the
 user whether to commit or stash before continuing.
