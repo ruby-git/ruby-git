@@ -237,7 +237,7 @@ error classes.
 ### Ruby Style
 
 - `frozen_string_literal: true` at the top of every Ruby file
-- Ruby 3.2.0+ idioms; keyword arguments for multi-parameter methods
+- Ruby 3.3.0+ idioms; keyword arguments for multi-parameter methods
 - `private` keyword form (not `private :method_name`)
 - Pattern matching for complex conditionals where appropriate
 
@@ -333,7 +333,7 @@ Version constraints live in `git.gemspec`; do not restate them here.
 
 ## Compatibility
 
-- **Minimum Ruby (language level):** 3.2.0
+- **Minimum Ruby (language level):** 3.3.0
 - **Supported Rubies:** MRI (macOS, Linux, Windows); latest JRuby and TruffleRuby on Linux
 - **Minimum Git:** 2.28.0
 - **Platforms:** macOS, Linux, Windows (JRuby/TruffleRuby officially supported on Linux only)
