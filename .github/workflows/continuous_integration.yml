@@ -24,8 +24,8 @@ jobs:
   # Ruby 3.4 hosts this job rather than the newest supported Ruby because it gates
   # merges: a lint gate should be insulated from churn in a brand-new major, and Ruby
   # 4.0 deprecations still surface through the matrix jobs below, which do run 4.0.
-  # 3.3+ is also a hard floor here, since yard-lint is only installed on 3.3 and later
-  # (see the gemspec) and YARD itself cannot build on JRuby or TruffleRuby.
+  # It also has to be MRI, since YARD and yard-lint cannot build on JRuby or
+  # TruffleRuby (see the gemspec).
   lint:
     name: Lint and Docs
 
@@ -109,10 +109,10 @@ jobs:
       matrix:
         # Only the minimum required versions of JRuby and TruffleRuby are tested.
         #
-        ruby: ["3.2", "4.0", "truffleruby-24.2.1", "jruby-10.0.0.1"]
+        ruby: ["3.3", "4.0", "truffleruby-24.2.1", "jruby-10.0.0.1"]
         operating-system: [ubuntu-latest]
         include:
-          - ruby: "3.2"
+          - ruby: "3.3"
             operating-system: windows-latest
 
     steps:
@@ -149,7 +149,7 @@ jobs:
 
   # The branch ruleset cannot require the matrix jobs above directly. A required status
   # check is matched by name, and `build`'s name is a template -- GitHub only expands it
-  # into "Ruby 3.2 on ubuntu-latest" and friends when it evaluates the matrix. The
+  # into "Ruby 3.3 on ubuntu-latest" and friends when it evaluates the matrix. The
   # job-level `if:` short-circuits before that happens, so a release PR reports one check
   # named literally "Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}" and the
   # five expanded names never report at all. Required checks that never report block a PR
