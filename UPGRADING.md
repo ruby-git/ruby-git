@@ -17,6 +17,7 @@ to update your code when upgrading from the preceding major version.
   - [Deprecated methods](#deprecated-methods)
     - [Facade method renames](#facade-method-renames)
     - [`Git::Repository` method renames](#gitrepository-method-renames)
+    - [`Git::Repository` option renames](#gitrepository-option-renames)
     - [v4.x-style configuration methods](#v4x-style-configuration-methods)
     - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
     - [Module-level `Git` function deprecations](#module-level-git-function-deprecations)
@@ -389,6 +390,38 @@ replacement returns, except `branches_all`.
 | `g.is_remote_branch?(name)` | `g.remote_branch?(name)` |
 | `g.is_branch?(name)` | `g.branch?(name)` |
 | `g.branches_all` | `g.branch_list` — returns `Array<Git::BranchInfo>`; see the return shape change above |
+
+#### `Git::Repository` option renames
+
+Five methods accept a v4.x option or positional argument under its old name.
+The old form still works in v5.x but emits a deprecation warning and is
+translated to the v5.x form shown below.
+
+> **`clean`:** `force: 2` runs `git clean -ff`, which also removes untracked
+> nested git repositories. A `false` or `nil` value for `:ff` or `:force_force`
+> still warns and has no effect; a value other than `true`, `false`, or `nil`
+> raises `ArgumentError`. When the deprecated key is `true` and a valid
+> `:force` is also given, `:force` is raised to `2` (a `:force` already at `2`
+> is unchanged). An invalid `:force` value such as `0` is passed through
+> unchanged and still raises `ArgumentError`; the deprecated key does not mask
+> it.
+
+> **`diff_path_status`:** `:path_limiter` accepts the same values as `:path`
+> (a `String`, a `Pathname`, or an `Array` of them). When both keys are given,
+> `:path_limiter` wins and no warning is emitted.
+
+> **`set_working` and `set_index`:** `must_exist:` defaults to `true`. When
+> both the positional argument and `must_exist:` are given, they are OR'ed so
+> the more restrictive value wins.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.clean(ff: true)` | `g.clean(force: 2)` |
+| `g.clean(force_force: true)` | `g.clean(force: 2)` |
+| `g.diff_path_status(ref1, ref2, path: p)` | `g.diff_path_status(ref1, ref2, path_limiter: p)` |
+| `g.commit(message, add_all: true)` | `g.commit(message, all: true)` — runs `git commit -a` |
+| `g.set_working(dir, check)` | `g.set_working(dir, must_exist: check)` |
+| `g.set_index(file, check)` | `g.set_index(file, must_exist: check)` |
 
 #### v4.x-style configuration methods
 
