@@ -137,13 +137,14 @@ Execute and report results for:
 
 Before creating the PR, confirm the branch situation:
 
-- [ ] Changes are on a feature branch (not `main` or `4.x`), named
+- [ ] Changes are on a feature branch (not `main`, `5.x`, or `4.x`), named
   `<type>/<short-description>`
 - [ ] Branch targets the correct base: `main` for features/breaking changes;
-  `4.x` for security fixes and backward-compatible v4.x-only changes
+  `5.x` or `4.x` for security fixes and backward-compatible changes that apply only
+  to that series
 
 **If changes are on the wrong branch:** Create a new branch from the appropriate
-base (`origin/main` or `origin/4.x`) and relocate the existing work using the
+base (`origin/main`, `origin/5.x`, or `origin/4.x`) and relocate the existing work using the
 most appropriate Git approach — cherry-pick (specific commits), rebase (linear
 history), or recommit (uncommitted changes) — based on the situation.
 

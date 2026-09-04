@@ -131,9 +131,10 @@ and is checked when each removal PR merges, not here.
 - [ ] Replace the retired maintenance branch with the new one everywhere it is named:
       the push triggers in `release.yml`, `continuous_integration.yml`, and
       `enforce_conventional_commits.yml` under `.github/workflows/`, the branch tables
-      in `.github/copilot-instructions.md` and `CONTRIBUTING.md`, and the skills that
-      list the protected branches. `grep -rn '4\.x' .github CONTRIBUTING.md` finds
-      them all.
+      in `.github/copilot-instructions.md` and `CONTRIBUTING.md`, the release support
+      policy in `README.md`, the protected branch list in `.husky/pre-commit`, and the
+      skills that list the protected branches.
+      `grep -rn '4\.x' .github .husky CONTRIBUTING.md README.md` finds them all.
 - [ ] Close the milestone and update the roadmap issue.
 
 ## What NOT to Do

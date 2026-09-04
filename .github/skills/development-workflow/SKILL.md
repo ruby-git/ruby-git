@@ -377,7 +377,7 @@ commit and complete the feature or bug fix.
      works on all platforms)
    - Then run in the terminal: `git push origin <branch>`
    - Then run in the terminal: `gh pr create --title "<title>" --base <target-branch> --body-file ./pr_body.md`
-     (choose `main` or `4.x` per the [branch strategy](../../../CONTRIBUTING.md))
+     (choose `main`, `5.x`, or `4.x` per the [branch strategy](../../../CONTRIBUTING.md))
 
    After creating the PR, verify the stored body with
    `gh pr view <number> --json body --jq '.body'`. If it is garbled, rewrite

@@ -128,7 +128,7 @@ bin/setup
 3. Run `npm install` (when npm is available) to install the Conventional Commit
    `commit-msg` hook used by this project (Husky + commitlint). A separate
    `pre-commit` hook is also installed that blocks direct commits to the
-   protected branches (`main`, `4.x`).
+   protected branches (`main`, `5.x`, `4.x`).
 4. Verify the toolchain by running `bundle exec rake --tasks`.
 
 `bin/setup` checks for [lychee](https://lychee.cli.rs) alongside Ruby, git, and
@@ -197,7 +197,7 @@ Once your pull request is ready for review, request a review from at least one
 
 During the review process, you may need to make additional commits; squash them.
 You will also need to rebase your branch onto the latest version of the target
-branch (e.g., `main` or `4.x`) before merging.
+branch (e.g., `main`, `5.x`, or `4.x`) before merging.
 
 At least one approval from a project maintainer is required before your pull request
 can be merged. The maintainer is responsible for ensuring that the pull request meets
@@ -219,11 +219,13 @@ first keeps the review cycle short.
 
 ## Branch strategy
 
-This project maintains two active branches:
+This project maintains `main` plus one maintenance branch for each supported previous
+major series:
 
 - **`main`**: All development. It releases the next version of the gem, including
-  the next major version.
-- **`4.x`**: The maintenance branch for the most recent previous major series. It
+  the next major version. Its next release is v6.0.0; every v5.x release is cut from
+  `5.x`.
+- **`5.x`** and **`4.x`**: The maintenance branches for the v5.x and v4.x series. Each
   receives bug fixes and security fixes, and backward-compatible features at the
   maintainers' discretion.
 
@@ -233,8 +235,10 @@ each major series is supported.
 When submitting a pull request:
 
 - **New features and breaking changes**: Target the `main` branch
-- **Bug fixes**: Target `main`, and maintainers will backport to `4.x` if applicable
-- **Security fixes**: Target both branches or `4.x` if the issue only affects v4.x
+- **Bug fixes**: Target `main`, and maintainers will backport to the maintenance
+  branches if applicable
+- **Security fixes**: Target `main` and every affected maintenance branch, or only a
+  maintenance branch if the issue affects that series alone
 
 Removing a deprecated API follows the
 [deprecation policy](.github/skills/breaking-change-analysis/SKILL.md#step-4-deprecation-policy):
@@ -1088,8 +1092,8 @@ $ LIST_UNCOVERED_DETAIL=true bundle exec rake spec:unit
 $ open coverage/index.html
 ```
 
-This policy applies to `main` only. The `4.x` maintenance branch predates it and is
-not held to these thresholds.
+This policy applies to `main` and `5.x`. The `4.x` maintenance branch predates it and
+is not held to these thresholds.
 
 #### Unit tests vs integration tests
 
