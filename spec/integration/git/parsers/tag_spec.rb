@@ -23,7 +23,7 @@ RSpec.describe Git::Parsers::Tag, :integration do
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.tag_add('v1.0.0')
+        repo.tag_create('v1.0.0')
       end
 
       it 'returns tag with populated metadata' do
@@ -58,7 +58,7 @@ RSpec.describe Git::Parsers::Tag, :integration do
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.tag_add('v2.0.0', annotate: true, message: 'Release version 2.0.0')
+        repo.tag_create('v2.0.0', annotate: true, message: 'Release version 2.0.0')
       end
 
       it 'returns tag with populated metadata' do
@@ -104,8 +104,8 @@ RSpec.describe Git::Parsers::Tag, :integration do
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.tag_add('v1.0.0', annotate: true, message: multiline_message)
-        repo.tag_add('v1.1.0', annotate: true, message: 'Simple message')
+        repo.tag_create('v1.0.0', annotate: true, message: multiline_message)
+        repo.tag_create('v1.1.0', annotate: true, message: 'Simple message')
       end
 
       it 'captures full multi-line message' do
@@ -129,17 +129,17 @@ RSpec.describe Git::Parsers::Tag, :integration do
         write_file('file1.txt', 'content1')
         repo.add('file1.txt')
         repo.commit('First commit')
-        repo.tag_add('v1.0.0')
+        repo.tag_create('v1.0.0')
 
         write_file('file2.txt', 'content2')
         repo.add('file2.txt')
         repo.commit('Second commit')
-        repo.tag_add('v1.1.0', annotate: true, message: 'Version 1.1.0')
+        repo.tag_create('v1.1.0', annotate: true, message: 'Version 1.1.0')
 
         write_file('file3.txt', 'content3')
         repo.add('file3.txt')
         repo.commit('Third commit')
-        repo.tag_add('v2.0.0')
+        repo.tag_create('v2.0.0')
       end
 
       it 'returns all tags' do
@@ -167,8 +167,8 @@ RSpec.describe Git::Parsers::Tag, :integration do
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.tag_add('release/v1.0')
-        repo.tag_add('feature-branch-tag')
+        repo.tag_create('release/v1.0')
+        repo.tag_create('feature-branch-tag')
       end
 
       it 'handles tags with slashes' do

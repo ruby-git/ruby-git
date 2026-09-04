@@ -607,6 +607,8 @@ RSpec.describe Git::Object::Tag do
   let(:repository) { Git::Repository.new(execution_context: execution_context) }
   let(:described_instance) { described_class.new(repository, 'tagsha123abc', 'v1.0') }
 
+  before { allow(Git::Deprecation).to receive(:warn) }
+
   describe '#initialize' do
     subject(:tag) { described_class.new(base, sha, name) }
 
@@ -875,7 +877,33 @@ RSpec.describe Git::Object do
       it 'creates a Tag via the deprecated new_tag path and emits a deprecation warning' do
         result = described_class.new(repository, 'v1.0', nil, true)
         expect(result).to be_a(Git::Object::Tag)
-        expect(Git::Deprecation).to have_received(:warn).with(a_string_including('deprecated'))
+        expect(Git::Deprecation).to have_received(:warn).with(
+          a_string_including('Git::Object.new with is_tag argument is deprecated')
+        )
+      end
+
+      context 'when the nested Git::Object::Tag warning is not stubbed' do
+        let(:messages) { [] }
+
+        # Route real warnings to a collector so the silence around the nested
+        # deprecated constructor is exercised instead of bypassed by the stubbed
+        # Git::Deprecation.warn
+        around do |example|
+          original_behavior = Git::Deprecation.behavior
+          Git::Deprecation.behavior = ->(message, *) { messages << message }
+          example.run
+        ensure
+          Git::Deprecation.behavior = original_behavior
+        end
+
+        before { allow(Git::Deprecation).to receive(:warn).and_call_original }
+
+        it 'lets only the Git::Object.new warning escape' do
+          described_class.new(repository, 'v1.0', nil, true)
+          expect(messages).to contain_exactly(
+            a_string_including('Git::Object.new with is_tag argument is deprecated')
+          )
+        end
       end
     end
 

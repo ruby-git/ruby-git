@@ -1255,6 +1255,8 @@ RSpec.describe Git::Repository::ObjectOperations do
 
     let(:tag_object) { instance_double(Git::Object::Tag) }
 
+    before { allow(Git::Deprecation).to receive(:warn) }
+
     it 'emits a deprecation warning via Git::Deprecation.warn' do
       allow(Git::Object::Tag).to receive(:new).and_return(tag_object)
       expect(Git::Deprecation).to receive(:warn).with(
@@ -1269,6 +1271,31 @@ RSpec.describe Git::Repository::ObjectOperations do
         .with(described_instance, 'v1.0')
         .and_return(tag_object)
       expect(result).to be(tag_object)
+    end
+
+    context 'when the nested Git::Object::Tag warning is not stubbed' do
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence around the nested
+      # deprecated constructor is exercised instead of bypassed by the stubbed
+      # Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(described_instance).to receive(:tag_sha).with('v1.0').and_return('tagsha123abc')
+      end
+
+      it 'lets only the Git::Repository#tag warning escape' do
+        result
+        expect(messages).to contain_exactly(a_string_including('Git::Repository#tag is deprecated'))
+      end
     end
   end
 
@@ -1299,8 +1326,9 @@ RSpec.describe Git::Repository::ObjectOperations do
       allow(Git::Parsers::Tag).to receive(:parse_list).with('raw-stdout').and_return(
         [instance_double(Git::TagInfo, name: 'v1.0.0'), instance_double(Git::TagInfo, name: 'v2.0.0')]
       )
-      allow(described_instance).to receive(:tag).with('v1.0.0').and_return(tag_first)
-      allow(described_instance).to receive(:tag).with('v2.0.0').and_return(tag_second)
+      allow(Git::Object::Tag).to receive(:new).with(described_instance, 'v1.0.0').and_return(tag_first)
+      allow(Git::Object::Tag).to receive(:new).with(described_instance, 'v2.0.0').and_return(tag_second)
+      allow(Git::Deprecation).to receive(:warn)
     end
 
     it 'emits a deprecation warning via Git::Deprecation.warn' do
@@ -1337,6 +1365,32 @@ RSpec.describe Git::Repository::ObjectOperations do
 
       it 'returns an empty array' do
         expect(result).to eq([])
+      end
+    end
+
+    context 'when the nested Git::Object::Tag warnings are not stubbed' do
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence around the nested
+      # deprecated constructors is exercised instead of bypassed by the stubbed
+      # Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(Git::Object::Tag).to receive(:new).and_call_original
+        allow(described_instance).to receive(:tag_sha).and_return('tagsha123abc')
+      end
+
+      it 'lets only the Git::Repository#tags warning escape' do
+        result
+        expect(messages).to contain_exactly(a_string_including('Git::Repository#tags is deprecated'))
       end
     end
   end
@@ -1457,6 +1511,26 @@ RSpec.describe Git::Repository::ObjectOperations do
           .with('v1.0.0', nil, force: true).and_return(create_result)
         described_instance.tag_create('v1.0.0', { force: true })
       end
+
+      it 'accepts a target followed by the trailing hash' do
+        expect(create_command).to receive(:call)
+          .with('v1.0.0', 'abc123', force: true).and_return(create_result)
+        described_instance.tag_create('v1.0.0', 'abc123', { force: true })
+      end
+    end
+
+    context 'with more than one positional argument after the name' do
+      it 'raises ArgumentError without calling git' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.tag_create('v1.0.0', 'HEAD', 'main') }
+          .to raise_error(ArgumentError, 'Expected at most one target before the options, got 2: ["HEAD", "main"]')
+      end
+
+      it 'raises ArgumentError when the extra arguments precede an options hash' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.tag_create('v1.0.0', 'HEAD', 'main', force: true) }
+          .to raise_error(ArgumentError, /Expected at most one target/)
+      end
     end
 
     context 'when an unknown option is provided' do
@@ -1520,7 +1594,8 @@ RSpec.describe Git::Repository::ObjectOperations do
     before do
       allow(Git::Commands::Tag::Create).to receive(:new).with(execution_context).and_return(create_command)
       allow(create_command).to receive(:call).and_return(command_result)
-      allow(described_instance).to receive(:tag).with('v1.0.0').and_return(tag_object)
+      allow(Git::Object::Tag).to receive(:new).with(described_instance, 'v1.0.0').and_return(tag_object)
+      allow(Git::Deprecation).to receive(:warn)
     end
 
     it 'emits a deprecation warning via Git::Deprecation.warn' do
@@ -1540,6 +1615,32 @@ RSpec.describe Git::Repository::ObjectOperations do
       expect(described_instance.tag_add('v1.0.0')).to be(tag_object)
     end
 
+    context 'when the nested Git::Object::Tag warning is not stubbed' do
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence around the nested
+      # deprecated constructor is exercised instead of bypassed by the stubbed
+      # Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(Git::Object::Tag).to receive(:new).and_call_original
+        allow(described_instance).to receive(:tag_sha).with('v1.0.0').and_return('tagsha123abc')
+      end
+
+      it 'lets only the Git::Repository#tag_add warning escape' do
+        described_instance.tag_add('v1.0.0')
+        expect(messages).to contain_exactly(a_string_including('Git::Repository#tag_add is deprecated'))
+      end
+    end
+
     context 'with no target and no options' do
       it 'calls the create command with a nil commit and no options' do
         expect(create_command).to receive(:call).with('v1.0.0', nil).and_return(command_result)
@@ -1551,6 +1652,13 @@ RSpec.describe Git::Repository::ObjectOperations do
       it 'forwards the target as the commit operand' do
         expect(create_command).to receive(:call).with('v1.0.0', 'abc123').and_return(command_result)
         described_instance.tag_add('v1.0.0', 'abc123')
+      end
+    end
+
+    context 'with more than one positional argument after the name' do
+      it 'keeps the legacy behavior of tagging the first and ignoring the rest' do
+        expect(create_command).to receive(:call).with('v1.0.0', 'abc123').and_return(command_result)
+        described_instance.tag_add('v1.0.0', 'abc123', 'ignored')
       end
     end
 
@@ -1637,11 +1745,11 @@ RSpec.describe Git::Repository::ObjectOperations do
 
       before do
         allow(described_instance).to receive(:tag_delete).with('v1.0.0').and_return(delete_stdout)
-        allow(Git::Deprecation).to receive(:warn)
       end
 
-      it 'issues a deprecation warning' do
-        expect(Git::Deprecation).to receive(:warn).with(/deprecated/)
+      it 'issues the :d/:delete deprecation warning after the tag_add warning' do
+        expect(Git::Deprecation).to receive(:warn).with(/tag_add is deprecated/).ordered
+        expect(Git::Deprecation).to receive(:warn).with(/Passing :d or :delete to tag_add is deprecated/).ordered
         described_instance.tag_add('v1.0.0', d: true)
       end
 

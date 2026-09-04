@@ -101,7 +101,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
   describe '#cat_file_tag' do
     before do
-      repo.tag_add('v1.0', annotate: true, message: 'Release v1.0')
+      repo.tag_create('v1.0', annotate: true, message: 'Release v1.0')
     end
 
     context 'with a valid annotated tag' do
@@ -126,7 +126,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'with an annotated tag whose message is empty' do
       before do
-        repo.tag_add('v2.0', annotate: true, message: '')
+        repo.tag_create('v2.0', annotate: true, message: '')
       end
 
       it 'returns a Hash without raising NoMethodError' do
@@ -143,7 +143,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   describe '#tag_sha' do
     context 'when the tag exists' do
       before do
-        repo.tag_add('v1.0')
+        repo.tag_create('v1.0')
       end
 
       it 'returns the SHA of the tagged commit as a String' do
@@ -462,7 +462,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   # already exercised by the #cat_file_type, #cat_file_contents, and #tag_sha
   # integration tests above. Unit tests in
   # spec/unit/git/repository/object_operations_spec.rb verify the delegation
-  # contract and argument forwarding.
+  # contract, argument forwarding, and the #tag deprecation warning.
 
   describe '#tag_list' do
     let(:head_sha) { described_instance.rev_parse('HEAD') }
@@ -474,7 +474,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
 
     context 'with a lightweight tag' do
-      before { repo.tag_add('v1.0.0') }
+      before { repo.tag_create('v1.0.0') }
 
       it 'returns a Git::TagInfo whose oid is nil and whose target_oid is the tagged commit' do
         result = described_instance.tag_list
@@ -487,7 +487,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
 
     context 'with an annotated tag' do
-      before { repo.tag_add('v1.0.0', annotate: true, message: 'Release 1.0.0') }
+      before { repo.tag_create('v1.0.0', annotate: true, message: 'Release 1.0.0') }
 
       it 'returns a Git::TagInfo carrying the tag object oid, the target commit, and the message' do
         info = described_instance.tag_list.first
@@ -501,9 +501,9 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'with patterns' do
       before do
-        repo.tag_add('v1.0.0')
-        repo.tag_add('v1.1.0')
-        repo.tag_add('v2.0.0')
+        repo.tag_create('v1.0.0')
+        repo.tag_create('v1.1.0')
+        repo.tag_create('v2.0.0')
       end
 
       it 'returns only the tags matching a single pattern' do
@@ -573,10 +573,13 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
+  # #tag_add is deprecated; each call is silenced so the :raise deprecation
+  # behavior configured in spec_helper does not abort the example. The
+  # deprecation warning itself is asserted in the unit spec.
   describe '#tag_add' do
     context 'with no target and no options' do
       it 'creates a lightweight tag on HEAD' do
-        tag = described_instance.tag_add('v1.0.0')
+        tag = Git::Deprecation.silence { described_instance.tag_add('v1.0.0') }
         expect(tag).to be_a(Git::Object::Tag)
         expect(tag.name).to eq('v1.0.0')
         expect(tag.annotated?).to be(false)
@@ -586,14 +589,16 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     context 'with a target commit' do
       it 'creates the tag pointing at the given commit' do
         head_sha = described_instance.rev_parse('HEAD')
-        tag = described_instance.tag_add('v1.0.0', head_sha)
+        tag = Git::Deprecation.silence { described_instance.tag_add('v1.0.0', head_sha) }
         expect(tag.objectish).to eq(head_sha)
       end
     end
 
     context 'with annotate and a message' do
       it 'creates an annotated tag carrying the message' do
-        tag = described_instance.tag_add('v1.0.0', annotate: true, message: 'Release 1.0.0')
+        tag = Git::Deprecation.silence do
+          described_instance.tag_add('v1.0.0', annotate: true, message: 'Release 1.0.0')
+        end
         expect(tag.annotated?).to be(true)
         expect(tag.message).to eq('Release 1.0.0')
       end
@@ -604,10 +609,12 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     # :force) are pure-Ruby or command concerns with no added end-to-end signal;
     # they are covered by the unit spec and command integration specs.
     context 'when the tag already exists' do
-      before { described_instance.tag_add('v1.0.0') }
+      before { described_instance.tag_create('v1.0.0') }
 
       it 'replaces the existing tag when force is given' do
-        replaced = described_instance.tag_add('v1.0.0', force: true, annotate: true, message: 'replaced')
+        replaced = Git::Deprecation.silence do
+          described_instance.tag_add('v1.0.0', force: true, annotate: true, message: 'replaced')
+        end
         expect(replaced.annotated?).to be(true)
         expect(replaced.message).to eq('replaced')
       end

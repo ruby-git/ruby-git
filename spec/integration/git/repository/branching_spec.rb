@@ -417,7 +417,7 @@ RSpec.describe Git::Repository::Branching, :integration do
 
     context 'on an unborn branch that shares its name with a tag' do
       before do
-        repo.tag_add('scratch')
+        repo.tag_create('scratch')
         repo.checkout('scratch', orphan: true)
       end
 
@@ -555,7 +555,7 @@ RSpec.describe Git::Repository::Branching, :integration do
 
     context 'when HEAD is on an unborn branch that shares its name with a tag' do
       before do
-        repo.tag_add('scratch')
+        repo.tag_create('scratch')
         repo.checkout('scratch', orphan: true)
       end
 

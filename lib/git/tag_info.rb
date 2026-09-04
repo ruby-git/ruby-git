@@ -43,7 +43,8 @@ module Git
   #   info.lightweight?  #=> true
   #   info.tagger        #=> nil
   #
-  # @see Git::Tag for the full-featured tag object with operations
+  # @see Git::Repository::ObjectOperations#tag_list for the repository method
+  #   that returns these
   #
   # @see Git::Commands::Tag::List for the command that produces these
   #

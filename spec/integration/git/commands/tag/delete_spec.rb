@@ -13,7 +13,7 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
       write_file('file.txt', 'content')
       repo.add('file.txt')
       repo.commit('Initial commit')
-      repo.tag_add('v1.0.0')
+      repo.tag_create('v1.0.0')
     end
 
     context 'when the command succeeds' do
@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
       end
 
       it 'returns exit code 1 for partial failure' do
-        repo.tag_add('v2.0.0')
+        repo.tag_create('v2.0.0')
 
         result = command.call('v1.0.0', 'nonexistent', 'v2.0.0')
 
