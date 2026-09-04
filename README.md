@@ -38,6 +38,7 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
   - [Deprecation policy](#deprecation-policy)
   - [Release support policy](#release-support-policy)
 - [Project announcements](#project-announcements)
+  - [2026-09-04: Retired branches deleted](#2026-09-04-retired-branches-deleted)
   - [2026-08-23: v5.x deprecations and the v6.0.0 roadmap](#2026-08-23-v5x-deprecations-and-the-v600-roadmap)
   - [2026-07-28: v5.0.0 released](#2026-07-28-v500-released)
   - [2026-01-07: AI policy introduced](#2026-01-07-ai-policy-introduced)
@@ -459,6 +460,19 @@ Support for a major series ends when the second major after it is released. v4.x
 supported until v6.0.0 ships, and v5.x until v7.0.0.
 
 ## Project announcements
+
+### 2026-09-04: Retired branches deleted
+
+On September 4, 2026, we deleted the `v1` and `master` branches. Neither had a
+purpose: support for v1.x ended when v3.0.0 shipped, per the
+[Release support policy](#release-support-policy), and `master` was the pre-rename
+default branch, frozen since the rename to `main` on 2025-06-06. Every v1.x release
+remains available as a tag, so nothing released was lost.
+
+The branches that remain are the ones the release support policy describes: `main`
+releases the next version, `4.x` maintains the v4.x series, and `5.x` maintains the
+v5.x series. See [issue #1786](https://github.com/ruby-git/ruby-git/issues/1786) for
+the details.
 
 ### 2026-08-23: v5.x deprecations and the v6.0.0 roadmap
 
