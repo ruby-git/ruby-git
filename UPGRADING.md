@@ -25,6 +25,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated)
     - [`Git::Branch` and `Git::Branches` deprecated](#gitbranch-and-gitbranches-deprecated)
     - [`Git::Object::Tag` deprecated](#gitobjecttag-deprecated)
+    - [`Git::Status` deprecated](#gitstatus-deprecated)
 
 ## Upgrading to v6.0.0
 
@@ -739,5 +740,89 @@ In the table, `name` is the tag name, `t` is a `Git::Object::Tag`, `info` is the
 | `t.diff(other)` | `g.diff(id, other)` |
 | `t.log(count)` | `g.log(count).object(id)` |
 | `t.archive(file, opts)` | `g.archive(id, file, opts)` |
+
+#### `Git::Status` deprecated
+
+Starting in v5.4.0, `Git::Status`, `Git::Status::StatusFile`, and
+`Git::Repository#status` are deprecated and will be removed in v6.0.0. Read the
+index and working tree state through `Git::Repository#status_info`, which
+returns an immutable `Git::StatusInfo` holding one `Git::StatusFileInfo` per
+path that `git status --porcelain=v2` reports. Calling `g.status` emits one
+deprecation warning, and so does constructing a `Git::Status` directly.
+
+`Git::StatusInfo` keeps the `changed`, `added`, `deleted`, and `untracked`
+readers and the `changed?`, `added?`, `deleted?`, and `untracked?` predicates,
+so code that only uses those can change `status` to `status_info` and needs
+no other edit, subject to the category differences below. The readers now
+return `Hash{String => Git::StatusFileInfo}`, and a new `unmerged` reader
+lists conflicted paths, which `Git::Status` did not report. The predicates
+still compare paths case-insensitively when `core.ignoreCase` is `true`.
+`Git::StatusInfo` is not `Enumerable`; iterate `status_info.files`, an
+`Array<Git::StatusFileInfo>` in git's output order.
+
+The categories are derived differently. `Git::Status` gave each file one
+`type`, and `changed` held only files whose type was `M`, so `changed`,
+`added`, and `deleted` were disjoint: a file staged as new and then modified
+in the working tree was only `added`. `Git::StatusInfo` derives the
+categories from both status characters, so `changed` also includes type
+changes (`T`), and one path can be in more than one category: that same file
+(`AM`) is in both `added` and `changed`, and a file modified in the index and
+then deleted from the working tree (`MD`) is in both `changed` and `deleted`.
+Code that relied on the sets being disjoint should test `index_status` and
+`worktree_status` directly.
+
+`Git::StatusInfo` holds only the paths `git status` reports. `Git::Status`
+also held an entry for every clean tracked file, seeded from `git ls-files`,
+so `status[path]` returned a `Git::Status::StatusFile` with a `nil` type for an
+unchanged path and `status.each` yielded one. `status_info[path]` returns `nil`
+for a clean path and `status_info.files` omits it. Code that inspected clean
+files should read `g.ls_files`, which still returns the index mode and SHA of
+every tracked path.
+
+`Git::StatusFileInfo` replaces the single `type` character with the two status
+characters of the porcelain v2 format, `index_status` (HEAD versus index) and
+`worktree_status` (index versus working tree), plus the `changed?`, `added?`,
+`deleted?`, `renamed?`, `unmerged?`, `untracked?`, and `ignored?` predicates:
+`added?` is true when `index_status` is `A`, `deleted?` when either status is
+`D`, and `changed?` when either status is `M` or `T`. It holds no repository
+reference, so `blob` is gone; fetch the object through the repository instead.
+`stage` is gone too: an unmerged entry carries its stage 1, 2, and 3 modes and
+SHAs in `unmerged_stages`, and every other entry is at stage 0.
+
+> **Field renames:** the legacy mode and SHA readers were named for the wrong
+> sides. `sha_index` and `mode_index` held the working-tree side of the diff:
+> the index blob when the working tree matched the index, and an all-zero SHA
+> when it did not. `sha_repo` and `mode_repo` held the side git compared the
+> working tree against: the index in a repository with no commits, and HEAD
+> once a commit exists (the factory applied `git diff-index HEAD` last). The
+> new names follow git: `sha_head` and `mode_head` are the HEAD side,
+> `sha_index` and `mode_index` are the index (staged) side, and
+> `mode_worktree` is the working-tree mode. There is no working-tree SHA
+> because `git status` does not compute one; `worktree_status` says whether
+> the working tree differs from the index.
+
+In the table, `g` is a `Git::Repository`, `status` is the `Git::Status` from
+`g.status`, `file` is a `Git::Status::StatusFile`, and `info` is the
+`Git::StatusFileInfo` that replaces it.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.status` | `g.status_info` — returns a `Git::StatusInfo` |
+| `Git::Status.new(g)` | `g.status_info` |
+| `status.changed`, `status.added`, `status.deleted`, `status.untracked` | same names on `g.status_info` — now `Hash{String => Git::StatusFileInfo}` keyed by path |
+| `status.changed?(path)`, `status.added?(path)`, `status.deleted?(path)`, `status.untracked?(path)` | same names on `g.status_info` |
+| `status[path]` | `g.status_info[path]` — a `Git::StatusFileInfo`, or `nil`; `nil` for a clean tracked path, which `status[path]` reported (see above) |
+| `status.each { \|file\| ... }` | `g.status_info.files.each { \|info\| ... }` — does not yield clean tracked paths (see above) |
+| `status.pretty` | no replacement; format `g.status_info.files` yourself |
+| `file.path` | `info.path` |
+| `file.type` | `info.index_status` and `info.worktree_status`, or the `info.changed?`, `info.added?`, and `info.deleted?` predicates |
+| `file.untracked` | `info.untracked?` |
+| `file.stage` | gone; `info.unmerged?` and `info.unmerged_stages` describe conflicted entries |
+| `file.sha_repo` | `info.sha_head`, or `info.sha_index` in a repository with no commits |
+| `file.mode_repo` | `info.mode_head`, or `info.mode_index` in a repository with no commits |
+| `file.sha_index` | `info.sha_index` for the staged blob; `info.worktree_status` says whether the working tree differs from it |
+| `file.mode_index` | `info.mode_worktree` |
+| `file.blob` | `g.object(info.sha_index)` when `info.sha_index` is set and not all zeros — it is `nil` for untracked, ignored, and unmerged entries and all zeros when the path is not in the index; legacy `blob` returned `nil` without a lookup when no SHA was available and fell back to `sha_repo` when `sha_index` was `nil`. For an unmerged entry read a stage instead: `g.object(info.unmerged_stages[2][:sha])` |
+| `file.blob(:repo)` | `g.object(info.sha_head)` when `info.sha_head` is set and not all zeros — it is `nil` for untracked, ignored, and unmerged entries and all zeros when the path is not in HEAD |
 
 ---

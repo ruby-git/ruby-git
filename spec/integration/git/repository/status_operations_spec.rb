@@ -73,11 +73,207 @@ RSpec.describe Git::Repository::StatusOperations, :integration do
     end
   end
 
+  # #status_info runs git status --porcelain=v2 -z and reads core.ignoreCase,
+  # then assembles a Git::StatusInfo. The integration test verifies the
+  # end-to-end value object against a real git repository.
+  describe '#status_info' do
+    context 'when the repository has no commits yet' do
+      before do
+        write_file('staged.rb', 'staged')
+        write_file('untracked.rb', 'untracked')
+        repo.add('staged.rb')
+      end
+
+      it 'returns a Git::StatusInfo reporting the staged file as added and the other as untracked' do
+        result = described_instance.status_info
+        expect(result).to be_a(Git::StatusInfo)
+        expect(result.files).to all(be_a(Git::StatusFileInfo))
+        expect(result.added.keys).to eq(['staged.rb'])
+        expect(result.untracked.keys).to eq(['untracked.rb'])
+      end
+    end
+
+    context 'when the repository has at least one commit' do
+      before do
+        write_file('README.md', "# Hello\n")
+        write_file('lib/keep.rb', "keep\n")
+        repo.add(all: true)
+        repo.commit('Initial commit')
+      end
+
+      context 'when the working tree is clean' do
+        it 'returns a Git::StatusInfo with no files' do
+          expect(described_instance.status_info.files).to eq([])
+        end
+      end
+
+      context 'when an untracked file exists' do
+        before { write_file('untracked.rb', 'content') }
+
+        it 'reports the file as untracked with no index or HEAD metadata' do
+          result = described_instance.status_info
+          expect(result.untracked.keys).to eq(['untracked.rb'])
+          expect(result.untracked?('untracked.rb')).to be(true)
+          expect(result['untracked.rb']).to have_attributes(
+            index_status: '?', worktree_status: '?', submodule: nil, sha_head: nil, sha_index: nil
+          )
+        end
+      end
+
+      context 'when a new file is staged' do
+        before do
+          write_file('new.rb', 'content')
+          repo.add('new.rb')
+        end
+
+        it 'reports the file as added with its index SHA' do
+          result = described_instance.status_info
+          expect(result.added.keys).to eq(['new.rb'])
+          expect(result.added?('new.rb')).to be(true)
+          expect(result['new.rb']).to have_attributes(index_status: 'A', worktree_status: '.')
+          expect(result['new.rb'].sha_index).to match(/\A[0-9a-f]{40}\z/)
+        end
+      end
+
+      context 'when a tracked file is modified in the working tree but not staged' do
+        before { write_file('README.md', "# Changed\n") }
+
+        it 'reports the file as changed on the worktree side' do
+          result = described_instance.status_info
+          expect(result.changed.keys).to eq(['README.md'])
+          expect(result.changed?('README.md')).to be(true)
+          expect(result['README.md']).to have_attributes(index_status: '.', worktree_status: 'M')
+        end
+      end
+
+      context 'when a tracked file is modified and staged' do
+        before do
+          write_file('README.md', "# Changed\n")
+          repo.add('README.md')
+        end
+
+        it 'reports the file as changed on the index side' do
+          result = described_instance.status_info
+          expect(result.changed.keys).to eq(['README.md'])
+          expect(result['README.md']).to have_attributes(index_status: 'M', worktree_status: '.')
+        end
+      end
+
+      context 'when a tracked file is deleted from the working tree' do
+        before { remove('README.md') }
+
+        it 'reports the file as deleted on the worktree side' do
+          result = described_instance.status_info
+          expect(result.deleted.keys).to eq(['README.md'])
+          expect(result.deleted?('README.md')).to be(true)
+          expect(result['README.md']).to have_attributes(index_status: '.', worktree_status: 'D')
+        end
+      end
+
+      context 'when a tracked file is removed from the index' do
+        before { repo.rm('README.md') }
+
+        it 'reports the file as deleted on the index side' do
+          result = described_instance.status_info
+          expect(result.deleted.keys).to eq(['README.md'])
+          expect(result['README.md']).to have_attributes(index_status: 'D', worktree_status: '.')
+        end
+      end
+
+      context 'when a tracked file is renamed in the index' do
+        before do
+          repo.mv('README.md', 'RENAMED.md')
+        end
+
+        it 'reports the file as renamed with its original path and score' do
+          result = described_instance.status_info
+          expect(result.files.map(&:path)).to eq(['RENAMED.md'])
+          expect(result['RENAMED.md']).to have_attributes(
+            index_status: 'R', worktree_status: '.', original_path: 'README.md', rename_score: 100
+          )
+          expect(result['RENAMED.md']).to be_renamed
+        end
+      end
+
+      context 'when a path contains a space' do
+        before do
+          write_file('dir name/file with space.txt', 'content')
+          write_file('README.md', "# Changed\n")
+        end
+
+        it 'keeps the whole path including its spaces' do
+          result = described_instance.status_info
+          expect(result.untracked.keys).to eq(['dir name/file with space.txt'])
+          expect(result.changed.keys).to eq(['README.md'])
+        end
+      end
+
+      context 'when opened from a subdirectory' do
+        before { write_file('lib/untracked.rb', 'untracked') }
+
+        it "returns paths relative to the repository's root" do
+          subdir_repo = Git.open(File.join(repo_dir, 'lib'))
+          expect(subdir_repo.status_info.untracked.keys).to eq(['lib/untracked.rb'])
+        end
+      end
+
+      context 'when core.ignoreCase is true' do
+        before do
+          repo.config_set('core.ignoreCase', 'true')
+          write_file('README.md', "# Changed\n")
+        end
+
+        it 'matches predicate paths case-insensitively' do
+          result = described_instance.status_info
+          expect(result.ignore_case).to be(true)
+          expect(result.changed?('readme.md')).to be(true)
+        end
+      end
+
+      context 'when core.ignoreCase is a non-canonical true spelling' do
+        before do
+          repo.config_set('core.ignoreCase', 'yes')
+          write_file('README.md', "# Changed\n")
+        end
+
+        it 'reads the setting as a boolean and matches predicate paths case-insensitively' do
+          result = described_instance.status_info
+          expect(result.ignore_case).to be(true)
+          expect(result.changed?('readme.md')).to be(true)
+        end
+      end
+
+      context 'when core.ignoreCase is false' do
+        before do
+          repo.config_set('core.ignoreCase', 'false')
+          write_file('README.md', "# Changed\n")
+        end
+
+        it 'matches predicate paths exactly' do
+          result = described_instance.status_info
+          expect(result.ignore_case).to be(false)
+          expect(result.changed?('readme.md')).to be(false)
+          expect(result.changed?('README.md')).to be(true)
+        end
+      end
+    end
+  end
+
   # #status performs multi-command orchestration: it runs git ls-files --stage,
   # git ls-files --others --exclude-standard, git diff-files, and (when commits
   # exist) git diff-index HEAD. The integration test verifies the end-to-end
   # return value against a real git repository.
+  #
+  # #status is deprecated in favor of #status_info; the warning is stubbed here
+  # because the suite raises on deprecation warnings.
   describe '#status' do
+    before { allow(Git::Deprecation).to receive(:warn) }
+
+    it 'emits a deprecation warning naming Git::Repository#status_info as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(/status is deprecated.*Use Git::Repository#status_info/)
+      described_instance.status
+    end
+
     context 'when the repository has no commits yet' do
       it 'returns a Git::Status instance' do
         expect(described_instance.status).to be_a(Git::Status)

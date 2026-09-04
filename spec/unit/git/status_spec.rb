@@ -12,6 +12,30 @@ RSpec.describe Git::Status do
 
   before do
     allow(Git::Status::StatusFileFactory).to receive(:new).with(base).and_return(factory)
+    allow(Git::Deprecation).to receive(:warn)
+  end
+
+  describe '#initialize' do
+    subject(:instance) { described_instance }
+
+    it 'emits a deprecation warning naming Git::Repository#status_info as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(/Git::Status is deprecated.*Use Git::Repository#status_info/)
+      instance
+    end
+
+    it 'builds its files through the factory' do
+      expect(factory).to receive(:construct_files).and_return(files)
+      instance
+    end
+
+    context 'when Git::Deprecation is unavailable (partial require)' do
+      before { hide_const('Git::Deprecation') }
+
+      it 'still builds its files without raising' do
+        expect(factory).to receive(:construct_files).and_return(files)
+        expect { instance }.not_to raise_error
+      end
+    end
   end
 
   describe '#added' do

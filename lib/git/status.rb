@@ -13,6 +13,9 @@ module Git
   #   status.deleted.each { |path, _file| puts "Deleted: #{path}" }
   #   status.untracked.each { |path, _file| puts "Untracked: #{path}" }
   #
+  # @deprecated Use {Git::StatusInfo}, returned by {Git::Repository#status_info},
+  #   instead; this class will be removed in v6.0.0
+  #
   # @api public
   #
   class Status
@@ -22,7 +25,15 @@ module Git
     #
     # @param base [Git::Repository] the git object backing this status
     #
+    # @deprecated Use {Git::Repository#status_info} instead
+    #
     def initialize(base)
+      if defined?(Git::Deprecation)
+        Git::Deprecation.warn(
+          'Git::Status is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#status_info instead.'
+        )
+      end
       @base = base
       # The factory returns a hash of file paths to StatusFile objects.
       @files = StatusFileFactory.new(base).construct_files
@@ -203,6 +214,9 @@ module Git
   class Status
     # Represents a single file's status in the git repository. Each instance
     # holds information about a file's state in the index and working tree.
+    #
+    # @deprecated Use {Git::StatusFileInfo}, held by {Git::StatusInfo#files},
+    #   instead; this class will be removed in v6.0.0
     #
     # @api public
     #

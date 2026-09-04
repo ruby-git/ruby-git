@@ -243,6 +243,12 @@ RSpec.describe Git::Repository::StatusOperations do
 
     before do
       allow(Git::Status).to receive(:new).with(described_instance).and_return(status)
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning naming Git::Repository#status_info as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(/status is deprecated.*Use Git::Repository#status_info/)
+      result
     end
 
     it 'constructs Git::Status with the repository instance as the base' do
@@ -252,6 +258,64 @@ RSpec.describe Git::Repository::StatusOperations do
 
     it 'returns the Git::Status instance' do
       expect(result).to eq(status)
+    end
+  end
+
+  describe '#status_info' do
+    subject(:result) { described_instance.status_info }
+
+    let(:status_command) { instance_double(Git::Commands::Status) }
+    let(:status_result) { command_result("? new.txt\0") }
+    let(:parsed_files) { [instance_double(Git::StatusFileInfo)] }
+    let(:ignore_case_entry) { nil }
+
+    before do
+      allow(Git::Commands::Status).to receive(:new).with(execution_context).and_return(status_command)
+      allow(status_command).to receive(:call).with(porcelain: 'v2', z: true, untracked_files: 'all')
+                                             .and_return(status_result)
+      allow(Git::Parsers::Status).to receive(:parse).with(status_result.stdout).and_return(parsed_files)
+      allow(described_instance).to receive(:config_get).with('core.ignoreCase', type: 'bool')
+                                                       .and_return(ignore_case_entry)
+    end
+
+    it 'reads core.ignoreCase as a boolean so that git canonicalizes its spelling' do
+      expect(described_instance).to receive(:config_get).with('core.ignoreCase', type: 'bool').and_return(nil)
+      result
+    end
+
+    it 'runs git status in NUL-separated porcelain v2 listing all untracked files, then parses the output' do
+      expect(status_command).to(
+        receive(:call).with(porcelain: 'v2', z: true, untracked_files: 'all').and_return(status_result).ordered
+      )
+      expect(Git::Parsers::Status).to receive(:parse).with(status_result.stdout).and_return(parsed_files).ordered
+      result
+    end
+
+    it 'returns a Git::StatusInfo holding the parsed files' do
+      expect(result).to be_a(Git::StatusInfo)
+      expect(result.files).to eq(parsed_files)
+    end
+
+    context 'when core.ignoreCase is not set' do
+      it 'returns a Git::StatusInfo with ignore_case false' do
+        expect(result.ignore_case).to be(false)
+      end
+    end
+
+    context 'when core.ignoreCase is true' do
+      let(:ignore_case_entry) { instance_double(Git::ConfigEntryInfo, value: 'true') }
+
+      it 'returns a Git::StatusInfo with ignore_case true' do
+        expect(result.ignore_case).to be(true)
+      end
+    end
+
+    context 'when core.ignoreCase is false' do
+      let(:ignore_case_entry) { instance_double(Git::ConfigEntryInfo, value: 'false') }
+
+      it 'returns a Git::StatusInfo with ignore_case false' do
+        expect(result.ignore_case).to be(false)
+      end
     end
   end
 end

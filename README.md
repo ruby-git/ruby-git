@@ -98,7 +98,7 @@ Clone, read status, and log:
 require 'git'
 
 repo = Git.clone('https://github.com/ruby-git/ruby-git.git', 'ruby-git')
-repo.status.changed.each { |f| puts "changed: #{f.path}" }
+repo.status_info.changed.each_key { |path| puts "changed: #{path}" }
 repo.log(5).execute.each { |c| puts c.message }
 ```
 

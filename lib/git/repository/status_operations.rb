@@ -2,8 +2,11 @@
 
 require 'git/commands/ls_files'
 require 'git/commands/rev_parse'
+require 'git/commands/status'
 require 'git/escaped_path'
+require 'git/parsers/status'
 require 'git/status'
+require 'git/status_info'
 
 module Git
   class Repository
@@ -87,6 +90,47 @@ module Git
         ).stdout.split("\n").map { |f| Private.unescape_quoted_path(f) }
       end
 
+      # Returns a {Git::StatusInfo} describing the index and working tree state
+      #
+      # Runs `git status` in porcelain v2 format with NUL-separated entries and
+      # every untracked file listed individually, then reads `core.ignoreCase`
+      # as a boolean so that the path predicates on the result compare paths the
+      # way git does in this repository. Every entry type git reports is
+      # represented, including renames, copies, and merge conflicts. Clean
+      # tracked paths are not reported by `git status`, so they are absent from
+      # the result; the deprecated {#status} listed them, and {#ls_files} still
+      # does.
+      #
+      # @example Check which files are modified
+      #   repo.status_info.changed
+      #   #=> { "lib/foo.rb" => #<data Git::StatusFileInfo path="lib/foo.rb", ...> }
+      #
+      # @example Check for untracked files
+      #   repo.status_info.untracked.keys #=> ["new_file.rb"]
+      #
+      # @example Check one path
+      #   repo.status_info.changed?('lib/foo.rb') #=> true
+      #
+      # @example Iterate over every entry
+      #   repo.status_info.files.each do |file|
+      #     puts "#{file.index_status}#{file.worktree_status} #{file.path}"
+      #   end
+      #
+      # @return [Git::StatusInfo] the status of the repository
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-status git-status
+      #
+      def status_info
+        result = Git::Commands::Status.new(@execution_context).call(
+          porcelain: 'v2', z: true, untracked_files: 'all'
+        )
+        files = Git::Parsers::Status.parse(result.stdout)
+        ignore_case = config_get('core.ignoreCase', type: 'bool')&.value == 'true'
+        Git::StatusInfo.new(files: files, ignore_case: ignore_case)
+      end
+
       # Returns a {Git::Status} object describing the working tree and index state
       #
       # Constructs a {Git::Status} for this repository by collecting information from
@@ -95,22 +139,26 @@ module Git
       # result identifies which files have been modified, added, deleted, or are
       # untracked.
       #
-      # @example Check which files are modified
-      #   repo.status.changed #=> { "lib/foo.rb" => <Git::Status::StatusFile ...> }
+      # Emits one deprecation warning per call. The {Git::Status} it constructs is
+      # built with warnings silenced so the caller does not see a second one.
       #
-      # @example Check for untracked files
-      #   repo.status.untracked #=> { "new_file.rb" => <Git::Status::StatusFile ...> }
-      #
-      # @example Iterate over all status files
-      #   repo.status.each { |file| puts "#{file.path}: #{file.type}" }
+      # @example Check which files are modified (deprecated; use status_info)
+      #   repo.status.changed.keys      #=> ["lib/foo.rb"]
+      #   repo.status_info.changed.keys #=> ["lib/foo.rb"]
       #
       # @return [Git::Status] the status of the repository
       #
       # @raise [Git::FailedError] if any underlying git command exits with a
       #   non-zero exit status
       #
+      # @deprecated Use {#status_info} instead
+      #
       def status
-        Git::Status.new(self)
+        Git::Deprecation.warn(
+          'Git::Repository#status is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#status_info instead.'
+        )
+        Git::Deprecation.silence { Git::Status.new(self) }
       end
 
       # List all files tracked in the index
