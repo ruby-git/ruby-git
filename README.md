@@ -38,6 +38,7 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
   - [Deprecation policy](#deprecation-policy)
   - [Release support policy](#release-support-policy)
 - [Project announcements](#project-announcements)
+  - [2026-09-04: v5.x releases move to the 5.x branch](#2026-09-04-v5x-releases-move-to-the-5x-branch)
   - [2026-09-04: Retired branches deleted](#2026-09-04-retired-branches-deleted)
   - [2026-08-23: v5.x deprecations and the v6.0.0 roadmap](#2026-08-23-v5x-deprecations-and-the-v600-roadmap)
   - [2026-07-28: v5.0.0 released](#2026-07-28-v500-released)
@@ -461,6 +462,19 @@ Support for a major series ends when the second major after it is released. v4.x
 supported until v6.0.0 ships, and v5.x until v7.0.0.
 
 ## Project announcements
+
+### 2026-09-04: v5.x releases move to the `5.x` branch
+
+On September 4, 2026, we created the `5.x` branch from v5.4.1. Every further v5.x
+release is cut from that branch, and the next release from `main` is v6.0.0. Nothing
+changes for users of the gem: v5.x continues to receive bug fixes and security fixes
+per the [Release support policy](#release-support-policy), and v4.x is supported
+until v6.0.0 ships.
+
+For contributors, fixes still land on `main` first and are backported to `5.x`. A fix
+for a problem that exists only in v5.x targets `5.x` directly. See the
+[branch strategy](CONTRIBUTING.md#branch-strategy) and
+[issue #1717](https://github.com/ruby-git/ruby-git/issues/1717), the v6.0.0 roadmap.
 
 ### 2026-09-04: Retired branches deleted
 
