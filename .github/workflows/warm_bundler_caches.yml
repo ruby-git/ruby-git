@@ -1,14 +1,15 @@
 name: Warm Bundler Caches
 
-# GitHub Actions scopes every cache to the ref that wrote it, and only caches
-# written at *default-branch* scope are readable from other refs. The CI workflow runs
-# on `pull_request`, where github.ref is refs/pull/<n>/merge, so the caches it writes
-# are visible to that one PR and nothing else. The result is that nearly every PR paid
-# a cold `bundle install` on nearly every job. See issue #1674 for the measurements.
+# GitHub Actions scopes every cache to the ref that wrote it. A run can read the
+# caches written at its own ref, at its base ref, and at the default branch, and no
+# others. The CI workflow runs on `pull_request`, where github.ref is
+# refs/pull/<n>/merge, so the caches it writes are visible to that one PR and nothing
+# else. The result is that nearly every PR paid a cold `bundle install` on nearly
+# every job. See issue #1674 for the measurements.
 #
-# This workflow exists solely to write those caches from refs/heads/main so that a
-# PR's *first* run can read them. It does no checkout-and-test work beyond what
-# `bundler-cache: true` needs: no specs, no RuboCop, no YARD.
+# This workflow exists solely to write those caches from the branches PRs use as
+# their base, so that a PR's *first* run can read them. It does no checkout-and-test
+# work beyond what `bundler-cache: true` needs: no specs, no RuboCop, no YARD.
 #
 # The matrix below must stay in sync with continuous_integration.yml: setup-ruby's
 # cache key embeds the runner OS, the resolved Ruby version, and the Gemfile.lock hash,
@@ -17,13 +18,13 @@ name: Warm Bundler Caches
 # list. The head rubies from experimental_continuous_integration.yml are deliberately
 # absent: that workflow already runs on `push: [main]` and warms its own caches.
 #
-# Only `main` is listed below. A run's readable caches are its own ref, its base ref,
-# and the default branch, so warming 4.x would need this file backported to the 4.x
-# branch with that branch's own matrix -- the copy on main is never what runs for a
-# push to 4.x.
+# The same scoping means a maintenance branch is warmed only by the copy of this file
+# on that branch, with that branch's own matrix -- the copy on main is never what runs
+# for a push to a maintenance branch. This copy lists `5.x` because it lives on the
+# 5.x branch; 4.x carries no copy and is not warmed.
 on:
   push:
-    branches: [main]
+    branches: [main, 5.x]
 
   workflow_dispatch:
 
