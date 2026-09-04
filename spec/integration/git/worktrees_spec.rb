@@ -20,7 +20,7 @@ RSpec.describe Git::Worktrees, :integration do
   context 'when initialized via Git::Repository (Git::Repository passed to constructor)' do
     let(:execution_context) { repo.execution_context }
     let(:repository) { Git::Repository.new(execution_context: execution_context) }
-    let(:worktrees) { repository.worktrees }
+    let(:worktrees) { Git::Deprecation.silence { repository.worktrees } }
 
     describe '#size' do
       it 'returns 1 for a repository with only the main worktree' do

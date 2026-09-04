@@ -26,6 +26,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Branch` and `Git::Branches` deprecated](#gitbranch-and-gitbranches-deprecated)
     - [`Git::Object::Tag` deprecated](#gitobjecttag-deprecated)
     - [`Git::Status` deprecated](#gitstatus-deprecated)
+    - [`Git::Worktree` and `Git::Worktrees` deprecated](#gitworktree-and-gitworktrees-deprecated)
 
 ## Upgrading to v6.0.0
 
@@ -824,5 +825,61 @@ In the table, `g` is a `Git::Repository`, `status` is the `Git::Status` from
 | `file.mode_index` | `info.mode_worktree` |
 | `file.blob` | `g.object(info.sha_index)` when `info.sha_index` is set and not all zeros — it is `nil` for untracked, ignored, and unmerged entries and all zeros when the path is not in the index; legacy `blob` returned `nil` without a lookup when no SHA was available and fell back to `sha_repo` when `sha_index` was `nil`. For an unmerged entry read a stage instead: `g.object(info.unmerged_stages[2][:sha])` |
 | `file.blob(:repo)` | `g.object(info.sha_head)` when `info.sha_head` is set and not all zeros — it is `nil` for untracked, ignored, and unmerged entries and all zeros when the path is not in HEAD |
+
+#### `Git::Worktree` and `Git::Worktrees` deprecated
+
+`Git::Worktree`, `Git::Worktrees`, `Git::Repository#worktree`,
+`Git::Repository#worktrees`, and `Git::Repository#worktrees_all` are deprecated
+and are removed in v6.0.0. Read worktree data through
+`Git::Repository#worktree_list`, which returns one `Git::WorktreeInfo` value
+object per worktree, and call the repository-level operations (`worktree_add`,
+`worktree_remove`, `worktree_move`, `worktree_lock`, `worktree_unlock`,
+`worktree_repair`, and `worktree_prune`) with the worktree path or its
+`Git::WorktreeInfo`. Return values are unchanged. Calling `g.worktree`,
+`g.worktrees`, or `g.worktrees_all`, constructing a `Git::Worktrees`, and calling
+`gcommit`, `add`, or `remove` on a `Git::Worktree` each emit a deprecation
+warning; the `dir`, `full`, `to_s`, and `to_a` readers on `Git::Worktree` do not.
+`g.worktrees` emits two warnings, one for itself and one for the `Git::Worktrees`
+it constructs, and `g.worktree(dir).add` emits one for `g.worktree` and one for
+`add`.
+
+> **Return shape change:** `worktrees_all` returns `[directory, sha]` pairs and
+> omits the main worktree of a bare repository, which has no checked-out commit.
+> `worktree_list` returns `Git::WorktreeInfo` objects with `path`, `head`,
+> `branch` (the full refname, such as `refs/heads/main`, or `nil` when detached
+> or bare), `bare?`, `detached?`, `locked?` with `lock_reason`, and `prunable?`
+> with `prune_reason`. It includes the bare main worktree, with `head` and
+> `branch` set to `nil`. `Git::WorktreeInfo#to_s` is the path, so an entry can be
+> passed to any method that takes a worktree path.
+>
+> **`gcommit` return type:** `Git::Worktree#gcommit` returned a
+> `Git::Object::Commit` for a worktree obtained from `g.worktree(dir)` and a raw
+> SHA `String` for one obtained from `g.worktrees`. `info.head` is always a
+> `String` (or `nil` for a bare main worktree); call `g.gcommit(info.head)` for
+> the commit object.
+>
+> **`full` and `to_s`:** `Git::Worktree#full` and `#to_s` append the commitish
+> given at construction to the path, so entries from `g.worktrees` read
+> `"/path/to/wt <sha>"`. `Git::WorktreeInfo#to_s` is the path alone.
+
+In the table, `dir` is the worktree path, `wt` is a `Git::Worktree`, and `info`
+is the `Git::WorktreeInfo` that replaces it.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.worktrees_all` | `g.worktree_list.map { \|w\| [w.path, w.head] }` — includes a bare main worktree as `[path, nil]`; add `.reject(&:bare?)` before `map` to omit it as `worktrees_all` did |
+| `g.worktrees` | `g.worktree_list` — returns `Array<Git::WorktreeInfo>`; the deprecated call emits two warnings |
+| `g.worktrees[dir]` | `g.worktree_list.find { \|w\| w.path == dir }` — `nil` when not found; `dir` is the path as git reports it (absolute, with symlinks resolved), as before |
+| `g.worktrees.size` | `g.worktree_list.size` |
+| `g.worktrees.each { \|wt\| ... }` | `g.worktree_list.each { \|info\| ... }` |
+| `g.worktrees.to_s` | `g.worktree_list.map { \|w\| "#{w.path} #{w.head}\n" }.join` |
+| `g.worktrees.prune` | `g.worktree_prune` |
+| `g.worktree(dir).add` | `g.worktree_add(dir)` |
+| `g.worktree(dir, commitish).add` | `g.worktree_add(dir, commitish)` |
+| `g.worktree(dir).remove` | `g.worktree_remove(dir)` — or `g.worktree_remove(info)` |
+| `wt.gcommit` | `info.head` — always a `String`, or `nil` for a bare main worktree; `g.gcommit(info.head)` for the commit object |
+| `wt.dir` | `info.path` |
+| `wt.full`, `wt.to_s` | `info.path` — or `"#{info.path} #{info.head}"` for the descriptor that entries from `g.worktrees` produced |
+| `wt.to_a` | `[info.path]` |
 
 ---

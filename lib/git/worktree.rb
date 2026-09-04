@@ -12,6 +12,17 @@ module Git
   #   worktree.add
   #   worktree.remove
   #
+  # @deprecated Use {Git::Repository::WorktreeOperations#worktree_list} and the
+  #   path-based worktree operations on {Git::Repository} instead
+  #
+  #   {Git::Repository::WorktreeOperations#worktree_list} returns immutable
+  #   {Git::WorktreeInfo} value objects. Operations that lived on this class are
+  #   called on the repository with the worktree path instead (for example
+  #   {Git::Repository::WorktreeOperations#worktree_add} and
+  #   {Git::Repository::WorktreeOperations#worktree_remove}). {#gcommit},
+  #   {#add}, and {#remove} each emit a deprecation warning; the `dir`, `full`,
+  #   `to_s`, and `to_a` readers do not.
+  #
   # @api public
   #
   class Worktree
@@ -69,7 +80,19 @@ module Git
     # @raise [Git::FailedError] if git must resolve the commit and exits with a
     #   non-zero exit status
     #
+    # @deprecated Use {Git::WorktreeInfo#head} from
+    #   {Git::Repository::WorktreeOperations#worktree_list} instead
+    #
+    #   `head` is always the commit SHA as a `String` (or `nil` for a bare main
+    #   worktree). Call `repo.gcommit(info.head)` for the commit object.
+    #
+    # @see Git::WorktreeInfo#head
+    #
     def gcommit
+      Git::Deprecation.warn(
+        'Git::Worktree#gcommit is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::WorktreeInfo#head from Git::Repository#worktree_list instead.'
+      )
       @gcommit ||= worktree_repository.gcommit(@full)
       @gcommit
     end
@@ -87,7 +110,15 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @deprecated Use {Git::Repository::WorktreeOperations#worktree_add} instead
+    #
+    # @see Git::Repository::WorktreeOperations#worktree_add
+    #
     def add
+      Git::Deprecation.warn(
+        'Git::Worktree#add is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#worktree_add instead.'
+      )
       worktree_repository.worktree_add(@dir, @gcommit)
     end
 
@@ -102,7 +133,15 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @deprecated Use {Git::Repository::WorktreeOperations#worktree_remove} instead
+    #
+    # @see Git::Repository::WorktreeOperations#worktree_remove
+    #
     def remove
+      Git::Deprecation.warn(
+        'Git::Worktree#remove is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#worktree_remove instead.'
+      )
       worktree_repository.worktree_remove(@dir)
     end
 

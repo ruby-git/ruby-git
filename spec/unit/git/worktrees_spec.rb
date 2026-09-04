@@ -17,6 +17,7 @@ RSpec.describe Git::Worktrees do
   let(:described_instance) { described_class.new(repo_base) }
 
   before do
+    allow(Git::Deprecation).to receive(:warn)
     allow(repo_base).to receive(:worktrees_all).and_return([
                                                              ['/repo',        'abc123'],
                                                              ['/repo/linked', 'def456']
@@ -42,6 +43,14 @@ RSpec.describe Git::Worktrees do
         allow(Git::Worktree).to receive(:new).with(base, '/repo/linked', 'def456').and_return(wt_linked)
       end
 
+      it 'emits a deprecation warning via Git::Deprecation.warn' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Worktrees is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#worktree_list instead.'
+        )
+        described_class.new(base)
+      end
+
       it 'calls worktrees_all on base directly' do
         expect(base).to receive(:worktrees_all).and_return([])
         described_class.new(base)
@@ -55,6 +64,35 @@ RSpec.describe Git::Worktrees do
 
       it 'populates the collection with both worktrees' do
         expect(described_class.new(base).size).to eq(2)
+      end
+    end
+
+    context 'when worktrees_all itself emits a deprecation warning' do
+      let(:base) { instance_double(Git::Repository) }
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence in #initialize is
+      # exercised instead of bypassed by the stubbed Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(base).to receive(:worktrees_all) do
+          Git::Deprecation.warn('Git::Repository#worktrees_all is deprecated')
+          [['/repo', 'abc123']]
+        end
+        allow(Git::Worktree).to receive(:new).with(base, '/repo', 'abc123').and_return(wt_main)
+      end
+
+      it 'lets only the Git::Worktrees warning escape' do
+        described_class.new(base)
+        expect(messages).to contain_exactly(a_string_including('Git::Worktrees is deprecated'))
       end
     end
   end

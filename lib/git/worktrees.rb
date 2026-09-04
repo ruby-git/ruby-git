@@ -10,6 +10,15 @@ module Git
   #   worktrees = repo.worktrees
   #   worktrees.each { |wt| puts wt.dir }
   #
+  # @deprecated Use {Git::Repository::WorktreeOperations#worktree_list} instead
+  #
+  #   {Git::Repository::WorktreeOperations#worktree_list} returns
+  #   `Array<Git::WorktreeInfo>` (immutable value objects). Look a worktree up
+  #   by path with `worktree_list.find { |w| w.path == path }` in place of
+  #   {#[]}, and call {Git::Repository::WorktreeOperations#worktree_prune} in
+  #   place of {#prune}. Constructing a `Git::Worktrees` emits a deprecation
+  #   warning.
+  #
   # @api public
   #
   class Worktrees
@@ -24,12 +33,21 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @deprecated Use {Git::Repository::WorktreeOperations#worktree_list} instead
+    #
+    # @see Git::Repository::WorktreeOperations#worktree_list
+    #
     def initialize(base)
+      Git::Deprecation.warn(
+        'Git::Worktrees is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#worktree_list instead.'
+      )
       @worktrees = {}
 
       @base = base
 
-      worktree_repository.worktrees_all.each do |w|
+      # worktrees_all is deprecated too; silence it so one Git::Worktrees.new emits one warning
+      Git::Deprecation.silence { worktree_repository.worktrees_all }.each do |w|
         @worktrees[w[0]] = Git::Worktree.new(@base, w[0], w[1])
       end
     end
