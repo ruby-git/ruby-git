@@ -10,7 +10,7 @@ name: Release Gem
 
 on:
   push:
-    branches: ["main", "4.x"]
+    branches: ["main", "4.x", "5.x"]
 
   workflow_dispatch:
 
@@ -28,6 +28,17 @@ jobs:
       id-token: write
 
     steps:
+      # workflow_dispatch can be run from any branch or tag, so stop unless the
+      # ref is one of the branches in the push filter above. This is a shell step
+      # rather than a job-level `if`: workflow expressions compare strings
+      # case-insensitively, while branch names are case-sensitive.
+      - name: Require a release branch
+        run: |
+          case "$GITHUB_REF" in
+            refs/heads/main | refs/heads/4.x | refs/heads/5.x) ;;
+            *) echo "::error::$GITHUB_REF is not a release branch"; exit 1 ;;
+          esac
+
       - name: Checkout project
         uses: actions/checkout@v6
 
@@ -38,6 +49,7 @@ jobs:
           token: ${{ secrets.AUTO_RELEASE_TOKEN }}
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
+          target-branch: ${{ github.ref_name }}
 
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
