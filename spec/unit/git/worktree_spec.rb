@@ -11,6 +11,8 @@ RSpec.describe Git::Worktree do
   let(:base) { instance_double(Git::Repository) }
   let(:dir)  { '/path/to/wt' }
 
+  before { allow(Git::Deprecation).to receive(:warn) }
+
   # ---------------------------------------------------------------------------
   # #initialize
   # ---------------------------------------------------------------------------
@@ -23,6 +25,11 @@ RSpec.describe Git::Worktree do
     context 'when gcommit is nil' do
       it 'sets both full and dir to the path' do
         expect(instance).to have_attributes(full: dir, dir: dir)
+      end
+
+      it 'does not emit a deprecation warning' do
+        expect(Git::Deprecation).not_to receive(:warn)
+        instance
       end
     end
 
@@ -52,6 +59,14 @@ RSpec.describe Git::Worktree do
         allow(base).to receive(:gcommit).with(dir).and_return(commit_object)
       end
 
+      it 'emits a deprecation warning via Git::Deprecation.warn' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Worktree#gcommit is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::WorktreeInfo#head from Git::Repository#worktree_list instead.'
+        )
+        wt.gcommit
+      end
+
       it 'calls base.gcommit with the full descriptor' do
         expect(base).to receive(:gcommit).with(dir)
         wt.gcommit
@@ -70,6 +85,14 @@ RSpec.describe Git::Worktree do
 
     context 'when a gcommit was given at construction' do
       let(:gcommit) { 'abc123' }
+
+      it 'emits a deprecation warning via Git::Deprecation.warn' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Worktree#gcommit is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::WorktreeInfo#head from Git::Repository#worktree_list instead.'
+        )
+        wt.gcommit
+      end
 
       it 'returns the pre-set gcommit' do
         expect(result).to eq(gcommit)
@@ -92,6 +115,15 @@ RSpec.describe Git::Worktree do
 
     context 'when base is a Git::Repository (new form)' do
       context 'when gcommit is nil' do
+        it 'emits a deprecation warning via Git::Deprecation.warn' do
+          allow(base).to receive(:worktree_add).with(dir, nil).and_return('output')
+          expect(Git::Deprecation).to receive(:warn).with(
+            'Git::Worktree#add is deprecated and will be removed in v6.0.0. ' \
+            'Use Git::Repository#worktree_add instead.'
+          )
+          wt.add
+        end
+
         it 'calls worktree_add on base directly with dir and nil' do
           expect(base).to receive(:worktree_add).with(dir, nil).and_return('output')
           wt.add
@@ -117,6 +149,15 @@ RSpec.describe Git::Worktree do
     let(:wt) { described_class.new(base, dir) }
 
     context 'when base is a Git::Repository (new form)' do
+      it 'emits a deprecation warning via Git::Deprecation.warn' do
+        allow(base).to receive(:worktree_remove).with(dir).and_return('')
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Worktree#remove is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#worktree_remove instead.'
+        )
+        wt.remove
+      end
+
       it 'calls worktree_remove on base directly with dir' do
         expect(base).to receive(:worktree_remove).with(dir).and_return('')
         wt.remove
@@ -136,6 +177,11 @@ RSpec.describe Git::Worktree do
 
     it 'returns an array containing just the dir' do
       expect(result).to eq([dir])
+    end
+
+    it 'does not emit a deprecation warning' do
+      expect(Git::Deprecation).not_to receive(:warn)
+      result
     end
 
     context 'when gcommit is set' do
@@ -159,6 +205,11 @@ RSpec.describe Git::Worktree do
 
     it 'returns the dir as the full descriptor' do
       expect(result).to eq(dir)
+    end
+
+    it 'does not emit a deprecation warning' do
+      expect(Git::Deprecation).not_to receive(:warn)
+      result
     end
 
     context 'when gcommit is set' do

@@ -95,6 +95,7 @@ require 'git/tag_info'
 require 'git/url'
 require 'git/version'
 require 'git/worktree'
+require 'git/worktree_info'
 require 'git/worktrees'
 
 # The Git module provides the basic functions to open a git
