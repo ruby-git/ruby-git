@@ -32,6 +32,8 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Status` deprecated](#gitstatus-deprecated)
     - [`Git::Worktree` and `Git::Worktrees` deprecated](#gitworktree-and-gitworktrees-deprecated)
     - [`Git.clone` option renames](#gitclone-option-renames)
+    - [`Git::Log` Enumerable interface deprecated](#gitlog-enumerable-interface-deprecated)
+    - [`Git::Object::Commit#set_commit` deprecated](#gitobjectcommitset_commit-deprecated)
 
 ## Upgrading to v6.0.0
 
@@ -1072,5 +1074,47 @@ replacement option, except that `:path` is dropped when `:chdir` is also given.
 | `Git.clone(url, dir, path: p)` | `Git.clone(url, dir, chdir: p)` |
 | `Git.clone(url, dir, recursive: true)` | `Git.clone(url, dir, recurse_submodules: true)` — or a pathspec `String` or `Array<String>` for a subset of submodules |
 | `Git.clone(url, dir, remote: name)` | `Git.clone(url, dir, origin: name)` |
+
+#### `Git::Log` Enumerable interface deprecated
+
+`Git::Log` is a query builder. Calling `each`, `size`, `to_s`, `first`, `last`, or
+`[]` directly on it runs the query and emits a deprecation warning; those methods
+are removed in v6.0.0. Call `Git::Log#execute` instead. It runs the query and
+returns a `Git::Log::Result`, which includes `Enumerable` and provides the same
+six methods. The chainable query methods on `Git::Log` (`since`, `author`,
+`between`, `path`, `max_count`, and so on) are unchanged.
+
+`Git::Log` includes `Enumerable`, so every `Enumerable` method called on the
+builder (`map`, `select`, `count`, `to_a`, `include?`, and so on) goes through the
+deprecated `each` and emits its warning. Move those calls to the result as well,
+not only the six named methods.
+
+> **Snapshot results:** `execute` returns a snapshot. The builder re-runs
+> `git log` only when a query method (`since`, `max_count`, and so on) has been
+> called since the last run, even with the same value as before, so calling
+> `execute` twice on an untouched builder returns equal results without a second
+> `git log`. Keep the result object when a chain of operations needs the same
+> commits rather than calling `g.log` again, which builds a new query.
+
+In the table, `g` is a `Git::Repository`.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.log.each { \|c\| ... }` | `g.log.execute.each { \|c\| ... }` |
+| `g.log.size` | `g.log.execute.size` |
+| `g.log.to_s` | `g.log.execute.to_s` — commits joined with newlines, as before |
+| `g.log.first`, `g.log.last` | `g.log.execute.first`, `g.log.execute.last` |
+| `g.log[i]`, `g.log[range]` | `g.log.execute[i]`, `g.log.execute[range]` |
+| any other `Enumerable` method on the log (`map`, `select`, `count`, `to_a`, `include?`, ...) | the same method on `g.log.execute` |
+
+#### `Git::Object::Commit#set_commit` deprecated
+
+`Git::Object::Commit#set_commit` is deprecated and is removed in v6.0.0. Call
+`from_data` instead; it takes the same parsed commit data hash and has the same
+effect.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `commit.set_commit(data)` | `commit.from_data(data)` |
 
 ---
