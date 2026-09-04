@@ -375,8 +375,6 @@ purpose-named methods.
 | `g.global_config(name)` | `g.config_get(name, global: true)` |
 | `g.global_config` | `g.config_list(global: true)` |
 | `g.global_config(name, value)` | `g.config_set(name, value, global: true)` |
-| `g.parse_config(file)` | `g.config_list(file: file)` |
-| `g.stash_list` | `g.stash_infos` — returns `Array<Git::StashInfo>`; see [Legacy stash API deprecated](#legacy-stash-api-deprecated) |
 
 #### `Git` module mixin deprecations
 
