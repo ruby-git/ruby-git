@@ -18,7 +18,7 @@ RSpec.describe Git::Commands::Stash::Drop, :integration do
     describe 'when the command succeeds' do
       before do
         write_file('file.txt', "modified\n")
-        repo.stash_save('WIP')
+        Git::Commands::Stash::Push.new(execution_context).call(message: 'WIP')
       end
 
       it 'returns a CommandLineResult' do

@@ -20,6 +20,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
     - [`Git::Author` deprecated](#gitauthor-deprecated)
     - [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated)
+    - [Legacy stash API deprecated](#legacy-stash-api-deprecated)
     - [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated)
     - [`Git::Remote` deprecated](#gitremote-deprecated)
     - [`Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated)
@@ -237,7 +238,7 @@ to the replacement shown to silence it.
 | `g.lib.config_list` | `g.config_list` — returns `Array<Git::ConfigEntryInfo>` |
 | `g.lib.config_set(name, value)` | `g.config_set(name, value)` |
 | `g.lib.git_version` | `g.git_version` |
-| `g.lib.stash_list` | `g.stashes_all` |
+| `g.lib.stash_list` | `g.stash_infos` — returns `Array<Git::StashInfo>`, newest first |
 | `g.lib.unmerged` | `g.unmerged` |
 | `g.lib.change_head_branch(name)` | `g.change_head_branch(name)` |
 | `g.lib.ls_remote(location, opts)` | `g.ls_remote(location, opts)` |
@@ -375,7 +376,7 @@ purpose-named methods.
 | `g.global_config` | `g.config_list(global: true)` |
 | `g.global_config(name, value)` | `g.config_set(name, value, global: true)` |
 | `g.parse_config(file)` | `g.config_list(file: file)` |
-| `g.stash_list` | `g.stashes_all` |
+| `g.stash_list` | `g.stash_infos` — returns `Array<Git::StashInfo>`; see [Legacy stash API deprecated](#legacy-stash-api-deprecated) |
 
 #### `Git` module mixin deprecations
 
@@ -416,34 +417,97 @@ Constructing `Git::Author` directly emits a deprecation warning naming
 
 `Git::Branch#stashes` ignores the branch it is called on and returns every stash
 in the repository, so `g.branch('feature').stashes` and `g.branch('main').stashes`
-return the same entries. Call `Git::Repository#stashes_all` instead; it is the
+return the same entries. Call `Git::Repository#stash_infos` instead; it is the
 query `Git::Branch#stashes` was already running.
 
 > **Return type change:** `Git::Branch#stashes` returns a `Git::Stashes`
-> collection of `Git::Stash` objects, newest first. `g.stashes_all` returns an
-> array of `[index, message]` pairs, oldest first. Code that read `stash.message`
-> from each entry should read the second element of each pair instead. Code that
-> iterated or indexed the collection must reverse the order first, because
-> `Git::Stashes` yields and indexes newest first while `g.stashes_all` is oldest
-> first.
+> collection of `Git::Stash` objects. `g.stash_infos` returns an array of
+> `Git::StashInfo` values. Both are newest first, so indexes carry over unchanged.
+> `Git::Stash#message` strips the `WIP on <branch>:` or `On <branch>:` prefix;
+> `Git::StashInfo#message` keeps the full message and exposes the branch name as
+> `Git::StashInfo#branch`.
 
 `Git::Stashes` also exposes `save`, `apply`, and `clear`. Those map to the
-repository's `stash_save`, `stash_apply`, and `stash_clear`, which are not
-deprecated. `Git::Stashes#apply(i)` already passed `i` to git as `stash@{i}`
-(`0` = newest), and `g.stash_apply(i)` does the same, so that index needs no
-conversion.
+repository's `stash_push`, `stash_apply`, and `stash_clear`. `Git::Stashes#apply(i)`
+already passed `i` to git as `stash@{i}` (`0` = newest), and `g.stash_apply(i)` does
+the same, so that index needs no conversion. The `Git::Stashes` class is deprecated
+as well; [Legacy stash API deprecated](#legacy-stash-api-deprecated) maps each of
+its methods.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.branch(name).stashes` | `g.stashes_all` — returns `[[index, message], ...]` |
-| `g.branch(name).stashes.each { \|s\| puts s.message }` | `g.stashes_all.reverse_each { \|_index, message\| puts message }` |
-| `g.branch(name).stashes.all` | `g.stashes_all` |
-| `g.branch(name).stashes.size` | `g.stashes_all.size` |
-| `g.branch(name).stashes[i].message` (`0` = newest, `i` coerced with `to_i`) | `g.stashes_all.reverse[i.to_i][1]` |
-| `g.branch(name).stashes.save(message)` | `g.stash_save(message)` |
+| `g.branch(name).stashes` | `g.stash_infos` — returns `Array<Git::StashInfo>`, newest first |
+| `g.branch(name).stashes.each { \|s\| puts s.message }` | `g.stash_infos.each { \|info\| puts info.message }` |
+| `g.branch(name).stashes.all` (`[index, message]` pairs, oldest first) | `g.stash_infos.reverse` — see the ordering note in [Legacy stash API deprecated](#legacy-stash-api-deprecated) |
+| `g.branch(name).stashes.size` | `g.stash_infos.size` |
+| `g.branch(name).stashes[i].message` (`0` = newest, `i` coerced with `to_i`) | `g.stash_infos[i.to_i].message` |
+| `g.branch(name).stashes.save(message)` | `g.stash_push(message: message)` |
 | `g.branch(name).stashes.apply` | `g.stash_apply` |
 | `g.branch(name).stashes.apply(i)` (`0` = newest) | `g.stash_apply(i)` |
-| `g.branch(name).stashes.clear` | `g.stash_clear` |
+| `g.branch(name).stashes.clear` | `g.stash_clear` — returns git's stdout (normally `""`, which is truthy) where `Git::Stashes#clear` returned `nil` |
+
+#### Legacy stash API deprecated
+
+Starting in v5.4.0, the stash methods on `Git::Repository` are built around the
+immutable `Git::StashInfo` value object. `g.stash_infos` returns every entry as a
+`Git::StashInfo`, and `stash_push`, `stash_pop`, `stash_drop`, `stash_show`,
+`stash_branch`, `stash_create`, and `stash_store` each map onto the `git stash`
+subcommand of the same name. Every method that takes a stash (`stash_apply`,
+`stash_pop`, `stash_drop`, `stash_show`, `stash_branch`) accepts a `Git::StashInfo`,
+a `stash@{N}` name, an Integer index (`0` = newest), or `nil` for the newest entry.
+
+The legacy methods and classes are deprecated and removed in v6.0.0:
+`Git::Repository#stashes_all`, `Git::Repository#stash_save`,
+`Git::Repository#stash_list`, `Git::Stash`, and `Git::Stashes`. Constructing a
+`Git::Stash` or `Git::Stashes` emits one warning per object.
+
+> **Ordering flip:** `g.stashes_all` returns entries **oldest first** with a
+> sequential index of its own (`0` is the oldest). `g.stash_infos` returns entries
+> **newest first**, the order `git stash list` uses, and `Git::StashInfo#index` is
+> git's own `stash@{N}` number (`0` is the newest). `g.stashes_all.first` is
+> `g.stash_infos.last`. Code that reads an entry by position must reverse the
+> array or the index.
+
+> **Message difference:** `g.stashes_all` strips the `WIP on <branch>:` or
+> `On <branch>:` prefix from each message. `Git::StashInfo#message` keeps the full
+> message git stores, and `Git::StashInfo#branch` holds the branch name. A stash
+> created from a detached HEAD has the branch `"(no branch)"`, the label git writes
+> in its message. `branch` is `nil` only when the message has no branch prefix at
+> all, as for a `stash_store` entry with a custom message.
+
+`g.stash_save(message)` returned `true` when it created a stash and `false` when
+there were no local changes to save. `g.stash_push(message: message)` returns the
+new `Git::StashInfo`, or `nil` when there were no local changes, so a truthiness
+check such as `if g.stash_push(message: 'WIP')` still works.
+
+`g.stash_list` returned the `git stash list` text as a String. Build that text from
+`g.stash_infos` if you need it. In v6.0.0, `stash_list` returns
+`Array<Git::StashInfo>`, the same value as `stash_infos`, and `stash_infos` stays as
+a permanent alias. Move String callers of `stash_list` to `stash_infos` before
+upgrading so the return type change cannot go unnoticed.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.stashes_all` | `g.stash_infos` — returns `Array<Git::StashInfo>`, newest first |
+| `g.stashes_all.each { \|index, message\| ... }` | `g.stash_infos.reverse_each.with_index { \|info, index\| ... info.message }` |
+| `g.stashes_all[i]` (`0` = oldest) | `g.stash_infos.reverse[i]` |
+| `g.stashes_all.last` | `g.stash_infos.first` |
+| `g.stash_save(message)` | `g.stash_push(message: message)` — returns `Git::StashInfo` or `nil` |
+| `g.stash_list` (String) | `g.stash_infos.map { \|s\| "#{s.name}: #{s.message}" }.join("\n")` |
+| `Git::Stash.new(g, message)` | `info = g.stash_push(message: message)` |
+| `Git::Stash.new(g, message, existing: true)` | `message` — `existing: true` only wrapped the String and never looked an entry up; code that needs a real entry picks one from `g.stash_infos` by index or name |
+| `stash.save` | `info = g.stash_push(message: message)` |
+| `stash.saved?` | `!info.nil?` — check the value `stash_push` returned rather than pushing again |
+| `stash.message` / `stash.to_s` | `info.message` — keeps the branch prefix; see the note above |
+| `Git::Stashes.new(g)` | `g.stash_infos` |
+| `stashes.all` (`[index, message]` pairs, oldest first) | `g.stash_infos.reverse` — see the ordering note above |
+| `stashes.each { \|s\| ... }` (newest first) | `g.stash_infos.each { \|info\| ... }` |
+| `stashes[i]` (`0` = newest, `i` coerced with `to_i`) | `g.stash_infos[i.to_i]` |
+| `stashes.size` | `g.stash_infos.size` |
+| `stashes.save(message)` | `g.stash_push(message: message)` |
+| `stashes.apply` / `stashes.apply(i)` | `g.stash_apply` / `g.stash_apply(i)` |
+| `stashes.clear` | `g.stash_clear` — returns git's stdout (normally `""`, which is truthy) where `Git::Stashes#clear` returned `nil` |
+
 #### `Git::Repository#remotes` deprecated
 
 `Git::Repository#remotes` is deprecated in favor of `Git::Repository#remote_list`
@@ -649,7 +713,7 @@ can resolve a local branch of that name and is only used where git expects it
 | `b.update_ref(commit)` (remote-tracking) | `g.update_ref("remotes/#{remote}/#{name}", commit)` |
 | `b.archive(file, opts)` | `g.archive(name, file, opts)` — pass `info.refname` for a remote-tracking branch |
 | `b.in_branch(message) { ... }` | `g.in_branch(name, message) { ... }` — local `b` only; see the differences above |
-| `b.stashes` | `g.stashes_all` — see [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated) |
+| `b.stashes` | `g.stash_infos` — see [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated) |
 
 #### `Git::Object::Tag` deprecated
 

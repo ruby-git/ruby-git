@@ -3,12 +3,23 @@
 module Git
   # Collection of stash entries for a Git repository
   #
-  # @example Iterate over stash entries
+  # This class is deprecated and will be removed in v6.0.0. Use the
+  # {Git::Repository} stash methods and {Git::StashInfo} instead:
+  # {Git::Repository#stash_infos} replaces the collection, and
+  # {Git::Repository#stash_push}, {Git::Repository#stash_apply}, and
+  # {Git::Repository#stash_clear} replace {#save}, {#apply}, and {#clear}.
+  #
+  # @example Iterate over stash entries (deprecated)
   #   git.stashes.each { |s| puts s.message }
   #
-  # @example Check and apply a stash
-  #   git.stashes.size   #=> 2
-  #   git.stashes.apply
+  # @example The replacement
+  #   repo.stash_infos.each { |info| puts info.message }
+  #   repo.stash_infos.size   #=> 2
+  #   repo.stash_apply
+  #
+  # @deprecated Use {Git::Repository#stash_infos} and {Git::StashInfo} instead
+  #
+  # @see Git::Repository#stash_infos
   #
   # @api public
   #
@@ -18,6 +29,7 @@ module Git
     # Initialize the stashes collection
     #
     # Loads all existing stash entries from the repository at construction time.
+    # Emits one deprecation warning per object.
     #
     # @example Load stashes for a repository
     #   stashes = Git::Stashes.new(repo)
@@ -28,14 +40,20 @@ module Git
     # @return [void]
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    # @deprecated Use {Git::Repository#stash_infos} and {Git::StashInfo} instead
+    #
     def initialize(base)
+      Git::Deprecation.warn(
+        'Git::Stashes is deprecated and will be removed in v6.0.0. ' \
+        'Use the Git::Repository stash methods (stash_infos, stash_push, stash_apply, stash_clear) ' \
+        'and Git::StashInfo instead.'
+      )
       @stashes = []
       @base = base
-
-      stash_repository.stashes_all.each do |stash|
-        message = stash[1]
-        @stashes.unshift(Git::Stash.new(@base, message, existing: true))
-      end
+      # stashes_all and Git::Stash are deprecated too; silence them so one
+      # Git::Stashes.new emits one warning
+      Git::Deprecation.silence { load_stashes }
     end
 
     # Returns all stash entries as an array of index and message pairs
@@ -51,7 +69,8 @@ module Git
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
     def all
-      stash_repository.stashes_all
+      # stashes_all is deprecated too; silence it so this call emits no second warning
+      Git::Deprecation.silence { stash_repository.stashes_all }
     end
 
     # Saves the current working-directory state to a new stash entry
@@ -65,8 +84,10 @@ module Git
     # @return [void]
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def save(message)
-      s = Git::Stash.new(@base, message)
+      # Git::Stash is deprecated too; silence it so this call emits no second warning
+      s = Git::Deprecation.silence { Git::Stash.new(@base, message) }
       @stashes.unshift(s) if s.saved?
     end
 
@@ -83,6 +104,7 @@ module Git
     # @return [String] the output from the git stash apply command
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def apply(index = nil)
       stash_repository.stash_apply(index)
     end
@@ -96,6 +118,7 @@ module Git
     # @return [void]
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def clear
       stash_repository.stash_clear
       @stashes = []
@@ -108,6 +131,7 @@ module Git
     #   git.stashes.size  #=> 2
     #
     # @return [Integer] the number of stashes
+    #
     def size
       @stashes.size
     end
@@ -145,11 +169,23 @@ module Git
     # @param index [Integer, #to_i] the stash index (0 = most recent)
     #
     # @return [Git::Stash, nil] the stash entry, or `nil` if the index is out of bounds
+    #
     def [](index)
       @stashes[index.to_i]
     end
 
     private
+
+    # Wraps every entry from the repository in a Git::Stash, newest first
+    #
+    # @return [void]
+    #
+    def load_stashes
+      stash_repository.stashes_all.each do |stash|
+        message = stash[1]
+        @stashes.unshift(Git::Stash.new(@base, message, existing: true))
+      end
+    end
 
     # Returns the facade interface for stash operations
     #
