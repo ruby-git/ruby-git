@@ -464,6 +464,115 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   # spec/unit/git/repository/object_operations_spec.rb verify the delegation
   # contract and argument forwarding.
 
+  describe '#tag_list' do
+    let(:head_sha) { described_instance.rev_parse('HEAD') }
+
+    context 'when the repository has no tags' do
+      it 'returns an empty array' do
+        expect(described_instance.tag_list).to eq([])
+      end
+    end
+
+    context 'with a lightweight tag' do
+      before { repo.tag_add('v1.0.0') }
+
+      it 'returns a Git::TagInfo whose oid is nil and whose target_oid is the tagged commit' do
+        result = described_instance.tag_list
+        expect(result.size).to eq(1)
+        expect(result.first).to be_a(Git::TagInfo)
+        expect(result.first).to have_attributes(
+          name: 'v1.0.0', oid: nil, target_oid: head_sha, annotated?: false, message: nil
+        )
+      end
+    end
+
+    context 'with an annotated tag' do
+      before { repo.tag_add('v1.0.0', annotate: true, message: 'Release 1.0.0') }
+
+      it 'returns a Git::TagInfo carrying the tag object oid, the target commit, and the message' do
+        info = described_instance.tag_list.first
+        expect(info).to have_attributes(
+          name: 'v1.0.0', target_oid: head_sha, annotated?: true, message: 'Release 1.0.0'
+        )
+        expect(info.oid).to match(/\A[0-9a-f]{40}\z/)
+        expect(info.oid).not_to eq(head_sha)
+      end
+    end
+
+    context 'with patterns' do
+      before do
+        repo.tag_add('v1.0.0')
+        repo.tag_add('v1.1.0')
+        repo.tag_add('v2.0.0')
+      end
+
+      it 'returns only the tags matching a single pattern' do
+        expect(described_instance.tag_list('v1.*').map(&:name)).to eq(%w[v1.0.0 v1.1.0])
+      end
+
+      it 'returns the tags matching any of several patterns' do
+        expect(described_instance.tag_list('v1.0.*', 'v2.*').map(&:name)).to eq(%w[v1.0.0 v2.0.0])
+      end
+
+      it 'returns nil from .first when no tag has the given name' do
+        expect(described_instance.tag_list('nonexistent').first).to be_nil
+      end
+    end
+  end
+
+  describe '#tag_create' do
+    let(:head_sha) { described_instance.rev_parse('HEAD') }
+
+    context 'with no target and no options' do
+      it 'creates a lightweight tag on HEAD and returns its Git::TagInfo' do
+        info = described_instance.tag_create('v1.0.0')
+        expect(info).to be_a(Git::TagInfo)
+        expect(info).to have_attributes(
+          name: 'v1.0.0', oid: nil, target_oid: head_sha, annotated?: false, message: nil
+        )
+      end
+    end
+
+    context 'with a target commit' do
+      let!(:first_sha) { head_sha }
+
+      before do
+        write_file('README.md', "# Hello World\n\nSecond commit\n")
+        repo.add('README.md')
+        repo.commit('Second commit')
+      end
+
+      it 'creates the tag pointing at the given commit' do
+        info = described_instance.tag_create('v1.0.0', first_sha)
+        expect(info).to have_attributes(name: 'v1.0.0', target_oid: first_sha)
+        expect(info.target_oid).not_to eq(described_instance.rev_parse('HEAD'))
+      end
+    end
+
+    context 'with annotate and a message' do
+      it 'creates an annotated tag carrying the message' do
+        info = described_instance.tag_create('v1.0.0', annotate: true, message: 'Release 1.0.0')
+        expect(info).to have_attributes(
+          name: 'v1.0.0', target_oid: head_sha, annotated?: true, message: 'Release 1.0.0'
+        )
+        expect(info.oid).to match(/\A[0-9a-f]{40}\z/)
+      end
+    end
+
+    # Facade-owned validation (annotated/signed without a message, unsupported
+    # options) and command error wrapping (tagging an existing name without
+    # :force) are pure-Ruby or command concerns with no added end-to-end signal;
+    # they are covered by the unit spec and command integration specs.
+    context 'when the tag already exists' do
+      before { described_instance.tag_create('v1.0.0') }
+
+      it 'replaces the existing tag when force is given' do
+        replaced = described_instance.tag_create('v1.0.0', force: true, annotate: true, message: 'replaced')
+        expect(replaced).to have_attributes(name: 'v1.0.0', annotated?: true, message: 'replaced')
+      end
+    end
+  end
+
   describe '#tag_add' do
     context 'with no target and no options' do
       it 'creates a lightweight tag on HEAD' do

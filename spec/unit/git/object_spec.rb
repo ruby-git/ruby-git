@@ -614,6 +614,14 @@ RSpec.describe Git::Object::Tag do
     let(:sha) { 'tagsha123abc' }
     let(:name) { 'v1.0' }
 
+    it 'emits a deprecation warning via Git::Deprecation.warn' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Object::Tag is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#tag_list and Git::TagInfo instead.'
+      )
+      tag
+    end
+
     context 'with name only (two-argument form)' do
       let(:sha) { 'v1.0' }
       let(:name) { nil }

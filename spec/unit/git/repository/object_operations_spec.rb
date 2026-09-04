@@ -1255,6 +1255,15 @@ RSpec.describe Git::Repository::ObjectOperations do
 
     let(:tag_object) { instance_double(Git::Object::Tag) }
 
+    it 'emits a deprecation warning via Git::Deprecation.warn' do
+      allow(Git::Object::Tag).to receive(:new).and_return(tag_object)
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#tag is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#tag_list(name).first instead.'
+      )
+      result
+    end
+
     it 'delegates to Git::Object::Tag.new with the repository as base' do
       expect(Git::Object::Tag).to receive(:new)
         .with(described_instance, 'v1.0')
@@ -1294,6 +1303,14 @@ RSpec.describe Git::Repository::ObjectOperations do
       allow(described_instance).to receive(:tag).with('v2.0.0').and_return(tag_second)
     end
 
+    it 'emits a deprecation warning via Git::Deprecation.warn' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#tags is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#tag_list instead.'
+      )
+      result
+    end
+
     it 'constructs Git::Commands::Tag::List with the execution context' do
       expect(Git::Commands::Tag::List).to receive(:new).with(execution_context).and_return(list_command)
       result
@@ -1324,6 +1341,177 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
+  describe '#tag_list' do
+    subject(:result) { described_instance.tag_list(*patterns) }
+
+    let(:patterns) { [] }
+    let(:list_command) { instance_double(Git::Commands::Tag::List) }
+    let(:list_result) { instance_double(Git::CommandLine::Result, stdout: 'raw-stdout') }
+    let(:parsed_tags) { [instance_double(Git::TagInfo), instance_double(Git::TagInfo)] }
+
+    before do
+      allow(Git::Commands::Tag::List).to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command).to receive(:call).and_return(list_result)
+      allow(Git::Parsers::Tag).to receive(:parse_list).with('raw-stdout').and_return(parsed_tags)
+    end
+
+    it 'constructs Git::Commands::Tag::List with the execution context' do
+      expect(Git::Commands::Tag::List).to receive(:new).with(execution_context).and_return(list_command)
+      result
+    end
+
+    it 'lists tags with the parser format string then parses the output' do
+      expect(list_command).to(
+        receive(:call).with(format: Git::Parsers::Tag::FORMAT_STRING).and_return(list_result).ordered
+      )
+      expect(Git::Parsers::Tag).to receive(:parse_list).with('raw-stdout').and_return(parsed_tags).ordered
+      expect(result).to eq(parsed_tags)
+    end
+
+    context 'with patterns' do
+      let(:patterns) { ['v1.*', 'v2.*'] }
+
+      it 'forwards the patterns to the list command' do
+        expect(list_command).to(
+          receive(:call).with('v1.*', 'v2.*', format: Git::Parsers::Tag::FORMAT_STRING).and_return(list_result)
+        )
+        result
+      end
+    end
+
+    context 'when there are no tags' do
+      let(:parsed_tags) { [] }
+
+      it 'returns an empty array' do
+        expect(result).to eq([])
+      end
+    end
+  end
+
+  describe '#tag_create' do
+    let(:create_command) { instance_double(Git::Commands::Tag::Create) }
+    let(:create_result) { instance_double(Git::CommandLine::Result) }
+    let(:list_command) { instance_double(Git::Commands::Tag::List) }
+    let(:list_result) { instance_double(Git::CommandLine::Result, stdout: 'raw-stdout') }
+    let(:tag_info) { instance_double(Git::TagInfo, name: 'v1.0.0') }
+
+    before do
+      allow(Git::Commands::Tag::Create).to receive(:new).with(execution_context).and_return(create_command)
+      allow(create_command).to receive(:call).and_return(create_result)
+      allow(Git::Commands::Tag::List).to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command).to receive(:call).and_return(list_result)
+      allow(Git::Parsers::Tag).to receive(:parse_list).with('raw-stdout').and_return([tag_info])
+    end
+
+    it 'constructs Git::Commands::Tag::Create with the execution context' do
+      expect(Git::Commands::Tag::Create).to receive(:new).with(execution_context).and_return(create_command)
+      described_instance.tag_create('v1.0.0')
+    end
+
+    it 'creates the tag, lists it by name, then parses the output' do
+      expect(create_command).to receive(:call).with('v1.0.0', nil).and_return(create_result).ordered
+      expect(list_command).to(
+        receive(:call).with('v1.0.0', format: Git::Parsers::Tag::FORMAT_STRING).and_return(list_result).ordered
+      )
+      expect(Git::Parsers::Tag).to receive(:parse_list).with('raw-stdout').and_return([tag_info]).ordered
+      described_instance.tag_create('v1.0.0')
+    end
+
+    it 'returns the Git::TagInfo for the created tag' do
+      expect(described_instance.tag_create('v1.0.0')).to be(tag_info)
+    end
+
+    context 'with no target and no options' do
+      it 'calls the create command with a nil commit and no options' do
+        expect(create_command).to receive(:call).with('v1.0.0', nil).and_return(create_result)
+        described_instance.tag_create('v1.0.0')
+      end
+    end
+
+    context 'with a target commit' do
+      it 'forwards the target as the commit operand' do
+        expect(create_command).to receive(:call).with('v1.0.0', 'abc123').and_return(create_result)
+        described_instance.tag_create('v1.0.0', 'abc123')
+      end
+    end
+
+    context 'with an options hash only' do
+      it 'forwards the options and a nil commit' do
+        expect(create_command).to receive(:call)
+          .with('v1.0.0', nil, annotate: true, message: 'hi').and_return(create_result)
+        described_instance.tag_create('v1.0.0', annotate: true, message: 'hi')
+      end
+    end
+
+    context 'with both a target and an options hash' do
+      it 'forwards the target and options' do
+        expect(create_command).to receive(:call)
+          .with('v1.0.0', 'abc123', force: true).and_return(create_result)
+        described_instance.tag_create('v1.0.0', 'abc123', force: true)
+      end
+    end
+
+    context 'with a positional options hash (legacy call shape)' do
+      it 'accepts the trailing hash as options' do
+        expect(create_command).to receive(:call)
+          .with('v1.0.0', nil, force: true).and_return(create_result)
+        described_instance.tag_create('v1.0.0', { force: true })
+      end
+    end
+
+    context 'when an unknown option is provided' do
+      it 'raises ArgumentError without calling git' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.tag_create('v1.0.0', bogus: true) }
+          .to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+    end
+
+    context 'when the :d option is provided' do
+      it 'rejects it as an unknown option without calling git' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.tag_create('v1.0.0', d: true) }
+          .to raise_error(ArgumentError, /Unknown options: d/)
+      end
+    end
+
+    context 'when the :delete option is provided' do
+      it 'rejects it as an unknown option without calling git' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.tag_create('v1.0.0', delete: true) }
+          .to raise_error(ArgumentError, /Unknown options: delete/)
+      end
+    end
+
+    context 'when an annotated tag is requested without a message' do
+      it 'raises ArgumentError without calling git' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.tag_create('v1.0.0', annotate: true) }
+          .to raise_error(ArgumentError, 'Cannot create an annotated or signed tag without a message.')
+      end
+    end
+
+    context 'when a signed tag is requested without a message' do
+      it 'raises ArgumentError without calling git' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.tag_create('v1.0.0', s: true) }
+          .to raise_error(ArgumentError, 'Cannot create an annotated or signed tag without a message.')
+      end
+    end
+
+    context 'when an annotated tag is requested with a message' do
+      it 'creates the tag and returns it' do
+        expect(described_instance.tag_create('v1.0.0', annotate: true, message: 'release')).to be(tag_info)
+      end
+    end
+
+    context 'when an annotated tag is requested with a :file option' do
+      it 'creates the tag and returns it' do
+        expect(described_instance.tag_create('v1.0.0', annotate: true, file: 'msg.txt')).to be(tag_info)
+      end
+    end
+  end
+
   describe '#tag_add' do
     let(:create_command) { instance_double(Git::Commands::Tag::Create) }
     let(:command_result) { instance_double(Git::CommandLine::Result) }
@@ -1333,6 +1521,14 @@ RSpec.describe Git::Repository::ObjectOperations do
       allow(Git::Commands::Tag::Create).to receive(:new).with(execution_context).and_return(create_command)
       allow(create_command).to receive(:call).and_return(command_result)
       allow(described_instance).to receive(:tag).with('v1.0.0').and_return(tag_object)
+    end
+
+    it 'emits a deprecation warning via Git::Deprecation.warn' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#tag_add is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#tag_create instead.'
+      )
+      described_instance.tag_add('v1.0.0')
     end
 
     it 'constructs Git::Commands::Tag::Create with the execution context' do
