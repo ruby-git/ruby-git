@@ -5,6 +5,7 @@ This document covers breaking changes and migration steps when upgrading the
 to update your code when upgrading from the preceding major version.
 
 - [Upgrading to v6.0.0](#upgrading-to-v600)
+  - [Minimum Ruby version](#minimum-ruby-version)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -45,12 +46,29 @@ v6.0.0 removes the APIs deprecated during v5.x under the project's
 
 To prepare:
 
-1. Upgrade to the latest v5.x release.
-2. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
+1. Upgrade to Ruby 3.3 or later if you are still on Ruby 3.2 (see
+   [Minimum Ruby version](#minimum-ruby-version)).
+2. Upgrade to the latest v5.x release.
+3. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
    your test suite and, if possible, staging.
-3. Fix each deprecation using the entries under
+4. Fix each deprecation using the entries under
    [Deprecated methods](#deprecated-methods) until the suite is clean.
-4. Upgrade to v6.0.0.
+5. Upgrade to v6.0.0.
+
+### Minimum Ruby version
+
+v6.0.0 requires Ruby 3.3.0 or later. v5.x supports Ruby 3.2, which reached end of
+life on 2026-04-01. The
+[Ruby version support policy](README.md#ruby-version-support-policy) commits the
+gem to the MRI versions that are still maintained, so the floor moves when a Ruby
+version leaves maintenance rather than with the gem's major version. Ruby 3.3 is
+in security maintenance until about 2027-03-31, so it stays supported in v6.0.0.
+A 3.4 floor can land in a later v6.x release once 3.3 reaches end of life.
+
+JRuby and TruffleRuby support is unchanged.
+
+If your application still runs on Ruby 3.2, upgrade Ruby before upgrading the gem,
+or stay on the latest v5.x release.
 
 ---
 
