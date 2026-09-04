@@ -12,7 +12,7 @@ RSpec.describe Git::Commands::ShowRef::List, :integration do
     write_file('file.txt', "content\n")
     repo.add('.')
     repo.commit('Initial commit')
-    repo.tag_add('v1.0')
+    repo.tag_create('v1.0')
   end
 
   describe '#call' do

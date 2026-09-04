@@ -24,6 +24,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Remote` deprecated](#gitremote-deprecated)
     - [`Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated)
     - [`Git::Branch` and `Git::Branches` deprecated](#gitbranch-and-gitbranches-deprecated)
+    - [`Git::Object::Tag` deprecated](#gitobjecttag-deprecated)
 
 ## Upgrading to v6.0.0
 
@@ -266,7 +267,7 @@ shim cannot forward them). Update call sites directly:
 
 | v4.x call | Notes |
 |-----------|-------|
-| `g.lib.list_files(ref_dir)` | Walked `.git/refs/` directly. Use `g.branch_list`, `g.tags`, or `g.remote_list` instead. |
+| `g.lib.list_files(ref_dir)` | Walked `.git/refs/` directly. Use `g.branch_list`, `g.tag_list`, or `g.remote_list` instead. |
 
 ##### Internal plumbing methods (no replacement)
 
@@ -647,5 +648,96 @@ can resolve a local branch of that name and is only used where git expects it
 | `b.archive(file, opts)` | `g.archive(name, file, opts)` — pass `info.refname` for a remote-tracking branch |
 | `b.in_branch(message) { ... }` | `g.in_branch(name, message) { ... }` — local `b` only; see the differences above |
 | `b.stashes` | `g.stashes_all` — see [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated) |
+
+#### `Git::Object::Tag` deprecated
+
+`Git::Object::Tag`, `Git::Repository#tag`, `Git::Repository#tags`, and
+`Git::Repository#tag_add` are deprecated and are removed in v6.0.0. Read tag data
+through `Git::Repository#tag_list`, which returns one `Git::TagInfo` value object per
+tag, create tags with `Git::Repository#tag_create`, which returns the new tag's
+`Git::TagInfo`, and call the repository-level operations (`archive`, `log`, `diff`,
+`cat_file_contents`, and so on) with the tag's object ID,
+`info.oid || info.target_oid`, which is the object a `Git::Object::Tag` pinned when
+it was constructed. Calling `g.tag`, `g.tags`, or
+`g.tag_add`, and constructing a `Git::Object::Tag`, each emit one deprecation
+warning; their return values are unchanged. `g.add_tag` already warned, pointing at
+`g.tag_add`, and now emits two warnings for a creation call, one for itself and one
+for the `g.tag_add` it calls; `g.add_tag(name, d: true)` emits three, adding the
+`:d`/`:delete` warning described below. The readers on a `Git::Object::Tag` do not
+warn.
+
+> **Return shape change:** `Git::Object::Tag` exposes `name`, `sha`, `objectish`,
+> `annotated?`, `message`, and `tagger`. `Git::TagInfo` exposes `name`, `oid`,
+> `target_oid`, `objecttype`, `annotated?`, `lightweight?`, `message`, and
+> `tagger`. `name` and `annotated?` are unchanged. `tagger` keeps the same `name`
+> and `email`, but `tagger.date` differs: `t.tagger.date` is a `Time` in the
+> process's local zone, while `info.tagger.date` keeps the UTC offset recorded in
+> the tag object. Both name the same instant. `message` differs for an annotated
+> tag created with an empty message (`message: ''`): `t.message` returns `""` and
+> `info.message` returns `nil`, the same value a lightweight tag has. `t.sha` and
+> `t.objectish` are the tag object's ID for an annotated tag and
+> the tagged object's ID for a lightweight tag. `Git::TagInfo` separates the two:
+> `oid` is the tag object's ID (`nil` for a lightweight tag) and `target_oid` is
+> the ID of the object the tag points to (set for both kinds), so
+> `info.oid || info.target_oid` reproduces `t.sha`. The target is usually a
+> commit, but a tag can point at any git object, and `info.objecttype` reports
+> which kind (`tag` for an annotated tag, or the target's own type such as
+> `commit` or `blob` for a lightweight one).
+>
+> **Missing tags:** `g.tag(name)` raises `Git::UnexpectedResultError` when no tag
+> has that name. `g.tag_list(name).first` returns `nil`.
+>
+> **Deleting through `tag_add`:** `g.tag_add(name, d: true)`, which was already
+> deprecated, deletes the tag and emits a second warning pointing at
+> `g.tag_delete`. `g.tag_create` rejects `:d` and `:delete` with `ArgumentError`.
+>
+> **Extra positional arguments:** `g.tag_add(name, target, extra)` ignores
+> `extra` and tags `target`. `g.tag_create` raises `ArgumentError` when more than
+> one positional argument follows the name.
+>
+> **Object identity:** every `Git::Object::Tag` resolves its tag to an object ID
+> when it is constructed and runs `size`, `contents`, `grep`, `diff`, `log`, and
+> `archive` against that ID, so moving or deleting the tag afterwards does not
+> redirect an existing object. `Git::Object::Tag.new(g, sha, name)` uses the
+> supplied `sha` as that ID; the other forms look it up from the ref. `annotated?`,
+> `message`, and `tagger` always read the ref `name`. `Git::TagInfo` describes the
+> ref only: `g.tag_list(name).first` returns whatever `name` points at now, or
+> `nil` once the tag is deleted. Keep the same identity by passing `id` (see the
+> table) rather than `name` to the operation replacements; they accept any object.
+> To read an annotated tag object by ID without going through its ref, use
+> `g.cat_file_tag(id)`, which returns the tag object's `object`, `type`, `tag`,
+> `tagger`, and `message`.
+
+In the table, `name` is the tag name, `t` is a `Git::Object::Tag`, `info` is the
+`Git::TagInfo` that replaces it, and `id` is `info.oid || info.target_oid` (or the
+`sha` given to the three-argument constructor), the object `t` pinned.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.tag(name)` | `g.tag_list(name).first` — a `Git::TagInfo`, or `nil` when the tag does not exist |
+| `g.tags` | `g.tag_list` — returns `Array<Git::TagInfo>` |
+| `g.tags.map(&:name)` | `g.tag_list.map(&:name)` |
+| `g.tag_add(name, opts)` | `g.tag_create(name, opts)` — returns a `Git::TagInfo` |
+| `g.tag_add(name, target, opts)` | `g.tag_create(name, target, opts)` |
+| `g.tag_add(name, d: true)` | `g.tag_delete(name)` |
+| `g.add_tag(name, opts)`, `g.add_tag(name, target, opts)` | `g.tag_create(name, ...)` — its warning names `g.tag_add`, which is deprecated too; go straight to `g.tag_create` |
+| `g.add_tag(name, d: true)` | `g.tag_delete(name)` — `g.tag_create` rejects `:d`; see the deletion note above |
+| `Git::Object::Tag.new(g, name)` | `g.tag_list(name).first` |
+| `Git::Object::Tag.new(g, sha, name)` | `g.tag_list(name).first` — reads the ref rather than `sha`; use `sha` as `id` for the operations below, or read the object with `g.cat_file_tag(sha)`; see the object identity note above |
+| `Git::Object.new(g, name, nil, true)` | `g.tag_list(name).first` — its warning names `Git::Object::Tag.new`, which is deprecated too |
+| `t.name` | `info.name` |
+| `t.sha`, `t.objectish`, `t.to_s` | `info.oid \|\| info.target_oid` — see the return shape change above |
+| `t.annotated?` | `info.annotated?` |
+| `t.message` | `info.message` — `nil` rather than `""` for an annotated tag with an empty message |
+| `t.tagger` | `info.tagger` — `date` keeps the recorded UTC offset; see the return shape change above |
+| `t.tag?` | not needed; every `Git::TagInfo` is a tag |
+| `t.size` | `g.cat_file_size(id)` — `id` rather than `name` keeps this and the operations below on the object `t` pinned; see the object identity note above |
+| `t.contents` | `g.cat_file_contents(id)` |
+| `t.contents { \|file\| ... }` | `g.cat_file_contents(id) { \|file\| ... }` — streams to a temporary file instead of buffering the object |
+| `t.contents_array` | `g.cat_file_contents(id).split("\n")` |
+| `t.grep(string, path, opts)` | `g.grep(string, path, opts.merge(object: id))` |
+| `t.diff(other)` | `g.diff(id, other)` |
+| `t.log(count)` | `g.log(count).object(id)` |
+| `t.archive(file, opts)` | `g.archive(id, file, opts)` |
 
 ---

@@ -143,7 +143,7 @@ RSpec.describe Git::Parsers::Branch, :integration do
         write_file('file.txt')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.tag_add('v1.0.0')
+        repo.tag_create('v1.0.0')
         write_file('file2.txt')
         repo.add('file2.txt')
         repo.commit('Second commit')

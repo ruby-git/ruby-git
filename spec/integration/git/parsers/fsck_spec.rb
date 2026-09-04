@@ -84,7 +84,7 @@ RSpec.describe Git::Parsers::Fsck, :integration do
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.tag_add('v1.0.0', annotate: true, message: 'Version 1.0.0')
+        repo.tag_create('v1.0.0', annotate: true, message: 'Version 1.0.0')
       end
 
       it 'returns tagged objects with tag name' do
