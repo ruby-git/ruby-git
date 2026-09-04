@@ -30,6 +30,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Object::Tag` deprecated](#gitobjecttag-deprecated)
     - [`Git::Status` deprecated](#gitstatus-deprecated)
     - [`Git::Worktree` and `Git::Worktrees` deprecated](#gitworktree-and-gitworktrees-deprecated)
+    - [`Git.clone` option renames](#gitclone-option-renames)
 
 ## Upgrading to v6.0.0
 
@@ -1017,5 +1018,26 @@ is the `Git::WorktreeInfo` that replaces it.
 | `wt.dir` | `info.path` |
 | `wt.full`, `wt.to_s` | `info.path` — or `"#{info.path} #{info.head}"` for the descriptor that entries from `g.worktrees` produced |
 | `wt.to_a` | `[info.path]` |
+
+#### `Git.clone` option renames
+
+Three `Git.clone` options were renamed in v5.x. The v4.x names still work. Each
+deprecated option present on a call emits its own deprecation warning, so a call
+that uses two of them warns twice. Each value is passed through to the
+replacement option, except that `:path` is dropped when `:chdir` is also given.
+
+> **Precedence and value notes:**
+> - `:path` and `:chdir` both run `git clone` from inside the given directory.
+>   When both are given, `:chdir` wins and `:path` is dropped.
+> - `:recursive` carries its value over to `:recurse_submodules` unchanged.
+>   `:recurse_submodules` also accepts a pathspec `String` or `Array<String>`
+>   to initialize only a subset of submodules, which `:recursive` never did.
+> - `:remote` and `:origin` have the same effect (`git clone --origin name`).
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `Git.clone(url, dir, path: p)` | `Git.clone(url, dir, chdir: p)` |
+| `Git.clone(url, dir, recursive: true)` | `Git.clone(url, dir, recurse_submodules: true)` — or a pathspec `String` or `Array<String>` for a subset of submodules |
+| `Git.clone(url, dir, remote: name)` | `Git.clone(url, dir, origin: name)` |
 
 ---
