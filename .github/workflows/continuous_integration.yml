@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, 4.x]
+    branches: [main, 4.x, 5.x]
   workflow_dispatch:
 
 # Cancel an in-progress run when the same PR (or branch) gets a new push. For

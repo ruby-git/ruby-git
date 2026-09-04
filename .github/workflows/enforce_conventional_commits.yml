@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - 4.x
+      - 5.x
 
 # Cancel an in-progress run when the same PR gets a new push; only the commit messages
 # as they stand after the latest push are worth linting.

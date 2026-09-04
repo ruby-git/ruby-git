@@ -10,7 +10,7 @@ name: Release Gem
 
 on:
   push:
-    branches: ["main", "4.x"]
+    branches: ["main", "4.x", "5.x"]
 
   workflow_dispatch:
 
@@ -38,6 +38,7 @@ jobs:
           token: ${{ secrets.AUTO_RELEASE_TOKEN }}
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
+          target-branch: ${{ github.ref_name }}
 
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
