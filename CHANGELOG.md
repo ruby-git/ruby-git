@@ -5,6 +5,18 @@
 
 # Change Log
 
+## [5.4.1](https://github.com/ruby-git/ruby-git/compare/v5.4.0...v5.4.1) (2026-09-04)
+
+
+### Other Changes
+
+* Document the Git.clone option renames in UPGRADING.md ([0f8e5d8](https://github.com/ruby-git/ruby-git/commit/0f8e5d85eda89d2da802eebde5036c3f32b0f08e)), closes [#1763](https://github.com/ruby-git/ruby-git/issues/1763)
+* **upgrading:** Document the Git::Log Enumerable and Commit#set_commit deprecations ([1d1c9bc](https://github.com/ruby-git/ruby-git/commit/1d1c9bcf33824ced13b13d61f7ce2f4cb1169e8d)), closes [#1764](https://github.com/ruby-git/ruby-git/issues/1764)
+* **upgrading:** Document the Git::Repository method renames ([e1bb6e6](https://github.com/ruby-git/ruby-git/commit/e1bb6e6214340fed5b52acf0366488c860687f41)), closes [#1765](https://github.com/ruby-git/ruby-git/issues/1765)
+* **upgrading:** Document the Git::Repository option renames ([0a2dfcb](https://github.com/ruby-git/ruby-git/commit/0a2dfcba94d9b5a0e89bdeaa9ec32de3ddc6dc59)), closes [#1766](https://github.com/ruby-git/ruby-git/issues/1766)
+* **upgrading:** Document the module-level Git deprecations ([cd3a2ae](https://github.com/ruby-git/ruby-git/commit/cd3a2ae81af6f90bf9e65b3ac21bce722efd84fc)), closes [#1762](https://github.com/ruby-git/ruby-git/issues/1762)
+* **upgrading:** Remove two misplaced rows from the configuration methods table ([61ad4c8](https://github.com/ruby-git/ruby-git/commit/61ad4c85763b1695618378b27d5f51e28bd0369d)), closes [#1761](https://github.com/ruby-git/ruby-git/issues/1761)
+
 ## [5.4.0](https://github.com/ruby-git/ruby-git/compare/v5.3.0...v5.4.0) (2026-09-04)
 
 
