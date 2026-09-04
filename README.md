@@ -448,12 +448,13 @@ are in [UPGRADING.md](UPGRADING.md#upgrading-to-v600). See
 ### Release support policy
 
 All development happens on `main`, which releases the next version of the gem,
-including the next major version.
+including the next major version. The next release from `main` is v6.0.0. Every
+further v5.x release is cut from `5.x`.
 
-The most recent previous major series is maintained on a branch named for that
-series, currently `4.x`. It receives bug fixes and security fixes, and
-backward-compatible features at the maintainers' discretion. Fixes land on `main`
-first and are backported, except a fix for a problem that exists only in the
+Each supported previous major series is maintained on a branch named for that
+series, currently `5.x` and `4.x`. These branches receive bug fixes and security
+fixes, and backward-compatible features at the maintainers' discretion. Fixes land on
+`main` first and are backported, except a fix for a problem that exists only in a
 maintenance branch, which targets that branch directly.
 
 Support for a major series ends when the second major after it is released. v4.x is
