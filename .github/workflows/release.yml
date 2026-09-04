@@ -1,13 +1,12 @@
 ---
 name: Release Gem
 
-description: |
-  This workflow creates a new release on GitHub and publishes the gem to
-  RubyGems.org.
-
-  The workflow uses the `googleapis/release-please-action` to handle the
-  release creation process and the `rubygems/release-gem` action to publish
-  the gem to rubygems.org
+# This workflow creates a new release on GitHub and publishes the gem to
+# RubyGems.org.
+#
+# The workflow uses the `googleapis/release-please-action` to handle the
+# release creation process and the `rubygems/release-gem` action to publish
+# the gem to rubygems.org
 
 on:
   push:
