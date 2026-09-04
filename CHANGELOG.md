@@ -5,6 +5,22 @@
 
 # Change Log
 
+## [5.4.0](https://github.com/ruby-git/ruby-git/compare/v5.3.0...v5.4.0) (2026-09-04)
+
+
+### Features
+
+* **stash:** Add the StashInfo facade surface and deprecate the legacy stash API ([3cc4c6b](https://github.com/ruby-git/ruby-git/commit/3cc4c6bdc58203eedf7f3207f8b915e52ebc6eee)), closes [#1730](https://github.com/ruby-git/ruby-git/issues/1730)
+* **status:** Add Git::StatusInfo and Git::StatusFileInfo and deprecate Git::Status ([b0a376b](https://github.com/ruby-git/ruby-git/commit/b0a376b19fb3ac100a11b8fa5f07b0700a6f4ce6)), closes [#1720](https://github.com/ruby-git/ruby-git/issues/1720)
+* **tag:** Add tag_list and tag_create and deprecate the Git::Object::Tag returns ([6f9c55c](https://github.com/ruby-git/ruby-git/commit/6f9c55c7d2e845c7ec595b9db5ad8117b28e90f8)), closes [#1719](https://github.com/ruby-git/ruby-git/issues/1719)
+* **worktree:** Add WorktreeInfo, cover every subcommand, and deprecate the legacy API ([581d6ad](https://github.com/ruby-git/ruby-git/commit/581d6ad908fb746a3b5e1726157da3d33a04bae4)), closes [#1731](https://github.com/ruby-git/ruby-git/issues/1731)
+
+
+### Other Changes
+
+* **release:** Move the workflow description into comments ([a5d90bd](https://github.com/ruby-git/ruby-git/commit/a5d90bdd7b9e07859007942eb07f9b153e9c9e0a)), closes [#1734](https://github.com/ruby-git/ruby-git/issues/1734)
+* **tag:** Add failing specs for TagInfo facade methods and Object::Tag deprecation ([749c327](https://github.com/ruby-git/ruby-git/commit/749c327bf793fd8f4b06b7a2dd1740aa977e9b57)), closes [#1719](https://github.com/ruby-git/ruby-git/issues/1719)
+
 ## [5.3.0](https://github.com/ruby-git/ruby-git/compare/v5.2.0...v5.3.0) (2026-09-03)
 
 
