@@ -14,6 +14,7 @@ This workflow describes how releases are managed for the ruby-git gem.
 - [How Releases Work](#how-releases-work)
 - [Developer Responsibilities](#developer-responsibilities)
 - [Checking Release Readiness](#checking-release-readiness)
+- [Cutting a maintenance branch](#cutting-a-maintenance-branch)
 - [Major release readiness](#major-release-readiness)
 - [After a major release](#after-a-major-release)
 - [What NOT to Do](#what-not-to-do)
@@ -39,7 +40,9 @@ Releases are **fully automated** via
 [release-please](https://github.com/googleapis/release-please) and the
 `.github/workflows/release.yml` workflow:
 
-1. Developers merge PRs with **conventional commit** messages into `main`
+1. Developers merge PRs with **conventional commit** messages into a release
+   branch: `main` for the next major, or a maintenance branch such as `5.x` or
+   `4.x` for a patch or minor release of an earlier series
 2. release-please automatically opens (and keeps updated) a **release PR** that
    bumps `lib/git/version.rb` and regenerates `CHANGELOG.md`
 3. When a maintainer merges the release PR, release-please creates a **GitHub
@@ -76,7 +79,7 @@ manually edit `lib/git/version.rb` or `CHANGELOG.md`.
 
 Before a maintainer merges a release PR:
 
-1. **Ensure CI passes on `main`:**
+1. **Ensure CI passes on the release branch** (`main`, `5.x`, or `4.x`):
 
    ```bash
    bundle exec rake default
@@ -96,6 +99,30 @@ Before a maintainer merges a release PR:
 
 4. **Review the release PR** — verify the auto-generated changelog and version
    bump look correct.
+
+## Cutting a maintenance branch
+
+`main` becomes the release line for the next major as soon as the first removal merges
+([ADR-0007](../../../docs/adr/0007-removals-require-one-normal-release-of-deprecation-not-calendar-soak.md)),
+which can be long before that major ships. Cut the maintenance branch for the current
+major at that point, not after the major release, so the series can keep releasing
+while `main` is pinned to the next major:
+
+- [ ] Create the branch (e.g. `5.x`) from the latest tag of that major and apply the
+      release branch ruleset.
+- [ ] On the new branch, add it to the `push` trigger and the release job guard in
+      `release.yml`, to the `pull_request` triggers in `continuous_integration.yml`
+      and `enforce_conventional_commits.yml`, and to the `push` trigger in
+      `warm_bundler_caches.yml`, all under `.github/workflows/`. The workflow that
+      runs is the one on the branch pushed to or targeted, and a Bundler cache is
+      readable only from the ref that wrote it, its base ref, and the default branch,
+      so the copies on `main` need no change.
+- [ ] Name the new branch beside the existing maintenance branch everywhere that one is
+      listed: the branch tables in `.github/copilot-instructions.md` and
+      `CONTRIBUTING.md`, the release support policy in `README.md`, the protected
+      branch list in `.husky/pre-commit`, and the skills that list the protected
+      branches. `grep -rn '<N>\.x' .github .husky CONTRIBUTING.md README.md`, with the
+      existing maintenance branch's major in place of `<N>`, finds them all.
 
 ## Major release readiness
 
@@ -126,14 +153,16 @@ and is checked when each removal PR merges, not here.
 ## After a major release
 
 - [ ] Add a README announcement entry dated the release day.
-- [ ] Create the maintenance branch for the previous major (e.g. `5.x`) from its last
-      tag and apply branch protection.
-- [ ] Replace the retired maintenance branch with the new one everywhere it is named:
-      the push triggers in `release.yml`, `continuous_integration.yml`, and
-      `enforce_conventional_commits.yml` under `.github/workflows/`, the branch tables
-      in `.github/copilot-instructions.md` and `CONTRIBUTING.md`, and the skills that
-      list the protected branches. `grep -rn '4\.x' .github CONTRIBUTING.md` finds
-      them all.
+- [ ] Support for the oldest maintenance branch ends with this release (see the release
+      support policy in `README.md`). Retire it everywhere it is named. In the workflow
+      triggers and release job guard under `.github/workflows/`, replace it with the
+      newer maintenance branch, which the cutting step left out of the copies on
+      `main`. Everywhere else the newer branch is already listed, so remove the retired
+      one: the branch tables in `.github/copilot-instructions.md` and
+      `CONTRIBUTING.md`, the release support policy in `README.md`, the protected
+      branch list in `.husky/pre-commit`, and the skills that list the protected
+      branches. `grep -rn '<N>\.x' .github .husky CONTRIBUTING.md README.md`, with the
+      retired branch's major in place of `<N>`, finds them all.
 - [ ] Close the milestone and update the roadmap issue.
 
 ## What NOT to Do

@@ -157,8 +157,10 @@ clean baseline, and create a clear implementation plan before writing any code.
 1. **Check Uncommitted Changes:** If there are any uncommitted changes in the
    project, ask the user what to do with them before continuing: include them in the
    current implementation plan, ignore them, or stash them before continuing.
-2. **Create Feature Branch:** Create a new branch from `origin/main` using the naming
-   convention `<type>/<short-description>` (e.g., `fix/issue-999`).
+2. **Create Feature Branch:** Decide the target branch first: `main`, `5.x`, or
+   `4.x` per the [branch strategy](../../../CONTRIBUTING.md#branch-strategy). Then
+   create a new branch from `origin/<target-branch>` using the naming convention
+   `<type>/<short-description>` (e.g., `fix/issue-999`).
 3. **Verify Project Setup:** Run `bin/setup` to ensure that the project is ready
    for development.
 4. **Verify Clean Baseline:** Ensure that all existing tests and linters pass by
@@ -377,7 +379,7 @@ commit and complete the feature or bug fix.
      works on all platforms)
    - Then run in the terminal: `git push origin <branch>`
    - Then run in the terminal: `gh pr create --title "<title>" --base <target-branch> --body-file ./pr_body.md`
-     (choose `main` or `4.x` per the [branch strategy](../../../CONTRIBUTING.md))
+     (the target branch chosen in Phase 1)
 
    After creating the PR, verify the stored body with
    `gh pr view <number> --json body --jq '.body'`. If it is garbled, rewrite

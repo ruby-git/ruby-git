@@ -2,7 +2,7 @@
 
 branch=$(git branch --show-current)
 
-protected_branches="main 4.x"
+protected_branches="main 5.x 4.x"
 
 for protected in $protected_branches; do
   if [ "$branch" = "$protected" ]; then
