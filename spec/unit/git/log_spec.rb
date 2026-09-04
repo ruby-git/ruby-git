@@ -367,9 +367,59 @@ RSpec.describe Git::Log::Result do
     end
   end
 
+  it 'responds to every method the deprecated Git::Log Enumerable interface provides' do
+    expect(result).to respond_to(:each, :size, :to_s, :first, :last, :[])
+  end
+
+  it 'is Enumerable' do
+    expect(result).to be_a(Enumerable)
+  end
+
+  describe '#each' do
+    it 'yields each commit in query order' do
+      expect { |block| result.each(&block) }.to yield_successive_args(*commits)
+    end
+
+    it 'returns an enumerator over the commits when no block is given' do
+      expect(result.each.to_a).to eq(commits)
+    end
+  end
+
+  describe '#size' do
+    it 'returns the number of commits' do
+      expect(result.size).to eq(3)
+    end
+  end
+
   describe '#to_s' do
     it 'joins the commit string representations with newlines, leading with the first commit sha' do
       expect(result.to_s).to eq("aaa111\nbbb222\nccc333")
+    end
+  end
+
+  describe '#first' do
+    it 'returns the first commit' do
+      expect(result.first).to be(commits.first)
+    end
+  end
+
+  describe '#last' do
+    it 'returns the last commit' do
+      expect(result.last).to be(commits.last)
+    end
+  end
+
+  describe '#[]' do
+    it 'returns the commit at an integer index' do
+      expect(result[1]).to be(commits[1])
+    end
+
+    it 'returns the commits in a range' do
+      expect(result[0..1]).to eq(commits[0..1])
+    end
+
+    it 'returns nil for an index past the end' do
+      expect(result[3]).to be_nil
     end
   end
 end
