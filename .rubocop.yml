@@ -41,7 +41,7 @@ AllCops:
   # Pinned explicitly rather than inferred because main_branch_shared_rubocop_config
   # sets 3.1, which is older than this gem supports, and a value inherited through
   # inherit_gem takes precedence over inference from the gemspec.
-  TargetRubyVersion: 3.2
+  TargetRubyVersion: 3.3
 
   Exclude:
     # archive/ holds frozen records of completed projects. The Ruby in there is

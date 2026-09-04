@@ -29,7 +29,7 @@ version_ge() {
 }
 
 # Extract the minimum Ruby version from required_ruby_version in the gemspec
-# (e.g., `spec.required_ruby_version = '>= 3.2.0'`). The gemspec is the
+# (e.g., `spec.required_ruby_version = '>= 3.3.0'`). The gemspec is the
 # authoritative source; bin/setup must not duplicate it.
 required_ruby_version() {
   local v
