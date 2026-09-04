@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.metadata['rubygems_mfa_required'] = 'true'
 
   spec.require_paths = ['lib']
-  spec.required_ruby_version = '>= 3.2.0'
+  spec.required_ruby_version = '>= 3.3.0'
   spec.requirements = ['git 2.28.0 or greater']
 
   spec.add_dependency 'activesupport', '>= 5.0'
@@ -74,9 +74,6 @@ Gem::Specification.new do |spec|
   # is also a C extension and so could not install on JRuby regardless.
   install_docs = mri
 
-  # yard-lint requires Ruby >= 3.3.
-  install_yard_lint = install_docs && Gem.ruby_version >= Gem::Version.new('3.3.0')
-
   # i18n 1.15+ uses Fiber.[] (Ruby 3.2 Fiber storage), which TruffleRuby < 34.0.0 does
   # not implement, so those runtimes hold at the last release that works there.
   pin_old_i18n = RUBY_ENGINE == 'truffleruby' &&
@@ -98,7 +95,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'simplecov-rspec', '~> 1.1'
   spec.add_development_dependency 'yard', '~> 0.9', '>= 0.9.28' if install_docs
   spec.add_development_dependency 'yard_example_test', '~> 0.2', '>= 0.2.1' if install_docs
-  spec.add_development_dependency 'yard-lint', '~> 1.8' if install_yard_lint
+  spec.add_development_dependency 'yard-lint', '~> 1.8' if install_docs
 
   # Specify which files should be added to the gem when it is released.
   #
