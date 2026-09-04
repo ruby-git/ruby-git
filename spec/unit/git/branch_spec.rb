@@ -532,9 +532,41 @@ RSpec.describe Git::Branch do
 
     before { allow(base).to receive(:stashes_all).and_return([]) }
 
-    it 'emits a deprecation warning via Git::Deprecation.warn' do
-      expect(Git::Deprecation).to receive(:warn).with(a_string_including('Git::Branch#stashes'))
+    it 'emits a deprecation warning pointing at Git::Repository#stash_infos' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Branch#stashes is deprecated and will be removed in v6.0.0. ' \
+        'It ignores the branch and returns all repository stashes. ' \
+        'Use Git::Repository#stash_infos instead.'
+      )
       branch.stashes
+    end
+
+    context 'when the Git::Stashes it builds emits deprecation warnings' do
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence around the nested
+      # deprecated call is exercised instead of bypassed by the stubbed
+      # Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(base).to receive(:stashes_all) do
+          Git::Deprecation.warn('Git::Repository#stashes_all is deprecated')
+          []
+        end
+      end
+
+      it 'lets only the Git::Branch#stashes warning escape' do
+        branch.stashes
+        expect(messages).to contain_exactly(a_string_including('Git::Branch#stashes is deprecated'))
+      end
     end
 
     it 'returns a Git::Stashes for the branch repository' do

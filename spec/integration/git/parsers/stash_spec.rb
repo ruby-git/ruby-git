@@ -27,7 +27,7 @@ RSpec.describe Git::Parsers::Stash, :integration do
     context 'with a single stash' do
       before do
         write_file('file.txt', 'modified content')
-        repo.stash_save('WIP on feature')
+        Git::Commands::Stash::Push.new(execution_context).call(message: 'WIP on feature')
       end
 
       it 'parses the stash index correctly' do
@@ -85,13 +85,13 @@ RSpec.describe Git::Parsers::Stash, :integration do
     context 'with multiple stashes' do
       before do
         write_file('file.txt', 'first change')
-        repo.stash_save('First stash')
+        Git::Commands::Stash::Push.new(execution_context).call(message: 'First stash')
 
         write_file('file.txt', 'second change')
-        repo.stash_save('Second stash')
+        Git::Commands::Stash::Push.new(execution_context).call(message: 'Second stash')
 
         write_file('file.txt', 'third change')
-        repo.stash_save('Third stash')
+        Git::Commands::Stash::Push.new(execution_context).call(message: 'Third stash')
       end
 
       it 'returns stashes in order (newest first)' do

@@ -3,13 +3,18 @@
 require 'spec_helper'
 
 RSpec.describe Git::Stashes do
-  # Git::Stashes accepts either Git::Repository (new form) or Git::Base (legacy).
-  # These specs cover the Git::Repository path with stubbed collaborators; the
-  # Git::Base path is exercised end-to-end by
+  # These specs cover Git::Stashes with stubbed Git::Repository collaborators. The
+  # real git path is exercised end-to-end by
   # spec/integration/git/repository/stashing_spec.rb.
 
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
   let(:repository) { Git::Repository.new(execution_context: execution_context) }
+
+  let(:deprecation_message) do
+    'Git::Stashes is deprecated and will be removed in v6.0.0. ' \
+      'Use the Git::Repository stash methods (stash_infos, stash_push, stash_apply, stash_clear) ' \
+      'and Git::StashInfo instead.'
+  end
 
   # Git::Repository#stashes_all returns stashes in oldest-first order
   let(:mocked_stashes_all_result) do
@@ -20,23 +25,57 @@ RSpec.describe Git::Stashes do
   end
 
   before do
+    allow(Git::Deprecation).to receive(:warn)
     allow(repository).to receive(:stashes_all).and_return(mocked_stashes_all_result)
   end
 
   describe '#initialize' do
+    it 'emits a deprecation warning via Git::Deprecation.warn' do
+      expect(Git::Deprecation).to receive(:warn).with(deprecation_message)
+      described_class.new(repository)
+    end
+
     it 'loads stashes from the repository' do
       stashes = described_class.new(repository)
       expect(stashes.size).to eq(2)
     end
 
     it 'creates Stash objects from stash data' do
-      stash_double = double('Stash', saved?: true)
+      stash_double = instance_double(Git::Stash, saved?: true)
       allow(Git::Stash).to receive(:new).and_return(stash_double)
 
       described_class.new(repository)
 
       expect(Git::Stash).to have_received(:new).with(repository, 'abc1234 Test', existing: true)
       expect(Git::Stash).to have_received(:new).with(repository, 'def5678 Work', existing: true)
+    end
+
+    context 'when stashes_all and Git::Stash.new themselves emit deprecation warnings' do
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence around the nested
+      # deprecated calls is exercised instead of bypassed by the stubbed
+      # Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(repository).to receive(:stashes_all) do
+          Git::Deprecation.warn('Git::Repository#stashes_all is deprecated')
+          mocked_stashes_all_result
+        end
+      end
+
+      it 'lets only the Git::Stashes warning escape' do
+        described_class.new(repository)
+        expect(messages).to contain_exactly(a_string_including('Git::Stashes is deprecated'))
+      end
     end
   end
 
@@ -66,17 +105,49 @@ RSpec.describe Git::Stashes do
       result = stashes.all
       expect(result).to eq(new_data)
     end
+
+    context 'when stashes_all itself emits a deprecation warning' do
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence around the nested
+      # deprecated call is exercised instead of bypassed by the stubbed
+      # Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(repository).to receive(:stashes_all) do
+          Git::Deprecation.warn('Git::Repository#stashes_all is deprecated')
+          mocked_stashes_all_result
+        end
+      end
+
+      it 'does not let the nested stashes_all warning escape' do
+        stashes
+        messages.clear
+
+        stashes.all
+
+        expect(messages).to be_empty
+      end
+    end
   end
 
   describe '#save' do
     subject(:stashes) { described_class.new(repository) }
 
     before do
-      allow(Git::Stash).to receive(:new).and_return(double('Stash', saved?: true))
+      allow(Git::Stash).to receive(:new).and_return(instance_double(Git::Stash, saved?: true))
     end
 
     context 'when there are changes to stash' do
-      let(:new_stash) { double('Stash', saved?: true) }
+      let(:new_stash) { instance_double(Git::Stash, saved?: true) }
 
       before do
         allow(Git::Stash).to receive(:new).with(repository, 'WIP').and_return(new_stash)
@@ -89,7 +160,7 @@ RSpec.describe Git::Stashes do
     end
 
     context 'when there are no changes to stash' do
-      let(:new_stash) { double('Stash', saved?: false) }
+      let(:new_stash) { instance_double(Git::Stash, saved?: false) }
 
       before do
         allow(Git::Stash).to receive(:new).with(repository, 'WIP').and_return(new_stash)
@@ -100,14 +171,42 @@ RSpec.describe Git::Stashes do
         expect(stashes.size).to eq(2)
       end
     end
+
+    context 'when the Git::Stash it builds emits a deprecation warning' do
+      let(:messages) { [] }
+
+      # Route real warnings to a collector so the silence around the nested
+      # deprecated call is exercised instead of bypassed by the stubbed
+      # Git::Deprecation.warn
+      around do |example|
+        original_behavior = Git::Deprecation.behavior
+        Git::Deprecation.behavior = ->(message, *) { messages << message }
+        example.run
+      ensure
+        Git::Deprecation.behavior = original_behavior
+      end
+
+      before do
+        allow(Git::Deprecation).to receive(:warn).and_call_original
+        allow(Git::Stash).to receive(:new).with(repository, 'WIP') do
+          Git::Deprecation.warn('Git::Stash is deprecated')
+          instance_double(Git::Stash, saved?: true)
+        end
+        stashes
+      end
+
+      it 'does not let the nested Git::Stash warning escape' do
+        expect { stashes.save('WIP') }.not_to(change { messages.size })
+      end
+    end
   end
 
   describe '#each' do
     subject(:stashes) { described_class.new(repository) }
 
     before do
-      allow(Git::Stash).to receive(:new).and_wrap_original do |_method, _base, message, **_kwargs|
-        instance_double('Git::Stash', saved?: true, message: message)
+      allow(Git::Stash).to receive(:new) do |_base, message, **_kwargs|
+        instance_double(Git::Stash, saved?: true, message: message)
       end
     end
 
@@ -135,8 +234,8 @@ RSpec.describe Git::Stashes do
     subject(:stashes) { described_class.new(repository) }
 
     before do
-      allow(Git::Stash).to receive(:new).and_wrap_original do |_method, _base, message, **_kwargs|
-        instance_double('Git::Stash', saved?: true, message: message)
+      allow(Git::Stash).to receive(:new) do |_base, message, **_kwargs|
+        instance_double(Git::Stash, saved?: true, message: message)
       end
     end
 
@@ -158,7 +257,7 @@ RSpec.describe Git::Stashes do
     subject(:stashes) { described_class.new(repository) }
 
     before do
-      allow(Git::Stash).to receive(:new).and_return(double('Stash', saved?: true))
+      allow(Git::Stash).to receive(:new).and_return(instance_double(Git::Stash, saved?: true))
     end
 
     it 'returns the number of stashes' do
@@ -170,7 +269,7 @@ RSpec.describe Git::Stashes do
     subject(:stashes) { described_class.new(repository) }
 
     before do
-      allow(Git::Stash).to receive(:new).and_return(double('Stash', saved?: true))
+      allow(Git::Stash).to receive(:new).and_return(instance_double(Git::Stash, saved?: true))
       allow(repository).to receive(:stash_clear)
     end
 
@@ -185,7 +284,7 @@ RSpec.describe Git::Stashes do
     subject(:stashes) { described_class.new(repository) }
 
     before do
-      allow(Git::Stash).to receive(:new).and_return(double('Stash', saved?: true))
+      allow(Git::Stash).to receive(:new).and_return(instance_double(Git::Stash, saved?: true))
       allow(repository).to receive(:stash_apply)
     end
 

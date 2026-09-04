@@ -132,22 +132,26 @@ module Git
     #
     # The result is memoized after the first call.
     #
-    # @example Iterate over stash entries
+    # @example Iterate over stash entries (deprecated)
     #   git.branch('main').stashes.each { |s| puts s }
+    #
+    # @example The replacement
+    #   repo.stash_infos.each { |info| puts info.message }
     #
     # @return [Git::Stashes] the stash list
     #
-    # @deprecated Use {Git::Repository#stashes_all} instead
+    # @deprecated Use {Git::Repository#stash_infos} instead
     #
-    # @see Git::Repository#stashes_all
+    # @see Git::Repository#stash_infos
     #
     def stashes
       Git::Deprecation.warn(
         'Git::Branch#stashes is deprecated and will be removed in v6.0.0. ' \
         'It ignores the branch and returns all repository stashes. ' \
-        'Use Git::Repository#stashes_all instead.'
+        'Use Git::Repository#stash_infos instead.'
       )
-      @stashes ||= Git::Stashes.new(branch_repository)
+      # Git::Stashes is deprecated too; silence it so one stashes call emits one warning
+      @stashes ||= Git::Deprecation.silence { Git::Stashes.new(branch_repository) }
     end
 
     # Checks out this branch, attempting to create it first if it does not already exist
