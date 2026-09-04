@@ -6,6 +6,7 @@
       "package-name": "git",
       "changelog-path": "CHANGELOG.md",
       "version-file": "lib/git/version.rb",
+      "release-as": "6.0.0",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "draft": false,

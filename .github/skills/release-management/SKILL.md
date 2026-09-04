@@ -153,6 +153,8 @@ and is checked when each removal PR merges, not here.
 ## After a major release
 
 - [ ] Add a README announcement entry dated the release day.
+- [ ] Remove `release-as` from `.release-please-config.json` if it was set to pin the
+      major. release-please keeps applying it to every later release until it is removed.
 - [ ] Support for the oldest maintenance branch ends with this release (see the release
       support policy in `README.md`). Retire it everywhere it is named. In the workflow
       triggers and release job guard under `.github/workflows/`, replace it with the
