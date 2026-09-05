@@ -5,6 +5,18 @@
 
 # Change Log
 
+## [6.0.0](https://github.com/ruby-git/ruby-git/compare/v5.4.1...v6.0.0) (2026-09-05)
+
+
+### Other Changes
+
+* Name the 5.x maintenance branch alongside 4.x ([f264747](https://github.com/ruby-git/ruby-git/commit/f2647470ac064fc1ac8c48e974fe3bd1faf0ae99))
+* **readme:** Announce the 5.x branch and the v6.0.0 line on main ([4510e7d](https://github.com/ruby-git/ruby-git/commit/4510e7dabf1952447a6a66883a14c627158dcb59))
+* **readme:** Announce the deletion of the v1 and master branches ([6c8251f](https://github.com/ruby-git/ruby-git/commit/6c8251f617481a143206cb9f513336e3b442701c)), closes [#1786](https://github.com/ruby-git/ruby-git/issues/1786)
+* Release v6.0.0 as the next version from main ([dbee8b9](https://github.com/ruby-git/ruby-git/commit/dbee8b9abfdb224893b6ca26e7531f53c241c448))
+* Replace the release-as config pin with a Release-As commit footer ([ebb7605](https://github.com/ruby-git/ruby-git/commit/ebb7605183b766759ef078ea48e41881f48ef5fb))
+* **skills:** Record the Release-As pin and two-PR shape of a maintenance branch cut ([4db3834](https://github.com/ruby-git/ruby-git/commit/4db383464f3e6ea73d2d41ac6e89311208ac94d8))
+
 ## [5.4.1](https://github.com/ruby-git/ruby-git/compare/v5.4.0...v5.4.1) (2026-09-04)
 
 
