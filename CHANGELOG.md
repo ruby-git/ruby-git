@@ -5,6 +5,14 @@
 
 # Change Log
 
+## [5.4.2](https://github.com/ruby-git/ruby-git/compare/v5.4.1...v5.4.2) (2026-09-05)
+
+
+### Other Changes
+
+* Name the 5.x maintenance branch alongside 4.x ([ad30718](https://github.com/ruby-git/ruby-git/commit/ad30718a61cb89c343c84c71feb1c94cf3995f28))
+* Run the CI, commitlint, release, and cache workflows for the 5.x branch ([7c3fd13](https://github.com/ruby-git/ruby-git/commit/7c3fd13994104c2c6b6564cc41d1e3c4e614255a))
+
 ## [5.4.1](https://github.com/ruby-git/ruby-git/compare/v5.4.0...v5.4.1) (2026-09-04)
 
 
