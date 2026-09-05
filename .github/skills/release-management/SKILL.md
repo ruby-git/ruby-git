@@ -106,23 +106,58 @@ Before a maintainer merges a release PR:
 ([ADR-0007](../../../docs/adr/0007-removals-require-one-normal-release-of-deprecation-not-calendar-soak.md)),
 which can be long before that major ships. Cut the maintenance branch for the current
 major at that point, not after the major release, so the series can keep releasing
-while `main` is pinned to the next major:
+while `main` is pinned to the next major.
 
-- [ ] Create the branch (e.g. `5.x`) from the latest tag of that major and apply the
-      release branch ruleset.
-- [ ] On the new branch, add it to the `push` trigger and the release job guard in
-      `release.yml`, to the `pull_request` triggers in `continuous_integration.yml`
-      and `enforce_conventional_commits.yml`, and to the `push` trigger in
+The cut is two pull requests, one into each branch, because each branch runs its own
+copy of the workflows. Both carry the same docs commit: write it once, cherry-pick it
+onto the other branch, and cherry-pick it again whenever review changes it on either
+side, so the two branches say the same thing. Merge the `main` PR first so the pin is
+in place before anything else lands on `main`. Below, `<N>` is the major being cut,
+`<N+1>` the major `main` will release next, and `<M>` the major of the maintenance
+branch that already exists.
+
+On `main`:
+
+- [ ] Add a README announcement entry dated the cut day: every further v<N>.x release
+      comes from the new branch, and the next release from `main` is v<N+1>.0.0.
+- [ ] Pin the next release from `main` to the next major with a `Release-As: <N+1>.0.0`
+      footer on the announcement commit. Without the pin, the first commit merged to
+      `main` after the cut has release-please open a release PR for the next v<N> patch
+      or minor from `main`, colliding with the release stream on the new branch.
+      release-please reads the footer from any commit since the last tag, so the pin
+      holds until the major ships and then expires on its own. The footer goes on a
+      `main`-only commit and never on the shared docs commit, which is cherry-picked
+      onto the new branch and would pin that branch's next release to the major too.
+      Do not use the `release-as` key in `.release-please-config.json` instead: it
+      applies to every release PR until someone remembers to remove it.
+
+On the new branch:
+
+- [ ] Create the branch `<N>.x` from the latest tag of that major and protect it with a
+      ruleset named `Release Branch (<N>.x)`, copied from `Release Branch (default)`.
+      The copy requires the same status checks as `main`. Until the next item lands,
+      the only PR that can satisfy them is that item's own, whose head carries the
+      triggers.
+- [ ] Add the branch to the `push` trigger and the release job guard in `release.yml`,
+      to the `pull_request` triggers in `continuous_integration.yml` and
+      `enforce_conventional_commits.yml`, and to the `push` trigger in
       `warm_bundler_caches.yml`, all under `.github/workflows/`. The workflow that
       runs is the one on the branch pushed to or targeted, and a Bundler cache is
       readable only from the ref that wrote it, its base ref, and the default branch,
       so the copies on `main` need no change.
+- [ ] Expect release-please to open a release PR from the new branch as soon as this
+      PR merges. No commit type is hidden in `.release-please-config.json`, so the
+      workflow and docs commits alone propose the next patch. Leave that release PR
+      open until the series has something worth releasing, or merge it.
+
+On both, in the shared docs commit:
+
 - [ ] Name the new branch beside the existing maintenance branch everywhere that one is
       listed: the branch tables in `.github/copilot-instructions.md` and
       `CONTRIBUTING.md`, the release support policy in `README.md`, the protected
       branch list in `.husky/pre-commit`, and the skills that list the protected
-      branches. `grep -rn '<N>\.x' .github .husky CONTRIBUTING.md README.md`, with the
-      existing maintenance branch's major in place of `<N>`, finds them all.
+      branches. `grep -rn '<M>\.x' .github .husky CONTRIBUTING.md README.md`, with the
+      existing maintenance branch's major in place of `<M>`, finds them all.
 
 ## Major release readiness
 
@@ -153,8 +188,6 @@ and is checked when each removal PR merges, not here.
 ## After a major release
 
 - [ ] Add a README announcement entry dated the release day.
-- [ ] Remove `release-as` from `.release-please-config.json` if it was set to pin the
-      major. release-please keeps applying it to every later release until it is removed.
 - [ ] Support for the oldest maintenance branch ends with this release (see the release
       support policy in `README.md`). Retire it everywhere it is named. In the workflow
       triggers and release job guard under `.github/workflows/`, replace it with the
@@ -163,8 +196,8 @@ and is checked when each removal PR merges, not here.
       one: the branch tables in `.github/copilot-instructions.md` and
       `CONTRIBUTING.md`, the release support policy in `README.md`, the protected
       branch list in `.husky/pre-commit`, and the skills that list the protected
-      branches. `grep -rn '<N>\.x' .github .husky CONTRIBUTING.md README.md`, with the
-      retired branch's major in place of `<N>`, finds them all.
+      branches. `grep -rn '<M>\.x' .github .husky CONTRIBUTING.md README.md`, with the
+      retired branch's major in place of `<M>`, finds them all.
 - [ ] Close the milestone and update the roadmap issue.
 
 ## What NOT to Do
