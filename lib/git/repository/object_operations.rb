@@ -701,50 +701,6 @@ module Git
         Git::Object.new(self, objectish, 'tree')
       end
 
-      # Returns a tag object for the given tag name
-      #
-      # Returns a {Git::Object::Tag} for `tag_name`. The returned object is
-      # either an annotated or a lightweight tag depending on the underlying
-      # ref type.
-      #
-      # @example Get a tag object
-      #   repo.tag('v1.0')
-      #   #=> #<Git::Object::Tag name="v1.0" ...>
-      #
-      # @param tag_name [String] the name of the tag
-      #
-      # @return [Git::Object::Tag] the tag object
-      #
-      # @raise [Git::UnexpectedResultError] if `tag_name` does not name an
-      #   existing tag
-      #
-      # @raise [Git::FailedError] if the underlying `git show-ref` invocation
-      #   exits with an unexpected status (i.e., outside the allowed 0..1 range)
-      #
-      # @deprecated Use `tag_list(name).first` instead
-      #
-      #   {#tag_list} returns immutable {Git::TagInfo} value objects rather
-      #   than {Git::Object::Tag}. `tag_list(name).first` is `nil` when the tag
-      #   does not exist, where this method raises
-      #   {Git::UnexpectedResultError}. Call the corresponding
-      #   {Git::Repository} method (e.g. {#archive}, {#log}, {#diff},
-      #   {#cat_file_contents}) with `info.oid || info.target_oid` for
-      #   operations on a tag; that is the object this method's return value
-      #   pins at construction, so a later move of the tag does not redirect
-      #   it, whereas the tag name would. The
-      #   {Git::Object::Tag} constructor is deprecated too; this method
-      #   silences it so one call emits one warning.
-      #
-      # @see #tag_list
-      #
-      def tag(tag_name)
-        Git::Deprecation.warn(
-          'Git::Repository#tag is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#tag_list(name).first instead.'
-        )
-        Git::Deprecation.silence { Git::Object::Tag.new(self, tag_name) }
-      end
-
       # Returns the appropriate git object for the given object reference
       #
       # Runs `git cat-file -t` to determine the object type, then constructs
@@ -814,46 +770,7 @@ module Git
         Git::Parsers::Tag.parse_list(result.stdout)
       end
 
-      # Returns all tags in the repository as tag objects
-      #
-      # Runs `git tag --list` with a machine-readable format, parses the output,
-      # and returns a {Git::Object::Tag} for each tag name.
-      #
-      # @example List the names of all tags
-      #   repo.tags.map(&:name) #=> ["v1.0.0", "v2.0.0"]
-      #
-      # @example No tags exist
-      #   repo.tags #=> []
-      #
-      # @return [Array<Git::Object::Tag>] one tag object per tag in the
-      #   repository; empty when there are none
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#tag_list} instead
-      #
-      #   {#tag_list} returns `Array<Git::TagInfo>` (immutable value objects)
-      #   rather than `Array<Git::Object::Tag>`. Look a tag up by name with
-      #   `tag_list(name).first`, and call the corresponding {Git::Repository}
-      #   method (e.g. {#archive}, {#log}, {#diff}, {#cat_file_contents}) with
-      #   `info.oid || info.target_oid` for operations on a tag; that is the
-      #   object each returned {Git::Object::Tag} pins at construction, so a
-      #   later move of the tag does not redirect it, whereas the tag name
-      #   would. The {Git::Object::Tag}
-      #   constructor is deprecated too; this method silences it so one call
-      #   emits one warning.
-      #
-      # @see #tag_list
-      #
-      def tags
-        Git::Deprecation.warn(
-          'Git::Repository#tags is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#tag_list instead.'
-        )
-        Git::Deprecation.silence { tag_list.map { |info| Git::Object::Tag.new(self, info.name) } }
-      end
-
-      # Option keys accepted by {#tag_create} and {#tag_add}
+      # Option keys accepted by {#tag_create}
       TAG_CREATE_ALLOWED_OPTS = %i[
         annotate a sign s no_sign local_user u force f message m file F
         edit e no_edit trailer cleanup create_reflog
@@ -948,116 +865,23 @@ module Git
       #   @return [Git::TagInfo] the newly created tag
       #
       # @raise [ArgumentError] if unsupported options are provided, including the
-      #   `:d` and `:delete` keys that {#tag_add} accepts; use {#tag_delete} to
-      #   delete a tag
+      #   `:d` and `:delete` keys; use {#tag_delete} to delete a tag
       #
       # @raise [ArgumentError] if an annotated or signed tag is requested without
       #   a message
       #
       # @raise [ArgumentError] if more than one positional argument follows the
-      #   name (before any options hash); {#tag_add} silently ignored the extra
-      #   arguments and tagged the first
+      #   name (before any options hash)
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       # @see https://git-scm.com/docs/git-tag git-tag
       #
       def tag_create(name, *args)
-        target, options = Private.tag_target_and_options(args, strict: true)
+        target, options = Private.tag_target_and_options(args)
         SharedPrivate.assert_valid_opts!(TAG_CREATE_ALLOWED_OPTS, **options)
         Private.create_tag(@execution_context, name, target, options)
         tag_list(name).first
-      end
-
-      # Create a new tag
-      #
-      # @overload tag_add(name, options = {})
-      #
-      #   @example Create a lightweight tag on HEAD
-      #     repo.tag_add('v1.0.0')
-      #
-      #   @example Create an annotated tag on HEAD
-      #     repo.tag_add('v1.0.0', annotate: true, message: 'Release 1.0.0')
-      #
-      #   @example Replace an existing tag on HEAD
-      #     repo.tag_add('v1.0.0', force: true)
-      #
-      #   @param name [String] the name of the tag to create
-      #
-      #   @param options [Hash] options for creating the tag (same keys as
-      #     {#tag_create})
-      #
-      #   @return [Git::Object::Tag] the newly created tag
-      #
-      # @overload tag_add(name, target, options = {})
-      #
-      #   @example Create a lightweight tag on a specific commit
-      #     repo.tag_add('v1.0.0', 'abc123')
-      #
-      #   @example Create an annotated tag on a specific commit
-      #     repo.tag_add('v1.0.0', 'abc123', annotate: true, message: 'Release 1.0.0')
-      #
-      #   @param name [String] the name of the tag to create
-      #
-      #   @param target [String] the object to tag (commit SHA, branch name, etc.)
-      #
-      #   @param options [Hash] options for creating the tag (same keys as
-      #     {#tag_create})
-      #
-      #   @return [Git::Object::Tag] the newly created tag
-      #
-      # @overload tag_add(name, delete_options)
-      #
-      #   @deprecated Use {#tag_delete} instead.
-      #
-      #   @example Delete a tag (deprecated)
-      #     repo.tag_add('v1.0.0', d: true)
-      #
-      #   @param name [String] the name of the tag to delete
-      #
-      #   @param delete_options [Hash{Symbol => Boolean}] deletion options;
-      #     only `:d` or `:delete` (set to `true`) is accepted — no other keys
-      #     and no `target` argument may be combined with this form
-      #
-      #   @return [String] git's stdout from the delete
-      #
-      #   @raise [ArgumentError] if a target is also provided
-      #
-      #   @raise [ArgumentError] if options other than `:d`/`:delete` are also
-      #     provided
-      #
-      # @raise [ArgumentError] if unsupported options are provided
-      #
-      # @raise [ArgumentError] if an annotated or signed tag is requested without
-      #   a message
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#tag_create} instead
-      #
-      #   {#tag_create} accepts the same `name`, `target`, and options and
-      #   returns a {Git::TagInfo} (an immutable value object) rather than a
-      #   {Git::Object::Tag}. It does not accept the `:d`/`:delete` form; use
-      #   {#tag_delete} for that. The {Git::Object::Tag} constructor is
-      #   deprecated too; this method silences it so one call emits one
-      #   warning, except that the `:d`/`:delete` form emits a second warning
-      #   of its own.
-      #
-      # @see #tag_create
-      #
-      def tag_add(name, *args)
-        Git::Deprecation.warn(
-          'Git::Repository#tag_add is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#tag_create instead.'
-        )
-        target, options = Private.tag_target_and_options(args)
-
-        return Private.tag_add_delete_deprecated(self, name, target, options) if options[:d] || options[:delete]
-
-        options = options.except(:d, :delete)
-        SharedPrivate.assert_valid_opts!(TAG_CREATE_ALLOWED_OPTS, **options)
-        Private.create_tag(@execution_context, name, target, options)
-        Git::Deprecation.silence { Git::Object::Tag.new(self, name) }
       end
 
       # Delete a tag
@@ -1085,31 +909,27 @@ module Git
       module Private
         module_function
 
-        # Splits the variadic `*args` of {ObjectOperations#tag_create} and
-        # {ObjectOperations#tag_add} into the target and the options hash
+        # Splits the variadic `*args` of {ObjectOperations#tag_create} into the
+        # target and the options hash
         #
-        # Both methods accept `(name, opts = {})` and `(name, target, opts = {})`,
+        # `tag_create` accepts `(name, opts = {})` and `(name, target, opts = {})`,
         # so a trailing `Hash` is the options and anything before it is the
         # target.
         #
         # @param args [Array] the arguments after the tag name
         #
-        # @param strict [Boolean] when `true`, raise instead of silently ignoring
-        #   a second positional argument before the options; `tag_create` is
-        #   strict, while the deprecated `tag_add` keeps its lenient behavior
-        #
         # @return [Array((String, nil), Hash)] the two-element tuple
         #   `[target, options]`; `target` is `nil` when only options were given
         #
-        # @raise [ArgumentError] if `strict` is `true` and more than one
-        #   positional argument precedes the options hash
+        # @raise [ArgumentError] if more than one positional argument precedes
+        #   the options hash
         #
         # @api private
         #
-        def tag_target_and_options(args, strict: false)
+        def tag_target_and_options(args)
           args = args.dup
           options = args.last.is_a?(Hash) ? args.pop : {}
-          if strict && args.size > 1
+          if args.size > 1
             raise ArgumentError,
                   "Expected at most one target before the options, got #{args.size}: #{args.inspect}"
           end
@@ -1198,41 +1018,6 @@ module Git
           return unless needs_message && !has_message
 
           raise ArgumentError, 'Cannot create an annotated or signed tag without a message.'
-        end
-
-        # Handle the deprecated :d/:delete option on tag_add
-        #
-        # Issues a deprecation warning and delegates to tag_delete. Raises
-        # ArgumentError if a target or incompatible options are also supplied.
-        #
-        # @param facade [ObjectOperations] the calling facade instance
-        #
-        # @param name [String] tag name
-        #
-        # @param target [String, nil] target argument (must be nil)
-        #
-        # @param opts [Hash] options hash (must contain only :d/:delete)
-        #
-        # @option opts [Boolean] :d (true) request deletion in the deprecated
-        #   `tag_add` form
-        #
-        # @option opts [Boolean] :delete (true) alias for `:d`
-        #
-        # @return [String] stdout from tag_delete
-        #
-        # @api private
-        #
-        def tag_add_delete_deprecated(facade, name, target, opts)
-          Git::Deprecation.warn(
-            'Passing :d or :delete to tag_add is deprecated and will be removed in v6.0.0. ' \
-            'Use tag_delete instead.'
-          )
-          raise ArgumentError, 'Cannot pass a target when using the :d/:delete option.' if target
-
-          extra = opts.keys - %i[d delete]
-          raise ArgumentError, "Cannot combine :d/:delete with other options: #{extra.join(', ')}" unless extra.empty?
-
-          facade.tag_delete(name)
         end
 
         # Returns the direct SHA for a tag reference
