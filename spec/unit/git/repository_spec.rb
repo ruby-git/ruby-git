@@ -207,23 +207,6 @@ RSpec.describe Git::Repository do
     end
   end
 
-  describe '#lib' do
-    subject(:lib_result) { described_instance.lib }
-
-    it 'returns self' do
-      allow(Git::Deprecation).to receive(:warn)
-      expect(lib_result).to be(described_instance)
-    end
-
-    it 'emits a deprecation warning' do
-      allow(Git::Deprecation).to receive(:warn)
-      described_instance.lib
-      expect(Git::Deprecation).to have_received(:warn).with(
-        a_string_including('Git::Repository#lib', 'deprecated', 'v6.0.0')
-      )
-    end
-  end
-
   describe 'Git::Configuring mixin' do
     it 'is included in Git::Repository so that all config_* methods are available' do
       expect(described_class.ancestors).to include(Git::Configuring)

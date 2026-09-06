@@ -14,14 +14,12 @@ Layout/LineLength:
   Exclude:
     - 'spec/unit/git/commands/tag/list_spec.rb'
 
-# Offense count: 4
+# Offense count: 2
 # Configuration parameters: CountComments, Max, CountAsOne.
 Metrics/ClassLength:
   Exclude:
-    - 'lib/git/base.rb'
     - 'lib/git/branch.rb'
     - 'lib/git/commands/arguments.rb'
-    - 'lib/git/lib.rb'
 
 # Offense count: 1
 # Configuration parameters: CountComments, Max, CountAsOne, AllowedMethods, AllowedPatterns.

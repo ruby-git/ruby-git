@@ -149,24 +149,6 @@ module Git
       index_file && Pathname.new(index_file)
     end
 
-    # Returns `self` after emitting a deprecation warning.
-    #
-    # Legacy callers that used `git.lib.some_method` can migrate to calling the
-    # facade method directly on the repository object. This shim will be removed
-    # in v6.0.0.
-    #
-    # @return [self]
-    #
-    # @api private
-    #
-    def lib
-      Git::Deprecation.warn(
-        'Git::Repository#lib is deprecated and will be removed in v6.0.0. ' \
-        'Use the repository object directly.'
-      )
-      self
-    end
-
     # @return [String, nil] the git directory path
     #
     # @api private
