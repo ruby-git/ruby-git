@@ -11,6 +11,7 @@ to update your code when upgrading from the preceding major version.
   - [Renamed facade methods removed](#renamed-facade-methods-removed)
   - [`Git::Object::Tag` removed](#gitobjecttag-removed)
   - [`Git::CommandLineResult` removed](#gitcommandlineresult-removed)
+  - [`Git::Repository#lib` removed](#gitrepositorylib-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -141,6 +142,15 @@ warning. That hook is gone, so referencing `Git::CommandLineResult` raises
 `NameError`. `Git::CommandLine::Result` is the only name for the result object.
 The [`Git::CommandLineResult` deprecated](#gitcommandlineresult-deprecated) entry
 under "Upgrading to v5.x" is the migration reference.
+
+### `Git::Repository#lib` removed
+
+v6.0.0 removes `Git::Repository#lib`. In v5.x it emitted a deprecation warning and
+returned `self`, so a v4.x call like `g.lib.some_method(args)` was forwarded to
+`g.some_method(args)`. That shim is gone, so calling `g.lib` raises
+`NoMethodError`. Call the facade method directly on the repository object. The
+[`Git::Lib` removed](#gitlib-removed) entry under "Upgrading to v5.x" maps every
+v4.x `g.lib.*` call shape to its replacement.
 
 ---
 
