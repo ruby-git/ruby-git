@@ -100,6 +100,12 @@ Before a maintainer merges a release PR:
 4. **Review the release PR** — verify the auto-generated changelog and version
    bump look correct.
 
+5. **Retire the release banner** — if `README.md` opens with a banner announcing
+   this major's `.0.0` release and the release PR is the major's first minor, merge
+   a docs PR that removes the banner before merging the release PR. The banner
+   announces the major; once the series has a minor, the dated announcement entry
+   carries the history.
+
 ## Cutting a maintenance branch
 
 `main` becomes the release line for the next major as soon as the first removal merges
@@ -120,6 +126,14 @@ On `main`:
 
 - [ ] Add a README announcement entry dated the cut day: every further v<N>.x release
       comes from the new branch, and the next release from `main` is v<N+1>.0.0.
+- [ ] Put a development note at the top of `README.md`, replacing the release banner
+      if one is still there: `main` is unreleased v<N+1>.0.0 development, the current
+      release series is v<N>.x, released from the new branch, and the
+      "Upgrading to v<N+1>.x" section of `UPGRADING.md` says what changes. Name the
+      series, not a tag: later v<N>.x releases do not touch `main`, so a tag in the
+      note would go stale. This goes on a `main`-only commit, never on the shared docs
+      commit: the new branch keeps whatever `README.md` opened with at the branch
+      point.
 - [ ] Pin the next release from `main` to the next major with a `Release-As: <N+1>.0.0`
       footer on the announcement commit. Without the pin, the first commit merged to
       `main` after the cut has release-please open a release PR for the next v<N> patch
@@ -184,6 +198,12 @@ and is checked when each removal PR merges, not here.
 - [ ] README examples use no removed APIs.
 - [ ] The changelog preview in the release PR reads correctly and every removal commit
       carries a `BREAKING CHANGE` footer.
+- [ ] The development note at the top of `README.md` is replaced with a release banner
+      naming the new major and linking to `UPGRADING.md` and `CHANGELOG.md`, in a docs
+      PR merged before the release PR. `README.md` ships in the gem and on RubyDoc, so
+      a banner added after the release never reaches the major's own artifact. The
+      major's first minor release removes the banner; see
+      [Checking Release Readiness](#checking-release-readiness).
 
 ## After a major release
 
