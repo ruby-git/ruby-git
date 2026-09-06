@@ -12,6 +12,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Object::Tag` removed](#gitobjecttag-removed)
   - [`Git::CommandLineResult` removed](#gitcommandlineresult-removed)
   - [`Git::Repository#lib` removed](#gitrepositorylib-removed)
+  - [`Git::Base` compatibility shim removed](#gitbase-compatibility-shim-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -151,6 +152,17 @@ returned `self`, so a v4.x call like `g.lib.some_method(args)` was forwarded to
 `NoMethodError`. Call the facade method directly on the repository object. The
 [`Git::Lib` removed](#gitlib-removed) entry under "Upgrading to v5.x" maps every
 v4.x `g.lib.*` call shape to its replacement.
+
+### `Git::Base` compatibility shim removed
+
+v6.0.0 removes the `Git::Base` compatibility shim. In v5.x `Git::Base` was a module
+included in `Git::Repository`: `is_a?(Git::Base)` stayed true, `Git::Base.new` raised
+`NoMethodError`, and defining a method on `Git::Base` emitted a deprecation warning
+while still adding the method to `Git::Repository`. That module is gone, so referencing
+`Git::Base` raises `NameError` and `is_a?(Git::Base)` no longer works. Move any
+monkeypatch to an application-owned module and include it into `Git::Repository`. The
+[`Git::Base` removed](#gitbase-removed) entry under "Upgrading to v5.x" shows the
+migration.
 
 ---
 
