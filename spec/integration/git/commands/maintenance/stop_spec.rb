@@ -3,15 +3,11 @@
 require 'spec_helper'
 require 'git/commands/maintenance/stop'
 
-# GIT_CONFIG_GLOBAL (used for global config isolation) requires git 2.32.0,
-# so these integration tests require 2.32.0 even though the command itself supports 2.30.0.
-#
 # `git maintenance stop` removes OS-level scheduler entries (launchctl on macOS,
 # systemd-timer on Linux). Running it on a developer machine that has existing
 # maintenance configured would silently disable their setup. Restricted to CI.
 RSpec.describe Git::Commands::Maintenance::Stop, :integration,
-               skip: unless_git('2.32.0', 'git maintenance stop') ||
-                     unless_ci_build('git maintenance stop') do
+               skip: unless_ci_build('git maintenance stop') do
   include_context 'in an empty repository'
 
   subject(:command) { described_class.new(execution_context) }

@@ -3,8 +3,7 @@
 require 'spec_helper'
 require 'git/commands/worktree/repair'
 
-RSpec.describe Git::Commands::Worktree::Repair, :integration,
-               skip: unless_git('2.29.0', 'git worktree repair') do
+RSpec.describe Git::Commands::Worktree::Repair, :integration do
   include_context 'in an empty repository'
 
   subject(:command) { described_class.new(execution_context) }
