@@ -1060,48 +1060,6 @@ module Git
         Git::Deprecation.silence { Git::Object::Tag.new(self, name) }
       end
 
-      # @overload add_tag(name, options = {})
-      #
-      #   @param name [String] the name of the tag to create
-      #
-      #   @param options [Hash] options for creating the tag
-      #
-      #   @return [Git::Object::Tag] the newly created tag
-      #
-      # @overload add_tag(name, target, options = {})
-      #
-      #   @param name [String] the name of the tag to create
-      #
-      #   @param target [String] the object to tag (commit SHA, branch name, etc.)
-      #
-      #   @param options [Hash] options for creating the tag
-      #
-      #   @return [Git::Object::Tag] the newly created tag
-      #
-      # @raise [ArgumentError] if unsupported options are provided
-      #
-      # @raise [ArgumentError] if an annotated or signed tag is requested without
-      #   a message
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#tag_create} instead
-      #
-      #   The warning names {#tag_add}, the replacement this method shipped
-      #   with, and {#tag_add} is deprecated as well, so a creation call emits
-      #   two warnings: one for this method and one for {#tag_add}. The delete
-      #   form `add_tag(name, d: true)` emits a third, for the deprecated `:d`
-      #   and `:delete` options on {#tag_add}; use {#tag_delete} for that. Go
-      #   straight to {#tag_create} for creation.
-      #
-      def add_tag(name, *)
-        Git::Deprecation.warn(
-          'Git::Repository#add_tag is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#tag_add instead.'
-        )
-        tag_add(name, *)
-      end
-
       # Delete a tag
       #
       # @example Delete a tag
@@ -1118,22 +1076,6 @@ module Git
         raise Git::FailedError, result if result.status.exitstatus.positive?
 
         result.stdout
-      end
-
-      # @param name [String] the name of the tag to delete
-      #
-      # @return [String] git's stdout from the delete
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#tag_delete} instead
-      #
-      def delete_tag(name)
-        Git::Deprecation.warn(
-          'Git::Repository#delete_tag is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#tag_delete instead.'
-        )
-        tag_delete(name)
       end
 
       # Private helpers
