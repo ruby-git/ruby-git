@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::WriteTree, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult with the tree SHA on stdout' do
+      it 'returns a Git::CommandLine::Result with the tree SHA on stdout' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

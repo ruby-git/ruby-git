@@ -14,7 +14,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetColor, :integration do
         repo.config_set('color.test.slot', 'red')
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('color.test.slot')
 
         expect(result).to be_a(Git::CommandLine::Result)

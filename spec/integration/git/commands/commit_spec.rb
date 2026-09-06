@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::Commit, :integration do
         repo.add('file.txt')
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call(message: 'Test commit')
 
         expect(result).to be_a(Git::CommandLine::Result)

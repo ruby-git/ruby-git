@@ -34,7 +34,7 @@ RSpec.describe Git::Commands::Am::Quit, :integration do
         execution_context.command_capturing('am', mbox_file, chdir: repo_dir, raise_on_failure: false)
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

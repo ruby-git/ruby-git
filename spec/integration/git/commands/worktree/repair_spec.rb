@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::Worktree::Repair, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         # git worktree repair inspects the CWD to detect linked worktree context;
         # run from within the repo directory so it does not mistakenly scan the
         # test runner's CWD.

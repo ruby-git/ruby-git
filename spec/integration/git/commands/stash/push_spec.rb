@@ -22,7 +22,7 @@ RSpec.describe Git::Commands::Stash::Push, :integration do
           write_file('tracked.txt', "modified content\n")
         end
 
-        it 'returns a CommandLineResult with output' do
+        it 'returns a Git::CommandLine::Result with output' do
           result = command.call
 
           expect(result).to be_a(Git::CommandLine::Result)

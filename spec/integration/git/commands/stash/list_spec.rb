@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Stash::List, :integration do
           Git::Commands::Stash::Push.new(execution_context).call(message: 'WIP on feature')
         end
 
-        it 'returns CommandLineResult with output' do
+        it 'returns Git::CommandLine::Result with output' do
           result = command.call
 
           expect(result).to be_a(Git::CommandLine::Result)

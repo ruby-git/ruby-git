@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::NameRev, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult with the symbolic name' do
+      it 'returns a Git::CommandLine::Result with the symbolic name' do
         result = command.call('HEAD')
 
         expect(result).to be_a(Git::CommandLine::Result)

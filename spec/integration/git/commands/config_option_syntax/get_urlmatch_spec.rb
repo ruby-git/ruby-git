@@ -14,7 +14,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch, :integration do
         repo.config_set('http.https://example.com.proxy', 'http://proxy.example.com')
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('http.proxy', 'https://example.com')
 
         expect(result).to be_a(Git::CommandLine::Result)

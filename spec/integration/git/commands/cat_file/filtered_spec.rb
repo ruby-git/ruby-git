@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::CatFile::Filtered, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       context 'with --textconv mode' do
-        it 'returns a CommandLineResult with the processed blob content' do
+        it 'returns a Git::CommandLine::Result with the processed blob content' do
           result = command.call('HEAD:README.md', textconv: true)
 
           expect(result).to be_a(Git::CommandLine::Result)

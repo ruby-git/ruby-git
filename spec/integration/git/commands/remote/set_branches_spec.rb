@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Remote::SetBranches, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult when setting fetch branches' do
+      it 'returns a Git::CommandLine::Result when setting fetch branches' do
         repo.remote_add('origin', remote_repo.dir.to_s)
 
         result = command.call('origin', 'feature/*')

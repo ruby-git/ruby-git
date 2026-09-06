@@ -30,7 +30,7 @@ RSpec.describe Git::Commands::Maintenance::Unregister, :integration do
         )
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call(config_file: global_config.path, env: isolated_env)
 
         expect(result).to be_a(Git::CommandLine::Result)

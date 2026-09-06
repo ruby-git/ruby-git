@@ -282,7 +282,7 @@ RSpec.describe Git::CommandLine::Capturing do
         allow(ProcessExecuter).to receive(:run_with_capture).and_return(mocked)
       end
 
-      it 'returns a CommandLineResult without raising when success? is false' do
+      it 'returns a Git::CommandLine::Result without raising when success? is false' do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.success?).to be false
         expect(result.status.exitstatus).to eq(1)

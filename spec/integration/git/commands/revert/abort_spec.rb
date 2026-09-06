@@ -34,7 +34,7 @@ RSpec.describe Git::Commands::Revert::Abort, :integration do
         )
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

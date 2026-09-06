@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::ReplaceAll, :integration do
         execution_context.command_capturing('config', '--add', 'test.multi', 'old2')
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('test.multi', 'new-value')
 
         expect(result).to be_a(Git::CommandLine::Result)

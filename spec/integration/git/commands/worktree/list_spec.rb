@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::Worktree::List, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult with no options' do
+      it 'returns a Git::CommandLine::Result with no options' do
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end

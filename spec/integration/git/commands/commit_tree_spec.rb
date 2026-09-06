@@ -22,7 +22,7 @@ RSpec.describe Git::Commands::CommitTree, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult with the new commit SHA on stdout' do
+      it 'returns a Git::CommandLine::Result with the new commit SHA on stdout' do
         result = command.call(tree_sha, m: 'Test commit')
 
         expect(result).to be_a(Git::CommandLine::Result)

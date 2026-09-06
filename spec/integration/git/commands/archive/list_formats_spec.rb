@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Archive::ListFormats, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult with output' do
+      it 'returns a Git::CommandLine::Result with output' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

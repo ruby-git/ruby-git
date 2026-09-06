@@ -44,7 +44,7 @@ RSpec.describe Git::Commands::Maintenance::Start, :integration,
       # Using the platform-appropriate scheduler keeps the test portable.
       let(:scheduler) { Gem.win_platform? ? 'schtasks' : 'crontab' }
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call(scheduler: scheduler, env: isolated_env)
 
         expect(result).to be_a(Git::CommandLine::Result)

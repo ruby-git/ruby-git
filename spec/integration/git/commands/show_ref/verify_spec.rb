@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::ShowRef::Verify, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('refs/heads/main')
 
         expect(result).to be_a(Git::CommandLine::Result)

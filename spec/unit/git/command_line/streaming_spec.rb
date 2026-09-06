@@ -187,7 +187,7 @@ RSpec.describe Git::CommandLine::Streaming do
         end
       end
 
-      it 'returns a CommandLineResult without raising when success? is false' do
+      it 'returns a Git::CommandLine::Result without raising when success? is false' do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.success?).to be false
         expect(result.status.exitstatus).to eq(1)

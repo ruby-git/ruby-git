@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::Am::Continue, :integration do
         repo.add('file.txt')
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

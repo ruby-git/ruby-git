@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::DiffIndex, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult with exit code 0 when no working-tree changes exist' do
+      it 'returns a Git::CommandLine::Result with exit code 0 when no working-tree changes exist' do
         result = command.call('HEAD')
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)

@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Push, :integration do
     end
 
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('origin', 'main')
 
         expect(result).to be_a(Git::CommandLine::Result)

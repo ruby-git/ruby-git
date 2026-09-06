@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::Stash::Clear, :integration do
 
   describe '#call' do
     describe 'when the command succeeds' do
-      it 'returns CommandLineResult' do
+      it 'returns Git::CommandLine::Result' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

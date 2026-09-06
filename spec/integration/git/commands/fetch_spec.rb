@@ -26,7 +26,7 @@ RSpec.describe Git::Commands::Fetch, :integration do
     end
 
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('origin', merge: true)
 
         expect(result).to be_a(Git::CommandLine::Result)
