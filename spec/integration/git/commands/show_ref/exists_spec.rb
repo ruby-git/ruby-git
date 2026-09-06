@@ -3,7 +3,7 @@
 require 'spec_helper'
 require 'git/commands/show_ref/exists'
 
-RSpec.describe Git::Commands::ShowRef::Exists, :integration, skip: unless_git('2.43.0', 'git show-ref --exists') do
+RSpec.describe Git::Commands::ShowRef::Exists, :integration do
   include_context 'in an empty repository'
 
   subject(:command) { described_class.new(execution_context) }

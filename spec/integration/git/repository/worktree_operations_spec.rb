@@ -136,18 +136,10 @@ RSpec.describe Git::Repository::WorktreeOperations, :integration do
         FileUtils.rm_rf(worktree_path)
       end
 
-      context 'on git versions before 2.42.0', if: Git.git_version < Git::Version.new(2, 42, 0) do
-        it 'raises Git::FailedError' do
-          expect { unborn_instance.worktree_add(worktree_path) }.to raise_error(Git::FailedError, /worktree/)
-        end
-      end
+      it 'succeeds and creates a second worktree entry' do
+        unborn_instance.worktree_add(worktree_path)
 
-      context 'on git versions 2.42.0 and later', if: Git.git_version >= Git::Version.new(2, 42, 0) do
-        it 'succeeds and creates a second worktree entry' do
-          unborn_instance.worktree_add(worktree_path)
-
-          expect(unborn_instance.worktree_list.size).to eq(2)
-        end
+        expect(unborn_instance.worktree_list.size).to eq(2)
       end
     end
   end

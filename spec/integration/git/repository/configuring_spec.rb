@@ -67,7 +67,7 @@ RSpec.describe Git::Repository, :integration do
     end
   end
 
-  describe '#global_config', skip: unless_git('2.32.0', 'GIT_CONFIG_GLOBAL isolation') do
+  describe '#global_config' do
     before { allow(Git::Deprecation).to receive(:warn).with(a_string_including('Git::Repository#global_config is deprecated')) }
 
     around do |example|

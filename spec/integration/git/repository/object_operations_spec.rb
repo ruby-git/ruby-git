@@ -76,7 +76,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'with a real SSH-signed commit',
             if: !Gem.win_platform?,
-            skip: unless_git('2.34', 'SSH commit signing') || unless_command('ssh-keygen', 'SSH commit signing') do
+            skip: unless_command('ssh-keygen', 'SSH commit signing') do
       let(:ssh_key_file) { File.join(repo_dir, '.git', 'test-key') }
 
       before do
