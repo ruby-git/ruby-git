@@ -209,7 +209,7 @@ This skill supports three modes. Determine which mode applies before starting:
 
    - delegates to a `Git::Commands::*` class via `@execution_context` (never
      constructs commands with `self` or builds CLI argv directly)
-   - does not return a `Git::CommandLineResult` from the public contract unless
+   - does not return a `Git::CommandLine::Result` from the public contract unless
      that is the documented return type for the entire topic module
    - whitelists forwarded options when the caller's hash is opaque
      (per-method `<METHOD>_ALLOWED_OPTS` constant +

@@ -188,7 +188,7 @@ Correct placement pattern:
 #
 #   @param name [String] the remote name
 #
-#   @return [Git::CommandLineResult] the command result
+#   @return [Git::CommandLine::Result] the command result
 #
 # @overload fetch(name, **options)
 #
@@ -196,7 +196,7 @@ Correct placement pattern:
 #
 #   @param options [Hash] command options
 #
-#   @return [Git::CommandLineResult] the command result
+#   @return [Git::CommandLine::Result] the command result
 #
 # @raise [ArgumentError] when the remote name is invalid
 #
@@ -210,7 +210,7 @@ Incorrect placement pattern:
 #
 #   @param name [String] the remote name
 #
-# @return [Git::CommandLineResult] the command result
+# @return [Git::CommandLine::Result] the command result
 #
 # @raise [ArgumentError] when the remote name is invalid
 #
@@ -457,11 +457,11 @@ parameters; the actual `def` keeps `...` so RuboCop is satisfied:
 #
 #   @param options [Hash] keyword options forwarded to the command
 #
-#   @return [Git::CommandLineResult] the command result
+#   @return [Git::CommandLine::Result] the command result
 #
 #   @yield [result] yields the command result, when a block is given
 #
-#   @yieldparam result [Git::CommandLineResult] the command result
+#   @yieldparam result [Git::CommandLine::Result] the command result
 #
 #   @yieldreturn [void]
 #
@@ -702,7 +702,7 @@ Correct — tag title without punctuation, blank line before continuation:
 #   Pass an Array of raw CLI arguments for compound boolean
 #   expressions.
 #
-# @return [Git::CommandLineResult] the result of calling `git grep`
+# @return [Git::CommandLine::Result] the result of calling `git grep`
 #
 #   Exit status 0 means matches were found; exit status 1 means no
 #   lines were selected (not an error).
@@ -715,7 +715,7 @@ Incorrect — trailing period on title, missing blank line before continuation, 
 #   distinctions in both the pattern and the file contents.
 #   Alias: :i
 #
-# @return [Git::CommandLineResult] the result of calling `git grep`.
+# @return [Git::CommandLine::Result] the result of calling `git grep`.
 #   Exit status 0 means matches were found; exit status 1 means no
 #   lines were selected (not an error).
 ```

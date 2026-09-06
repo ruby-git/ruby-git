@@ -281,14 +281,14 @@ method, not the type of the underlying call expression.
 
 | Facade does | `@return` type |
 | --- | --- |
-| Returns the raw `CommandLineResult` | `[Git::CommandLineResult]` |
+| Returns the raw `Git::CommandLine::Result` | `[Git::CommandLine::Result]` |
 | Returns `result.stdout` (chomped or raw) | `[String]` |
 | Returns parsed structured data via a parser | The parser's return type (e.g. `[Array<Git::BranchInfo>]`, `[Hash]`) |
 | Returns a result-class instance via a factory | The result class (e.g. `[Git::BranchDeleteResult]`) |
 | Returns a single Boolean derived from the result | `[Boolean]` |
 
 Never write `@return [Git::Commands::Foo::Result]` — command-class result types
-are internal. Surface `Git::CommandLineResult` only when the topic module's
+are internal. Surface `Git::CommandLine::Result` only when the topic module's
 documented contract is to expose raw results.
 
 ### `@raise` rules
@@ -333,7 +333,7 @@ delegators do not need them.
 
 ### Common issues
 
-- **`@return [Git::CommandLineResult]` on a method that actually returns a
+- **`@return [Git::CommandLine::Result]` on a method that actually returns a
   parsed value.** Match the actual return value, not the inner call expression.
 - **Copying `@option` blocks from the command class.** The facade exposes only
   the options listed in its public contract (and the `<METHOD>_ALLOWED_OPTS`

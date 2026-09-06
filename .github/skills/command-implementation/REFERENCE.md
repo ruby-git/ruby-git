@@ -261,7 +261,7 @@ class SomeCommand < Git::Commands::Base
   #
   #     YARD docs for this command's call signature.
   #
-  #     @return [Git::CommandLineResult]
+  #     @return [Git::CommandLine::Result]
 end
 ```
 
@@ -369,7 +369,7 @@ module Git
         #
         #       Alias: :f
         #
-        #     @return [Git::CommandLineResult] the result of calling `git ...`
+        #     @return [Git::CommandLine::Result] the result of calling `git ...`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
@@ -465,7 +465,7 @@ an explicit override.
 #
 #   @option options [Boolean, nil] :unordered (nil) unordered output
 #
-#   @return [Git::CommandLineResult] the result of calling `git cat-file --batch`
+#   @return [Git::CommandLine::Result] the result of calling `git cat-file --batch`
 #
 #   @raise [ArgumentError] if unsupported options are provided
 #
@@ -534,7 +534,7 @@ end
 #   (git's default behavior). Pass +"diff"+ or +"raw"+ to emit
 #   +--show-current-patch=diff+ / +--show-current-patch=raw+.
 #
-# @return [Git::CommandLineResult] the result of the command
+# @return [Git::CommandLine::Result] the result of the command
 #
 # @raise [Git::FailedError] if no am session is in progress
 #
@@ -915,7 +915,7 @@ Key points for the facade method:
   caller's value wins on key collision, and are included in `ALLOWED_OPTS`. Add a
   comment explaining *why* (e.g., `# non-interactive default`).
 - **Return the legacy type** — typically `.stdout` or a parsed struct, not
-  `CommandLineResult`.
+  `Git::CommandLine::Result`.
 
 ## Internal compatibility contract
 
@@ -1002,7 +1002,7 @@ newlines are data), hardcode it in a `def call` override instead — exposing it
 A command class file should only `require` what it actually uses. The canonical
 example is parser requires: `require 'git/parsers/foo'` is needed by the
 `Git::Repository::*` facade but not by the command class itself — the command class just runs git
-and returns `CommandLineResult`.
+and returns `Git::CommandLine::Result`.
 
 ```ruby
 # ❌ Command class does not use Git::Parsers::Branch
