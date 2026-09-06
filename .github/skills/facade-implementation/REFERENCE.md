@@ -821,10 +821,10 @@ the replacement, and their operation methods stay.
 already destined for deprecation. When you touch one of these areas, add the
 value-object-returning method instead.
 
-Tags are where this bites. `Git::TagInfo` and its parser exist, but no facade method
-returns one yet: `tag`, `add_tag`, and the rest all hand back `Git::Object::Tag`. So
-following the guardrail for a tag means writing the missing facade method first, not
-reaching for one that is already there.
+Tags are the worked example. `tag`, `tags`, and `tag_add` return `Git::Object::Tag`
+and are deprecated. `tag_list` and `tag_create` return `Git::TagInfo` and are the
+pattern for any new tag facade method. Build on that pair rather than on the
+deprecated three.
 
 `Git::Object::Commit`, `Tree`, and `Blob` are a deliberate exception to step 4. See
 [ADR-0002](../../../docs/adr/0002-commit-tree-and-blob-become-hollow-shells.md).
