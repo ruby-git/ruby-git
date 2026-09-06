@@ -334,7 +334,7 @@ Version constraints live in `git.gemspec`; do not restate them here.
 ## Compatibility
 
 - **Minimum Ruby (language level):** 3.3.0
-- **Supported Rubies:** MRI (macOS, Linux, Windows); latest JRuby and TruffleRuby on Linux
+- **Supported Rubies:** MRI (macOS, Linux, Windows); JRuby and TruffleRuby on Linux from the earliest release whose Ruby compatibility target is at or above the MRI floor (the CI matrix pins the exact versions tested)
 - **Minimum Git:** 2.28.0
 - **Platforms:** macOS, Linux, Windows (JRuby/TruffleRuby officially supported on Linux only)
 - Use `File.join` and forward slashes; avoid platform-specific paths in tests
