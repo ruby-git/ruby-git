@@ -10,6 +10,7 @@ to update your code when upgrading from the preceding major version.
   - [Minimum addressable version](#minimum-addressable-version)
   - [Renamed facade methods removed](#renamed-facade-methods-removed)
   - [`Git::Object::Tag` removed](#gitobjecttag-removed)
+  - [`Git::CommandLineResult` removed](#gitcommandlineresult-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -131,6 +132,15 @@ data through `Git::Repository#tag_list` and create tags with
 to v5.x" maps every removed call, including the readers and operations on a
 `Git::Object::Tag`, to its replacement, and describes where the replacement's
 return shape or error behavior differs.
+
+### `Git::CommandLineResult` removed
+
+v6.0.0 removes `Git::CommandLineResult`. In v5.x a `Git.const_missing` hook
+resolved the constant to `Git::CommandLine::Result` and emitted a deprecation
+warning. That hook is gone, so referencing `Git::CommandLineResult` raises
+`NameError`. `Git::CommandLine::Result` is the only name for the result object.
+The [`Git::CommandLineResult` deprecated](#gitcommandlineresult-deprecated) entry
+under "Upgrading to v5.x" is the migration reference.
 
 ---
 
