@@ -111,7 +111,7 @@ without a method definition in the subclass:
 #
 #     @option options [Boolean, nil] :force (nil) ...
 #
-#     @return [Git::CommandLineResult]
+#     @return [Git::CommandLine::Result]
 ```
 
 Note the placement rules:
@@ -142,7 +142,7 @@ method:
 #
 #   @option options [Boolean, nil] :all (nil) ...
 #
-#   @return [Git::CommandLineResult] the result of calling `git log`
+#   @return [Git::CommandLine::Result] the result of calling `git log`
 #
 #   @raise [ArgumentError] if conflicting options are given
 #
@@ -339,7 +339,7 @@ For each command file, run through these checks in order:
 
 ### 3. Return and raise tags
 
-- [ ] `@return [Git::CommandLineResult]` with wording: "the result of calling `git
+- [ ] `@return [Git::CommandLine::Result]` with wording: "the result of calling `git
       <subcommand>`"
 - [ ] `@api public` is present at the end of the `@overload` block (after all `@raise`
       tags) — every command class is `@api private` at the class level, but `call` is

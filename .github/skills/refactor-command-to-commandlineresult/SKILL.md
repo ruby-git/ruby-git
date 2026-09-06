@@ -1,13 +1,13 @@
 ---
 name: refactor-command-to-commandlineresult
-description: "Migrates a command class that still performs parsing or custom execution logic to return raw Git::CommandLineResult, moving parsing to facade/parser layers. Use during architectural redesign refactoring."
+description: "Migrates a command class that still performs parsing or custom execution logic to return raw Git::CommandLine::Result, moving parsing to facade/parser layers. Use during architectural redesign refactoring."
 ---
 
 # Refactor Command to CommandLineResult
 
 Migrate a command that still performs parsing or custom execution logic to the
 `Git::Commands::Base` pattern, so command classes return raw
-`Git::CommandLineResult` and parsing moves to facade/parser layers.
+`Git::CommandLine::Result` and parsing moves to facade/parser layers.
 
 ## Contents
 
@@ -71,7 +71,7 @@ class SomeCommand < Git::Commands::Base
   #
   #     Execute the git ... command.
   #
-  #     @return [Git::CommandLineResult]
+  #     @return [Git::CommandLine::Result]
 end
 ```
 
@@ -83,7 +83,7 @@ end
 3. Remove custom `#call` body and add `# @!method call(*, **)` YARD directive.
 4. If command requires non-default success exits, add `allow_exit_status` with
    rationale comment.
-5. Update callers to consume `CommandLineResult` and parse `result.stdout` where
+5. Update callers to consume `Git::CommandLine::Result` and parse `result.stdout` where
    needed.
 
 ## What to remove from command classes
@@ -101,14 +101,14 @@ end
 
 ## What to update in tests
 
-- unit specs should assert CLI args and `CommandLineResult` behavior
+- unit specs should assert CLI args and `Git::CommandLine::Result` behavior
 - remove parsed-object assertions from command unit specs
 - move parsing expectations to parser/facade tests
 - include `raise_on_failure: false` in mocked command expectations
 
 ## YARD updates
 
-- update `@return` to `Git::CommandLineResult`
+- update `@return` to `Git::CommandLine::Result`
 - keep command-specific `@overload` docs nested under `# @!method call(*, **)` directive
 - ensure `@raise` wording reflects allowed range behavior
 - tag short descriptions must not end with punctuation (no trailing period, comma,

@@ -433,7 +433,7 @@ facade or end-to-end tests.
 
 Integration tests should only cover:
 
-- A smoke test: calling with valid arguments returns a `CommandLineResult` with
+- A smoke test: calling with valid arguments returns a `Git::CommandLine::Result` with
   expected output (e.g., non-empty for commands that produce output)
 - Exit codes from real git: one test per success exit code, exercised through real
   git invocations that naturally produce each code. For example, for `git diff`:
@@ -477,7 +477,7 @@ RSpec.describe Git::Commands::Add, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         # ... valid invocation ...
       end
     end
@@ -545,12 +545,12 @@ group require the same minimum version.
 
 ```ruby
 # ✅ Different options introduced in different git versions — guard each `it` individually
-it 'returns a CommandLineResult with the :retry option',
+it 'returns a Git::CommandLine::Result with the :retry option',
    skip: unless_git('2.46.0', 'git am --retry') do
   # ...
 end
 
-it 'returns a CommandLineResult with the :batch_updates option',
+it 'returns a Git::CommandLine::Result with the :batch_updates option',
    skip: unless_git('2.47.0', 'git update-ref --batch-updates') do
   # ...
 end

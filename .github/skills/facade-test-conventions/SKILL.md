@@ -91,7 +91,7 @@ test asserts:
 RSpec.describe Git::Repository::Staging do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
-  let(:command_result) { instance_double(Git::CommandLineResult, stdout: '') }
+  let(:command_result) { instance_double(Git::CommandLine::Result, stdout: '') }
   let(:add_command) { instance_double(Git::Commands::Add) }
   let(:add_result) { command_result }
 
@@ -108,7 +108,7 @@ end
 The shared `command_result` `let` provides a default empty-stdout result; each
 per-command alias (`add_result`, `branch_list_result`, ...) lets individual
 tests override stdout in isolation — e.g.
-`let(:add_result) { instance_double(Git::CommandLineResult, stdout: 'fixture output') }`
+`let(:add_result) { instance_double(Git::CommandLine::Result, stdout: 'fixture output') }`
 in a nested `context` — without affecting other tests in the file.
 
 Setup invariants:
@@ -137,8 +137,8 @@ Setup invariants:
 - **Parser invocation** — when the facade uses a `Git::Parsers::*` class,
   stub the parser and assert it is called with the command's stdout. Assert the
   facade returns what the parser returned.
-- **Raw `CommandLineResult` return** — when the facade's contract is to
-  return the command's `Git::CommandLineResult` directly (not `.stdout` and
+- **Raw `Git::CommandLine::Result` return** — when the facade's contract is to
+  return the command's `Git::CommandLine::Result` directly (not `.stdout` and
   not a parser output), assert `eq(<command>_result)` to verify pass-through.
 - **Option whitelisting** — when the facade defines a `<METHOD>_ALLOWED_OPTS`
   constant and calls `Git::Repository::Internal.assert_valid_opts!`, test that

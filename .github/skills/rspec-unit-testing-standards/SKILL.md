@@ -102,24 +102,17 @@ Never use a string in place of the constant, even for backward-compat aliases:
 ```ruby
 # Bad — string describe; described_class is unavailable, coverage tooling may not
 # map the spec to the source file, and typos go undetected at load time.
-RSpec.describe 'Git::CommandLineResult' do
+RSpec.describe 'Git::CommandLine::Result' do
 ```
 
-If the constant is a backward-compat alias (e.g. `Git::CommandLineResult =
-Git::CommandLine::Result`), use the alias constant itself as the describe argument —
-the alias is a real Ruby constant and loads without issue. The test content should
-verify that the alias points to the correct target using object identity (`be`),
-which would not be caught implicitly by a `NameError` on the canonical constant:
-
-```ruby
-RSpec.describe Git::CommandLineResult do
-  it 'is a backward-compatible alias for Git::CommandLine::Result' do
-    expect(described_class).to be(Git::CommandLine::Result)
-  end
-end
-```
-
-Do not test `#initialize` or other behavior here — that is already covered by the spec for the canonical class.
+If a class is also reachable through a backward-compat alias constant, the spec
+that covers the alias uses the alias constant itself as the describe argument —
+the alias is a real Ruby constant and loads without issue. That spec verifies only
+that the alias points to the correct target using object identity (`be`), which a
+`NameError` on the canonical constant would not catch. Do not test `#initialize`
+or other behavior there — the spec for the canonical class already covers it. The
+project has no such alias today: `Git::CommandLineResult` was the last one, and
+v6.0.0 removed it.
 
 ### Rule 2 (MUST): One `describe` block per public method
 
@@ -210,7 +203,7 @@ data"), not five separate behaviors:
 # Good — all assertions verify one concept: the returned result is correct
 it 'returns a result with the failure details' do
   result = described_instance.run('status', raise_on_failure: false)
-  expect(result).to be_a(Git::CommandLineResult)
+  expect(result).to be_a(Git::CommandLine::Result)
   expect(result.status.success?).to be false
   expect(result.status.exitstatus).to eq(1)
   expect(result.stdout).to eq("modified: foo.rb\n")
@@ -412,7 +405,7 @@ Stub anything whose real involvement would make the test cross a unit boundary
 like `String`, `Integer`, or `Array`. The guiding question: would running the real
 thing make this test not a unit test?
 
-> **Exception:** Simple value objects with no IO (e.g., `Git::CommandLineResult`)
+> **Exception:** Simple value objects with no IO (e.g., `Git::CommandLine::Result`)
 > can be used directly if doing so keeps the test a unit test.
 
 ### Rule 19 (MUST): Use `allow` for incidental stubs; use `expect` for behavioral assertions

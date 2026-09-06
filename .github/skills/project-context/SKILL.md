@@ -46,7 +46,7 @@ coding standard details, or implementation constraints.
 | --- | --- |
 | `Git::Repository` | Main facade — entry point for all user-facing operations; methods live in `Git::Repository::*` topic modules under `lib/git/repository/`, included into the class |
 | `Git::ExecutionContext::*` | Configured subprocess runner; holds binary path, env vars, and global opts; provides `#command_capturing`/`#command_streaming` to command classes |
-| `Git::Commands::*` | Command classes: define CLI API, bind args, execute → return `CommandLineResult` |
+| `Git::Commands::*` | Command classes: define CLI API, bind args, execute → return `Git::CommandLine::Result` |
 | `Git::CommandLine` | Subprocess execution: escaping, timeout, stdout/stderr capture |
 | `Git::Parsers::*` | Transform raw stdout into structured data |
 | `Git::Object::*` | Immutable Git objects (Commit, Tree, Blob) |
@@ -83,7 +83,7 @@ Git::Repository (facade — topic modules under lib/git/repository/)
 ```
 
 - **Commands layer** (`Git::Commands::*`): Owns the git CLI contract. Declares
-  arguments via DSL, executes command, returns `CommandLineResult`. No parsing.
+  arguments via DSL, executes command, returns `Git::CommandLine::Result`. No parsing.
   - `literal` entries are **only** for operation selectors (subcommand names,
     mode flags like `--delete` that define what the class does). Output-format
     flags, parser-contract options, and other caller-controlled options belong as

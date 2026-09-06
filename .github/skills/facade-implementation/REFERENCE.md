@@ -146,9 +146,9 @@ Apply these rules in order:
    2. A **primitive** (`String` of chomped stdout, `Boolean`, `Integer`) when
       the output is a single value.
    3. `nil` or `self` when the method is called for its side effects.
-   4. **`Git::CommandLineResult`** only when the topic module explicitly
+   4. **`Git::CommandLine::Result`** only when the topic module explicitly
       documents that as its contract (rare — reserved for low-level escape
-      hatches). Do not return `CommandLineResult` by default just because the
+      hatches). Do not return `Git::CommandLine::Result` by default just because the
       command returns it.
 3. **Never return** a type from `Git::Commands::*` (e.g.
    `Git::Commands::Foo::Bar::SomeResult`). Command-internal types are not part
@@ -257,7 +257,7 @@ Three phases — keep them in this order:
 2. **Call** — invoke one or more `Git::Commands::*` instances, each via
    `@execution_context`.
 3. **Assemble** — pass stdout/stderr/status through a parser or result-class
-   factory method, or return the raw `CommandLineResult` value the topic module
+   factory method, or return the raw `Git::CommandLine::Result` value the topic module
    documents.
 
 ### Sequencing multiple commands
@@ -342,7 +342,7 @@ facade method, confirm whether each responsibility applies and is handled:
   calls are sequenced explicitly with intermediate results held in local variables.
 - [ ] **Build rich response objects** — passes stdout through a `Git::Parsers::*`
   class or a result-class factory method to produce the documented return type.
-  Returning the raw `CommandLineResult` is acceptable only when that is the
+  Returning the raw `Git::CommandLine::Result` is acceptable only when that is the
   documented public contract for the topic module.
 
 ## Argument pre-processing patterns
@@ -742,7 +742,7 @@ without depending on `activesupport`.
 | The facade returns a `String` of git's stdout (chomped or as-is) | `.stdout` |
 | The facade returns a structured object built from line-by-line parsing | A `Git::Parsers::*` class |
 | The facade returns a single bool/int derived from output | Inline transformation in the facade |
-| The facade returns a `Git::CommandLineResult` | Return the raw result |
+| The facade returns a `Git::CommandLine::Result` | Return the raw result |
 
 If the parsing logic exceeds ~5 lines, extract it into a `Git::Parsers::*` class
 and call it from the facade. The facade method remains an orchestration sequence,
@@ -841,7 +841,7 @@ appropriate parser.
 ### Leaking command-class types into the public API
 
 The public return type should never be `Git::Commands::Foo::Bar::SomeResult` or
-any other type from `Git::Commands::*`. Returning `Git::CommandLineResult` is
+any other type from `Git::Commands::*`. Returning `Git::CommandLine::Result` is
 acceptable when the topic module documents that as its contract, but is not the
 default — see [Choosing the return type](#choosing-the-return-type). Returning
 domain objects (`Git::BranchInfo`, `Git::DiffResult`, etc.) is preferred for
