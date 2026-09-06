@@ -262,7 +262,7 @@ begin
   Git.clone(repo_url, timeout: 10)
 rescue Git::TimeoutError => e
   e.result.tap do |r|
-    r.class #=> Git::CommandLineResult
+    r.class #=> Git::CommandLine::Result
     r.status #=> #<Process::Status: pid 62173 SIGKILL (signal 9)>
     r.status.timeout? #=> true
     r.git_cmd # The git command ran as an array of strings
