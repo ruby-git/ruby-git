@@ -4,7 +4,7 @@ This document covers breaking changes and migration steps when upgrading the
 `git` gem to a new major version. Each section describes what changed and how
 to update your code when upgrading from the preceding major version.
 
-- [Upgrading to v6.0.0](#upgrading-to-v600)
+- [Upgrading to v6.x](#upgrading-to-v6x)
   - [Minimum Ruby version](#minimum-ruby-version)
   - [Minimum git version](#minimum-git-version)
 - [Upgrading to v5.x](#upgrading-to-v5x)
@@ -37,7 +37,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Log` Enumerable interface deprecated](#gitlog-enumerable-interface-deprecated)
     - [`Git::Object::Commit#set_commit` deprecated](#gitobjectcommitset_commit-deprecated)
 
-## Upgrading to v6.0.0
+## Upgrading to v6.x
 
 v6.0.0 is not yet released. This section will be completed when it ships.
 

@@ -301,7 +301,7 @@ documentation](https://api.rubyonrails.org/classes/ActiveSupport/Deprecation.htm
 for more details.
 
 Before upgrading the git gem to the next major version, follow the upgrade procedure
-in [UPGRADING.md](UPGRADING.md#upgrading-to-v600). It turns the warnings into errors so
+in [UPGRADING.md](UPGRADING.md#upgrading-to-v6x). It turns the warnings into errors so
 that you cannot miss one.
 
 For the full list of deprecated methods and their replacements, see
@@ -453,7 +453,7 @@ The recommended way to upgrade across a major version:
 
 Because every deprecation warning is present in the last release of a major series,
 this procedure finds every change the next major requires. The version-specific steps
-are in [UPGRADING.md](UPGRADING.md#upgrading-to-v600). See
+are in [UPGRADING.md](UPGRADING.md#upgrading-to-v6x). See
 [Deprecations](#deprecations) for how to configure the warnings.
 
 ### Release support policy
