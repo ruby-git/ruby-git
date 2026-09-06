@@ -398,8 +398,18 @@ This gem is expected to function correctly on:
 
 - All [non-EOL versions](https://www.ruby-lang.org/en/downloads/branches/) of the MRI
   Ruby on Mac, Linux, and Windows
-- The latest version of JRuby 9.4+ on Linux
-- The latest version of TruffleRuby 24+ on Linux
+- JRuby and TruffleRuby on Linux, starting from the earliest release whose Ruby
+  compatibility target is at or above the oldest supported MRI version, unless a
+  newer release is otherwise needed (for example, when a release does not
+  implement a feature the gem depends on)
+
+Consult the CI build matrix in
+[`.github/workflows/continuous_integration.yml`](.github/workflows/continuous_integration.yml)
+for the exact JRuby and TruffleRuby versions tested. Newer releases of each engine
+are expected to work but are not tested.
+
+Because the JRuby and TruffleRuby floors derive from the MRI floor, they move
+whenever the oldest supported MRI version changes.
 
 This project intends to support the latest version of JRuby on Windows once
 the [process_executer](https://github.com/main-branch/process_executer) gem properly
