@@ -43,7 +43,7 @@ required_ruby_version() {
 }
 
 # Extract the minimum git version from the gemspec requirements line
-# (e.g., `spec.requirements = ['git 2.28.0 or greater']`). The gemspec is the
+# (e.g., `spec.requirements = ['git 2.43.0 or greater']`). The gemspec is the
 # authoritative source; bin/setup must not duplicate it.
 required_git_version() {
   local v

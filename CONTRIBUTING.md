@@ -95,7 +95,7 @@ prerequisite is missing.
 | --- | --- | --- |
 | Ruby | `>= 3.3.0` (matches `required_ruby_version` in [`git.gemspec`](git.gemspec)) | A version manager such as [rbenv](https://github.com/rbenv/rbenv), [asdf](https://asdf-vm.com/), [chruby](https://github.com/postmodern/chruby), or [rvm](https://rvm.io/) is recommended so you can match the project's CI matrix. |
 | Bundler | Any 2.x or 4.x | Install with `gem install bundler`. |
-| git | `>= 2.28.0` (matches `git.gemspec` `requirements`) | Older git versions are not supported and the test suite will not pass against them. |
+| git | `>= 2.43.0` (matches `git.gemspec` `requirements`) | Older git versions are not supported and the test suite will not pass against them. |
 | Node.js / npm | Optional | Required only to install the local Conventional Commit `commit-msg` hook (Husky + commitlint). If npm is missing, `bin/setup` will warn and continue. CI will still validate commit messages. |
 | [lychee](https://lychee.cli.rs) | `>= 0.24.0` | Runs the markdown link check (`rake markdown:links`), which is part of the default task. The floor comes from [`.lychee.toml`](.lychee.toml): older releases cannot parse the enum form of `include_fragments`. Install with `brew install lychee` (macOS), `snap install lychee` (Ubuntu), `pacman -S lychee` (Arch), `winget install --id lycheeverse.lychee` (Windows), or see the [install docs](https://github.com/lycheeverse/lychee#installation). |
 

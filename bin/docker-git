@@ -7,7 +7,7 @@ usage() {
   echo ""
   echo "Usage: $(basename "$0") <version>"
   echo ""
-  echo "Example: $(basename "$0") 2.28.0"
+  echo "Example: $(basename "$0") 2.43.0"
   exit 1
 }
 

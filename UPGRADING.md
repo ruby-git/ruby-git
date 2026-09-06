@@ -6,6 +6,7 @@ to update your code when upgrading from the preceding major version.
 
 - [Upgrading to v6.0.0](#upgrading-to-v600)
   - [Minimum Ruby version](#minimum-ruby-version)
+  - [Minimum git version](#minimum-git-version)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -48,12 +49,14 @@ To prepare:
 
 1. Upgrade to Ruby 3.3 or later if you are still on Ruby 3.2 (see
    [Minimum Ruby version](#minimum-ruby-version)).
-2. Upgrade to the latest v5.x release.
-3. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
+2. Check that `git --version` reports 2.43.0 or later everywhere the gem runs (see
+   [Minimum git version](#minimum-git-version)).
+3. Upgrade to the latest v5.x release.
+4. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
    your test suite and, if possible, staging.
-4. Fix each deprecation using the entries under
+5. Fix each deprecation using the entries under
    [Deprecated methods](#deprecated-methods) until the suite is clean.
-5. Upgrade to v6.0.0.
+6. Upgrade to v6.0.0.
 
 ### Minimum Ruby version
 
@@ -69,6 +72,21 @@ JRuby and TruffleRuby support is unchanged.
 
 If your application still runs on Ruby 3.2, upgrade Ruby before upgrading the gem,
 or stay on the latest v5.x release.
+
+### Minimum git version
+
+v6.0.0 requires git 2.43.0 or later. v5.x required 2.28.0.
+
+Git 2.43.0 was released on November 20, 2023, and is the version shipped by
+Ubuntu 24.04, RHEL 8.10 and 9.4, SLES 15 SP6, openSUSE Leap 15.6, and Alpine 3.19.
+Ubuntu 22.04 is the supported platform whose stock git (2.34) falls below the new
+floor. On Ubuntu 22.04, install a newer git (for example from the
+[git-core PPA](https://launchpad.net/~git-core/+archive/ubuntu/ppa)) or stay on
+v5.x. Apple's git 2.39 from Xcode 16 also falls below the floor; Xcode 26 ships
+git 2.50.
+
+Features that need a git newer than 2.43.0 stay gated per command and raise
+`Git::VersionError` on older installations, as `git am --retry` (2.46.0) does today.
 
 ---
 

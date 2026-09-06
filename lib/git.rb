@@ -116,7 +116,7 @@ module Git
   #
   # @api public
   #
-  MINIMUM_GIT_VERSION = Version.parse('2.28.0')
+  MINIMUM_GIT_VERSION = Version.parse('2.43.0')
 
   # Compatibility shim for code that monkeypatches the `Git::Base` class from
   # versions prior to 5.0.0.

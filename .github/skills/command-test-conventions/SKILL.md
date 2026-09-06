@@ -52,7 +52,7 @@ it, MUST-level structural, naming, stubbing, and coverage checks will not be app
 
 Before deciding that test coverage is missing for an option, alias, or flag
 form, determine the repository's minimum supported Git version from project
-metadata. In this repository, `git.gemspec` declares `git 2.28.0 or greater`.
+metadata. In this repository, `git.gemspec` declares `git 2.43.0 or greater`.
 
 Coverage expectations for CLI forms must be based on the minimum supported Git
 version, not only on the locally installed Git. Use version-matched upstream
@@ -530,7 +530,7 @@ end
 #### Guard tests for options introduced after the minimum supported Git version
 
 When an integration test exercises an option that was introduced after the minimum
-supported Git version (2.28.0), guard the example with
+supported Git version (2.43.0), guard the example with
 `skip: unless_git(minimum_version, feature_description)` to prevent failures on
 installations that do not yet have the required Git version. The `unless_git` helper
 is defined in `spec/spec_helper.rb`:
@@ -545,19 +545,19 @@ group require the same minimum version.
 
 ```ruby
 # ✅ Different options introduced in different git versions — guard each `it` individually
-it 'returns a CommandLineResult with the :verbose option',
-   skip: unless_git('2.33.0', 'git worktree list --verbose') do
+it 'returns a CommandLineResult with the :retry option',
+   skip: unless_git('2.46.0', 'git am --retry') do
   # ...
 end
 
-it 'returns a CommandLineResult with the :z option combined with :porcelain',
-   skip: unless_git('2.36.0', 'git worktree list --porcelain -z') do
+it 'returns a CommandLineResult with the :batch_updates option',
+   skip: unless_git('2.47.0', 'git update-ref --batch-updates') do
   # ...
 end
 
 # ✅ All tests in the group require the same version — guard the context/describe block
-RSpec.describe Git::Commands::ShowRef::Exists, :integration,
-               skip: unless_git('2.43.0', 'git show-ref --exists') do
+RSpec.describe Git::Commands::Am::Retry, :integration,
+               skip: unless_git('2.46.0', 'git am --retry') do
   # ...
 end
 ```
@@ -618,7 +618,7 @@ error. For example:
 
 ```ruby
 it 'succeeds when no merge is in progress' do
-  skip 'requires git 2.35.0 or later' unless Git.git_version >= Git::Version.new(2, 35, 0)
+  skip 'requires git 2.46.0 or later' unless Git.git_version >= Git::Version.new(2, 46, 0)
 
   expect { command.call }.not_to raise_error
 end

@@ -68,7 +68,7 @@ methods you can call on a repository object.
 ## Install
 
 This gem is a wrapper around the `git` command line, so a `git` executable (version
-2.28.0 or greater) must be installed and on your `PATH`. See the [Git version support
+2.43.0 or greater) must be installed and on your `PATH`. See the [Git version support
 policy](#git-version-support-policy) for details.
 
 Install the gem and add to the application's Gemfile by executing:
@@ -418,7 +418,7 @@ supports subprocess status reporting on JRuby for Windows (see
 
 ### Git version support policy
 
-This gem requires git version 2.28.0 or greater as specified in the gemspec. This
+This gem requires git version 2.43.0 or greater as specified in the gemspec. This
 requirement reflects:
 
 - The minimum git version necessary to support all features provided by this gem
@@ -426,9 +426,9 @@ requirement reflects:
   capabilities
 - The practical limitations of testing across multiple git versions in CI
 
-Git 2.28.0 was released on July 27, 2020. While this gem may work with earlier
-versions of git, compatibility with versions prior to 2.28.0 is not tested or
-guaranteed. Users on older git versions should upgrade to at least 2.28.0.
+Git 2.43.0 was released on November 20, 2023. While this gem may work with earlier
+versions of git, compatibility with versions prior to 2.43.0 is not tested or
+guaranteed. Users on older git versions should upgrade to at least 2.43.0.
 
 The supported git version may be increased in future major or minor releases of this
 gem as new git features are adopted or as maintaining backward compatibility becomes
@@ -508,8 +508,8 @@ deprecated during the v5.x series in favor of the immutable `*Info` value-object
 APIs. v6.0.0 will remove each deprecated class once a normal v5.x release has carried
 its deprecation warning and UPGRADING.md entry, per the
 [Deprecation policy](#deprecation-policy). v6.0.0 will not ship until every planned
-deprecation has shipped that way. v6.0.0 also raises the version floors: git ≥ 2.42.0,
-Ruby ≥ 3.4.
+deprecation has shipped that way. v6.0.0 also raises the version floors: git ≥ 2.43.0,
+Ruby ≥ 3.3.
 
 [Issue #1717](https://github.com/ruby-git/ruby-git/issues/1717) is the living
 roadmap, tracking scope, sequencing, and status. If your code uses the classes

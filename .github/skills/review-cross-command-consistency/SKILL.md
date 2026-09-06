@@ -61,7 +61,7 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
 Before flagging siblings as inconsistent for option names, aliases, negated
 forms, or documented values, determine the repository's minimum supported Git
 version from project metadata. In this repository, `git.gemspec` declares
-`git 2.28.0 or greater`.
+`git 2.43.0 or greater`.
 
 Consistency judgments for CLI surface area must be based on the minimum
 supported Git version, not only on the locally installed Git. Use

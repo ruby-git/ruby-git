@@ -249,7 +249,7 @@ class SomeCommand < Git::Commands::Base
   end
 
   # optional — only when introduced after Git::MINIMUM_GIT_VERSION
-  requires_git_version '2.29.0'
+  requires_git_version '2.46.0'
 
   # optional for non-zero successful exits
   # reason comment
@@ -621,7 +621,7 @@ changes their meaning without touching their files — after edits, rerun
 
 `requires_git_version` is a **class-level** declaration only. Individual options do
 **not** carry version annotations. The declaration must use a `'major.minor.patch'`
-string (e.g., `'2.29.0'`), not a `Git::Version` or `Range` — pre-release versions
+string (e.g., `'2.46.0'`), not a `Git::Version` or `Range` — pre-release versions
 are not supported.
 
 | Scenario | Action |
