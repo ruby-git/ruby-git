@@ -531,146 +531,6 @@ module Git
       end
     end
 
-    # A Git tag object
-    #
-    # This class represents a tag in Git, which can be either annotated or lightweight.
-    #
-    # Annotated tags contain additional metadata such as the tagger's name, email, and
-    # the date when the tag was created, along with a message.
-    #
-    # @deprecated Use {Git::Repository::ObjectOperations#tag_list} and
-    #   {Git::TagInfo} instead
-    #
-    #   {Git::TagInfo} is an immutable value object carrying the tag's `name`,
-    #   `oid`, `target_oid`, `annotated?`, `message`, and `tagger`. Call the
-    #   corresponding {Git::Repository} method (e.g. `archive`, `log`, `diff`,
-    #   `cat_file_contents`) with `info.oid || info.target_oid` for operations
-    #   on a tag; that is the object this class resolves and pins at
-    #   construction, so a later move of the tag does not redirect an existing
-    #   object, whereas the tag name would. Constructing a `Git::Object::Tag`
-    #   emits a deprecation warning.
-    #
-    class Tag < AbstractObject
-      # @return [String] the tag name
-      #
-      attr_accessor :name
-
-      # @overload initialize(base, name)
-      #
-      #   @param base [Git::Repository] the git repository
-      #
-      #   @param name [String] the name of the tag
-      #
-      # @overload initialize(base, sha, name)
-      #
-      #   `sha` is kept as the object that the inherited operations (`size`,
-      #   `contents`, `grep`, `diff`, `log`, `archive`) run against; `annotated?`,
-      #   `message`, and `tagger` read the ref `name`. {Git::TagInfo} describes a
-      #   ref, so there is no OID-based replacement for this form: pass `sha` to
-      #   the {Git::Repository} operation directly, or read the tag object with
-      #   {Git::Repository::ObjectOperations#cat_file_tag}.
-      #
-      #   @param base [Git::Repository] the git repository
-      #
-      #   @param sha [String] the SHA of the tag object
-      #
-      #   @param name [String] the name of the tag
-      #
-      def initialize(base, sha, name = nil)
-        Git::Deprecation.warn(
-          'Git::Object::Tag is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#tag_list and Git::TagInfo instead.'
-        )
-        sha, name = resolve_sha_and_name(base, sha, name)
-        super(base, sha)
-
-        @name = name
-        @annotated = nil
-        @loaded = false
-      end
-
-      # Returns whether this tag is annotated
-      #
-      # @return [Boolean] `true` when the tag has an annotated tag object
-      #
-      def annotated?
-        @annotated = @annotated.nil? ? (object_repository.cat_file_type(name) == 'tag') : @annotated
-      end
-
-      # Returns the tag message
-      #
-      # @return [String, nil] the annotated tag message, or `nil` for a
-      #   lightweight tag
-      #
-      def message
-        check_tag
-        @message
-      end
-
-      # Returns whether this object is a tag
-      #
-      # @return [Boolean] `true`
-      #
-      def tag?
-        true
-      end
-
-      # Returns the tagger identity
-      #
-      # @return [Git::AuthorInfo, nil] the tagger for an annotated tag, or `nil`
-      #   for a lightweight tag
-      #
-      def tagger
-        check_tag
-        @tagger
-      end
-
-      private
-
-      # Resolves the two-argument constructor form to a SHA and a tag name
-      #
-      # In the two-argument form `sha` carries the tag name and the SHA is
-      # looked up from the repository.
-      #
-      # @param base [Git::Repository] the git repository
-      #
-      # @param sha [String] the SHA of the tag object, or the tag name in the
-      #   two-argument form
-      #
-      # @param name [String, nil] the tag name, or `nil` in the two-argument form
-      #
-      # @return [Array(String, String)] the resolved `[sha, name]` pair
-      #
-      # @raise [Git::UnexpectedResultError] if the tag does not exist
-      #
-      def resolve_sha_and_name(base, sha, name)
-        return [sha, name] unless name.nil?
-
-        resolved = base.tag_sha(sha)
-        raise Git::UnexpectedResultError, "Tag '#{sha}' does not exist." if resolved == ''
-
-        [resolved, sha]
-      end
-
-      # Loads annotated tag data when available
-      #
-      # @return [void]
-      #
-      def check_tag
-        return if @loaded
-
-        if annotated?
-          tdata = object_repository.cat_file_tag(@name)
-          @message = tdata['message'].chomp
-          @tagger = Git::AuthorInfo.parse(tdata['tagger'])
-        else
-          @message = @tagger = nil
-        end
-
-        @loaded = true
-      end
-    end
-
     # if we're calling this, we don't know what type it is yet
     # so this is our little factory method
     #
@@ -680,15 +540,10 @@ module Git
     #
     # @param type [String, nil] object type hint: `blob`, `commit`, or `tree`
     #
-    # @param is_tag [Boolean] whether to construct a tag object
-    #
     # @return [Git::Object::AbstractObject] the concrete object wrapper
     #
-    def self.new(base, objectish, type = nil, is_tag = false) # rubocop:disable Style/OptionalBooleanParameter
-      return new_tag(base, objectish) if is_tag
-
+    def self.new(base, objectish, type = nil)
       type ||= object_repository_for(base).cat_file_type(objectish)
-      # TODO: why not handle tag case here too?
       klass =
         case type
         when /blob/   then Blob
@@ -696,29 +551,6 @@ module Git
         when /tree/   then Tree
         end
       klass.new(base, objectish)
-    end
-
-    # Creates a tag object through the deprecated factory path
-    #
-    # @param base [Git::Repository] the repository used to query object data
-    #
-    # @param objectish [String] the tag name or SHA
-    #
-    # @return [Git::Object::Tag] the tag object wrapper
-    #
-    # @deprecated Use {Git::Repository::ObjectOperations#tag_list} instead
-    #
-    #   The warning names `Git::Object::Tag.new`, the replacement this path
-    #   shipped with, and the {Git::Object::Tag} constructor is deprecated as
-    #   well; this method silences it so one call emits one warning. Go
-    #   straight to `Git::Repository#tag_list(name).first`.
-    #
-    private_class_method def self.new_tag(base, objectish)
-      Git::Deprecation.warn(
-        'Git::Object.new with is_tag argument is deprecated and will be removed in v6.0.0. ' \
-        'Use Git::Object::Tag.new instead.'
-      )
-      Git::Deprecation.silence { Git::Object::Tag.new(base, objectish) }
     end
 
     # Returns the repository used for object lookup

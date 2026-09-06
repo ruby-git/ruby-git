@@ -9,6 +9,7 @@ to update your code when upgrading from the preceding major version.
   - [Minimum git version](#minimum-git-version)
   - [Minimum addressable version](#minimum-addressable-version)
   - [Renamed facade methods removed](#renamed-facade-methods-removed)
+  - [`Git::Object::Tag` removed](#gitobjecttag-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -116,8 +117,20 @@ v6.0.0 removes the five `Git::Repository` methods that v5.0.0 renamed to the
 and `delete_tag`. Each one warned throughout v5.x and named its replacement. The
 [Facade method renames](#facade-method-renames) table under "Upgrading to v5.x" is
 the migration reference. For `add_tag`, go straight to `tag_create`: the `tag_add`
-that the v5.x warning names is deprecated too (see
-[`Git::Object::Tag` deprecated](#gitobjecttag-deprecated)).
+that the v5.x warning names is removed too (see
+[`Git::Object::Tag` removed](#gitobjecttag-removed)).
+
+### `Git::Object::Tag` removed
+
+v6.0.0 removes `Git::Object::Tag`, the three `Git::Repository` methods that
+returned it (`tag`, `tags`, and `tag_add`), and the `is_tag` argument to
+`Git::Object.new`. Each warned from v5.4.0 on and named its replacement. Read tag
+data through `Git::Repository#tag_list` and create tags with
+`Git::Repository#tag_create`; both return `Git::TagInfo` value objects. The
+[`Git::Object::Tag` deprecated](#gitobjecttag-deprecated) entry under "Upgrading
+to v5.x" maps every removed call, including the readers and operations on a
+`Git::Object::Tag`, to its replacement, and describes where the replacement's
+return shape or error behavior differs.
 
 ---
 

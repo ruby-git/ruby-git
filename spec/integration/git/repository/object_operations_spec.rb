@@ -455,14 +455,13 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
-  # Integration tests for #gblob, #gcommit, #gtree, #tag, and #object are
-  # intentionally omitted. All five are one-line delegators to Git::Object.new
-  # or Git::Object::Tag.new — there is no facade-level orchestration or
-  # post-processing. The underlying git operations (cat-file, show-ref) are
-  # already exercised by the #cat_file_type, #cat_file_contents, and #tag_sha
-  # integration tests above. Unit tests in
-  # spec/unit/git/repository/object_operations_spec.rb verify the delegation
-  # contract, argument forwarding, and the #tag deprecation warning.
+  # Integration tests for #gblob, #gcommit, #gtree, and #object are
+  # intentionally omitted. All four are one-line delegators to Git::Object.new
+  # — there is no facade-level orchestration or post-processing. The
+  # underlying git operation (cat-file) is already exercised by the
+  # #cat_file_type and #cat_file_contents integration tests above. Unit tests
+  # in spec/unit/git/repository/object_operations_spec.rb verify the
+  # delegation contract and argument forwarding.
 
   describe '#tag_list' do
     let(:head_sha) { described_instance.rev_parse('HEAD') }
@@ -569,54 +568,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       it 'replaces the existing tag when force is given' do
         replaced = described_instance.tag_create('v1.0.0', force: true, annotate: true, message: 'replaced')
         expect(replaced).to have_attributes(name: 'v1.0.0', annotated?: true, message: 'replaced')
-      end
-    end
-  end
-
-  # #tag_add is deprecated; each call is silenced so the :raise deprecation
-  # behavior configured in spec_helper does not abort the example. The
-  # deprecation warning itself is asserted in the unit spec.
-  describe '#tag_add' do
-    context 'with no target and no options' do
-      it 'creates a lightweight tag on HEAD' do
-        tag = Git::Deprecation.silence { described_instance.tag_add('v1.0.0') }
-        expect(tag).to be_a(Git::Object::Tag)
-        expect(tag.name).to eq('v1.0.0')
-        expect(tag.annotated?).to be(false)
-      end
-    end
-
-    context 'with a target commit' do
-      it 'creates the tag pointing at the given commit' do
-        head_sha = described_instance.rev_parse('HEAD')
-        tag = Git::Deprecation.silence { described_instance.tag_add('v1.0.0', head_sha) }
-        expect(tag.objectish).to eq(head_sha)
-      end
-    end
-
-    context 'with annotate and a message' do
-      it 'creates an annotated tag carrying the message' do
-        tag = Git::Deprecation.silence do
-          described_instance.tag_add('v1.0.0', annotate: true, message: 'Release 1.0.0')
-        end
-        expect(tag.annotated?).to be(true)
-        expect(tag.message).to eq('Release 1.0.0')
-      end
-    end
-
-    # Facade-owned validation (annotated/signed without a message, unsupported
-    # options) and command error wrapping (tagging an existing name without
-    # :force) are pure-Ruby or command concerns with no added end-to-end signal;
-    # they are covered by the unit spec and command integration specs.
-    context 'when the tag already exists' do
-      before { described_instance.tag_create('v1.0.0') }
-
-      it 'replaces the existing tag when force is given' do
-        replaced = Git::Deprecation.silence do
-          described_instance.tag_add('v1.0.0', force: true, annotate: true, message: 'replaced')
-        end
-        expect(replaced.annotated?).to be(true)
-        expect(replaced.message).to eq('replaced')
       end
     end
   end
