@@ -42,7 +42,7 @@ Gem::Specification.new do |spec|
   spec.requirements = ['git 2.43.0 or greater']
 
   spec.add_dependency 'activesupport', '>= 5.0'
-  spec.add_dependency 'addressable', '~> 2.8'
+  spec.add_dependency 'addressable', '~> 2.9'
   spec.add_dependency 'process_executer', '~> 4.1'
   spec.add_dependency 'rchardet', '~> 1.9'
 

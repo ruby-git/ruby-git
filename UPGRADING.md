@@ -7,6 +7,7 @@ to update your code when upgrading from the preceding major version.
 - [Upgrading to v6.x](#upgrading-to-v6x)
   - [Minimum Ruby version](#minimum-ruby-version)
   - [Minimum git version](#minimum-git-version)
+  - [Minimum addressable version](#minimum-addressable-version)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -51,12 +52,14 @@ To prepare:
    [Minimum Ruby version](#minimum-ruby-version)).
 2. Check that `git --version` reports 2.43.0 or later everywhere the gem runs (see
    [Minimum git version](#minimum-git-version)).
-3. Upgrade to the latest v5.x release.
-4. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
+3. Run `bundle update addressable` and confirm the lockfile resolves addressable
+   2.9.0 or later (see [Minimum addressable version](#minimum-addressable-version)).
+4. Upgrade to the latest v5.x release.
+5. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
    your test suite and, if possible, staging.
-5. Fix each deprecation using the entries under
+6. Fix each deprecation using the entries under
    [Deprecated methods](#deprecated-methods) until the suite is clean.
-6. Upgrade to v6.0.0.
+7. Upgrade to v6.0.0.
 
 ### Minimum Ruby version
 
@@ -87,6 +90,23 @@ git 2.50.
 
 Features that need a git newer than 2.43.0 stay gated per command and raise
 `Git::VersionError` on older installations, as `git am --retry` (2.46.0) does today.
+
+### Minimum addressable version
+
+v6.0.0 depends on `addressable ~> 2.9`. v5.x accepts `~> 2.8`.
+
+Addressable 2.9.0 (released in April 2026) fixes the ReDoS vulnerability in
+`Addressable::Template#match`
+([GHSA-h27x-rffw-24p4](https://github.com/sporkmonger/addressable/security/advisories/GHSA-h27x-rffw-24p4)).
+Addressable 2.8.10 mitigates only part of it, and the advisory lists every release
+below 2.9.0 as affected. The gem never calls `Addressable::Template`, so v5.x is not
+affected and keeps the wider constraint. v6.0.0 raises the floor to the 2.9 series so
+that dependency scanners stop flagging the gem's resolved dependency tree.
+
+The `~> 2.8` constraint already permits 2.9.0, so most applications resolve it after
+`bundle update addressable`. The upgrade fails only when another gem in the bundle
+caps addressable below 2.9.0. In that case, update or replace that gem, or stay on
+the latest v5.x release.
 
 ---
 
