@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ['lib']
   spec.required_ruby_version = '>= 3.3.0'
-  spec.requirements = ['git 2.28.0 or greater']
+  spec.requirements = ['git 2.43.0 or greater']
 
   spec.add_dependency 'activesupport', '>= 5.0'
   spec.add_dependency 'addressable', '~> 2.8'

@@ -89,10 +89,10 @@ end
 # an example group when the installed git is too old to support the feature
 # under test.
 #
-# @param minimum_version [String] the minimum git version required (e.g., `'2.43.0'`)
+# @param minimum_version [String] the minimum git version required (e.g., `'2.46.0'`)
 #
 #   Shorter strings are treated as if trailing `.0` components were appended, so
-#   `'2.43'` is equivalent to `'2.43.0'`.
+#   `'2.46'` is equivalent to `'2.46.0'`.
 #
 # @param feature [String] the feature name to include in the skip reason
 #
@@ -100,7 +100,7 @@ end
 #   otherwise a human-readable skip reason string
 #
 # @example
-#   RSpec.describe MyFeature, skip: unless_git('2.43', 'git show-ref --exists') do
+#   RSpec.describe MyFeature, skip: unless_git('2.46', 'git am --retry') do
 #     it 'works' do
 #       # ...
 #     end
@@ -445,7 +445,7 @@ end
 #
 # @example
 #   let(:execution_context) { execution_context_double }
-#   let(:execution_context) { execution_context_double('2.30.0') }
+#   let(:execution_context) { execution_context_double('2.46.0') }
 #
 def execution_context_double(version = '99.99.99')
   double('ExecutionContext', git_version: Git::Version.parse(version))
@@ -459,7 +459,7 @@ end
 # @return [Git::Version] the version that git_version will return when called
 #
 # @example
-#   stub_git_version(execution_context, '2.28.0')
+#   stub_git_version(execution_context, '2.43.0')
 #
 def stub_git_version(context, version)
   git_version = Git::Version.parse(version)

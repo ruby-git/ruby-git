@@ -58,7 +58,7 @@ Evaluate the PR against these criteria:
 
 **Commits:** Conventional Commits format, lowercase subjects under 100 chars, no trailing period. Breaking changes use `!` and `BREAKING CHANGE:` footer.
 
-**Compatibility:** Backward compatible (or marked breaking), Ruby 3.3+, Git 2.28.0+, cross-platform (Windows/macOS/Linux).
+**Compatibility:** Backward compatible (or marked breaking), Ruby 3.3+, Git 2.43.0+, cross-platform (Windows/macOS/Linux).
 
 **Security:** No command injection, proper escaping via Git::CommandLine, input validation, resource cleanup.
 

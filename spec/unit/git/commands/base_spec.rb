@@ -347,7 +347,7 @@ RSpec.describe Git::Commands::Base do
 
       it 'raises VersionError when git version is below MINIMUM_GIT_VERSION' do
         expect { command.call }
-          .to raise_error(Git::VersionError, /The git gem requires git >= 2.28.0/)
+          .to raise_error(Git::VersionError, /The git gem requires git >= 2.43.0/)
       end
     end
 
@@ -355,17 +355,17 @@ RSpec.describe Git::Commands::Base do
       let(:command_class) do
         Class.new(described_class) do
           arguments { literal 'status' }
-          requires_git_version '2.30.0'
+          requires_git_version '2.46.0'
         end
       end
-      let(:execution_context) { execution_context_double('2.29.0') }
+      let(:execution_context) { execution_context_double('2.45.0') }
       let(:command) { command_class.new(execution_context) }
 
       it 'raises VersionError when git version is below class minimum' do
         expect { command.call }
           .to raise_error(Git::VersionError) do |error|
-            expect(error.message).to match(/requires git >= 2.30.0/)
-            expect(error.actual_version).to eq(Git::Version.parse('2.29.0'))
+            expect(error.message).to match(/requires git >= 2.46.0/)
+            expect(error.actual_version).to eq(Git::Version.parse('2.45.0'))
           end
       end
     end
@@ -393,7 +393,7 @@ RSpec.describe Git::Commands::Base do
       let(:command_class) do
         Class.new(described_class) do
           arguments { literal 'status' }
-          requires_git_version '2.35.0'
+          requires_git_version '2.46.0'
         end
       end
       let(:execution_context) { execution_context_double('2.27.0') }
@@ -402,7 +402,7 @@ RSpec.describe Git::Commands::Base do
       it 'fails with floor message when both floor and class constraint would fail' do
         # Should fail with floor message, not class-level message
         expect { command.call }
-          .to raise_error(Git::VersionError, /The git gem requires git >= 2.28.0/)
+          .to raise_error(Git::VersionError, /The git gem requires git >= 2.43.0/)
       end
     end
 
@@ -410,10 +410,10 @@ RSpec.describe Git::Commands::Base do
       let(:command_class) do
         Class.new(described_class) do
           arguments { literal 'status' }
-          requires_git_version '2.30.0'
+          requires_git_version '2.46.0'
         end
       end
-      let(:execution_context) { execution_context_double('2.35.0') }
+      let(:execution_context) { execution_context_double('2.50.0') }
       let(:command) { command_class.new(execution_context) }
 
       it 'executes normally when version requirements are met' do
@@ -432,7 +432,7 @@ RSpec.describe Git::Commands::Base do
           arguments { literal 'status' }
         end
       end
-      let(:execution_context) { execution_context_double('2.35.0') }
+      let(:execution_context) { execution_context_double('2.43.0') }
       let(:command) { command_class.new(execution_context) }
 
       it 'executes normally when no version constraint is declared' do
