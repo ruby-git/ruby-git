@@ -88,10 +88,9 @@ module Git
       #   @option options [Boolean, nil] :p (nil) alias for `:patch`
       #
       #   @option options [Boolean, nil] :staged (nil) stash only the staged changes
-      #     (alias: `:S`; requires git 2.35+)
+      #     (alias: `:S`)
       #
-      #   @option options [Boolean, nil] :S (nil) alias for `:staged` (requires git
-      #     2.35+)
+      #   @option options [Boolean, nil] :S (nil) alias for `:staged`
       #
       #   @option options [Boolean, nil] :keep_index (nil) keep the staged changes
       #     in the index (alias: `:k`)
@@ -304,16 +303,15 @@ module Git
       # @option opts [Integer, String] :U (nil) alias for `:unified`
       #
       # @option opts [Boolean, nil] :include_untracked (nil) include the
-      #   untracked files recorded in the entry (alias: `:u`; requires git 2.30+)
+      #   untracked files recorded in the entry (alias: `:u`)
       #
       # @option opts [Boolean, nil] :u (nil) alias for `:include_untracked`
-      #   (requires git 2.30+)
       #
       # @option opts [Boolean, nil] :no_include_untracked (nil) exclude the
-      #   untracked files recorded in the entry (requires git 2.30+)
+      #   untracked files recorded in the entry
       #
       # @option opts [Boolean, nil] :only_untracked (nil) show only the
-      #   untracked files recorded in the entry (requires git 2.30+)
+      #   untracked files recorded in the entry
       #
       # @option opts [Boolean, Integer, nil] :find_renames (nil) detect
       #   renames, optionally with a similarity threshold (alias: `:M`)

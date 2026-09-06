@@ -18,7 +18,7 @@ module Git
     # - {ShowRef::ExcludeExisting} — stdin-based filter for ref names, excluding
     #   refs that already exist in the repository
     #   (`git show-ref --exclude-existing[=<pattern>]`)
-    # - {ShowRef::Exists} — boolean existence check without output (git >= 2.43)
+    # - {ShowRef::Exists} — boolean existence check without output
     #   (`git show-ref --exists <ref>`)
     #
     # @example List all refs matching a pattern

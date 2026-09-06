@@ -19,8 +19,6 @@ module Git
     # - {Maintenance::Register} — add repository to maintenance config
     # - {Maintenance::Unregister} — remove repository from maintenance config
     #
-    # All subcommands require Git 2.30.0 or later.
-    #
     # @see https://git-scm.com/docs/git-maintenance git-maintenance documentation
     #
     # @api private

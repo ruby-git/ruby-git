@@ -18,7 +18,7 @@ module Git
       #
       # For pattern-based listing, use {ShowRef::List}.
       # For stdin-based filtering, use {ShowRef::ExcludeExisting}.
-      # For a silent boolean check (git >= 2.43), use {ShowRef::Exists}.
+      # For a silent boolean check, use {ShowRef::Exists}.
       #
       # @example Verify a single ref
       #   cmd = Git::Commands::ShowRef::Verify.new(execution_context)

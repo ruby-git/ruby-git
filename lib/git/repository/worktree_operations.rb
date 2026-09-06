@@ -235,8 +235,6 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      # @raise [Git::VersionError] if the installed git is older than 2.29.0
-      #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
       #
       def worktree_repair(*paths)

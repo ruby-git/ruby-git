@@ -282,38 +282,30 @@ RSpec.describe Git::Repository::WorktreeOperations, :integration do
   end
 
   describe '#worktree_repair' do
-    context 'on git versions 2.29.0 and later', if: Git.git_version >= Git::Version.new(2, 29, 0) do
-      let(:worktree_path) { new_worktree_path }
-      let(:moved_path) { new_worktree_path }
+    let(:worktree_path) { new_worktree_path }
+    let(:moved_path) { new_worktree_path }
 
-      before do
-        described_instance.worktree_add(worktree_path)
-        FileUtils.mv(worktree_path, moved_path)
-      end
-
-      after do
-        FileUtils.rm_rf(worktree_path)
-        FileUtils.rm_rf(moved_path)
-      end
-
-      it 'reconnects a linked worktree that was moved without git' do
-        described_instance.worktree_repair(moved_path)
-
-        expect(described_instance.worktree_list.map(&:path)).to include(File.realpath(moved_path))
-      end
-
-      # With no paths, git repairs the link of the worktree at the current
-      # directory rather than the one named by --git-dir, so the example passes
-      # the moved path to keep the outcome independent of the test's cwd.
-      it 'returns the output from git as a String' do
-        expect(described_instance.worktree_repair(moved_path)).to be_a(String)
-      end
+    before do
+      described_instance.worktree_add(worktree_path)
+      FileUtils.mv(worktree_path, moved_path)
     end
 
-    context 'on git versions before 2.29.0', if: Git.git_version < Git::Version.new(2, 29, 0) do
-      it 'raises Git::VersionError' do
-        expect { described_instance.worktree_repair }.to raise_error(Git::VersionError, /2\.29\.0/)
-      end
+    after do
+      FileUtils.rm_rf(worktree_path)
+      FileUtils.rm_rf(moved_path)
+    end
+
+    it 'reconnects a linked worktree that was moved without git' do
+      described_instance.worktree_repair(moved_path)
+
+      expect(described_instance.worktree_list.map(&:path)).to include(File.realpath(moved_path))
+    end
+
+    # With no paths, git repairs the link of the worktree at the current
+    # directory rather than the one named by --git-dir, so the example passes
+    # the moved path to keep the outcome independent of the test's cwd.
+    it 'returns the output from git as a String' do
+      expect(described_instance.worktree_repair(moved_path)).to be_a(String)
     end
   end
 
