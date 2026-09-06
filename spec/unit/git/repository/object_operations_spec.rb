@@ -1798,32 +1798,6 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
-  # ---------------------------------------------------------------------------
-  # #add_tag (deprecated alias for #tag_add)
-  # ---------------------------------------------------------------------------
-
-  describe '#add_tag' do
-    let(:tag_object) { instance_double(Git::Object::Tag) }
-
-    before do
-      allow(described_instance).to receive(:tag_add).and_return(tag_object)
-      allow(Git::Deprecation).to receive(:warn)
-    end
-
-    it 'emits a deprecation warning matching /add_tag is deprecated/' do
-      expect(Git::Deprecation).to receive(:warn).with(/add_tag is deprecated/)
-      described_instance.add_tag('v1.0.0')
-    end
-
-    it 'calls tag_add with all arguments forwarded and returns its return value' do
-      expect(described_instance)
-        .to receive(:tag_add).with('v1.0.0', 'abc123', { force: true })
-        .and_return(tag_object)
-      result = described_instance.add_tag('v1.0.0', 'abc123', force: true)
-      expect(result).to be(tag_object)
-    end
-  end
-
   describe '#tag_delete' do
     subject(:result) { described_instance.tag_delete('v1.0.0') }
 
@@ -1864,32 +1838,6 @@ RSpec.describe Git::Repository::ObjectOperations do
           expect(error.result).to be(command_result)
         end
       end
-    end
-  end
-
-  # ---------------------------------------------------------------------------
-  # #delete_tag (deprecated alias for #tag_delete)
-  # ---------------------------------------------------------------------------
-
-  describe '#delete_tag' do
-    let(:delete_stdout) { "Deleted tag 'v1.0.0' (was abc123)\n" }
-
-    before do
-      allow(described_instance).to receive(:tag_delete).and_return(delete_stdout)
-      allow(Git::Deprecation).to receive(:warn)
-    end
-
-    it 'emits a deprecation warning matching /delete_tag is deprecated/' do
-      expect(Git::Deprecation).to receive(:warn).with(/delete_tag is deprecated/)
-      described_instance.delete_tag('v1.0.0')
-    end
-
-    it 'calls tag_delete with all arguments forwarded and returns its return value' do
-      expect(described_instance)
-        .to receive(:tag_delete).with('v1.0.0')
-        .and_return(delete_stdout)
-      result = described_instance.delete_tag('v1.0.0')
-      expect(result).to be(delete_stdout)
     end
   end
 end

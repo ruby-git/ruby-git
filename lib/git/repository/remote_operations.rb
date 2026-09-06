@@ -346,41 +346,6 @@ module Git
         nil
       end
 
-      # @param name [String] the name for the new remote
-      #
-      # @param url [String, Git::Repository] the URL of the remote repository
-      #
-      #   A {Git::Repository} instance is accepted for local references and converted
-      #   to `url.repo.to_s`.
-      #
-      # @param opts [Hash] options for adding the remote
-      #
-      # @option opts [Boolean, nil] :fetch (nil) fetch from the remote immediately
-      #   after adding it (`-f`)
-      #
-      #   The deprecated alias `:with_fetch` is accepted and normalized
-      #   automatically.
-      #
-      # @option opts [String, nil] :track (nil) track only the given branch during
-      #   fetch (`-t`)
-      #
-      # @return [Git::Remote] the newly added remote
-      #
-      # @raise [ArgumentError] when unsupported option keys are provided
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#remote_add} instead
-      #
-      def add_remote(name, url, opts = {})
-        Git::Deprecation.warn(
-          'Git::Repository#add_remote is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#remote_add instead.'
-        )
-        remote_add(name, url, opts)
-        Git::Remote.new(self, name)
-      end
-
       # Removes a remote from this repository
       #
       # Deletes the remote named `name` along with its associated configuration,
@@ -397,22 +362,6 @@ module Git
       #
       def remote_remove(name)
         Git::Commands::Remote::Remove.new(@execution_context).call(name)
-      end
-
-      # @param name [String] the name of the remote to remove
-      #
-      # @return [Git::CommandLine::Result] the result of calling `git remote remove`
-      #
-      # @raise [Git::FailedError] when git exits with a non-zero status
-      #
-      # @deprecated Use {#remote_remove} instead
-      #
-      def remove_remote(name)
-        Git::Deprecation.warn(
-          'Git::Repository#remove_remote is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#remote_remove instead.'
-        )
-        remote_remove(name)
       end
 
       # Sets the URL for an existing remote
@@ -442,28 +391,6 @@ module Git
         Git::Commands::Remote::SetUrl.new(@execution_context).call(name, url)
 
         nil
-      end
-
-      # @param name [String] the name of the remote to update
-      #
-      # @param url [String, Git::Repository] the new URL for the remote
-      #
-      #   A {Git::Repository} instance is accepted for local references and converted
-      #   to `url.repo.to_s`.
-      #
-      # @return [Git::Remote] the updated remote
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#remote_set_url} instead
-      #
-      def set_remote_url(name, url)
-        Git::Deprecation.warn(
-          'Git::Repository#set_remote_url is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#remote_set_url instead.'
-        )
-        remote_set_url(name, url)
-        Git::Remote.new(self, name)
       end
 
       # Configures which branches are fetched for a remote
