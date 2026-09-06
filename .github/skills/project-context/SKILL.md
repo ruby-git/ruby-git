@@ -49,7 +49,7 @@ coding standard details, or implementation constraints.
 | `Git::Commands::*` | Command classes: define CLI API, bind args, execute → return `CommandLineResult` |
 | `Git::CommandLine` | Subprocess execution: escaping, timeout, stdout/stderr capture |
 | `Git::Parsers::*` | Transform raw stdout into structured data |
-| `Git::Object::*` | Immutable Git objects (Commit, Tree, Blob, Tag) |
+| `Git::Object::*` | Immutable Git objects (Commit, Tree, Blob) |
 | `Git::Status` | Working-directory status (enumerable `StatusFile` collection) |
 | `Git::Diff` | Diff operations (enumerable `DiffFile` collection) |
 | `Git::Log` | Chainable commit-history query builder |

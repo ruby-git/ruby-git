@@ -773,13 +773,13 @@ and `Git::Worktree` are the ones on this path. Each is being replaced by an immu
 value object plus name-based facade operations, following the route `Git::BranchInfo`
 and `Git::RemoteInfo` already took.
 
-The tell over-matches, so check what you have found before starting. Thirteen classes
+The tell over-matches, so check what you have found before starting. Several classes
 take a `base`. The collections (`Git::Branches`, `Git::Stashes`, `Git::Worktrees`) go
 with their element class under step 4 rather than getting their own value object.
 `Git::Diff`, `Git::Log`, and `Git::DiffStats` hold a repository because they defer the
 query until something asks for a result, which is a different design and not this
 migration. `Git::Object::Commit`, `Tree`, and `Blob` are the exception recorded in
-ADR-0002; `Git::Object::Tag` is not exempt and is still a target.
+ADR-0002. `Git::Object::Tag` was not exempt and was removed in v6.0.0.
 
 `Git::Status` is a target too, despite looking like the query objects above. Its
 constructor calls `StatusFileFactory#construct_files` immediately, so it is eager rather
@@ -821,10 +821,10 @@ the replacement, and their operation methods stay.
 already destined for deprecation. When you touch one of these areas, add the
 value-object-returning method instead.
 
-Tags are the worked example. `tag`, `tags`, and `tag_add` return `Git::Object::Tag`
-and are deprecated. `tag_list` and `tag_create` return `Git::TagInfo` and are the
-pattern for any new tag facade method. Build on that pair rather than on the
-deprecated three.
+Tags are the worked example. `tag_list` and `tag_create` return `Git::TagInfo` and
+are the pattern for any new tag facade method. `Git::Object::Tag` and the `tag`,
+`tags`, and `tag_add` methods that returned it were deprecated in v5.4.0 and
+removed in v6.0.0, which completed the four steps for tags.
 
 `Git::Object::Commit`, `Tree`, and `Blob` are a deliberate exception to step 4. See
 [ADR-0002](../../../docs/adr/0002-commit-tree-and-blob-become-hollow-shells.md).
