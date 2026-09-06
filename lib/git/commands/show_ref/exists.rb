@@ -25,11 +25,6 @@ module Git
       #   result = cmd.call('refs/heads/main')
       #   result.status.exitstatus  # => 0 (exists) or 2 (not found)
       #
-      # @note Requires git 2.43 or later
-      #
-      #   Earlier versions do not recognise the `--exists` flag and will exit
-      #   non-zero with an "unknown option" error.
-      #
       # @note `arguments` block audited against https://git-scm.com/docs/git-show-ref/2.53.0
       #
       # @see Git::Commands::ShowRef

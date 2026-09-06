@@ -16,7 +16,7 @@ module Git
       #
       # For strict per-ref verification, use {Git::Commands::ShowRef::Verify}.
       # For stdin-based filtering, use {Git::Commands::ShowRef::ExcludeExisting}.
-      # For a simple boolean existence check (git >= 2.43), use {Git::Commands::ShowRef::Exists}.
+      # For a simple boolean existence check, use {Git::Commands::ShowRef::Exists}.
       #
       # @example List all refs
       #   cmd = Git::Commands::ShowRef::List.new(execution_context)

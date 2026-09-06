@@ -22,8 +22,6 @@ module Git
       # @api private
       #
       class Start < Git::Commands::Base
-        requires_git_version '2.30.0'
-
         arguments do
           literal 'maintenance'
           literal 'start'
@@ -63,8 +61,6 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
-        #
-        #     @raise [Git::VersionError] if git version is below 2.30.0
       end
     end
   end

@@ -34,9 +34,6 @@ module Git
           operand :path, repeatable: true
         end
 
-        # git worktree repair was introduced in git 2.29.0
-        requires_git_version '2.29.0'
-
         # @!method call(*)
         #
         #   @overload call(*path, **options)
@@ -66,8 +63,6 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
-        #
-        #     @raise [Git::VersionError] if git version is below 2.29.0
         #
         #     @api public
       end
