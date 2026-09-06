@@ -112,7 +112,7 @@ RSpec.describe Git do
         result
       end
 
-      it 'returns the CommandLineResult from ConfigOptionSyntax::Set#call' do
+      it 'returns the Git::CommandLine::Result from ConfigOptionSyntax::Set#call' do
         allow(set_command).to receive(:call).with('user.name', 'Bob', global: true).and_return(set_result)
         expect(result).to eq(set_result)
       end
@@ -212,7 +212,7 @@ RSpec.describe Git do
         result
       end
 
-      it 'returns the CommandLineResult from ConfigOptionSyntax::Set#call' do
+      it 'returns the Git::CommandLine::Result from ConfigOptionSyntax::Set#call' do
         allow(set_command).to receive(:call).with('user.name', 'Bob').and_return(set_result)
         expect(result).to eq(set_result)
       end

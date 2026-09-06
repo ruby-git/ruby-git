@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Stash::Create, :integration do
       context 'with local changes' do
         before { write_file('file.txt', "modified\n") }
 
-        it 'returns a CommandLineResult with output' do
+        it 'returns a Git::CommandLine::Result with output' do
           result = command.call
 
           expect(result).to be_a(Git::CommandLine::Result)

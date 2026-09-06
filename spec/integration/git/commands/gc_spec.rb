@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Gc, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

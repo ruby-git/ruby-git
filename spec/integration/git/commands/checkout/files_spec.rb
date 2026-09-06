@@ -18,7 +18,7 @@ RSpec.describe Git::Commands::Checkout::Files, :integration do
     describe 'when the command succeeds' do
       before { write_file('file.txt', "modified\n") }
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('HEAD', pathspec: ['file.txt'])
 
         expect(result).to be_a(Git::CommandLine::Result)

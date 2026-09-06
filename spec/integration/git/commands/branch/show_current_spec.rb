@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Branch::ShowCurrent, :integration do
 
   describe '#call' do
     describe 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         write_file('README.md', 'Initial content')
         repo.add('README.md')
         repo.commit('Initial commit')

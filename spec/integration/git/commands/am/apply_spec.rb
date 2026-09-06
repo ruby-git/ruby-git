@@ -30,7 +30,7 @@ RSpec.describe Git::Commands::Am::Apply, :integration do
         repo.reset('HEAD~1', hard: true)
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call(mbox_file, chdir: repo_dir)
 
         expect(result).to be_a(Git::CommandLine::Result)

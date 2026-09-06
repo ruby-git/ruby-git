@@ -30,7 +30,7 @@ RSpec.describe Git::Commands::Merge::Abort, :integration do
         expect { repo.merge('feature') }.to raise_error(Git::FailedError)
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

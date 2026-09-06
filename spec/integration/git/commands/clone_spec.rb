@@ -30,7 +30,7 @@ RSpec.describe Git::Commands::Clone, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call(source_dir, File.join(clone_dir, 'cloned'))
 
         expect(result).to be_a(Git::CommandLine::Result)

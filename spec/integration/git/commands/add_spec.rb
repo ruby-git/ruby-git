@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Add, :integration do
       context 'with a new file' do
         before { write_file('new.txt', "new content\n") }
 
-        it 'returns a CommandLineResult' do
+        it 'returns a Git::CommandLine::Result' do
           result = command.call('new.txt')
 
           expect(result).to be_a(Git::CommandLine::Result)

@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::RemoveSection, :integration do
         set.call('testsection.key', 'value')
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('testsection')
 
         expect(result).to be_a(Git::CommandLine::Result)

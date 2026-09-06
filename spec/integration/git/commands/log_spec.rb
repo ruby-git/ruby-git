@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Log, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult with non-empty output' do
+      it 'returns a Git::CommandLine::Result with non-empty output' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

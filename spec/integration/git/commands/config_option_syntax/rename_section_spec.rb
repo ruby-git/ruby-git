@@ -14,7 +14,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::RenameSection, :integration do
         repo.config_set('oldsection.key', 'value')
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('oldsection', 'newsection')
 
         expect(result).to be_a(Git::CommandLine::Result)

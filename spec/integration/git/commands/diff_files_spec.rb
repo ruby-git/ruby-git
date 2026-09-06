@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::DiffFiles, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult with exit code 0 when no unstaged changes exist' do
+      it 'returns a Git::CommandLine::Result with exit code 0 when no unstaged changes exist' do
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)

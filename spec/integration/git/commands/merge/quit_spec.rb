@@ -31,7 +31,7 @@ RSpec.describe Git::Commands::Merge::Quit, :integration do
           expect { repo.merge('feature') }.to raise_error(Git::FailedError)
         end
 
-        it 'returns a CommandLineResult' do
+        it 'returns a Git::CommandLine::Result' do
           result = command.call
 
           expect(result).to be_a(Git::CommandLine::Result)
@@ -39,7 +39,7 @@ RSpec.describe Git::Commands::Merge::Quit, :integration do
       end
 
       context 'when no merge is in progress' do
-        it 'returns a CommandLineResult' do
+        it 'returns a Git::CommandLine::Result' do
           result = command.call
 
           expect(result).to be_a(Git::CommandLine::Result)

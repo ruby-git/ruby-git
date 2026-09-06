@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::Grep, :integration do
 
   describe '#call' do
     context 'when the command succeeds (matches found)' do
-      it 'returns a CommandLineResult with exit status 0' do
+      it 'returns a Git::CommandLine::Result with exit status 0' do
         result = command.call('HEAD', pattern: 'foo')
 
         expect(result).to be_a(Git::CommandLine::Result)

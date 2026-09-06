@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::Describe, :integration do
 
   describe '#call' do
     describe 'when the command succeeds' do
-      it 'returns a CommandLineResult describing HEAD' do
+      it 'returns a Git::CommandLine::Result describing HEAD' do
         result = command.call(tags: true)
 
         expect(result).to be_a(Git::CommandLine::Result)

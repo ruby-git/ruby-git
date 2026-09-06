@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Clean, :integration do
       context 'with untracked files' do
         before { write_file('untracked.txt', "untracked\n") }
 
-        it 'returns a CommandLineResult' do
+        it 'returns a Git::CommandLine::Result' do
           result = command.call(force: true)
 
           expect(result).to be_a(Git::CommandLine::Result)

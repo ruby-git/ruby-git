@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::Init, :integration do
 
   describe '#call' do
     describe 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call(init_dir)
 
         expect(result).to be_a(Git::CommandLine::Result)

@@ -32,7 +32,7 @@ RSpec.describe Git::Commands::Worktree::Move, :integration do
         FileUtils.rm_rf(dst_path)
       end
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call(src_path, dst_path)
         expect(result).to be_a(Git::CommandLine::Result)
       end

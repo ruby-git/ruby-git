@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::CatFile::Batch, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       context 'with --batch mode' do
-        it 'returns a CommandLineResult with output for the specified object' do
+        it 'returns a Git::CommandLine::Result with output for the specified object' do
           result = command.call('HEAD:README.md', batch: true)
 
           expect(result).to be_a(Git::CommandLine::Result)

@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::Branch::Copy, :integration do
     end
 
     describe 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('main-copy')
 
         expect(result).to be_a(Git::CommandLine::Result)

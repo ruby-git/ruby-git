@@ -28,7 +28,7 @@ RSpec.describe Git::Commands::Worktree::Unlock, :integration do
 
       after { FileUtils.rm_rf(worktree_path) }
 
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call(worktree_path)
         expect(result).to be_a(Git::CommandLine::Result)
       end

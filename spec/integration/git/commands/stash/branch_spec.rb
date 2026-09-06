@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::Stash::Branch, :integration do
     end
 
     describe 'when the command succeeds' do
-      it 'returns a CommandLineResult with output' do
+      it 'returns a Git::CommandLine::Result with output' do
         result = command.call('stash-branch')
 
         expect(result).to be_a(Git::CommandLine::Result)

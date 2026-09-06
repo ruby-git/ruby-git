@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::Add, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call('test.multi', 'value1')
 
         expect(result).to be_a(Git::CommandLine::Result)

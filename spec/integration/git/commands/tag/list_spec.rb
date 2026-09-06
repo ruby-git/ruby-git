@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Tag::List, :integration do
 
   describe '#call' do
     describe 'when the command succeeds' do
-      it 'returns a CommandLineResult with output' do
+      it 'returns a Git::CommandLine::Result with output' do
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')

@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::RevParse, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult for --verify HEAD' do
+      it 'returns a Git::CommandLine::Result for --verify HEAD' do
         result = command.call('HEAD', verify: true)
 
         expect(result).to be_a(Git::CommandLine::Result)

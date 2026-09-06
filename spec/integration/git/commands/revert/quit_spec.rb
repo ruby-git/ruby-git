@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Revert::Quit, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       context 'when no revert is in progress' do
-        it 'returns a CommandLineResult (no-op unlike --abort)' do
+        it 'returns a Git::CommandLine::Result (no-op unlike --abort)' do
           result = command.call
 
           expect(result).to be_a(Git::CommandLine::Result)

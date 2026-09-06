@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Stash::Show, :integration do
 
   describe '#call' do
     describe 'when the command succeeds' do
-      it 'returns a CommandLineResult with numstat output' do
+      it 'returns a Git::CommandLine::Result with numstat output' do
         result = command.call(numstat: true, shortstat: true)
 
         expect(result).to be_a(Git::CommandLine::Result)

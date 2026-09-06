@@ -22,7 +22,7 @@ RSpec.describe Git::Commands::Stash::Pop, :integration do
         Git::Commands::Stash::Push.new(execution_context).call(message: 'WIP')
       end
 
-      it 'returns a CommandLineResult with output' do
+      it 'returns a Git::CommandLine::Result with output' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)

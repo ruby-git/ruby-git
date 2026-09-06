@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::Show, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult with commit information' do
+      it 'returns a Git::CommandLine::Result with commit information' do
         result = command.call('HEAD')
 
         expect(result).to be_a(Git::CommandLine::Result)

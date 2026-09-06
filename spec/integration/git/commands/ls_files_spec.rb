@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::LsFiles, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       context 'with no arguments' do
-        it 'returns a CommandLineResult' do
+        it 'returns a Git::CommandLine::Result' do
           result = command.call
 
           expect(result).to be_a(Git::CommandLine::Result)

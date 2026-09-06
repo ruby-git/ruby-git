@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::Fsck, :integration do
     end
 
     describe 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a Git::CommandLine::Result' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLine::Result)
