@@ -1,4 +1,4 @@
-# Upgrading the `git` Gem
+# Upgrading the `git` gem
 
 This document covers breaking changes and migration steps when upgrading the
 `git` gem to a new major version. Each section describes what changed and how
@@ -94,25 +94,24 @@ Features that need a git newer than 2.43.0 stay gated per command and raise
 
 ### Overview
 
-v5.0.0 delivers a new internal architecture while keeping the v4.x API working
-for the vast majority of users. Most v4.x code requires **no changes** to run on
-v5.x.
+v5.0.0 replaces the internal architecture while keeping the v4.x API working
+for most users. Most v4.x code requires **no changes** to run on v5.x.
 
 The new architecture introduces a layered design (`Git::Commands`,
-`Git::Repository`, and associated parsers). Compatibility shims — deprecated
-forwarding methods that map old call patterns to the new API — ensure that v4.x
-code continues to work. These shims emit deprecation warnings that tell you
-exactly what to change and what will be eliminated in v6.0.0.
+`Git::Repository`, and associated parsers). Compatibility shims, deprecated
+forwarding methods that map old call patterns to the new API, keep v4.x code
+working. These shims emit deprecation warnings that tell you what to change and
+what v6.0.0 removes.
 
-Hard breaks are limited to a small number of things that had no safe migration
-path. These are described in the [Breaking changes](#breaking-changes) section,
-followed by [Deprecated methods](#deprecated-methods) that still work in v5.x
-but are removed in v6.0.0.
+Hard breaks are limited to the few things that had no safe migration path.
+The [Breaking changes](#breaking-changes) section describes them, followed by
+[Deprecated methods](#deprecated-methods) that still work in v5.x but are
+removed in v6.0.0.
 
 For information on how to suppress or configure deprecation warnings, see the
 [Deprecations](README.md#deprecations) section of the README.
 
-**Changes at a glance:**
+Changes at a glance:
 
 | Change | Type | Impact | Action required |
 |--------|------|--------|-----------------|
@@ -129,46 +128,44 @@ For information on how to suppress or configure deprecation warnings, see the
 
 #### `Git::Base` removed
 
-`Git::Base` — the class previously returned by `Git.open`, `Git.clone`,
-`Git.init`, and `Git.bare` — is removed in v5.0.0. The replacement is
-`Git::Repository`, which is returned by all four entry points and exposes the
-same public API.
+`Git::Base`, the class that `Git.open`, `Git.clone`, `Git.init`, and `Git.bare`
+returned, is removed in v5.0.0. All four entry points now return
+`Git::Repository`, which exposes the same public API.
 
-**Code that must be updated:**
+Code that must be updated:
 
 ```ruby
-# v4.x — explicit Git::Base reference (raises NameError in v5.x)
+# v4.x: explicit Git::Base reference (raises NameError in v5.x)
 repo = Git::Base.new(working_directory: '/path/to/repo')
 
-# v5.x — use the entry-point methods; do not construct Git::Repository directly
+# v5.x: use the entry-point methods; do not construct Git::Repository directly
 repo = Git.open('/path/to/repo')
 ```
 
 ```ruby
-# v4.x — type-checking against Git::Base (raises NameError in v5.x because Git::Base is removed)
+# v4.x: type-checking against Git::Base (raises NameError in v5.x because Git::Base is removed)
 raise unless repo.is_a?(Git::Base)
 
-# v5.x — check against Git::Repository
+# v5.x: check against Git::Repository
 raise unless repo.is_a?(Git::Repository)
 ```
 
 ```ruby
-# v4.x — requiring the internal file (raises LoadError in v5.x)
+# v4.x: requiring the internal file (raises LoadError in v5.x)
 require 'git/base'
 
-# v5.x — the public entry point is git itself; no internal require needed
+# v5.x: the public entry point is git itself; no internal require needed
 require 'git'
 ```
 
-**Public API is preserved:** `Git::Repository` provides every method that
-`Git::Base` did. Code that simply calls methods on the object returned by
-`Git.open` (e.g., `repo.commit`, `repo.status`, `repo.add`) requires no
-changes.
+**Public API is preserved.** `Git::Repository` provides every method that
+`Git::Base` did. Code that calls methods on the object returned by `Git.open`
+(e.g., `repo.commit`, `repo.status`, `repo.add`) requires no changes.
 
-**Monkeypatching `Git::Base` is deprecated:** v5.x includes a temporary
+**Monkeypatching `Git::Base` is deprecated.** v5.x includes a temporary
 compatibility shim for applications that define instance methods on `Git::Base`.
-Those methods are made available on `Git::Repository` instances, but each method
-definition emits a deprecation warning and this shim will be removed in v6.0.0.
+The shim makes those methods available on `Git::Repository` instances, but each
+method definition emits a deprecation warning, and v6.0.0 removes the shim.
 
 Move custom repository helpers to an application-owned extension module and
 include or prepend that module into `Git::Repository` during application setup:
@@ -181,7 +178,7 @@ module Git::Base
   end
 end
 
-# v5.x — keep the extension in application-owned code
+# v5.x: keep the extension in application-owned code
 module MyAppGitRepositoryExtensions
   def worktree_clean?
     status.changed.empty?
@@ -198,9 +195,9 @@ Git::Repository.include(MyAppGitRepositoryExtensions)
 `Git.open`, `Git.clone`, `Git.init`, and `Git.bare` now return
 `Git::Repository` instead of `Git::Base`.
 
-For most callers this is transparent — the returned object responds to the same
-methods. Code that explicitly checks `is_a?(Git::Base)` or `be_a(Git::Base)` in
-tests must be updated:
+For most callers this is transparent, because the returned object responds to
+the same methods. Update code that checks `is_a?(Git::Base)` or `be_a(Git::Base)`
+in tests:
 
 ```ruby
 # v4.x
@@ -228,10 +225,10 @@ For example, `Git.clone` supports `log:`, not `logger:`. A misspelled or
 unsupported option that v4.x ignored must be corrected:
 
 ```ruby
-# v4.x — silently ignored; did not configure clone logging
+# v4.x: silently ignored; did not configure clone logging
 Git.clone(url, path, logger: logger)
 
-# v5.x — use the documented option name
+# v5.x: use the documented option name
 Git.clone(url, path, log: logger)
 ```
 
@@ -245,7 +242,7 @@ implementation class. `Git::Lib` is removed in v5.0.0.
 
 In v5.x, calling `#lib` on a repo object returns `self` with a deprecation
 warning. This means `g.lib.some_method(args)` is forwarded to
-`g.some_method(args)` — but only if `some_method` exists on `Git::Repository`.
+`g.some_method(args)`, but only if `some_method` exists on `Git::Repository`.
 Methods that were unique to `Git::Lib` and have no counterpart on
 `Git::Repository` raise `NoMethodError` immediately. The `#lib` method itself
 is removed in v6.0.0.
@@ -257,18 +254,18 @@ method.
 ##### Methods that work via the `#lib` shim (with deprecation warning)
 
 The following v4.x `g.lib.*` call shapes are forwarded to their `Git::Repository`
-counterpart by the `#lib → self` shim. They emit a deprecation warning; migrate
-to the replacement shown to silence it.
+counterpart by the `#lib` shim, which returns `self`. They emit a deprecation
+warning; migrate to the replacement shown to silence it.
 
-> **Note — config return type change:** `g.lib.config_get(name)` returned a
+> **Config return type change.** `g.lib.config_get(name)` returned a
 > `String`; `g.lib.config_list` returned a `Hash`.
 > The v5.x replacements `config_get` and `config_list` return
-> `Git::ConfigEntryInfo` and `Array<Git::ConfigEntryInfo>` respectively — richer
-> objects that expose `.value` (the String), `.key`, `.scope`, and `.origin`.
+> `Git::ConfigEntryInfo` and `Array<Git::ConfigEntryInfo>` respectively. Those
+> objects expose `.value` (the String), `.key`, `.scope`, and `.origin`.
 >
 > If you only need the String value:
-> - `g.config_get(name)&.value` → replaces `g.lib.config_get(name)`
-> - `g.config_list.to_h { |e| [e.key, e.value] }` → replaces `g.lib.config_list`
+> - `g.config_get(name)&.value` replaces `g.lib.config_get(name)`
+> - `g.config_list.to_h { |e| [e.key, e.value] }` replaces `g.lib.config_list`
 >
 > If your code was using the v4.x public `g.config(name)` API (not `g.lib.*`),
 > that deprecated bridge still returns a `String` in v5.x and continues to work
@@ -276,17 +273,17 @@ to the replacement shown to silence it.
 
 | v4.x call | Replacement in v5.x |
 |-----------|---------------------|
-| `g.lib.config_get(name)` | `g.config_get(name)` — returns `Git::ConfigEntryInfo`; use `.value` for the String |
-| `g.lib.config_list` | `g.config_list` — returns `Array<Git::ConfigEntryInfo>` |
+| `g.lib.config_get(name)` | `g.config_get(name)`. Returns `Git::ConfigEntryInfo`; use `.value` for the String |
+| `g.lib.config_list` | `g.config_list`. Returns `Array<Git::ConfigEntryInfo>` |
 | `g.lib.config_set(name, value)` | `g.config_set(name, value)` |
 | `g.lib.git_version` | `g.git_version` |
-| `g.lib.stash_list` | `g.stash_infos` — returns `Array<Git::StashInfo>`, newest first |
+| `g.lib.stash_list` | `g.stash_infos`. Returns `Array<Git::StashInfo>`, newest first |
 | `g.lib.unmerged` | `g.unmerged` |
 | `g.lib.change_head_branch(name)` | `g.change_head_branch(name)` |
 | `g.lib.ls_remote(location, opts)` | `g.ls_remote(location, opts)` |
 | `g.lib.current_branch_state` | `g.current_branch_state` |
 
-> **Note — `current_branch_state` return type change:** `g.lib.current_branch_state`
+> **`current_branch_state` return type change.** `g.lib.current_branch_state`
 > returned a `Git::Lib::HeadState` (a mutable `Struct`). `g.current_branch_state`
 > returns a `Git::Repository::Branching::HeadState` (an immutable `Data` object).
 > Both expose `.state` (`:active`, `:unborn`, or `:detached`) and `.name`. If your
@@ -297,8 +294,8 @@ to the replacement shown to silence it.
 ##### Methods that raise `NoMethodError` in v5.x
 
 These `Git::Lib` method names have no counterpart on `Git::Repository`, so
-`g.lib.method_name` raises `NoMethodError` even in v5.x (the `#lib → self`
-shim cannot forward them). Update call sites directly:
+`g.lib.method_name` raises `NoMethodError` even in v5.x because the `#lib` shim
+has nothing to forward them to. Update call sites directly:
 
 | v4.x call | Replacement in v5.x |
 |-----------|---------------------|
@@ -316,8 +313,8 @@ shim cannot forward them). Update call sites directly:
 
 ##### Internal plumbing methods (no replacement)
 
-The following methods were technically public on `Git::Lib` but are internal
-helpers with no plausible external use. They have no replacement in v5.0.0:
+The following methods were public on `Git::Lib` in name only. They are internal
+helpers with no plausible external use and have no replacement in v5.0.0:
 
 - `assert_args_are_not_options`
 - `assert_valid_opts`
@@ -341,15 +338,15 @@ filter log output by path when combined with `#between` or other revision range
 options. This relied on ambiguous `git log` argument handling and was not the
 intended API for path filtering.
 
-In v5.x, `Git::Log#object` should be treated as a revision expression. When both
-`#object` and `#between` are specified, `#between` takes precedence. Code that
-used `#object` to limit commits to a path should use `#path` instead.
+In v5.x, `Git::Log#object` is a revision expression. When both `#object` and
+`#between` are specified, `#between` takes precedence. Code that used `#object`
+to limit commits to a path should use `#path` instead.
 
 ```ruby
-# v4.x — ambiguous; could appear to filter commits touching this path
+# v4.x: ambiguous; could appear to filter commits touching this path
 git.log(500).object('cookbooks/mycookbook').between('1.0.0', 'HEAD').execute
 
-# v5.x — use #path for path filtering
+# v5.x: use #path for path filtering
 git.log(500).path('cookbooks/mycookbook').between('1.0.0', 'HEAD').execute
 
 # #object remains appropriate for revision expressions
@@ -373,8 +370,8 @@ result.is_a?(Git::CommandLine::Result)
 ```
 
 This change is only relevant if your code references `Git::CommandLineResult`
-by name (typically in type checks or documentation). Code that simply uses the
-result object returned by git commands is unaffected.
+by name (typically in type checks or documentation). Code that uses the result
+object returned by git commands is unaffected.
 
 ---
 
@@ -402,7 +399,7 @@ Seven more `Git::Repository` methods were renamed in v5.x. The old names continu
 to work but emit deprecation warnings. Each old name returns exactly what its
 replacement returns, except `branches_all`.
 
-> **Return shape change:** `g.branches_all` returns an `Array` of 4-element
+> **Return shape change.** `g.branches_all` returns an `Array` of 4-element
 > tuples `[refname, current, worktree, symref]`, where `refname` is the short
 > form (`main` or `remotes/origin/main`), `current` and `worktree` are booleans,
 > and `symref` is the symbolic-ref target or `nil`. `g.branch_list` returns
@@ -420,14 +417,14 @@ replacement returns, except `branches_all`.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.empty?` | `g.no_commits?` — `true` when the repository has no commits |
-| `g.reset_hard` | `g.reset(nil, hard: true)` — `reset` takes the commitish positionally, so pass `nil` before the options; returns git's stdout, as `reset_hard` did |
-| `g.reset_hard(commitish)` | `g.reset(commitish, hard: true)` — `reset_hard` ignored any `:hard` option passed to it and always reset with `--hard` |
-| `g.conflicts { \|file, yours, theirs\| ... }` | `g.each_conflict { \|file, yours, theirs\| ... }` — same block arguments; returns the unmerged paths |
+| `g.empty?` | `g.no_commits?`. `true` when the repository has no commits |
+| `g.reset_hard` | `g.reset(nil, hard: true)`. `reset` takes the commitish positionally, so pass `nil` before the options; returns git's stdout, as `reset_hard` did |
+| `g.reset_hard(commitish)` | `g.reset(commitish, hard: true)`. `reset_hard` ignored any `:hard` option passed to it and always reset with `--hard` |
+| `g.conflicts { \|file, yours, theirs\| ... }` | `g.each_conflict { \|file, yours, theirs\| ... }`. Same block arguments; returns the unmerged paths |
 | `g.is_local_branch?(name)` | `g.local_branch?(name)` |
 | `g.is_remote_branch?(name)` | `g.remote_branch?(name)` |
 | `g.is_branch?(name)` | `g.branch?(name)` |
-| `g.branches_all` | `g.branch_list` — returns `Array<Git::BranchInfo>`; see the return shape change above |
+| `g.branches_all` | `g.branch_list`. Returns `Array<Git::BranchInfo>`; see the return shape change above |
 
 #### `Git::Repository` option renames
 
@@ -435,7 +432,7 @@ Five methods accept a v4.x option or positional argument under its old name.
 The old form still works in v5.x but emits a deprecation warning and is
 translated to the v5.x form shown below.
 
-> **`clean`:** `force: 2` runs `git clean -ff`, which also removes untracked
+> **`clean`.** `force: 2` runs `git clean -ff`, which also removes untracked
 > nested git repositories. A `false` or `nil` value for `:ff` or `:force_force`
 > still warns and has no effect; a value other than `true`, `false`, or `nil`
 > raises `ArgumentError`. When the deprecated key is `true` and a valid
@@ -444,11 +441,11 @@ translated to the v5.x form shown below.
 > unchanged and still raises `ArgumentError`; the deprecated key does not mask
 > it.
 
-> **`diff_path_status`:** `:path_limiter` accepts the same values as `:path`
+> **`diff_path_status`.** `:path_limiter` accepts the same values as `:path`
 > (a `String`, a `Pathname`, or an `Array` of them). When both keys are given,
 > `:path_limiter` wins and no warning is emitted.
 
-> **`set_working` and `set_index`:** `must_exist:` defaults to `true`. When
+> **`set_working` and `set_index`.** `must_exist:` defaults to `true`. When
 > both the positional argument and `must_exist:` are given, they are OR'ed so
 > the more restrictive value wins.
 
@@ -457,7 +454,7 @@ translated to the v5.x form shown below.
 | `g.clean(ff: true)` | `g.clean(force: 2)` |
 | `g.clean(force_force: true)` | `g.clean(force: 2)` |
 | `g.diff_path_status(ref1, ref2, path: p)` | `g.diff_path_status(ref1, ref2, path_limiter: p)` |
-| `g.commit(message, add_all: true)` | `g.commit(message, all: true)` — runs `git commit -a` |
+| `g.commit(message, add_all: true)` | `g.commit(message, all: true)`. Runs `git commit -a` |
 | `g.set_working(dir, check)` | `g.set_working(dir, must_exist: check)` |
 | `g.set_index(file, check)` | `g.set_index(file, must_exist: check)` |
 
@@ -469,27 +466,27 @@ purpose-named methods. The same applies to the module-level
 `Git.global_config`, which is replaced by `Git.config_get`, `Git.config_set`,
 and `Git.config_list` called with `global: true`.
 
-> **Return type change:** The v4.x `g.config(name)` and `Git.global_config(name)`
+> **Return type change.** The v4.x `g.config(name)` and `Git.global_config(name)`
 > returned a `String`; `g.config` and `Git.global_config` returned a `Hash`. The
 > v5.x replacements `config_get` and `config_list` return `Git::ConfigEntryInfo`
 > (or `nil` when the key is not set) and `Array<Git::ConfigEntryInfo>`
 > respectively. Use `.value` to get the String value:
-> - `g.config_get(name)&.value` → String or nil
-> - `g.config_list.to_h { |e| [e.key, e.value] }` → Hash (key → value)
+> - `g.config_get(name)&.value` returns a String or nil
+> - `g.config_list.to_h { |e| [e.key, e.value] }` returns a Hash of key to value
 >
 > The setters `g.config(name, value)` and `Git.global_config(name, value)`
 > returned the raw command result; `config_set` returns `nil`.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.config(name)` | `g.config_get(name)` — returns `Git::ConfigEntryInfo`; use `.value` for the String |
-| `g.config` | `g.config_list` — returns `Array<Git::ConfigEntryInfo>` |
+| `g.config(name)` | `g.config_get(name)`. Returns `Git::ConfigEntryInfo`; use `.value` for the String |
+| `g.config` | `g.config_list`. Returns `Array<Git::ConfigEntryInfo>` |
 | `g.config(name, value)` | `g.config_set(name, value)` |
 | `g.global_config(name)` | `g.config_get(name, global: true)` |
 | `g.global_config` | `g.config_list(global: true)` |
 | `g.global_config(name, value)` | `g.config_set(name, value, global: true)` |
-| `Git.global_config(name)` | `Git.config_get(name, global: true)` — returns `Git::ConfigEntryInfo` or `nil`; use `.value` for the String |
-| `Git.global_config` | `Git.config_list(global: true)` — returns `Array<Git::ConfigEntryInfo>` |
+| `Git.global_config(name)` | `Git.config_get(name, global: true)`. Returns `Git::ConfigEntryInfo` or `nil`; use `.value` for the String |
+| `Git.global_config` | `Git.config_list(global: true)`. Returns `Array<Git::ConfigEntryInfo>` |
 | `Git.global_config(name, value)` | `Git.config_set(name, value, global: true)` |
 
 #### `Git` module mixin deprecations
@@ -523,7 +520,7 @@ legacy type that is deprecated:
 - `Git.binary_version` is replaced by `Git.git_version`, which keeps the
   optional binary path argument.
 
-> **Return type change:** `Git.binary_version` returned an `Array<Integer>` of
+> **Return type change.** `Git.binary_version` returned an `Array<Integer>` of
 > `[major, minor, patch]`. `Git.git_version` returns a `Git::Version`, which
 > supports comparison and exposes `major`, `minor`, and `patch`.
 > `Git.git_version.to_a` reproduces the legacy array. The return value of
@@ -533,15 +530,16 @@ legacy type that is deprecated:
 |-----------------------------------------------------|-------------|
 | `Git.ls_remote(nil)` | `Git.ls_remote` or `Git.ls_remote('.')` |
 | `Git.ls_remote(nil, opts)` | `Git.ls_remote('.', opts)` |
-| `Git.binary_version` | `Git.git_version` — returns `Git::Version`; use `.to_a` for the `[major, minor, patch]` Array |
+| `Git.binary_version` | `Git.git_version`. Returns `Git::Version`; use `.to_a` for the `[major, minor, patch]` Array |
 | `Git.binary_version(binary_path)` | `Git.git_version(binary_path)` |
 
 #### `Git::Author` deprecated
 
-Starting in v5.3.0, methods that return author, committer, or tagger data —
-`Git::Object::Commit#author`, `Git::Object::Commit#committer`,
-`Git::Object::Tag#tagger`, and `Git::TagInfo#tagger` — return an immutable
-`Git::AuthorInfo` value object instead of the mutable `Git::Author`.
+Starting in v5.3.0, the methods that return author, committer, or tagger data
+return an immutable `Git::AuthorInfo` value object instead of the mutable
+`Git::Author`. Those methods are `Git::Object::Commit#author`,
+`Git::Object::Commit#committer`, `Git::Object::Tag#tagger`, and
+`Git::TagInfo#tagger`.
 
 `Git::AuthorInfo` exposes the same `name`, `email`, and `date` readers, so code
 that only reads these attributes needs no changes. Code that mutated a
@@ -564,7 +562,7 @@ in the repository, so `g.branch('feature').stashes` and `g.branch('main').stashe
 return the same entries. Call `Git::Repository#stash_infos` instead; it is the
 query `Git::Branch#stashes` was already running.
 
-> **Return type change:** `Git::Branch#stashes` returns a `Git::Stashes`
+> **Return type change.** `Git::Branch#stashes` returns a `Git::Stashes`
 > collection of `Git::Stash` objects. `g.stash_infos` returns an array of
 > `Git::StashInfo` values. Both are newest first, so indexes carry over unchanged.
 > `Git::Stash#message` strips the `WIP on <branch>:` or `On <branch>:` prefix;
@@ -580,15 +578,15 @@ its methods.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.branch(name).stashes` | `g.stash_infos` — returns `Array<Git::StashInfo>`, newest first |
+| `g.branch(name).stashes` | `g.stash_infos`. Returns `Array<Git::StashInfo>`, newest first |
 | `g.branch(name).stashes.each { \|s\| puts s.message }` | `g.stash_infos.each { \|info\| puts info.message }` |
-| `g.branch(name).stashes.all` (`[index, message]` pairs, oldest first) | `g.stash_infos.reverse` — see the ordering note in [Legacy stash API deprecated](#legacy-stash-api-deprecated) |
+| `g.branch(name).stashes.all` (`[index, message]` pairs, oldest first) | `g.stash_infos.reverse`. See the ordering note in [Legacy stash API deprecated](#legacy-stash-api-deprecated) |
 | `g.branch(name).stashes.size` | `g.stash_infos.size` |
 | `g.branch(name).stashes[i].message` (`0` = newest, `i` coerced with `to_i`) | `g.stash_infos[i.to_i].message` |
 | `g.branch(name).stashes.save(message)` | `g.stash_push(message: message)` |
 | `g.branch(name).stashes.apply` | `g.stash_apply` |
 | `g.branch(name).stashes.apply(i)` (`0` = newest) | `g.stash_apply(i)` |
-| `g.branch(name).stashes.clear` | `g.stash_clear` — returns git's stdout (normally `""`, which is truthy) where `Git::Stashes#clear` returned `nil` |
+| `g.branch(name).stashes.clear` | `g.stash_clear`. Returns git's stdout (normally `""`, which is truthy) where `Git::Stashes#clear` returned `nil` |
 
 #### Legacy stash API deprecated
 
@@ -605,14 +603,14 @@ The legacy methods and classes are deprecated and removed in v6.0.0:
 `Git::Repository#stash_list`, `Git::Stash`, and `Git::Stashes`. Constructing a
 `Git::Stash` or `Git::Stashes` emits one warning per object.
 
-> **Ordering flip:** `g.stashes_all` returns entries **oldest first** with a
+> **Ordering flip.** `g.stashes_all` returns entries **oldest first** with a
 > sequential index of its own (`0` is the oldest). `g.stash_infos` returns entries
 > **newest first**, the order `git stash list` uses, and `Git::StashInfo#index` is
 > git's own `stash@{N}` number (`0` is the newest). `g.stashes_all.first` is
 > `g.stash_infos.last`. Code that reads an entry by position must reverse the
 > array or the index.
 
-> **Message difference:** `g.stashes_all` strips the `WIP on <branch>:` or
+> **Message difference.** `g.stashes_all` strips the `WIP on <branch>:` or
 > `On <branch>:` prefix from each message. `Git::StashInfo#message` keeps the full
 > message git stores, and `Git::StashInfo#branch` holds the branch name. A stash
 > created from a detached HEAD has the branch `"(no branch)"`, the label git writes
@@ -632,25 +630,25 @@ upgrading so the return type change cannot go unnoticed.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.stashes_all` | `g.stash_infos` — returns `Array<Git::StashInfo>`, newest first |
+| `g.stashes_all` | `g.stash_infos`. Returns `Array<Git::StashInfo>`, newest first |
 | `g.stashes_all.each { \|index, message\| ... }` | `g.stash_infos.reverse_each.with_index { \|info, index\| ... info.message }` |
 | `g.stashes_all[i]` (`0` = oldest) | `g.stash_infos.reverse[i]` |
 | `g.stashes_all.last` | `g.stash_infos.first` |
-| `g.stash_save(message)` | `g.stash_push(message: message)` — returns `Git::StashInfo` or `nil` |
+| `g.stash_save(message)` | `g.stash_push(message: message)`. Returns `Git::StashInfo` or `nil` |
 | `g.stash_list` (String) | `g.stash_infos.map { \|s\| "#{s.name}: #{s.message}" }.join("\n")` |
 | `Git::Stash.new(g, message)` | `info = g.stash_push(message: message)` |
-| `Git::Stash.new(g, message, existing: true)` | `message` — `existing: true` only wrapped the String and never looked an entry up; code that needs a real entry picks one from `g.stash_infos` by index or name |
+| `Git::Stash.new(g, message, existing: true)` | `message`. `existing: true` only wrapped the String and never looked an entry up; code that needs a real entry picks one from `g.stash_infos` by index or name |
 | `stash.save` | `info = g.stash_push(message: message)` |
-| `stash.saved?` | `!info.nil?` — check the value `stash_push` returned rather than pushing again |
-| `stash.message` / `stash.to_s` | `info.message` — keeps the branch prefix; see the note above |
+| `stash.saved?` | `!info.nil?`. Check the value `stash_push` returned rather than pushing again |
+| `stash.message` / `stash.to_s` | `info.message`. Keeps the branch prefix; see the note above |
 | `Git::Stashes.new(g)` | `g.stash_infos` |
-| `stashes.all` (`[index, message]` pairs, oldest first) | `g.stash_infos.reverse` — see the ordering note above |
+| `stashes.all` (`[index, message]` pairs, oldest first) | `g.stash_infos.reverse`. See the ordering note above |
 | `stashes.each { \|s\| ... }` (newest first) | `g.stash_infos.each { \|info\| ... }` |
 | `stashes[i]` (`0` = newest, `i` coerced with `to_i`) | `g.stash_infos[i.to_i]` |
 | `stashes.size` | `g.stash_infos.size` |
 | `stashes.save(message)` | `g.stash_push(message: message)` |
 | `stashes.apply` / `stashes.apply(i)` | `g.stash_apply` / `g.stash_apply(i)` |
-| `stashes.clear` | `g.stash_clear` — returns git's stdout (normally `""`, which is truthy) where `Git::Stashes#clear` returned `nil` |
+| `stashes.clear` | `g.stash_clear`. Returns git's stdout (normally `""`, which is truthy) where `Git::Stashes#clear` returned `nil` |
 
 #### `Git::Repository#remotes` deprecated
 
@@ -660,10 +658,10 @@ one deprecation warning for itself plus one `Git::Remote` constructor warning fo
 each remote it returns (see the `Git::Remote` deprecation below), so a repository
 with N remotes produces N + 1 warnings per call.
 
-> **Return type change:** `remotes` returns `Array<Git::Remote>` — mutable
+> **Return type change.** `remotes` returns `Array<Git::Remote>`, mutable
 > objects with `name`, `url`, and `fetch_opts` accessors and `fetch`, `merge`,
 > `branch`, and `remove` operations. `remote_list` returns
-> `Array<Git::RemoteInfo>` — immutable value objects read from the repository's
+> `Array<Git::RemoteInfo>`, immutable value objects read from the repository's
 > git config, with fields such as `name`, `url`, `push_url`, `fetch`, and `push`.
 > Because a remote may carry more than one URL or refspec, `url`, `push_url`,
 > `fetch`, and `push` are always frozen `Array<String>`. When a remote has more
@@ -673,25 +671,25 @@ with N remotes produces N + 1 warnings per call.
 > refspec, while `fetch` holds all of them. Operations that lived on
 > `Git::Remote` are called on the repository with the remote name instead.
 >
-> **Order change:** `remotes` lists remotes in the order `git remote` prints
+> **Order change.** `remotes` lists remotes in the order `git remote` prints
 > them, while `remote_list` keeps the order in which remotes first appear in the
 > config. When the legacy order matters, iterate `g.remote_names` (the same
 > `git remote` order) or sort `g.remote_list` explicitly.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.remotes` | `g.remote_list` — returns `Array<Git::RemoteInfo>` |
+| `g.remotes` | `g.remote_list`. Returns `Array<Git::RemoteInfo>` |
 | `g.remotes.map(&:name)` | `g.remote_list.map(&:name)` or `g.remote_names` |
-| `g.remotes.map(&:to_s)` | `g.remote_list.map(&:name)` — `Git::RemoteInfo#to_s` is not the name |
-| `g.remotes.map(&:url)` | `g.remote_list.map { \|r\| r.url.first }` — `url` is an `Array<String>` |
-| `g.remotes.map(&:fetch_opts)` | `g.remote_list.map { \|r\| r.fetch.last }` — `fetch` holds every refspec |
-| `g.remotes.each(&:fetch)` | `g.remote_names.each { \|name\| g.fetch(name) }` — same order as `remotes` |
+| `g.remotes.map(&:to_s)` | `g.remote_list.map(&:name)`. `Git::RemoteInfo#to_s` is not the name |
+| `g.remotes.map(&:url)` | `g.remote_list.map { \|r\| r.url.first }`. `url` is an `Array<String>` |
+| `g.remotes.map(&:fetch_opts)` | `g.remote_list.map { \|r\| r.fetch.last }`. `fetch` holds every refspec |
+| `g.remotes.each(&:fetch)` | `g.remote_names.each { \|name\| g.fetch(name) }`. Same order as `remotes` |
 | `remote.fetch` | `g.fetch(remote.name)` |
-| `remote.fetch(opts)` | `g.fetch(remote.name, opts)` — same options hash |
+| `remote.fetch(opts)` | `g.fetch(remote.name, opts)`. Same options hash |
 | `remote.merge` | `g.merge("#{remote.name}/#{g.current_branch}")` |
 | `remote.merge(branch)` | `g.merge("#{remote.name}/#{branch}")` |
-| `remote.branch` | `g.branch_list("#{remote.name}/#{g.current_branch}").first` — returns a `Git::BranchInfo` |
-| `remote.branch(name)` | `g.branch_list("#{remote.name}/#{name}").first` — returns a `Git::BranchInfo` |
+| `remote.branch` | `g.branch_list("#{remote.name}/#{g.current_branch}").first`. Returns a `Git::BranchInfo` |
+| `remote.branch(name)` | `g.branch_list("#{remote.name}/#{name}").first`. Returns a `Git::BranchInfo` |
 | `remote.remove` | `g.remote_remove(remote.name)` |
 
 #### `Git::Remote` deprecated
@@ -707,7 +705,7 @@ and one for the `Git::Remote` it constructs. Likewise `g.remotes` emits one warn
 for itself plus one per `Git::Remote` it returns (N + 1 for N remotes). The extra
 warnings from `g.remote` and `g.remotes` are expected, not a bug.
 
-> **Return type changes:** `Git::RemoteInfo#url` and `Git::RemoteInfo#fetch` are
+> **Return type changes.** `Git::RemoteInfo#url` and `Git::RemoteInfo#fetch` are
 > frozen `Array<String>` because a remote may carry more than one URL or fetch
 > refspec. The legacy `Git::Remote#url` and `Git::Remote#fetch_opts` returned only
 > the last configured value, so `r.url.last` and `r.fetch.last` reproduce them
@@ -727,19 +725,19 @@ In the table, `name` is the remote name (`g.remote` defaults it to `'origin'`).
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.remote` | `g.remote_list.find { \|r\| r.name == 'origin' }` — returns a `Git::RemoteInfo`; the deprecated call emits two warnings |
-| `g.remote(name)` | `g.remote_list.find { \|r\| r.name == name }` — returns a `Git::RemoteInfo`; the deprecated call emits two warnings |
-| `g.config_remote(name)` for `url`, `fetch`, and the other modeled fields | `g.remote_list.find { \|r\| r.name == name }` — a `Git::RemoteInfo`, not a `Hash` |
-| `g.config_remote(name)` for every key, including custom ones | `g.config_list.select { \|e\| e.key.start_with?("remote.#{name}.") }.to_h { \|e\| [e.key.delete_prefix("remote.#{name}."), e.value] }` — the same `Hash{String => String}` |
+| `g.remote` | `g.remote_list.find { \|r\| r.name == 'origin' }`. Returns a `Git::RemoteInfo`; the deprecated call emits two warnings |
+| `g.remote(name)` | `g.remote_list.find { \|r\| r.name == name }`. Returns a `Git::RemoteInfo`; the deprecated call emits two warnings |
+| `g.config_remote(name)` for `url`, `fetch`, and the other modeled fields | `g.remote_list.find { \|r\| r.name == name }`. A `Git::RemoteInfo`, not a `Hash` |
+| `g.config_remote(name)` for every key, including custom ones | `g.config_list.select { \|e\| e.key.start_with?("remote.#{name}.") }.to_h { \|e\| [e.key.delete_prefix("remote.#{name}."), e.value] }`. The same `Hash{String => String}` |
 | `remote.name`, `remote.to_s` | `g.remote_list.find { \|r\| r.name == name }.name` or `g.remote_names` |
-| `remote.url` | `g.remote_list.find { \|r\| r.name == name }.url` — `Array<String>`; `.first` for the single-URL case |
-| `remote.fetch_opts` | `g.remote_list.find { \|r\| r.name == name }.fetch` — `Array<String>` of refspecs |
+| `remote.url` | `g.remote_list.find { \|r\| r.name == name }.url`. `Array<String>`; `.first` for the single-URL case |
+| `remote.fetch_opts` | `g.remote_list.find { \|r\| r.name == name }.fetch`. `Array<String>` of refspecs |
 | `remote.fetch` | `g.fetch(name)` |
-| `remote.fetch(opts)` | `g.fetch(name, opts)` — same option keys |
+| `remote.fetch(opts)` | `g.fetch(name, opts)`. Same option keys |
 | `remote.merge` | `g.merge("#{name}/#{g.current_branch}")` |
 | `remote.merge(branch)` | `g.merge("#{name}/#{branch}")` |
-| `remote.branch` | `g.branch_list("#{name}/#{g.current_branch}").first` — returns a `Git::BranchInfo` |
-| `remote.branch(branch)` | `g.branch_list("#{name}/#{branch}").first` — returns a `Git::BranchInfo` |
+| `remote.branch` | `g.branch_list("#{name}/#{g.current_branch}").first`. Returns a `Git::BranchInfo` |
+| `remote.branch(branch)` | `g.branch_list("#{name}/#{branch}").first`. Returns a `Git::BranchInfo` |
 | `remote.remove` | `g.remote_remove(name)` |
 
 #### `Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated
@@ -774,7 +772,7 @@ constructing a `Git::Branches`, and calling any operation on a `Git::Branch` eac
 emit a deprecation warning; their return values are unchanged. The `full`,
 `name`, `remote`, `to_s`, and `to_a` readers on `Git::Branch` do not warn.
 
-> **Return shape change:** `Git::Branch` exposes `full` (`main` or
+> **Return shape change.** `Git::Branch` exposes `full` (`main` or
 > `remotes/origin/main`), `name`, and `remote` (a `Git::Remote`, or `nil`).
 > `Git::BranchInfo` exposes `refname` (always the full ref: `refs/heads/main` or
 > `refs/remotes/origin/main`), `short_name` (`main` for both), `remote_name` (a
@@ -785,7 +783,7 @@ emit a deprecation warning; their return values are unchanged. The `full`,
 > `'origin/main'` matches the remote-tracking branch. The `remotes/origin/main`
 > and `refs/...` forms that `g.branches[...]` accepted match nothing.
 >
-> **`checkout` no longer creates the branch:** `g.branch('x').checkout` created
+> **`checkout` no longer creates the branch.** `g.branch('x').checkout` created
 > `x` when it did not exist, ignoring any error from that attempt, and then
 > checked it out. `g.checkout('x')` does not create a missing local branch,
 > with one exception that is git's own: when exactly one remote has a branch
@@ -831,33 +829,33 @@ can resolve a local branch of that name and is only used where git expects it
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.branch(name)` | `g.branch_list(name).first` for a local branch, or `g.branch_list("#{remote}/#{name}").find(&:remote?)` for a remote-tracking one — a `Git::BranchInfo`, or `nil` when the branch does not exist; the `remotes/` and `refs/` forms match nothing |
-| `g.branch` | `g.branch_list(g.current_branch).first` — `nil` when HEAD is detached or unborn; use `g.current_branch_state` there |
-| `g.branches` | `g.branch_list` — returns `Array<Git::BranchInfo>` |
+| `g.branch(name)` | `g.branch_list(name).first` for a local branch, or `g.branch_list("#{remote}/#{name}").find(&:remote?)` for a remote-tracking one. A `Git::BranchInfo`, or `nil` when the branch does not exist; the `remotes/` and `refs/` forms match nothing |
+| `g.branch` | `g.branch_list(g.current_branch).first`. `nil` when HEAD is detached or unborn; use `g.current_branch_state` there |
+| `g.branches` | `g.branch_list`. Returns `Array<Git::BranchInfo>` |
 | `g.branches[name]` | `g.branch_list(name).first`, or `g.branch_list("#{remote}/#{name}").find(&:remote?)` for a remote-tracking branch |
 | `g.branches.local` | `g.branch_list.reject(&:remote?)` |
 | `g.branches.remote` | `g.branch_list.select(&:remote?)` |
 | `g.branches.size` | `g.branch_list.size` |
 | `g.branches.each { \|b\| ... }` | `g.branch_list.each { \|info\| ... }` |
-| `g.branches.to_s` | `g.branch_list.map { \|i\| "#{i.current? ? '* ' : '  '}#{i.refname}\n" }.join` — full refs, not `remotes/...` |
-| `b.full`, `b.to_s` | `info.refname` — `refs/remotes/origin/main` rather than `remotes/origin/main` |
+| `g.branches.to_s` | `g.branch_list.map { \|i\| "#{i.current? ? '* ' : '  '}#{i.refname}\n" }.join`. Full refs, not `remotes/...` |
+| `b.full`, `b.to_s` | `info.refname`. `refs/remotes/origin/main` rather than `remotes/origin/main` |
 | `b.to_a` | `[info.refname]` |
 | `b.name` | `info.short_name` |
-| `b.remote` | `info.remote_name` — a `String`, or `nil` for a local branch |
-| `b.gcommit` | `g.gcommit(name)` — pass `info.refname` for a remote-tracking branch |
-| `b.checkout` | `g.checkout(name)` — does not create the branch (see above); pass `info.refname` for a remote-tracking branch |
-| `b.create` | `g.branch_new(name)` — raises when the branch already exists |
+| `b.remote` | `info.remote_name`. A `String`, or `nil` for a local branch |
+| `b.gcommit` | `g.gcommit(name)`. Pass `info.refname` for a remote-tracking branch |
+| `b.checkout` | `g.checkout(name)`. Does not create the branch (see above); pass `info.refname` for a remote-tracking branch |
+| `b.create` | `g.branch_new(name)`. Raises when the branch already exists |
 | `b.delete` (local) | `g.branch_delete(name)` |
 | `b.delete` (remote-tracking) | `g.branch_delete("#{remote}/#{name}", remotes: true)` |
 | `b.current` | `g.current_branch == name` |
 | `b.contains?(commit)` | `!g.branch_contains(commit, name).empty?` |
 | `b.merge` | `g.merge(name)` |
-| `b.merge(branch, message)` | `g.merge_into(name, branch, message)` — local `b` only; see the differences above |
+| `b.merge(branch, message)` | `g.merge_into(name, branch, message)`. Local `b` only; see the differences above |
 | `b.update_ref(commit)` (local) | `g.update_ref(name, commit)` |
 | `b.update_ref(commit)` (remote-tracking) | `g.update_ref("remotes/#{remote}/#{name}", commit)` |
-| `b.archive(file, opts)` | `g.archive(name, file, opts)` — pass `info.refname` for a remote-tracking branch |
-| `b.in_branch(message) { ... }` | `g.in_branch(name, message) { ... }` — local `b` only; see the differences above |
-| `b.stashes` | `g.stash_infos` — see [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated) |
+| `b.archive(file, opts)` | `g.archive(name, file, opts)`. Pass `info.refname` for a remote-tracking branch |
+| `b.in_branch(message) { ... }` | `g.in_branch(name, message) { ... }`. Local `b` only; see the differences above |
+| `b.stashes` | `g.stash_infos`. See [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated) |
 
 #### `Git::Object::Tag` deprecated
 
@@ -876,7 +874,7 @@ for the `g.tag_add` it calls; `g.add_tag(name, d: true)` emits three, adding the
 `:d`/`:delete` warning described below. The readers on a `Git::Object::Tag` do not
 warn.
 
-> **Return shape change:** `Git::Object::Tag` exposes `name`, `sha`, `objectish`,
+> **Return shape change.** `Git::Object::Tag` exposes `name`, `sha`, `objectish`,
 > `annotated?`, `message`, and `tagger`. `Git::TagInfo` exposes `name`, `oid`,
 > `target_oid`, `objecttype`, `annotated?`, `lightweight?`, `message`, and
 > `tagger`. `name` and `annotated?` are unchanged. `tagger` keeps the same `name`
@@ -894,18 +892,18 @@ warn.
 > which kind (`tag` for an annotated tag, or the target's own type such as
 > `commit` or `blob` for a lightweight one).
 >
-> **Missing tags:** `g.tag(name)` raises `Git::UnexpectedResultError` when no tag
+> **Missing tags.** `g.tag(name)` raises `Git::UnexpectedResultError` when no tag
 > has that name. `g.tag_list(name).first` returns `nil`.
 >
-> **Deleting through `tag_add`:** `g.tag_add(name, d: true)`, which was already
+> **Deleting through `tag_add`.** `g.tag_add(name, d: true)`, which was already
 > deprecated, deletes the tag and emits a second warning pointing at
 > `g.tag_delete`. `g.tag_create` rejects `:d` and `:delete` with `ArgumentError`.
 >
-> **Extra positional arguments:** `g.tag_add(name, target, extra)` ignores
+> **Extra positional arguments.** `g.tag_add(name, target, extra)` ignores
 > `extra` and tags `target`. `g.tag_create` raises `ArgumentError` when more than
 > one positional argument follows the name.
 >
-> **Object identity:** every `Git::Object::Tag` resolves its tag to an object ID
+> **Object identity.** Every `Git::Object::Tag` resolves its tag to an object ID
 > when it is constructed and runs `size`, `contents`, `grep`, `diff`, `log`, and
 > `archive` against that ID, so moving or deleting the tag afterwards does not
 > redirect an existing object. `Git::Object::Tag.new(g, sha, name)` uses the
@@ -924,26 +922,26 @@ In the table, `name` is the tag name, `t` is a `Git::Object::Tag`, `info` is the
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.tag(name)` | `g.tag_list(name).first` — a `Git::TagInfo`, or `nil` when the tag does not exist |
-| `g.tags` | `g.tag_list` — returns `Array<Git::TagInfo>` |
+| `g.tag(name)` | `g.tag_list(name).first`. A `Git::TagInfo`, or `nil` when the tag does not exist |
+| `g.tags` | `g.tag_list`. Returns `Array<Git::TagInfo>` |
 | `g.tags.map(&:name)` | `g.tag_list.map(&:name)` |
-| `g.tag_add(name, opts)` | `g.tag_create(name, opts)` — returns a `Git::TagInfo` |
+| `g.tag_add(name, opts)` | `g.tag_create(name, opts)`. Returns a `Git::TagInfo` |
 | `g.tag_add(name, target, opts)` | `g.tag_create(name, target, opts)` |
 | `g.tag_add(name, d: true)` | `g.tag_delete(name)` |
-| `g.add_tag(name, opts)`, `g.add_tag(name, target, opts)` | `g.tag_create(name, ...)` — its warning names `g.tag_add`, which is deprecated too; go straight to `g.tag_create` |
-| `g.add_tag(name, d: true)` | `g.tag_delete(name)` — `g.tag_create` rejects `:d`; see the deletion note above |
+| `g.add_tag(name, opts)`, `g.add_tag(name, target, opts)` | `g.tag_create(name, ...)`. Its warning names `g.tag_add`, which is deprecated too; go straight to `g.tag_create` |
+| `g.add_tag(name, d: true)` | `g.tag_delete(name)`. `g.tag_create` rejects `:d`; see the deletion note above |
 | `Git::Object::Tag.new(g, name)` | `g.tag_list(name).first` |
-| `Git::Object::Tag.new(g, sha, name)` | `g.tag_list(name).first` — reads the ref rather than `sha`; use `sha` as `id` for the operations below, or read the object with `g.cat_file_tag(sha)`; see the object identity note above |
-| `Git::Object.new(g, name, nil, true)` | `g.tag_list(name).first` — its warning names `Git::Object::Tag.new`, which is deprecated too |
+| `Git::Object::Tag.new(g, sha, name)` | `g.tag_list(name).first`. Reads the ref rather than `sha`; use `sha` as `id` for the operations below, or read the object with `g.cat_file_tag(sha)`; see the object identity note above |
+| `Git::Object.new(g, name, nil, true)` | `g.tag_list(name).first`. Its warning names `Git::Object::Tag.new`, which is deprecated too |
 | `t.name` | `info.name` |
-| `t.sha`, `t.objectish`, `t.to_s` | `info.oid \|\| info.target_oid` — see the return shape change above |
+| `t.sha`, `t.objectish`, `t.to_s` | `info.oid \|\| info.target_oid`. See the return shape change above |
 | `t.annotated?` | `info.annotated?` |
-| `t.message` | `info.message` — `nil` rather than `""` for an annotated tag with an empty message |
-| `t.tagger` | `info.tagger` — `date` keeps the recorded UTC offset; see the return shape change above |
+| `t.message` | `info.message`. `nil` rather than `""` for an annotated tag with an empty message |
+| `t.tagger` | `info.tagger`. `date` keeps the recorded UTC offset; see the return shape change above |
 | `t.tag?` | not needed; every `Git::TagInfo` is a tag |
-| `t.size` | `g.cat_file_size(id)` — `id` rather than `name` keeps this and the operations below on the object `t` pinned; see the object identity note above |
+| `t.size` | `g.cat_file_size(id)`. `id` rather than `name` keeps this and the operations below on the object `t` pinned; see the object identity note above |
 | `t.contents` | `g.cat_file_contents(id)` |
-| `t.contents { \|file\| ... }` | `g.cat_file_contents(id) { \|file\| ... }` — streams to a temporary file instead of buffering the object |
+| `t.contents { \|file\| ... }` | `g.cat_file_contents(id) { \|file\| ... }`. Streams to a temporary file instead of buffering the object |
 | `t.contents_array` | `g.cat_file_contents(id).split("\n")` |
 | `t.grep(string, path, opts)` | `g.grep(string, path, opts.merge(object: id))` |
 | `t.diff(other)` | `g.diff(id, other)` |
@@ -998,7 +996,7 @@ reference, so `blob` is gone; fetch the object through the repository instead.
 `stage` is gone too: an unmerged entry carries its stage 1, 2, and 3 modes and
 SHAs in `unmerged_stages`, and every other entry is at stage 0.
 
-> **Field renames:** the legacy mode and SHA readers were named for the wrong
+> **Field renames.** The legacy mode and SHA readers were named for the wrong
 > sides. `sha_index` and `mode_index` held the working-tree side of the diff:
 > the index blob when the working tree matched the index, and an all-zero SHA
 > when it did not. `sha_repo` and `mode_repo` held the side git compared the
@@ -1016,12 +1014,12 @@ In the table, `g` is a `Git::Repository`, `status` is the `Git::Status` from
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.status` | `g.status_info` — returns a `Git::StatusInfo` |
+| `g.status` | `g.status_info`. Returns a `Git::StatusInfo` |
 | `Git::Status.new(g)` | `g.status_info` |
-| `status.changed`, `status.added`, `status.deleted`, `status.untracked` | same names on `g.status_info` — now `Hash{String => Git::StatusFileInfo}` keyed by path |
+| `status.changed`, `status.added`, `status.deleted`, `status.untracked` | same names on `g.status_info`. Now `Hash{String => Git::StatusFileInfo}` keyed by path |
 | `status.changed?(path)`, `status.added?(path)`, `status.deleted?(path)`, `status.untracked?(path)` | same names on `g.status_info` |
-| `status[path]` | `g.status_info[path]` — a `Git::StatusFileInfo`, or `nil`; `nil` for a clean tracked path, which `status[path]` reported (see above) |
-| `status.each { \|file\| ... }` | `g.status_info.files.each { \|info\| ... }` — does not yield clean tracked paths (see above) |
+| `status[path]` | `g.status_info[path]`. A `Git::StatusFileInfo`, or `nil`; `nil` for a clean tracked path, which `status[path]` reported (see above) |
+| `status.each { \|file\| ... }` | `g.status_info.files.each { \|info\| ... }`. Does not yield clean tracked paths (see above) |
 | `status.pretty` | no replacement; format `g.status_info.files` yourself |
 | `file.path` | `info.path` |
 | `file.type` | `info.index_status` and `info.worktree_status`, or the `info.changed?`, `info.added?`, and `info.deleted?` predicates |
@@ -1031,8 +1029,8 @@ In the table, `g` is a `Git::Repository`, `status` is the `Git::Status` from
 | `file.mode_repo` | `info.mode_head`, or `info.mode_index` in a repository with no commits |
 | `file.sha_index` | `info.sha_index` for the staged blob; `info.worktree_status` says whether the working tree differs from it |
 | `file.mode_index` | `info.mode_worktree` |
-| `file.blob` | `g.object(info.sha_index)` when `info.sha_index` is set and not all zeros — it is `nil` for untracked, ignored, and unmerged entries and all zeros when the path is not in the index; legacy `blob` returned `nil` without a lookup when no SHA was available and fell back to `sha_repo` when `sha_index` was `nil`. For an unmerged entry read a stage instead: `g.object(info.unmerged_stages[2][:sha])` |
-| `file.blob(:repo)` | `g.object(info.sha_head)` when `info.sha_head` is set and not all zeros — it is `nil` for untracked, ignored, and unmerged entries and all zeros when the path is not in HEAD |
+| `file.blob` | `g.object(info.sha_index)` when `info.sha_index` is set and not all zeros. It is `nil` for untracked, ignored, and unmerged entries and all zeros when the path is not in the index; legacy `blob` returned `nil` without a lookup when no SHA was available and fell back to `sha_repo` when `sha_index` was `nil`. For an unmerged entry read a stage instead: `g.object(info.unmerged_stages[2][:sha])` |
+| `file.blob(:repo)` | `g.object(info.sha_head)` when `info.sha_head` is set and not all zeros. It is `nil` for untracked, ignored, and unmerged entries and all zeros when the path is not in HEAD |
 
 #### `Git::Worktree` and `Git::Worktrees` deprecated
 
@@ -1051,7 +1049,7 @@ warning; the `dir`, `full`, `to_s`, and `to_a` readers on `Git::Worktree` do not
 it constructs, and `g.worktree(dir).add` emits one for `g.worktree` and one for
 `add`.
 
-> **Return shape change:** `worktrees_all` returns `[directory, sha]` pairs and
+> **Return shape change.** `worktrees_all` returns `[directory, sha]` pairs and
 > omits the main worktree of a bare repository, which has no checked-out commit.
 > `worktree_list` returns `Git::WorktreeInfo` objects with `path`, `head`,
 > `branch` (the full refname, such as `refs/heads/main`, or `nil` when detached
@@ -1060,13 +1058,13 @@ it constructs, and `g.worktree(dir).add` emits one for `g.worktree` and one for
 > `branch` set to `nil`. `Git::WorktreeInfo#to_s` is the path, so an entry can be
 > passed to any method that takes a worktree path.
 >
-> **`gcommit` return type:** `Git::Worktree#gcommit` returned a
+> **`gcommit` return type.** `Git::Worktree#gcommit` returned a
 > `Git::Object::Commit` for a worktree obtained from `g.worktree(dir)` and a raw
 > SHA `String` for one obtained from `g.worktrees`. `info.head` is always a
 > `String` (or `nil` for a bare main worktree); call `g.gcommit(info.head)` for
 > the commit object.
 >
-> **`full` and `to_s`:** `Git::Worktree#full` and `#to_s` append the commitish
+> **`full` and `to_s`.** `Git::Worktree#full` and `#to_s` append the commitish
 > given at construction to the path, so entries from `g.worktrees` read
 > `"/path/to/wt <sha>"`. `Git::WorktreeInfo#to_s` is the path alone.
 
@@ -1075,19 +1073,19 @@ is the `Git::WorktreeInfo` that replaces it.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
-| `g.worktrees_all` | `g.worktree_list.map { \|w\| [w.path, w.head] }` — includes a bare main worktree as `[path, nil]`; add `.reject(&:bare?)` before `map` to omit it as `worktrees_all` did |
-| `g.worktrees` | `g.worktree_list` — returns `Array<Git::WorktreeInfo>`; the deprecated call emits two warnings |
-| `g.worktrees[dir]` | `g.worktree_list.find { \|w\| w.path == dir }` — `nil` when not found; `dir` is the path as git reports it (absolute, with symlinks resolved), as before |
+| `g.worktrees_all` | `g.worktree_list.map { \|w\| [w.path, w.head] }`. Includes a bare main worktree as `[path, nil]`; add `.reject(&:bare?)` before `map` to omit it as `worktrees_all` did |
+| `g.worktrees` | `g.worktree_list`. Returns `Array<Git::WorktreeInfo>`; the deprecated call emits two warnings |
+| `g.worktrees[dir]` | `g.worktree_list.find { \|w\| w.path == dir }`. `nil` when not found; `dir` is the path as git reports it (absolute, with symlinks resolved), as before |
 | `g.worktrees.size` | `g.worktree_list.size` |
 | `g.worktrees.each { \|wt\| ... }` | `g.worktree_list.each { \|info\| ... }` |
 | `g.worktrees.to_s` | `g.worktree_list.map { \|w\| "#{w.path} #{w.head}\n" }.join` |
 | `g.worktrees.prune` | `g.worktree_prune` |
 | `g.worktree(dir).add` | `g.worktree_add(dir)` |
 | `g.worktree(dir, commitish).add` | `g.worktree_add(dir, commitish)` |
-| `g.worktree(dir).remove` | `g.worktree_remove(dir)` — or `g.worktree_remove(info)` |
-| `wt.gcommit` | `info.head` — always a `String`, or `nil` for a bare main worktree; `g.gcommit(info.head)` for the commit object |
+| `g.worktree(dir).remove` | `g.worktree_remove(dir)` or `g.worktree_remove(info)` |
+| `wt.gcommit` | `info.head`. Always a `String`, or `nil` for a bare main worktree; `g.gcommit(info.head)` for the commit object |
 | `wt.dir` | `info.path` |
-| `wt.full`, `wt.to_s` | `info.path` — or `"#{info.path} #{info.head}"` for the descriptor that entries from `g.worktrees` produced |
+| `wt.full`, `wt.to_s` | `info.path` or `"#{info.path} #{info.head}"` for the descriptor that entries from `g.worktrees` produced |
 | `wt.to_a` | `[info.path]` |
 
 #### `Git.clone` option renames
@@ -1108,7 +1106,7 @@ replacement option, except that `:path` is dropped when `:chdir` is also given.
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
 | `Git.clone(url, dir, path: p)` | `Git.clone(url, dir, chdir: p)` |
-| `Git.clone(url, dir, recursive: true)` | `Git.clone(url, dir, recurse_submodules: true)` — or a pathspec `String` or `Array<String>` for a subset of submodules |
+| `Git.clone(url, dir, recursive: true)` | `Git.clone(url, dir, recurse_submodules: true)` or a pathspec `String` or `Array<String>` for a subset of submodules |
 | `Git.clone(url, dir, remote: name)` | `Git.clone(url, dir, origin: name)` |
 
 #### `Git::Log` Enumerable interface deprecated
@@ -1125,7 +1123,7 @@ builder (`map`, `select`, `count`, `to_a`, `include?`, and so on) goes through t
 deprecated `each` and emits its warning. Move those calls to the result as well,
 not only the six named methods.
 
-> **Snapshot results:** `execute` returns a snapshot. The builder re-runs
+> **Snapshot results.** `execute` returns a snapshot. The builder re-runs
 > `git log` only when a query method (`since`, `max_count`, and so on) has been
 > called since the last run, even with the same value as before, so calling
 > `execute` twice on an untouched builder returns equal results without a second
@@ -1138,7 +1136,7 @@ In the table, `g` is a `Git::Repository`.
 |-----------------------------------------------------|-------------|
 | `g.log.each { \|c\| ... }` | `g.log.execute.each { \|c\| ... }` |
 | `g.log.size` | `g.log.execute.size` |
-| `g.log.to_s` | `g.log.execute.to_s` — commits joined with newlines, as before |
+| `g.log.to_s` | `g.log.execute.to_s`. Commits joined with newlines, as before |
 | `g.log.first`, `g.log.last` | `g.log.execute.first`, `g.log.execute.last` |
 | `g.log[i]`, `g.log[range]` | `g.log.execute[i]`, `g.log.execute[range]` |
 | any other `Enumerable` method on the log (`map`, `select`, `count`, `to_a`, `include?`, ...) | the same method on `g.log.execute` |

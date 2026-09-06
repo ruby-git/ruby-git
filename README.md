@@ -15,9 +15,9 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 [![AI Policy](https://img.shields.io/badge/AI%20Policy-Doc-blue)](AI_POLICY.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **v5.0.0 is here.** This is a major release with a redesigned internal
-> architecture, but most v4.x code runs unchanged thanks to compatibility
-> shims. See [UPGRADING.md](UPGRADING.md) for the migration guide and
+> **v5.0.0 is released.** It is a major release with a redesigned internal
+> architecture, but compatibility shims keep most v4.x code running unchanged.
+> See [UPGRADING.md](UPGRADING.md) for the migration guide and
 > [CHANGELOG.md](CHANGELOG.md) for full release notes.
 
 - [Summary](#summary)
@@ -148,12 +148,12 @@ Git.config.git_ssh = 'ssh -i ~/.ssh/id_rsa'
 
 How SSH configuration is determined:
 
-- If `git_ssh` is not specified in the API call, the global config (`Git.configure {
-  |c| c.git_ssh = ... }`) is used.
-- If `git_ssh: nil` is specified, SSH is disabled for that instance (no SSH key or
-  script will be used).
-- If `git_ssh` is a non-empty string, it is used for that instance (overriding the
-  global config).
+- If the API call does not specify `git_ssh`, the gem uses the global config
+  (`Git.configure { |c| c.git_ssh = ... }`).
+- If the call specifies `git_ssh: nil`, the gem disables SSH for that instance and
+  uses no SSH key or script.
+- If `git_ssh` is a non-empty string, the gem uses it for that instance instead of
+  the global config.
 
 You can also specify a custom SSH script on a per-repository basis:
 
@@ -169,8 +169,8 @@ git = Git.clone('git@github.com:user/repo.git', 'local-dir',
 git = Git.init('new-repo', git_ssh: 'ssh -i /path/to/private_key')
 ```
 
-This is especially useful in multi-threaded applications where different repositories
-require different SSH credentials.
+This matters in multi-threaded applications where different repositories need
+different SSH credentials.
 
 ### Git configuration
 
@@ -224,13 +224,11 @@ See [`Git::Error`](https://rubydoc.info/gems/git/Git/Error) for more information
 Set a timeout for git command line operations either globally or per method call for
 methods that accept a `:timeout` parameter.
 
-The timeout value must be a real, non-negative `Numeric` value that specifies the
-number of seconds a `git` command is given to complete before being sent a KILL
-signal. This library may hang if the `git` command does not terminate after
-receiving the KILL signal.
-
-When a command times out, the gem kills it with the `SIGKILL` signal and raises a
-`Git::TimeoutError`. This error derives from `Git::SignaledError` and `Git::Error`.
+The timeout is the number of seconds a `git` command may run before the gem sends
+it `SIGKILL`. It must be a real, non-negative `Numeric`. When a command times out,
+the gem kills it and raises `Git::TimeoutError`, which derives from
+`Git::SignaledError` and `Git::Error`. The gem may hang if the `git` command does
+not terminate after receiving `SIGKILL`.
 
 If the timeout value is `0` or `nil`, no timeout is enforced.
 
@@ -333,7 +331,7 @@ gem sets. It is unaffected by the locale: the behavior is identical under `en_US
 and case-insensitive matching are unaffected on every platform.
 
 **Workaround.** Perl-compatible regular expressions do match characters on Git for
-Windows, so the surfaces that can reach a PCRE engine accept an opt-in selector:
+Windows, so the methods that can reach a PCRE engine accept an opt-in selector:
 
 ```ruby
 repo.grep('^.PFEL', nil, perl_regexp: true)      # matches on every platform
@@ -418,21 +416,17 @@ supports subprocess status reporting on JRuby for Windows (see
 
 ### Git version support policy
 
-This gem requires git version 2.43.0 or greater as specified in the gemspec. This
-requirement reflects:
+This gem requires git 2.43.0 or later, as the gemspec declares. The floor weighs the
+git features the gem depends on, the systems users still run, and the git versions
+CI can test.
 
-- The minimum git version necessary to support all features provided by this gem
-- A reasonable balance between supporting older systems and using modern git
-  capabilities
-- The practical limitations of testing across multiple git versions in CI
+Git 2.43.0 was released on November 20, 2023. The gem may work with an older git,
+but the project does not test or support versions before 2.43.0. Users on an older
+git should upgrade to at least 2.43.0.
 
-Git 2.43.0 was released on November 20, 2023. While this gem may work with earlier
-versions of git, compatibility with versions prior to 2.43.0 is not tested or
-guaranteed. Users on older git versions should upgrade to at least 2.43.0.
-
-The supported git version may be increased in future major or minor releases of this
-gem as new git features are adopted or as maintaining backward compatibility becomes
-impractical. Such changes will be documented in the CHANGELOG and release notes.
+A later major or minor release may raise the floor when the gem adopts a newer git
+feature or when keeping compatibility with an old git becomes impractical. The
+CHANGELOG and release notes document each such change.
 
 ### Deprecation policy
 
@@ -501,19 +495,19 @@ the details.
 
 ### 2026-08-23: v5.x deprecations and the v6.0.0 roadmap
 
-The road to v6.0.0 is now planned and public. The remaining ActiveRecord-style
+The v6.0.0 plan is public. The remaining ActiveRecord-style
 classes (`Git::Branch`, `Git::Remote`, `Git::Stash`, `Git::Worktree`,
 `Git::Object::Tag`, `Git::Status`, `Git::Author`, and their collections) will be
 deprecated during the v5.x series in favor of the immutable `*Info` value-object
 APIs. v6.0.0 will remove each deprecated class once a normal v5.x release has carried
 its deprecation warning and UPGRADING.md entry, per the
 [Deprecation policy](#deprecation-policy). v6.0.0 will not ship until every planned
-deprecation has shipped that way. v6.0.0 also raises the version floors: git ≥ 2.43.0,
-Ruby ≥ 3.3.
+deprecation has shipped that way. v6.0.0 also raises the version floors to git 2.43.0
+and Ruby 3.3.
 
-[Issue #1717](https://github.com/ruby-git/ruby-git/issues/1717) is the living
-roadmap, tracking scope, sequencing, and status. If your code uses the classes
-above, you can start migrating now. Each deprecation names its replacement, and
+[Issue #1717](https://github.com/ruby-git/ruby-git/issues/1717) is the roadmap
+and tracks scope, order, and status. If your code uses the classes above, you can
+start migrating now. Each deprecation names its replacement, and
 [UPGRADING.md](UPGRADING.md) carries the migration guide as releases ship.
 
 ### 2026-07-28: v5.0.0 released
@@ -522,7 +516,7 @@ We have published [`git v5.0.0`](https://rubygems.org/gems/git/versions/5.0.0), 
 first stable release of the v5.x series, after five public beta releases in June and
 July 2026.
 
-**v5.0.0 is a major release with breaking changes.** See
+v5.0.0 is a major release with breaking changes. See
 [UPGRADING.md](UPGRADING.md) for the complete migration guide.
 
 To install:
@@ -542,22 +536,22 @@ while emitting deprecation warnings that tell you what to migrate before v6.0.0.
 
 ### 2026-01-07: AI policy introduced
 
-We have adopted a formal [AI Policy](AI_POLICY.md) to clarify expectations for
-AI-assisted contributions. Please review it before opening a PR to ensure your
-changes are fully understood, meet our quality bar, and respect licensing
-requirements.
+We have adopted an [AI Policy](AI_POLICY.md) that sets expectations for
+AI-assisted contributions. Read it before opening a PR. It asks that you understand
+every change you submit, that the work meets the project's quality bar, and that it
+respects licensing requirements.
 
-We chose a principles-based policy to respect contributors' time and expertise. It
-is quick to read and easy to remember, and it still sets clear expectations.
+The policy states principles rather than a checklist, so it is short to read and
+still sets clear expectations.
 
 ### 2025-07-09: Architectural redesign
 
 On this date we announced an architectural redesign of the git gem. The architecture
-at the time was difficult to maintain and evolve; the redesign replaced it with a
-clearer, more testable three-layer structure of commands, parsers, and a
-`Git::Repository` facade.
+at the time was difficult to maintain and change. The redesign replaced it with a
+three-layer structure of commands, parsers, and a `Git::Repository` facade, which is
+easier to test because each layer can be exercised on its own.
 
-**The redesign shipped in v5.0.0 and is complete.** `Git::Base` and `Git::Lib` are
+The redesign shipped in v5.0.0 and is complete. `Git::Base` and `Git::Lib` are
 gone, along with the `g.lib` accessor. See [UPGRADING.md](UPGRADING.md) for what
 changed and how to migrate.
 
@@ -575,10 +569,10 @@ to new code live in [`.github/skills/`](.github/skills/).
 
 ### 2025-07-07: We now use RuboCop
 
-To improve code consistency and maintainability, the `ruby-git` project has adopted
-[RuboCop](https://rubocop.org/) as our static code analyzer and formatter. All new
-contributions must follow the style guidelines enforced by our RuboCop
-configuration.
+The `ruby-git` project has adopted [RuboCop](https://rubocop.org/) as its static
+code analyzer and formatter so that contributions share one style. All new
+contributions must follow the style rules the project's RuboCop configuration
+enforces.
 
 Run RuboCop from the project's Rakefile:
 
