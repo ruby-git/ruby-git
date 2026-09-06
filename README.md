@@ -15,10 +15,10 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 [![AI Policy](https://img.shields.io/badge/AI%20Policy-Doc-blue)](AI_POLICY.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **v5.0.0 is released.** It is a major release with a redesigned internal
-> architecture, but compatibility shims keep most v4.x code running unchanged.
-> See [UPGRADING.md](UPGRADING.md) for the migration guide and
-> [CHANGELOG.md](CHANGELOG.md) for full release notes.
+> **This branch is unreleased v6.0.0 development.** The current release series
+> is v5.x, released from the `5.x` branch. v6.0.0 removes the APIs deprecated
+> during v5.x. See [Upgrading to v6.x](UPGRADING.md#upgrading-to-v6x) for what
+> changes.
 
 - [Summary](#summary)
 - [Install](#install)
