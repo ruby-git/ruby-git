@@ -13,6 +13,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::CommandLineResult` removed](#gitcommandlineresult-removed)
   - [`Git::Repository#lib` removed](#gitrepositorylib-removed)
   - [`Git::Base` compatibility shim removed](#gitbase-compatibility-shim-removed)
+  - [`Git.binary_version` and `Git.ls_remote(nil)` removed](#gitbinary_version-and-gitls_remotenil-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -165,6 +166,23 @@ while still adding the method to `Git::Repository`. That module is gone, so refe
 monkeypatch to an application-owned module and include it into `Git::Repository`. The
 [`Git::Base` removed](#gitbase-removed) entry under "Upgrading to v5.x" shows the
 migration.
+
+### `Git.binary_version` and `Git.ls_remote(nil)` removed
+
+v6.0.0 removes two module-level shims on `Git`:
+
+- `Git.binary_version` is gone, so calling it raises `NoMethodError`. `Git.git_version`
+  is the only way to read the git version. It returns a `Git::Version`;
+  `Git.git_version.to_a` reproduces the `[major, minor, patch]` Array, and the
+  optional binary path argument is preserved as `Git.git_version(binary_path)`.
+- `Git.ls_remote` no longer accepts `nil` as the repository argument. In v5.x `nil`
+  was normalized to `'.'` with a deprecation warning. Passing `nil` now raises
+  `ArgumentError`. Omitting the argument still defaults to `'.'`, so `Git.ls_remote`
+  and `Git.ls_remote('.', opts)` are unchanged.
+
+The [Module-level `Git` function
+deprecations](#module-level-git-function-deprecations) entry under "Upgrading to
+v5.x" maps each call shape to its replacement.
 
 ### Filesystem errors raised as `Git::Error`
 

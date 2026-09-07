@@ -350,10 +350,10 @@ module Git
   # @example From a specific remote of the current repository
   #   references = Git.ls_remote('origin')
   #
-  # @param repository [String, nil] the target repository location or the name of a remote
+  # @param repository [String] the target repository location or the name of a remote
   #
-  #   Defaults to `'.'` (the current directory). Passing `nil` explicitly is
-  #   deprecated and will be removed in v6.0.0; pass `'.'` or omit the argument.
+  #   Defaults to `'.'` (the current directory). Passing `nil` raises
+  #   `ArgumentError`; pass `'.'` or omit the argument.
   #
   # @param options [Hash] the options to pass to the git command
   #
@@ -411,8 +411,11 @@ module Git
   #
   # @return [Hash{String => Hash}] the available references of the target repo
   #
+  # @raise [ArgumentError] if `repository` is `nil` or `options` contains an unknown key
+  #
   def self.ls_remote(repository = '.', options = {})
-    repository = normalize_ls_remote_repository(repository)
+    raise ArgumentError, 'repository must not be nil' if repository.nil?
+
     options = options.dup
     log = options.delete(:log)
     unknown = options.keys - LS_REMOTE_ALLOWED_OPTS
@@ -422,29 +425,6 @@ module Git
     output_lines = Git::Commands::LsRemote.new(context).call(repository, **options).stdout.split("\n")
     Git::Parsers::LsRemote.parse_output(output_lines)
   end
-
-  # Normalize the repository argument for {.ls_remote}
-  #
-  # Returns the repository unchanged unless it is nil, in which case a
-  # deprecation warning is emitted and `'.'` is returned.
-  #
-  # @param repository [String, nil] the repository argument passed by the caller
-  #
-  # @return [String] the normalized repository value (`'.'` when nil was given)
-  #
-  # @api private
-  #
-  def self.normalize_ls_remote_repository(repository)
-    return repository unless repository.nil?
-
-    Git::Deprecation.warn(
-      'Passing nil as the repository to Git.ls_remote is deprecated and will ' \
-      "be removed in v6.0.0. Pass '.' explicitly or omit the argument instead."
-    )
-
-    '.'
-  end
-  private_class_method :normalize_ls_remote_repository
 
   # Thread-safe cache for git versions, keyed by binary path.
   @git_version_cache_mutex = Mutex.new
@@ -681,32 +661,4 @@ module Git
     raise ArgumentError, "#{invalid.join(', ')} scope requires a repository"
   end
   private_class_method :assert_valid_scope!
-
-  # Return the version of the git binary
-  #
-  # @example Basic usage
-  #   Git.binary_version  # => [2, 46, 0]
-  #
-  # @param binary_path [String, nil] path to the git binary; defaults to
-  #   `Git::Config.instance.binary_path`
-  #
-  # @return [Array<Integer>] the version of the git binary
-  #
-  # @deprecated Use {Git.git_version} instead, which returns a
-  #   {Git::Version} (not an Array)
-  #
-  #   For the legacy array shape, call: `Git.git_version.to_a`.
-  #   The optional binary_path argument is preserved:
-  #   `Git.git_version(binary_path)`.
-  #
-  def self.binary_version(binary_path = nil)
-    binary_path ||= Git::Config.instance.binary_path
-    Git::Deprecation.warn(
-      'Git.binary_version is deprecated and will be removed in v6.0.0. ' \
-      'Use Git.git_version instead, which returns a Git::Version ' \
-      '(not an Array). For the legacy array shape, call: Git.git_version.to_a. ' \
-      'The optional binary_path argument is preserved: Git.git_version(binary_path).'
-    )
-    git_version(binary_path).to_a
-  end
 end

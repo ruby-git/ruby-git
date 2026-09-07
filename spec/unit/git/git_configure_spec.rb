@@ -2,8 +2,8 @@
 
 require 'spec_helper'
 
-# These specs verify that Git.configure, Git.config, Git.git_version, and
-# Git.binary_version resolve global config through Git::Config.instance.
+# These specs verify that Git.configure, Git.config, and Git.git_version
+# resolve global config through Git::Config.instance.
 # They also verify that Git extends Git::Configuring for structured config access.
 #
 RSpec.describe Git do
@@ -76,19 +76,6 @@ RSpec.describe Git do
       allow(Git).to receive(:cached_git_version).and_return(Git::Version.new(2, 42, 0))
       described_class.git_version
       expect(Git).to have_received(:cached_git_version).with(expected_path)
-    end
-  end
-
-  describe '.binary_version' do
-    before do
-      allow(Git::Deprecation).to receive(:warn)
-      allow(Git).to receive(:git_version).and_return(Git::Version.new(2, 42, 0))
-    end
-
-    it 'delegates to Git.git_version for the default binary path' do
-      result = described_class.binary_version
-      expect(Git).to have_received(:git_version)
-      expect(result).to eq([2, 42, 0])
     end
   end
 end
