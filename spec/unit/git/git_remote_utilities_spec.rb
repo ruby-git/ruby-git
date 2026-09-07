@@ -38,10 +38,12 @@ RSpec.describe Git do
     end
 
     context 'when repository is nil' do
-      it "emits a deprecation warning and defaults to '.'" do
-        expect(ls_remote_command).to receive(:call).with('.').and_return(command_result(''))
-        expect(Git::Deprecation).to receive(:warn).with(a_string_including('nil'))
-        described_class.ls_remote(nil)
+      it 'raises ArgumentError without running the command' do
+        allow(ls_remote_command).to receive(:call)
+
+        expect { described_class.ls_remote(nil) }.to raise_error(ArgumentError, /repository must not be nil/)
+
+        expect(ls_remote_command).not_to have_received(:call)
       end
     end
 
