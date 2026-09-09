@@ -345,74 +345,31 @@ RSpec.describe Git::Factories do
       end
     end
 
-    context 'with deprecated :path option' do
-      let(:options) { { path: '/output' } }
+    context 'with a v4.x option removed in v6.0.0' do
+      # Let the real Commands::Clone bind the options so its validation runs
+      before { allow(Git::Commands::Clone).to receive(:new).with(global_context).and_call_original }
 
-      it 'emits a deprecation warning' do
-        expect(Git::Deprecation).to receive(:warn).with(/path.*deprecated/i)
-        repository
-      end
+      context 'with :path' do
+        let(:options) { { path: '/output' } }
 
-      it 'uses :path value as :chdir' do
-        allow(Git::Deprecation).to receive(:warn)
-        repository
-        expect(clone_command).to have_received(:call).with(repository_url, nil, chdir: '/output')
-      end
-
-      context 'when Git::Deprecation is unavailable' do
-        before { hide_const('Git::Deprecation') }
-
-        it 'still uses :path value as :chdir' do
-          repository
-          expect(clone_command).to have_received(:call).with(repository_url, nil, chdir: '/output')
+        it 'raises ArgumentError' do
+          expect { repository }.to raise_error(ArgumentError, /Unsupported options: :path/)
         end
       end
-    end
 
-    context 'with deprecated :recursive option' do
-      let(:options) { { recursive: true } }
+      context 'with :recursive' do
+        let(:options) { { recursive: true } }
 
-      it 'emits a deprecation warning' do
-        expect(Git::Deprecation).to receive(:warn).with(/recursive.*deprecated/i)
-        repository
-      end
-
-      it 'maps :recursive to :recurse_submodules' do
-        allow(Git::Deprecation).to receive(:warn)
-        repository
-        expect(clone_command).to have_received(:call).with(repository_url, nil, recurse_submodules: true)
-      end
-
-      context 'when Git::Deprecation is unavailable' do
-        before { hide_const('Git::Deprecation') }
-
-        it 'still maps :recursive to :recurse_submodules' do
-          repository
-          expect(clone_command).to have_received(:call).with(repository_url, nil, recurse_submodules: true)
+        it 'raises ArgumentError' do
+          expect { repository }.to raise_error(ArgumentError, /Unsupported options: :recursive/)
         end
       end
-    end
 
-    context 'with deprecated :remote option' do
-      let(:options) { { remote: 'upstream' } }
+      context 'with :remote' do
+        let(:options) { { remote: 'upstream' } }
 
-      it 'emits a deprecation warning' do
-        expect(Git::Deprecation).to receive(:warn).with(/remote.*deprecated/i)
-        repository
-      end
-
-      it 'maps :remote to :origin' do
-        allow(Git::Deprecation).to receive(:warn)
-        repository
-        expect(clone_command).to have_received(:call).with(repository_url, nil, origin: 'upstream')
-      end
-
-      context 'when Git::Deprecation is unavailable' do
-        before { hide_const('Git::Deprecation') }
-
-        it 'still maps :remote to :origin' do
-          repository
-          expect(clone_command).to have_received(:call).with(repository_url, nil, origin: 'upstream')
+        it 'raises ArgumentError' do
+          expect { repository }.to raise_error(ArgumentError, /Unsupported options: :remote/)
         end
       end
     end
