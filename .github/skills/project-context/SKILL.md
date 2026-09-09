@@ -293,15 +293,52 @@ See [CONTRIBUTING.md](../../../CONTRIBUTING.md) for authoritative, complete guid
 
 ### Error Hierarchy
 
-All gem errors inherit from `Git::Error`:
+This section is the authority on which errors the gem raises and how errors from
+outside the gem are converted. The reason is recorded in
+[ADR-0008](../../../docs/adr/0008-errors-from-outside-the-gem-are-converted-at-the-boundary-that-admits-them.md).
 
-- `Git::FailedError` — non-zero exit status
-- `Git::SignaledError` — killed by signal
-- `Git::TimeoutError` — exceeded timeout (subclass of `SignaledError`)
-- `ArgumentError` — invalid arguments
+The gem raises only `ArgumentError` or errors that subclass `Git::Error`:
 
-All errors include structured data (command, output, status) for debugging. Never
-swallow exceptions silently.
+- `Git::Error` — base class for every runtime failure. `Git::GitExecuteError` is a
+  deprecated alias of it, not a separate class
+- `Git::CommandLineError` — git ran and did not succeed; carries the command, output,
+  and status. Subclasses: `Git::FailedError` (non-zero exit), `Git::SignaledError`
+  (killed by signal), `Git::TimeoutError` (exceeded timeout, subclass of
+  `SignaledError`)
+- `Git::ProcessIOError` — I/O with the git process failed
+- `Git::UnexpectedResultError` — git output did not parse
+- `Git::VersionError` — the installed git does not meet a version requirement
+- `ArgumentError` — a caller mistake. Deliberately not a `Git::Error`, so a broad
+  `rescue Git::Error` cannot hide a programming error. A deprecated call under the
+  `raise` deprecation behavior raises `ActiveSupport::DeprecationException` for the
+  same reason.
+
+Converting errors from outside the gem:
+
+- Any error a standard library or gem call can raise is converted at that call, to
+  `ArgumentError` for a caller mistake or to `Git::Error` (or a subclass) otherwise,
+  with the underlying error as `cause`. The class the library chose does not decide
+  which one: a foreign `ArgumentError` is converted like any other class when the
+  failure is not a caller mistake. No site is exempt because its failure is unlikely
+  or because the caller chose the path.
+- Wrap every call the gem initiates that can raise `SystemCallError` in
+  `Git::SystemCallGuard.call`. The guard converts only that family; a call that can
+  raise another class, such as `Zlib::Error`, needs its own rescue. Predicates such as
+  `File.file?` do not raise and stay unwrapped. When the method yields to a caller's
+  block, yield inside `guard.unguarded` so an error raised by the caller's code passes
+  through unchanged.
+- Parsers convert the `ArgumentError` from `Time.iso8601` to
+  `Git::UnexpectedResultError`, because a malformed date in git's output is not a
+  caller mistake. Subprocess errors are converted in `Git::CommandLine`; command
+  classes do not convert them again.
+- `Git::Deprecation.warn` is not a conversion site. Under the `raise` deprecation
+  behavior it raises `ActiveSupport::DeprecationException`, which passes through
+  unchanged because the caller configured that behavior.
+- A site may recover instead of raise when it has a fallback. `tag_sha` reads the
+  loose ref with a local `rescue SystemCallError` and falls through to
+  `git show-ref`. Never swallow an exception silently. The deprecated `Git::Branch`
+  paths slated for removal, which swallow errors in `check_if_create`, predate the
+  rule and are not held to it.
 
 ### Path Handling
 

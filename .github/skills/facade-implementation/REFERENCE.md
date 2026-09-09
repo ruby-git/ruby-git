@@ -20,6 +20,7 @@ is loaded by subagents during the [Facade Implementation](SKILL.md) workflow.
   - [Sequencing multiple commands](#sequencing-multiple-commands)
 - [Topic module skeleton](#topic-module-skeleton)
 - [The five facade responsibilities checklist](#the-five-facade-responsibilities-checklist)
+  - [Filesystem calls in facade methods](#filesystem-calls-in-facade-methods)
 - [Argument pre-processing patterns](#argument-pre-processing-patterns)
   - [Path normalization](#path-normalization)
   - [Option whitelisting (preventing API expansion)](#option-whitelisting-preventing-api-expansion)
@@ -344,6 +345,16 @@ facade method, confirm whether each responsibility applies and is handled:
   class or a result-class factory method to produce the documented return type.
   Returning the raw `Git::CommandLine::Result` is acceptable only when that is the
   documented public contract for the topic module.
+
+### Filesystem calls in facade methods
+
+A call the facade method makes itself that can raise `SystemCallError` (reading a ref
+file, creating a temporary file, changing directory) runs inside
+`Git::SystemCallGuard.call`, and a caller's block is yielded inside `guard.unguarded`.
+Predicates such as `File.file?` do not raise and stay unwrapped. A site with a fallback
+may rescue `SystemCallError` locally and recover instead, as `tag_sha` does. The rule
+and its reason are in
+[Project Context - Error Hierarchy](../project-context/SKILL.md#error-hierarchy).
 
 ## Argument pre-processing patterns
 
