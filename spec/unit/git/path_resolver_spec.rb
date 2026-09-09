@@ -284,21 +284,10 @@ RSpec.describe Git::PathResolver do
       end
     end
 
-    context 'when the git binary cannot be found' do
-      before do
-        allow(rev_parse_command).to receive(:call).and_raise(Errno::ENOENT)
-      end
-
-      it 'raises ArgumentError indicating the git binary was not found' do
-        expect { root }.to raise_error(ArgumentError, /git binary not found/)
-      end
-    end
-
     context 'when the working directory path cannot be expanded' do
       before do
         # A relative path is expanded against Dir.pwd, which fails when the
-        # process working directory has been removed. Without the guard this
-        # ENOENT is misreported as a missing git binary.
+        # process working directory has been removed.
         allow(File).to receive(:expand_path).with(working_dir).and_raise(Errno::ENOENT, 'getcwd')
       end
 

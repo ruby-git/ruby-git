@@ -285,7 +285,8 @@ module Git
     #   a git working tree
     #
     # @raise [Git::Error] if the `.git` path is a gitdir pointer file that cannot
-    #   be read
+    #   be read, if the git binary cannot be found or fails to launch, or if a
+    #   filesystem call made while resolving the paths fails
     #
     # @note This method opens working copies only. To open a bare repository, use
     #   `Git.bare`.
@@ -477,6 +478,9 @@ module Git
     # @return [String] the absolute path to the root of the working tree
     #
     # @raise [ArgumentError] if `working_dir` is not inside a git working tree
+    #
+    # @raise [Git::Error] if the git binary cannot be found or fails to launch, or
+    #   if `working_dir` cannot be expanded to an absolute path
     #
     # @api private
     #
