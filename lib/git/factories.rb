@@ -17,7 +17,7 @@ module Git
   #
   # @api private
   #
-  module Factories # rubocop:disable Metrics/ModuleLength
+  module Factories
     # Clone a repository into a new directory
     #
     # @example Clone into the default directory
@@ -155,13 +155,6 @@ module Git
     #
     # @option options [String, Pathname, nil] :chdir run `git clone` from within
     #   this directory
-    #
-    # @option options [String, Pathname, nil] :path deprecated; use `:chdir` instead
-    #
-    # @option options [Boolean, nil] :recursive deprecated; use
-    #   `:recurse_submodules` instead
-    #
-    # @option options [String, nil] :remote deprecated; use `:origin` instead
     #
     # @return [Git::Repository] a repository bound to the cloned working copy or
     #   bare repository
@@ -532,9 +525,6 @@ module Git
     #
     def prepare_clone_options(options)
       opts = options.dup
-      deprecate_clone_path_option!(opts)
-      deprecate_clone_recursive_option!(opts)
-      deprecate_clone_remote_option!(opts)
       context_opts = extract_clone_context_options!(opts)
       normalize_clone_repository_option!(opts)
 
@@ -739,84 +729,6 @@ module Git
       raise Git::UnexpectedResultError, "Unable to determine clone directory from: #{stderr}" unless match
 
       [match[2], !match[1].nil?]
-    end
-
-    # Handle the deprecated `:path` option for {clone}
-    #
-    # @param opts [Hash] clone options (mutated in place)
-    #
-    # @option opts [String, Pathname, nil] :path deprecated; use `:chdir`
-    #   instead
-    #
-    # @option opts [String, Pathname, nil] :chdir run `git clone` from within
-    #   this directory
-    #
-    # @return [void] mutates `opts` in place
-    #
-    # @api private
-    #
-    def deprecate_clone_path_option!(opts)
-      return unless opts.key?(:path)
-
-      if defined?(Git::Deprecation)
-        Git::Deprecation.warn(
-          'The :path option for Git.clone is deprecated and will be removed in v6.0.0. ' \
-          'Use :chdir instead.'
-        )
-      end
-      path = opts.delete(:path)
-      opts[:chdir] ||= path
-    end
-
-    # Handle the deprecated `:recursive` option for {clone}
-    #
-    # @param opts [Hash] clone options (mutated in place)
-    #
-    # @option opts [Boolean, nil] :recursive deprecated; use
-    #   `:recurse_submodules` instead
-    #
-    # @option opts [Boolean, String, Array<String>, nil] :recurse_submodules
-    #   initialize submodules after cloning
-    #
-    # @return [void] mutates `opts` in place
-    #
-    # @api private
-    #
-    def deprecate_clone_recursive_option!(opts)
-      return unless opts.key?(:recursive)
-
-      if defined?(Git::Deprecation)
-        Git::Deprecation.warn(
-          'The :recursive option for Git.clone is deprecated and will be removed in v6.0.0. ' \
-          'Use :recurse_submodules instead.'
-        )
-      end
-      opts[:recurse_submodules] = opts.delete(:recursive)
-    end
-
-    # Handle the deprecated `:remote` option for {clone}
-    #
-    # @param opts [Hash] clone options (mutated in place)
-    #
-    # @option opts [String, nil] :remote deprecated; use `:origin` instead
-    #
-    # @option opts [String, nil] :origin remote name to use instead of
-    #   `origin`
-    #
-    # @return [void] mutates `opts` in place
-    #
-    # @api private
-    #
-    def deprecate_clone_remote_option!(opts)
-      return unless opts.key?(:remote)
-
-      if defined?(Git::Deprecation)
-        Git::Deprecation.warn(
-          'The :remote option for Git.clone is deprecated and will be removed in v6.0.0. ' \
-          'Use :origin instead.'
-        )
-      end
-      opts[:origin] = opts.delete(:remote)
     end
   end
 end

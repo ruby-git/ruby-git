@@ -14,6 +14,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Repository#lib` removed](#gitrepositorylib-removed)
   - [`Git::Base` compatibility shim removed](#gitbase-compatibility-shim-removed)
   - [`Git.binary_version` and `Git.ls_remote(nil)` removed](#gitbinary_version-and-gitls_remotenil-removed)
+  - [`Git.clone` legacy options removed](#gitclone-legacy-options-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -183,6 +184,21 @@ v6.0.0 removes two module-level shims on `Git`:
 The [Module-level `Git` function
 deprecations](#module-level-git-function-deprecations) entry under "Upgrading to
 v5.x" maps each call shape to its replacement.
+
+### `Git.clone` legacy options removed
+
+v6.0.0 removes the three v4.x option names that `Git.clone` accepted with a
+deprecation warning throughout v5.x: `:path`, `:recursive`, and `:remote`. Each
+now falls through to the normal option validation, so passing one raises
+`ArgumentError` (see [Unsupported options raise
+`ArgumentError`](#unsupported-options-raise-argumenterror)). Use `:chdir`,
+`:recurse_submodules`, and `:origin` instead; those options are unchanged. The
+[`Git.clone` option renames](#gitclone-option-renames) entry under "Upgrading to
+v5.x" maps each removed option to its replacement.
+
+`Git.export` still drops a `:remote` option before calling `Git.clone`, as its
+documentation states, so `Git.export(url, dir, remote: name)` does not raise. That
+behavior was never a deprecation and is unchanged.
 
 ### Filesystem errors raised as `Git::Error`
 
@@ -1220,10 +1236,11 @@ is the `Git::WorktreeInfo` that replaces it.
 
 #### `Git.clone` option renames
 
-Three `Git.clone` options were renamed in v5.x. The v4.x names still work. Each
-deprecated option present on a call emits its own deprecation warning, so a call
-that uses two of them warns twice. Each value is passed through to the
-replacement option, except that `:path` is dropped when `:chdir` is also given.
+Three `Git.clone` options were renamed in v5.x. The v4.x names still work in
+v5.x. Each deprecated option present on a call emits its own deprecation
+warning, so a call that uses two of them warns twice. Each value is passed
+through to the replacement option, except that `:path` is dropped when `:chdir`
+is also given.
 
 > **Precedence and value notes:**
 > - `:path` and `:chdir` both run `git clone` from inside the given directory.
