@@ -85,7 +85,8 @@ module Git
     # @raise [ArgumentError] if `working_dir` does not exist, is not a
     #   directory, or is not inside a git working tree
     #
-    #   Also raised if the git binary cannot be found.
+    # @raise [Git::Error] if the git binary cannot be found or fails to launch, or
+    #   if `working_dir` cannot be expanded to an absolute path
     #
     def root_of_worktree(working_dir, binary_path: :use_global_config, git_ssh: :use_global_config)
       raise ArgumentError, "'#{working_dir}' does not exist or is not a directory" unless Dir.exist?(working_dir)
@@ -103,8 +104,10 @@ module Git
     #
     # @return [String] the top-level directory reported by git
     #
-    # @raise [ArgumentError] if the git binary is not found or `working_dir` is
-    #   not inside a git working tree
+    # @raise [ArgumentError] if `working_dir` is not inside a git working tree
+    #
+    # @raise [Git::Error] if the git binary cannot be found or fails to launch, or
+    #   if `working_dir` cannot be expanded to an absolute path
     #
     # @api private
     #
@@ -115,8 +118,6 @@ module Git
       end
 
       Git::Commands::RevParse.new(execution_context).call(show_toplevel: true, chdir: expanded_dir).stdout
-    rescue Errno::ENOENT
-      raise ArgumentError, 'Failed to find the root of the worktree: git binary not found'
     rescue Git::FailedError
       raise ArgumentError, "'#{working_dir}' is not in a git working tree"
     end
