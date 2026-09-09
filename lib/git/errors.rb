@@ -6,10 +6,14 @@ module Git
   # Base class for all custom git module errors
   #
   # The git gem will only raise an `ArgumentError` or an error that is a subclass of
-  # `Git::Error`. It does not explicitly raise any other types of errors.
+  # `Git::Error`.
   #
   # It is recommended to rescue `Git::Error` to catch any runtime error raised by
   # this gem unless you need more specific error handling.
+  #
+  # Operating system errors from the gem's own filesystem operations, such as
+  # reading a `.git` pointer file or creating a temporary file, are raised as
+  # `Git::Error`. The original `SystemCallError` is available through `cause`.
   #
   # Git's custom errors are arranged in the following class heirarchy:
   #

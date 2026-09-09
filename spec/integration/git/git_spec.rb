@@ -34,6 +34,58 @@ RSpec.describe Git, :integration do
       expect(repository.repo_size).to be > 0
     end
 
+    context 'when a repository subdirectory is readable but not searchable' do
+      let(:unsearchable_dir) { File.join(repo_dir, '.git', 'objects') }
+
+      before do
+        skip 'POSIX file modes are not supported on Windows' if Gem.win_platform?
+        skip 'root bypasses POSIX file modes' if Process.euid.zero?
+
+        # Mode 0444 lets Find.find list the directory but makes File.lstat fail
+        # on each entry inside it. Mode 0 would instead fail the listing itself,
+        # which Find.find swallows under its default ignore_error: true.
+        # Open the repository before restricting the mode: Git.open shells out
+        # to git, which needs to read the object store.
+        repository
+
+        File.write(File.join(unsearchable_dir, 'probe.txt'), 'x' * 10)
+        File.chmod(0o444, unsearchable_dir)
+      end
+
+      after { File.chmod(0o755, unsearchable_dir) if File.exist?(unsearchable_dir) }
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { repository.repo_size }
+          .to raise_error(Git::Error, /Failed to compute the repository size/) do |error|
+            expect(error.cause).to be_a(Errno::EACCES)
+          end
+      end
+    end
+
+    context 'when a repository subdirectory cannot be listed at all' do
+      let(:unlistable_dir) { File.join(repo_dir, '.git', 'objects') }
+      let!(:size_before) do
+        skip 'POSIX file modes are not supported on Windows' if Gem.win_platform?
+        skip 'root bypasses POSIX file modes' if Process.euid.zero?
+
+        repository
+
+        File.write(File.join(unlistable_dir, 'probe.txt'), 'x' * 10)
+        repository.repo_size
+      end
+
+      before { File.chmod(0, unlistable_dir) }
+
+      after { File.chmod(0o755, unlistable_dir) if File.exist?(unlistable_dir) }
+
+      it 'silently skips the subtree rather than raising' do
+        # Find.find swallows the Dir.children failure under its default
+        # ignore_error: true, so the total is quietly low rather than an error.
+        # This pins that behavior so a change to Find's default is noticed.
+        expect(repository.repo_size).to be < size_before
+      end
+    end
+
     context 'when given an explicit repository path' do
       let(:options) { { repository: File.join(repo_dir, '.git') } }
 

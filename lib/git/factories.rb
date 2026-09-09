@@ -284,6 +284,9 @@ module Git
     # @raise [ArgumentError] if `working_dir` is not a directory or is not inside
     #   a git working tree
     #
+    # @raise [Git::Error] if the `.git` path is a gitdir pointer file that cannot
+    #   be read
+    #
     # @note This method opens working copies only. To open a bare repository, use
     #   `Git.bare`.
     #
@@ -327,6 +330,8 @@ module Git
     #   `Git.config.binary_path`.
     #
     # @return [Git::Repository] a repository bound to the bare repository directory
+    #
+    # @raise [Git::Error] if `git_dir` is a gitdir pointer file that cannot be read
     #
     # @api public
     #

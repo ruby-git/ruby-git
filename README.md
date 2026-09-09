@@ -203,8 +203,7 @@ the full API of its result.
 
 ## Errors raised by this gem
 
-The git gem raises only `ArgumentError` or errors that subclass `Git::Error`. It
-does not explicitly raise any other types of errors.
+The git gem raises only `ArgumentError` or errors that subclass `Git::Error`.
 
 Rescue `Git::Error` to catch any runtime error raised by this gem, unless you need
 more specific error handling.
@@ -214,6 +213,18 @@ begin
   # some git operation
 rescue Git::Error => e
   puts "An error occurred: #{e.message}"
+end
+```
+
+Operating system errors from the gem's own filesystem operations, such as reading
+a `.git` pointer file or creating a temporary file, are raised as `Git::Error`.
+The original `SystemCallError` is available through `cause`:
+
+```ruby
+begin
+  repo = Git.open('/path/to/repo')
+rescue Git::Error => e
+  puts e.cause.class if e.cause.is_a?(SystemCallError) #=> Errno::EACCES
 end
 ```
 

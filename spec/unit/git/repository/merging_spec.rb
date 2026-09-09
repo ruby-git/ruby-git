@@ -626,6 +626,28 @@ RSpec.describe Git::Repository::Merging do
         expect { |b| described_instance.each_conflict(&b) }.to yield_control.once
       end
 
+      context 'when the temporary file cannot be created' do
+        before do
+          allow(Tempfile).to receive(:create).and_raise(Errno::EACCES, '/tmp')
+        end
+
+        it 'raises Git::Error with the system error as cause' do
+          expect { described_instance.each_conflict { nil } }
+            .to raise_error(Git::Error,
+                            /Failed to write the staged content to a temporary file.*Permission denied/) do |error|
+              expect(error.cause).to be_a(Errno::EACCES)
+            end
+        end
+      end
+
+      context 'when the block raises a SystemCallError' do
+        it 'lets the SystemCallError propagate unchanged' do
+          failing_block = proc { raise Errno::ENOENT, 'caller.txt' }
+          expect { described_instance.each_conflict(&failing_block) }
+            .to raise_error(Errno::ENOENT, /caller\.txt/)
+        end
+      end
+
       it 'yields the file path as the first argument' do
         described_instance.each_conflict do |file, _your, _their|
           expect(file).to eq('example.txt')

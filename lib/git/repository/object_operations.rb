@@ -17,6 +17,7 @@ require 'git/parsers/grep'
 require 'git/parsers/ls_tree'
 require 'git/parsers/tag'
 require 'git/repository/shared_private'
+require 'git/system_call_guard'
 require 'git/escaped_path'
 require 'tempfile'
 require 'zlib'
@@ -72,20 +73,25 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @raise [Git::Error] if a block is given and the object content cannot be
+      #   written to a temporary file
+      #
       # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
       #
-      def cat_file_contents(object)
+      def cat_file_contents(object, &block)
         raise ArgumentError, "Invalid object: '#{object}'" if object&.start_with?('-')
 
         return Git::Commands::CatFile::Raw.new(@execution_context).call(object, p: true).stdout unless block_given?
 
         # Stream git output directly to a tempfile to avoid buffering large
         # object content in memory when a block is given.
-        Tempfile.create do |file|
-          file.binmode
-          Git::Commands::CatFile::Raw.new(@execution_context).call(object, p: true, out: file)
-          file.rewind
-          yield file
+        Git::SystemCallGuard.call('Failed to write the object content to a temporary file') do |guard|
+          Tempfile.create do |file|
+            file.binmode
+            Git::Commands::CatFile::Raw.new(@execution_context).call(object, p: true, out: file)
+            file.rewind
+            guard.unguarded { block.call(file) }
+          end
         end
       end
 
@@ -298,6 +304,10 @@ module Git
       #
       # Returns an empty string when the tag does not exist.
       #
+      # Reads the loose ref file under `refs/tags` directly when it exists and
+      # falls back to `git show-ref` otherwise, including when the file cannot
+      # be read.
+      #
       # @example Get the SHA of an existing tag
       #   repo.tag_sha('v1.0')
       #   #=> "abc1234567890abcdef1234567890abcdef123456"
@@ -315,9 +325,7 @@ module Git
       def tag_sha(tag_name)
         tags_dir = File.expand_path(File.join(@execution_context.git_dir, 'refs', 'tags'))
         head = File.expand_path(File.join(tags_dir, tag_name))
-        return File.read(head).chomp if head.start_with?("#{tags_dir}#{File::SEPARATOR}") && File.file?(head)
-
-        Private.show_ref_tag_sha(@execution_context, tag_name)
+        Private.loose_tag_sha(tags_dir, head) || Private.show_ref_tag_sha(@execution_context, tag_name)
       end
 
       # Returns all recursive entries for a given tree object
@@ -621,20 +629,17 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @raise [Git::Error] if the archive file cannot be written
+      #
       # @see https://git-scm.com/docs/git-archive git-archive documentation
       #
       def archive(treeish, file = nil, opts = {})
         SharedPrivate.assert_valid_opts!(ARCHIVE_ALLOWED_OPTS, **opts)
         raise ArgumentError, "#{file.inspect} is a directory" if file && File.directory?(file)
 
-        tmp = Private.write_archive_tmp(@execution_context, treeish, opts, dest_dir: Private.staging_dir_for(file))
-        return tmp unless file
-
-        Private.atomic_replace(tmp, file)
-        file
-      rescue StandardError
-        FileUtils.rm_f(tmp) if tmp
-        raise
+        Git::SystemCallGuard.call('Failed to write the archive') do
+          Private.write_archive(@execution_context, treeish, file, opts)
+        end
       end
 
       # Returns a blob object for the given object reference
@@ -1020,6 +1025,27 @@ module Git
           raise ArgumentError, 'Cannot create an annotated or signed tag without a message.'
         end
 
+        # Read the SHA from a loose tag ref file without forking git
+        #
+        # Returns `nil` when the ref is not a loose file under `tags_dir` or when
+        # the file cannot be read, so the caller falls back to `git show-ref`.
+        #
+        # @param tags_dir [String] absolute path of the `refs/tags` directory
+        #
+        # @param head [String] absolute path of the candidate loose ref file
+        #
+        # @return [String, nil] the SHA in the file, or `nil` to fall back to git
+        #
+        # @api private
+        #
+        def loose_tag_sha(tags_dir, head)
+          return nil unless head.start_with?("#{tags_dir}#{File::SEPARATOR}") && File.file?(head)
+
+          File.read(head).chomp
+        rescue SystemCallError
+          nil
+        end
+
         # Returns the direct SHA for a tag reference
         #
         # Returns the hash from `refs/tags/<name>` only. Returns an empty string
@@ -1076,6 +1102,45 @@ module Git
           return Dir.tmpdir unless file
 
           File.dirname(File.expand_path(file))
+        end
+
+        # Write a git archive, staging it in a temporary file first
+        #
+        # @param execution_context [Git::ExecutionContext] the execution context
+        #
+        # @param treeish [String] tree-ish to archive
+        #
+        # @param file [String, nil] destination path, or `nil` to keep the
+        #   temporary file
+        #
+        # @param opts [Hash] caller-supplied options (read-only)
+        #
+        # @option opts [String] :format ('zip') archive format (`'tar'`, `'zip'`,
+        #   or `'tgz'`)
+        #
+        # @option opts [Boolean, nil] :add_gzip (nil) apply gzip post-processing
+        #   to the generated archive
+        #
+        # @option opts [String] :prefix (nil) prefix for entries in the archive
+        #
+        # @option opts [String] :path (nil) path within `treeish` to archive
+        #
+        # @option opts [String] :remote (nil) remote repository from which to
+        #   retrieve the archive
+        #
+        # @return [String] path to the written archive file
+        #
+        # @api private
+        #
+        def write_archive(execution_context, treeish, file, opts)
+          tmp = write_archive_tmp(execution_context, treeish, opts, dest_dir: staging_dir_for(file))
+          return tmp unless file
+
+          atomic_replace(tmp, file)
+          file
+        rescue StandardError
+          FileUtils.rm_f(tmp) if tmp
+          raise
         end
 
         # Write a git archive to a fresh temporary file and return its path

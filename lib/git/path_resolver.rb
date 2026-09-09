@@ -4,6 +4,7 @@ require 'git/commands/rev_parse'
 require 'git/errors'
 require 'git/execution_context'
 require 'git/execution_context/global'
+require 'git/system_call_guard'
 
 module Git
   # Resolves and normalizes the filesystem paths that locate a Git repository
@@ -43,6 +44,9 @@ module Git
     #
     # @return [Hash{Symbol => (String, nil)}] a hash with `:working_directory`,
     #   `:repository`, and `:index` keys
+    #
+    # @raise [Git::Error] if the repository path is a gitdir pointer file that
+    #   cannot be read
     #
     def resolve_paths(working_directory: nil, repository: nil, index: nil, bare: false)
       working_dir = resolve_working_directory(working_directory, bare: bare)
@@ -106,9 +110,11 @@ module Git
     #
     def execute_rev_parse_toplevel(working_dir, binary_path: :use_global_config, git_ssh: :use_global_config)
       execution_context = Git::ExecutionContext::Global.new(binary_path: binary_path, git_ssh: git_ssh)
-      Git::Commands::RevParse.new(execution_context).call(
-        show_toplevel: true, chdir: File.expand_path(working_dir)
-      ).stdout
+      expanded_dir = Git::SystemCallGuard.call('Failed to expand the working directory path') do
+        File.expand_path(working_dir)
+      end
+
+      Git::Commands::RevParse.new(execution_context).call(show_toplevel: true, chdir: expanded_dir).stdout
     rescue Errno::ENOENT
       raise ArgumentError, 'Failed to find the root of the worktree: git binary not found'
     rescue Git::FailedError
@@ -124,12 +130,15 @@ module Git
     #
     # @return [String, nil] the absolute path, or `nil` for bare repos
     #
+    # @raise [Git::Error] if the path cannot be expanded, which happens when the
+    #   process working directory has been removed
+    #
     # @api private
     #
     def resolve_working_directory(path, bare:)
       return nil if bare
 
-      File.expand_path(path || Dir.pwd)
+      Git::SystemCallGuard.call('Failed to resolve the working directory') { File.expand_path(path || Dir.pwd) }
     end
     private_class_method :resolve_working_directory
 
@@ -149,14 +158,19 @@ module Git
     #
     # @return [String] the absolute path to the repository
     #
+    # @raise [Git::Error] if the path cannot be expanded, which happens when the
+    #   process working directory has been removed
+    #
     # @api private
     #
     def resolve_repository(path, working_dir, bare:, bare_default: nil)
-      initial_path = if bare
-                       File.expand_path(path || bare_default || Dir.pwd)
-                     else
-                       File.expand_path(path || '.git', working_dir)
-                     end
+      initial_path = Git::SystemCallGuard.call('Failed to resolve the repository directory') do
+        if bare
+          File.expand_path(path || bare_default || Dir.pwd)
+        else
+          File.expand_path(path || '.git', working_dir)
+        end
+      end
 
       resolve_gitdir_pointer(initial_path)
     end
@@ -171,6 +185,8 @@ module Git
     #
     # @return [String] the resolved absolute path
     #
+    # @raise [Git::Error] if `path` is a file that cannot be read
+    #
     # Relative pointer targets are resolved from the directory containing the
     # pointer file itself, matching git's pointer-file semantics.
     #
@@ -179,7 +195,7 @@ module Git
     def resolve_gitdir_pointer(path)
       return path unless File.file?(path)
 
-      gitdir_content = File.read(path).strip
+      gitdir_content = Git::SystemCallGuard.call('Failed to read the gitdir pointer file') { File.read(path) }.strip
       return path unless gitdir_content.start_with?('gitdir: ')
 
       gitdir_path = gitdir_content.sub(/\Agitdir: /, '')

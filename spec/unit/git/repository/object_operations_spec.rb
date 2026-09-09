@@ -89,6 +89,34 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
 
+    context 'with a block when the temporary file cannot be created' do
+      before do
+        allow(Tempfile).to receive(:create).and_raise(Errno::EACCES, '/tmp')
+      end
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { described_instance.cat_file_contents('HEAD') { |_f| nil } }
+          .to raise_error(Git::Error,
+                          /Failed to write the object content to a temporary file.*Permission denied/) do |error|
+            expect(error.cause).to be_a(Errno::EACCES)
+          end
+      end
+    end
+
+    context 'with a block that raises a SystemCallError' do
+      before do
+        allow(raw_command).to receive(:call) do |_object, **kwargs|
+          kwargs[:out].write('content')
+          command_result('')
+        end
+      end
+
+      it 'lets the SystemCallError propagate unchanged' do
+        expect { described_instance.cat_file_contents('HEAD') { |_f| raise Errno::ENOENT, 'caller.txt' } }
+          .to raise_error(Errno::ENOENT, /caller\.txt/)
+      end
+    end
+
     context 'when object starts with a hyphen' do
       subject(:result) { described_instance.cat_file_contents('--batch') }
 
@@ -454,6 +482,23 @@ RSpec.describe Git::Repository::ObjectOperations do
       it 'reads the SHA directly from the file without forking a git process' do
         expect(described_instance.tag_sha('v1.0')).to eq('abc1234')
         expect(Git::Commands::ShowRef::List).not_to have_received(:new)
+      end
+    end
+
+    context 'when the loose ref file exists but cannot be read' do
+      before do
+        allow(File).to receive(:file?).with(tag_ref_path).and_return(true)
+        allow(File).to receive(:read).with(tag_ref_path).and_raise(Errno::EACCES, tag_ref_path)
+        allow(show_ref_list_command).to receive(:call)
+          .and_return(command_result("abc1234 refs/tags/v1.0\n"))
+      end
+
+      it 'falls through to git show-ref and returns the SHA' do
+        expect(described_instance.tag_sha('v1.0')).to eq('abc1234')
+      end
+
+      it 'does not raise the SystemCallError' do
+        expect { described_instance.tag_sha('v1.0') }.not_to raise_error
       end
     end
 
@@ -982,6 +1027,27 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
 
+    context 'when the destination cannot be written' do
+      let(:tmpfile) do
+        t = Tempfile.new(['archive_unit', '.zip'])
+        t.close
+        t
+      end
+
+      after { tmpfile.close! }
+
+      before do
+        allow(File).to receive(:rename).and_raise(Errno::EACCES, tmpfile.path)
+      end
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { described_instance.archive('HEAD', tmpfile.path) }
+          .to raise_error(Git::Error, /Failed to write the archive.*Permission denied/) do |error|
+            expect(error.cause).to be_a(Errno::EACCES)
+          end
+      end
+    end
+
     context 'with an output path that does not yet exist' do
       let(:new_dest) { File.join(Dir.tmpdir, "archive_unit_new_#{Process.pid}.zip") }
 
@@ -999,8 +1065,11 @@ RSpec.describe Git::Repository::ObjectOperations do
                                            .and_raise(Errno::ENOSPC, 'No space left on device')
       end
 
-      it 'propagates the error' do
-        expect { described_instance.archive('HEAD') }.to raise_error(Errno::ENOSPC)
+      it 'raises Git::Error with the system error as cause' do
+        expect { described_instance.archive('HEAD') }
+          .to raise_error(Git::Error, /Failed to write the archive.*No space left on device/) do |error|
+            expect(error.cause).to be_a(Errno::ENOSPC)
+          end
       end
     end
 
@@ -1011,8 +1080,11 @@ RSpec.describe Git::Repository::ObjectOperations do
                                            .and_raise(Errno::ENOSPC, 'No space left on device')
       end
 
-      it 'propagates the error' do
-        expect { described_instance.archive('HEAD', nil, add_gzip: true) }.to raise_error(Errno::ENOSPC)
+      it 'raises Git::Error with the system error as cause' do
+        expect { described_instance.archive('HEAD', nil, add_gzip: true) }
+          .to raise_error(Git::Error, /Failed to write the archive.*No space left on device/) do |error|
+            expect(error.cause).to be_a(Errno::ENOSPC)
+          end
       end
     end
 

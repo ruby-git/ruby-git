@@ -89,6 +89,7 @@ require 'git/status_info'
 require 'git/stash'
 require 'git/stash_info'
 require 'git/stashes'
+require 'git/system_call_guard'
 require 'git/tag_delete_failure'
 require 'git/tag_delete_result'
 require 'git/tag_info'
@@ -280,11 +281,14 @@ module Git
   #
   # @return [void]
   #
+  # @raise [Git::Error] if the `.git` directory cannot be removed
+  #
   def self.export(repository_url, directory = nil, options = {})
     options.delete(:remote)
     repo = clone(repository_url, directory, { depth: 1 }.merge(options))
     repo.checkout("origin/#{options[:branch]}") if options[:branch]
-    FileUtils.rm_r File.join(repo.dir.to_s, '.git')
+    git_dir = File.join(repo.dir.to_s, '.git')
+    Git::SystemCallGuard.call('Failed to remove the .git directory') { FileUtils.rm_r(git_dir) }
   end
 
   # Get or set a git global configuration value

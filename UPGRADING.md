@@ -64,7 +64,9 @@ To prepare:
    your test suite and, if possible, staging.
 6. Fix each deprecation using the entries under
    [Deprecated methods](#deprecated-methods) until the suite is clean.
-7. Upgrade to v6.0.0.
+7. Replace any `rescue Errno::*` around gem calls with `rescue Git::Error` (see
+   [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)).
+8. Upgrade to v6.0.0.
 
 ### Minimum Ruby version
 
@@ -163,6 +165,40 @@ while still adding the method to `Git::Repository`. That module is gone, so refe
 monkeypatch to an application-owned module and include it into `Git::Repository`. The
 [`Git::Base` removed](#gitbase-removed) entry under "Upgrading to v5.x" shows the
 migration.
+
+### Filesystem errors raised as `Git::Error`
+
+The gem's own filesystem calls used to let a bare `SystemCallError` escape, which
+contradicted the documented contract that the gem raises only `ArgumentError` or a
+`Git::Error` subclass. Those calls now raise `Git::Error`, with the original error
+available through `cause`.
+
+The affected methods are `Git.open` (reading a gitdir pointer file), `Git.export`,
+`Git::Repository#chdir`, `#with_working`, `#with_temp_index`, `#with_temp_working`,
+`#cat_file_contents`, `#each_conflict`, `#conflicts`, `#archive`, and `#repo_size`.
+
+```ruby
+# v5.x
+begin
+  Git.open('/path/to/repo')
+rescue Errno::EACCES => e
+  handle_permission_problem(e)
+end
+
+# v6.x
+begin
+  Git.open('/path/to/repo')
+rescue Git::Error => e
+  raise unless e.cause.is_a?(Errno::EACCES)
+
+  handle_permission_problem(e.cause)
+end
+```
+
+Code that already rescues `Git::Error` needs no change. A `SystemCallError` raised by
+your own block inside `chdir`, `with_working`, `with_temp_index`, `with_temp_working`,
+or the block form of `cat_file_contents` still propagates unchanged, so the gem never
+relabels an error raised by your code.
 
 ---
 
