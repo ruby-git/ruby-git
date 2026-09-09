@@ -227,7 +227,9 @@ major series:
   cut from `5.x`.
 - **`5.x`** and **`4.x`**: The maintenance branches for the v5.x and v4.x series. Each
   receives bug fixes and security fixes, and backward-compatible features at the
-  maintainers' discretion.
+  maintainers' discretion. A fix that changes the class of a raised exception is
+  backported only when it passes the rescue-compatibility test in
+  [Branch & PR Strategy](.github/copilot-instructions.md#branch--pr-strategy).
 
 The README's [Release support policy](README.md#release-support-policy) says how long
 each major series is supported.
@@ -236,7 +238,7 @@ When submitting a pull request:
 
 - **New features and breaking changes**: Target the `main` branch
 - **Bug fixes**: Target `main`, and maintainers will backport to the maintenance
-  branches if applicable
+  branches if applicable and the change passes the rescue-compatibility test above
 - **Security fixes**: Target `main` and every affected maintenance branch, or only a
   maintenance branch if the issue affects that series alone
 

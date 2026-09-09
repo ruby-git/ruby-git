@@ -15,6 +15,12 @@ module Git
   # reading a `.git` pointer file or creating a temporary file, are raised as
   # `Git::Error`. The original `SystemCallError` is available through `cause`.
   #
+  # The promise covers errors the gem raises from its own operations. An error
+  # raised by a block your code passes to a method such as `chdir` propagates
+  # unchanged, and when `Git::Deprecation.behavior` is `:raise` a deprecated call
+  # raises `ActiveSupport::DeprecationException`, which is intentionally not a
+  # `Git::Error`.
+  #
   # Git's custom errors are arranged in the following class heirarchy:
   #
   # ```text

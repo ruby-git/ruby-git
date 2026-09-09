@@ -110,8 +110,11 @@ affected. Record the fact and its proof in the **Safety Proof** section of the
 assessment. A safety claim backed only by reasoning is an open question, not a
 finding — the step is complete when every such claim names its fact and the code that
 proved it. This proof applies to hard breaks and behavior changes that have no
-deprecation path. The deprecation policy in [Step 4](#step-4-deprecation-policy)
-governs removal of a deprecated API.
+deprecation path. A change to the class of a raised exception is such a behavior change
+unless it passes the rescue-compatibility test in
+[Branch & PR Strategy](../../copilot-instructions.md#branch--pr-strategy). The
+deprecation policy in [Step 4](#step-4-deprecation-policy) governs removal of a
+deprecated API.
 
 ## Step 4: Deprecation policy
 

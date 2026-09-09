@@ -33,3 +33,11 @@ fine to use `#` in footer values such as `Closes: #999` or `Refs: #999`.
 | `main` | New features, breaking changes, all active development. Its next release is v6.0.0; every further v5.x release is cut from `5.x` |
 | `5.x` | Security fixes, backward-compatible bug fixes, and backward-compatible features at the maintainers' discretion for the v5.x series |
 | `4.x` | Security fixes, backward-compatible bug fixes, and backward-compatible features at the maintainers' discretion for the v4.x series |
+
+A fix that changes the class of a raised exception is a backward-compatible bug fix
+only when every `rescue` clause that caught the old class still catches the new one:
+the new class subclasses the old, or the old is kept as a catchable alias. Otherwise it
+is a behavior change with no deprecation path and ships in the next major with an
+`UPGRADING.md` entry. When a maintenance branch documents a contract that the old
+behavior breaks, that branch gets a documentation fix instead. The reason is recorded
+in [ADR-0008](../docs/adr/0008-errors-from-outside-the-gem-are-converted-at-the-boundary-that-admits-them.md).

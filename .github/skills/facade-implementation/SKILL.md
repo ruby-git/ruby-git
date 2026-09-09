@@ -108,7 +108,8 @@ See [REFERENCE.md](REFERENCE.md) for the full reference covering:
 - Topic module selection (existing modules + decision rules for creating a new module)
 - Designing a facade method (return type, signature, body shape)
 - Topic module skeleton (file layout)
-- The five facade responsibilities as a checklist
+- The five facade responsibilities as a checklist, plus the `Git::SystemCallGuard`
+  rule for filesystem calls a facade method makes itself
 - Argument pre-processing patterns (path normalization, option whitelisting via
   `SharedPrivate.assert_valid_opts!` + `private_constant`,
   deprecation handling, defaults)

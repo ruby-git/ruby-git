@@ -228,6 +228,14 @@ rescue Git::Error => e
 end
 ```
 
+The promise covers errors the gem raises from its own operations. Two things pass
+through unchanged. An error raised by a block your code passes to a method such as
+`chdir` or `with_temp_working` is your error, and the gem does not relabel it. And
+with the `raise` behavior described under [Deprecation policy](#deprecation-policy), a
+deprecated call raises `ActiveSupport::DeprecationException`, which is intentionally
+not a `Git::Error` so a broad rescue cannot hide a deprecation your code opted to
+treat as fatal.
+
 See [`Git::Error`](https://rubydoc.info/gems/git/Git/Error) for more information.
 
 ## Specifying and handling timeouts
