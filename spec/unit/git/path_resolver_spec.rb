@@ -119,6 +119,46 @@ RSpec.describe Git::PathResolver do
       end
     end
 
+    context 'when the gitdir pointer file cannot be read' do
+      let(:pointer_file) { File.expand_path('/repo/.git') }
+      let(:args) { { working_directory: '/repo', repository: pointer_file } }
+
+      before do
+        allow(File).to receive(:file?).with(pointer_file).and_return(true)
+        allow(File).to receive(:read).with(pointer_file).and_raise(Errno::EACCES, pointer_file)
+      end
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { paths }.to raise_error(Git::Error, /gitdir pointer file.*Permission denied/) do |error|
+          expect(error.cause).to be_a(Errno::EACCES)
+        end
+      end
+    end
+
+    context 'when the working directory has been removed' do
+      let(:args) { {} }
+
+      before { allow(Dir).to receive(:pwd).and_raise(Errno::ENOENT, 'getcwd') }
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { paths }.to raise_error(Git::Error, /Failed to resolve the working directory/) do |error|
+          expect(error.cause).to be_a(Errno::ENOENT)
+        end
+      end
+    end
+
+    context 'when the bare repository path cannot be expanded' do
+      let(:args) { { bare: true } }
+
+      before { allow(Dir).to receive(:pwd).and_raise(Errno::ENOENT, 'getcwd') }
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { paths }.to raise_error(Git::Error, /Failed to resolve the repository directory/) do |error|
+          expect(error.cause).to be_a(Errno::ENOENT)
+        end
+      end
+    end
+
     context 'when the repository path is a file without a gitdir pointer' do
       let(:tmp_dir) { Dir.mktmpdir }
       let(:plain_file) { File.join(tmp_dir, '.git') }
@@ -251,6 +291,21 @@ RSpec.describe Git::PathResolver do
 
       it 'raises ArgumentError indicating the git binary was not found' do
         expect { root }.to raise_error(ArgumentError, /git binary not found/)
+      end
+    end
+
+    context 'when the working directory path cannot be expanded' do
+      before do
+        # A relative path is expanded against Dir.pwd, which fails when the
+        # process working directory has been removed. Without the guard this
+        # ENOENT is misreported as a missing git binary.
+        allow(File).to receive(:expand_path).with(working_dir).and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { root }.to raise_error(Git::Error, /Failed to expand the working directory path/) do |error|
+          expect(error.cause).to be_a(Errno::ENOENT)
+        end
       end
     end
 

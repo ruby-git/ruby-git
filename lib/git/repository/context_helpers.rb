@@ -4,6 +4,7 @@ require 'fileutils'
 require 'pathname'
 require 'tmpdir'
 require 'git/execution_context/repository'
+require 'git/system_call_guard'
 
 module Git
   class Repository
@@ -32,6 +33,8 @@ module Git
       # @raise [ArgumentError] if the repository has no working directory (bare
       #   repository)
       #
+      # @raise [Git::Error] if the working directory cannot be entered
+      #
       # @yield [dir] the repository working directory
       #
       # @yieldparam dir [Pathname] the working directory path
@@ -41,7 +44,7 @@ module Git
       def chdir
         raise ArgumentError, 'cannot chdir: repository has no working directory (bare repository)' if dir.nil?
 
-        Dir.chdir(dir.to_s) { yield dir }
+        context_helpers_chdir(dir.to_s) { yield dir }
       end
 
       # Temporarily switches the git index to `new_index` for the duration of
@@ -92,6 +95,8 @@ module Git
       #
       # @return [Object] the value returned by the block
       #
+      # @raise [Git::Error] if the temporary directory cannot be created
+      #
       # @yield [repo] the repository instance with the temporary index active
       #
       # @yieldparam repo [Git::Repository] `self`
@@ -102,7 +107,7 @@ module Git
         # Use a unique temp directory so the index file path is collision-free
         # and does not exist until git writes it. An existing empty file would
         # be treated as a corrupt index by git.
-        temp_dir = Dir.mktmpdir('git-temp-index-')
+        temp_dir = context_helpers_mktmpdir('git-temp-index-')
         begin
           with_index(File.join(temp_dir, 'index'), &)
         ensure
@@ -131,6 +136,8 @@ module Git
       #
       # @raise [ArgumentError] if `work_dir` does not exist on disk
       #
+      # @raise [Git::Error] if `work_dir` cannot be entered
+      #
       # @yield [repo] the repository instance with the new working directory
       #   active
       #
@@ -141,7 +148,7 @@ module Git
       def with_working(work_dir) # :yields: self
         old_context = @execution_context
         set_working(work_dir)
-        Dir.chdir(dir.to_s) { yield self }
+        context_helpers_chdir(dir.to_s) { yield self }
       ensure
         @execution_context = old_context
       end
@@ -160,6 +167,9 @@ module Git
       #
       # @return [Object] the value returned by the block
       #
+      # @raise [Git::Error] if the temporary directory cannot be created or
+      #   removed
+      #
       # @yield [repo] the repository instance with the temporary working
       #   directory active
       #
@@ -167,8 +177,10 @@ module Git
       #
       # @yieldreturn [Object] returned as the method's return value
       #
-      def with_temp_working(&block) # :yields: self
-        Dir.mktmpdir('temp-workdir') { |temp_dir| with_working(temp_dir, &block) }
+      def with_temp_working(&) # :yields: self
+        Git::SystemCallGuard.call('Failed to create or remove a temporary directory') do |guard|
+          Dir.mktmpdir('temp-workdir') { |temp_dir| guard.unguarded { with_working(temp_dir, &) } }
+        end
       end
 
       # Sets the git index to `index_file` and rebuilds the execution context
@@ -231,6 +243,49 @@ module Git
 
       private
 
+      # Runs the block with the process working directory set to `path`
+      #
+      # A `SystemCallError` from entering or leaving `path` is raised as
+      # {Git::Error}. A `SystemCallError` raised by the block propagates
+      # unchanged.
+      #
+      # The message does not name a directory because `Dir.chdir` fails on
+      # either leg: entering `path`, or restoring the previous directory
+      # afterward. The underlying `SystemCallError` names the directory that
+      # actually failed.
+      #
+      # @param path [String] the directory to enter
+      #
+      # @return [Object] the value returned by the block
+      #
+      # @raise [Git::Error] if `path` cannot be entered
+      #
+      # @yield the code to run inside `path`
+      #
+      # @yieldreturn [Object] returned as the method's return value
+      #
+      # @api private
+      #
+      def context_helpers_chdir(path, &block)
+        Git::SystemCallGuard.call('Failed to change directory') do |guard|
+          Dir.chdir(path) { guard.unguarded(&block) }
+        end
+      end
+
+      # Creates a temporary directory, raising {Git::Error} on failure
+      #
+      # @param prefix [String] the directory name prefix
+      #
+      # @return [String] the path of the new directory
+      #
+      # @raise [Git::Error] if the directory cannot be created
+      #
+      # @api private
+      #
+      def context_helpers_mktmpdir(prefix)
+        Git::SystemCallGuard.call('Failed to create a temporary directory') { Dir.mktmpdir(prefix) }
+      end
+
       # Resolves deprecated `check` argument semantics with `must_exist:`
       #
       # @param check [Boolean, nil] deprecated positional existence-check value
@@ -268,8 +323,13 @@ module Git
       #
       # @raise [ArgumentError] if `must_exist` is `true` and the path does not exist
       #
+      # @raise [Git::Error] if the path cannot be expanded, which happens when
+      #   `path` is relative and the process working directory has been removed
+      #
       def context_helpers_validate_path(path, must_exist)
-        Pathname.new(File.expand_path(path.to_s)).tap do |expanded_path|
+        expanded = Git::SystemCallGuard.call('Failed to expand the path') { File.expand_path(path.to_s) }
+
+        Pathname.new(expanded).tap do |expanded_path|
           raise ArgumentError, "path does not exist: #{expanded_path}" if must_exist && !expanded_path.exist?
         end
       end

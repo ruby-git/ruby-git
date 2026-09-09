@@ -20,6 +20,7 @@ require 'git/repository/staging'
 require 'git/repository/stashing'
 require 'git/repository/status_operations'
 require 'git/repository/worktree_operations'
+require 'git/system_call_guard'
 
 module Git
   # The main public interface for interacting with a Git repository
@@ -302,12 +303,32 @@ module Git
     #
     # @return [Integer] the total size in bytes of the repository directory
     #
+    # @raise [Git::Error] if the repository directory cannot be traversed, for
+    #   example when a subdirectory cannot be searched
+    #
     def repo_size
       repository = repo
       return 0 unless repository&.directory?
 
+      Git::SystemCallGuard.call('Failed to compute the repository size') do
+        repo_size_of_directory(repository.to_s)
+      end
+    end
+
+    private
+
+    # Sums the size of every regular file under `dir`
+    #
+    # Symbolic links are not followed. Entries that disappear between the
+    # traversal and the `lstat` call are skipped.
+    #
+    # @param dir [String] the directory to traverse
+    #
+    # @return [Integer] the total size in bytes of the files under `dir`
+    #
+    def repo_size_of_directory(dir)
       total = 0
-      Find.find(repository.to_s) do |path|
+      Find.find(dir) do |path|
         stat = File.lstat(path)
         total += stat.size if stat.file?
       rescue Errno::ENOENT
@@ -315,8 +336,6 @@ module Git
       end
       total
     end
-
-    private
 
     # Normalizes deprecated `config` call shapes into positional arguments
     #

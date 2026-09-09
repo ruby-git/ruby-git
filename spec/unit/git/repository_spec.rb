@@ -205,6 +205,18 @@ RSpec.describe Git::Repository do
         expect(repo_size).to eq(150)
       end
     end
+
+    context 'when a directory cannot be searched' do
+      before do
+        allow(File).to receive(:lstat).and_raise(Errno::EACCES, repo_dir)
+      end
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { repo_size }.to raise_error(Git::Error, /Failed to compute the repository size/) do |error|
+          expect(error.cause).to be_a(Errno::EACCES)
+        end
+      end
+    end
   end
 
   describe 'Git::Configuring mixin' do

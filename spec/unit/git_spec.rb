@@ -98,5 +98,18 @@ RSpec.describe Git do
         result
       end
     end
+
+    context 'when the .git directory cannot be removed' do
+      before do
+        allow(FileUtils).to receive(:rm_r).and_raise(Errno::EACCES, File.join(directory, '.git'))
+      end
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { result }
+          .to raise_error(Git::Error, /Failed to remove the \.git directory.*Permission denied/) do |error|
+            expect(error.cause).to be_a(Errno::EACCES)
+          end
+      end
+    end
   end
 end
