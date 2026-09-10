@@ -327,6 +327,11 @@ module Git
   # Exports the current HEAD (or the specific branch given in <tt>options[:branch]</tt>)
   # into the given `directory`. It then removes all traces of git from the directory.
   #
+  # Removing `.git` is not atomic. If it fails, the exported files are complete and
+  # usable, but the directory keeps whatever part of `.git` could not be deleted.
+  # Nothing is cleaned up, because the exported files are the deliverable and the
+  # leftover has to be removed by hand once the cause of the failure is fixed.
+  #
   # Takes the same options as {Git.clone} except that `:depth` defaults to 1 and
   # `:remote` is ignored with a deprecation warning.
   #
@@ -347,6 +352,10 @@ module Git
   #   export a SHA.
   #
   # @return [void]
+  #
+  # @raise [SystemCallError] if the `.git` directory cannot be removed. The exported
+  #   files are left in place, and the directory keeps whatever part of `.git` could
+  #   not be deleted.
   #
   def self.export(repository_url, directory = nil, options = {})
     if options.key?(:remote)
