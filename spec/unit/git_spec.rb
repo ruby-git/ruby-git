@@ -82,19 +82,12 @@ RSpec.describe Git do
     end
 
     context 'when options include :branch' do
-      let(:options) { { branch: 'develop' } }
+      let(:options) { { branch: 'v1.0.0' } }
 
-      before { allow(repo).to receive(:checkout) }
-
-      it 'checks out the origin branch on the cloned repository' do
-        expect(repo).to receive(:checkout).with('origin/develop')
-        result
-      end
-    end
-
-    context 'when options do not include :branch' do
-      it 'does not check out a branch' do
-        expect(repo).not_to receive(:checkout)
+      it 'forwards :branch to clone so git resolves the branch or tag' do
+        expect(described_class).to receive(:clone)
+          .with(repository_url, directory, { depth: 1, branch: 'v1.0.0' })
+          .and_return(repo)
         result
       end
     end
