@@ -67,6 +67,11 @@ RSpec.describe Git do
       result
     end
 
+    it 'does not emit a deprecation warning' do
+      expect(Git::Deprecation).not_to receive(:warn)
+      result
+    end
+
     it 'removes the .git directory from the cloned repository' do
       expect(FileUtils).to receive(:rm_r).with(File.join(directory, '.git'))
       result
@@ -74,6 +79,16 @@ RSpec.describe Git do
 
     context 'when options include :remote' do
       let(:options) { { remote: 'upstream' } }
+
+      before { allow(Git::Deprecation).to receive(:warn) }
+
+      it 'emits a deprecation warning saying the option is ignored and should be deleted' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'The :remote option to Git.export is ignored, is deprecated, and will be removed in a future ' \
+          'major release. Delete it from the call.'
+        )
+        result
+      end
 
       it 'removes :remote before passing options to clone' do
         expect(described_class).to receive(:clone).with(repository_url, directory, { depth: 1 }).and_return(repo)
