@@ -387,6 +387,17 @@ RSpec.describe Git, :integration do
       end
     end
 
+    # :remote was Git.clone's v4.x name for :origin. Git.export used to drop it
+    # silently; it now reaches Git.clone's option validation like any other
+    # unsupported option.
+    context 'with :remote' do
+      let(:options) { { remote: 'upstream' } }
+
+      it 'raises ArgumentError naming the unsupported option' do
+        expect { export }.to raise_error(ArgumentError, /Unsupported options: :remote/)
+      end
+    end
+
     # :branch is forwarded to `git clone --branch`, which looks up a ref name the
     # remote advertises. Branch short names and tag names resolve; full ref paths,
     # SHAs, and revision expressions do not.
