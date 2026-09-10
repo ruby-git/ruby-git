@@ -18,6 +18,7 @@ is loaded by subagents during the [Facade Implementation](SKILL.md) workflow.
   - [One-line delegator](#one-line-delegator)
   - [Orchestration sequence](#orchestration-sequence)
   - [Sequencing multiple commands](#sequencing-multiple-commands)
+  - [Failure state](#failure-state)
 - [Topic module skeleton](#topic-module-skeleton)
 - [The five facade responsibilities checklist](#the-five-facade-responsibilities-checklist)
   - [Filesystem calls in facade methods](#filesystem-calls-in-facade-methods)
@@ -280,6 +281,55 @@ end
 
 Do not build a generic dispatcher or a "run everything in parallel" abstraction.
 Explicit sequential calls are the documented pattern.
+
+### Failure state
+
+When a facade method can fail after it has already changed something, decide what a
+failure leaves behind before writing the body. The rule is
+[ADR-0009](../../../docs/adr/0009-a-failed-operation-leaves-behind-whatever-the-caller-can-use.md):
+leave behind whatever the caller can use, and remove only what is of no use to anyone.
+It does not depend on how many commands the method runs.
+
+| What the failure leaves | Do | Example |
+| --- | --- | --- |
+| A repository stopped mid operation | Leave it | `#merge_into` leaves a conflicted merge on the target branch |
+| The output the caller asked for | Leave it | `Git.export` leaves the exported files when `.git` cannot be removed |
+| A private scratch file the caller never named | Remove it and re-raise | `#archive` deletes its temporary file |
+| Gem-internal state (`@execution_context`) | Restore it in `ensure` | `#with_working`, `#with_index`, `#with_temp_index` |
+
+Rules for a method that switches HEAD:
+
+1. Validate and whitelist **before the first mutating call**, so a rejected argument
+   cannot leave the repository on another branch. `#merge_into` rejects `:no_commit` and
+   an empty source list up front for this reason.
+2. Guard the target with `SharedPrivate.assert_local_branch!`. A commit SHA, tag, or
+   remote-tracking branch detaches HEAD, and work committed there would be stranded at a
+   commit nothing references.
+3. Capture the return point with `SharedPrivate.head_restore_point`, never with
+   `current_branch`, which reports `'HEAD'` when detached. The helper also rejects an
+   unborn HEAD, which cannot be checked out again by name.
+4. Do **not** wrap the restore checkout in `ensure`. With a conflicted merge in the
+   worktree that checkout fails on its own and the `ensure` masks the original error.
+5. Document the failure state in the method's YARD docs as a bold `**Note:**`, because
+   Ruby convention says a block-taking method restores and this one does not.
+
+```ruby
+def merge_into(target_branch, branch, message = nil, opts = {})
+  SharedPrivate.assert_valid_opts!(MERGE_INTO_ALLOWED_OPTS, **opts)
+  raise ArgumentError, 'at least one branch to merge is required' if Array(branch).empty?
+
+  SharedPrivate.assert_local_branch!(self, target_branch)
+  restore_point = SharedPrivate.head_restore_point(self)
+  checkout(target_branch)
+  output = merge(branch, message, opts)
+  checkout(restore_point)   # not in an ensure — see rule 4
+  output
+end
+```
+
+Before adding a cleanup on a failure path, check that it can actually run. A cleanup
+that fails for the same reason as the operation it is cleaning up after buys nothing,
+and one that deletes the caller's deliverable is worse than doing nothing.
 
 ## Topic module skeleton
 
