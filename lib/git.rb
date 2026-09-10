@@ -308,10 +308,13 @@ module Git # rubocop:disable Style/OneClassPerFile
   # See +clone+ for options.  Does not obey the <tt>:remote</tt> option,
   # since the .git info will be deleted anyway; always uses the default
   # remote, 'origin.'
+  #
+  # <tt>options[:branch]</tt> is the short name of the ref: a branch name such as
+  # 'main' or a tag name such as 'v1.0.0'. A full ref path such as
+  # 'refs/tags/v1.0.0' or a commit SHA is not accepted.
   def self.export(repository, name, options = {})
     options.delete(:remote)
     repo = clone(repository, name, { depth: 1 }.merge(options))
-    repo.checkout("origin/#{options[:branch]}") if options[:branch]
     FileUtils.rm_r File.join(repo.dir.to_s, '.git')
   end
 
