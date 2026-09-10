@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [4.4.5](https://github.com/ruby-git/ruby-git/compare/v4.4.4...v4.4.5) (2026-09-10)
+
+
+### Other Changes
+
+* **export:** Describe what a failed .git removal leaves behind ([8a596f0](https://github.com/ruby-git/ruby-git/commit/8a596f00e032170ad6a48af2337dad71b7418069)), closes [#1823](https://github.com/ruby-git/ruby-git/issues/1823)
+
 ## [4.4.4](https://github.com/ruby-git/ruby-git/compare/v4.4.3...v4.4.4) (2026-09-10)
 
 
