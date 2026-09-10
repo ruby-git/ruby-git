@@ -327,16 +327,19 @@ module Git
   # Exports the current HEAD (or the specific branch given in <tt>options[:branch]</tt>)
   # into the given `directory`. It then removes all traces of git from the directory.
   #
-  # Takes the same options as {Git.clone} except that `:remote` is silently ignored
-  # and `:depth` defaults to 1.
+  # Takes the same options as {Git.clone} except that `:depth` defaults to 1 and
+  # `:remote` is ignored with a deprecation warning.
   #
   # @param repository_url [String, URI, Pathname] the repository to export from
   #
   # @param directory [String, Pathname, nil] the directory to export into; defaults to the
   #   repository basename
   #
-  # @param options [Hash] options forwarded to {Git.clone} (`:remote` is ignored;
-  #   `:depth` defaults to 1)
+  # @param options [Hash] options forwarded to {Git.clone} (`:depth` defaults to 1)
+  #
+  # @option options [String] :remote deprecated and ignored; delete it from the call.
+  #   Passing it emits a deprecation warning and it will be removed in a future
+  #   major release.
   #
   # @option options [String] :branch the branch or tag to export instead of HEAD.
   #   Give the short name (`main`, `v1.0.0`); a full ref path such as
