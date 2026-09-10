@@ -312,6 +312,15 @@ module Git # rubocop:disable Style/OneClassPerFile
   # <tt>options[:branch]</tt> is the short name of the ref: a branch name such as
   # 'main' or a tag name such as 'v1.0.0'. A full ref path such as
   # 'refs/tags/v1.0.0' or a commit SHA is not accepted.
+  #
+  # Removing +.git+ is not atomic. If it fails, the exported files are complete and
+  # usable, but the directory keeps whatever part of +.git+ could not be deleted.
+  # Nothing is cleaned up, because the exported files are the deliverable and the
+  # leftover has to be removed by hand once the cause of the failure is fixed.
+  #
+  # @raise [SystemCallError] if the +.git+ directory cannot be removed. The exported
+  #   files are left in place, and the directory keeps whatever part of +.git+ could
+  #   not be deleted.
   def self.export(repository, name, options = {})
     options.delete(:remote)
     repo = clone(repository, name, { depth: 1 }.merge(options))
