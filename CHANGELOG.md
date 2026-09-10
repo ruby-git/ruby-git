@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [4.4.4](https://github.com/ruby-git/ruby-git/compare/v4.4.3...v4.4.4) (2026-09-10)
+
+
+### Bug Fixes
+
+* **export:** Drop the redundant checkout that broke Git.export for tags ([59bfe62](https://github.com/ruby-git/ruby-git/commit/59bfe62ac739030319cdfb83d601dd77e958205b)), closes [#1815](https://github.com/ruby-git/ruby-git/issues/1815)
+
 ## [4.4.3](https://github.com/ruby-git/ruby-git/compare/v4.4.2...v4.4.3) (2026-08-30)
 
 
