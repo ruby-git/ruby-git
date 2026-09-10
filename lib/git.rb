@@ -346,7 +346,13 @@ module Git
   # @return [void]
   #
   def self.export(repository_url, directory = nil, options = {})
-    options.delete(:remote)
+    if options.key?(:remote)
+      Git::Deprecation.warn(
+        'The :remote option to Git.export is ignored, is deprecated, and will be removed in a future ' \
+        'major release. Delete it from the call.'
+      )
+      options.delete(:remote)
+    end
     repo = clone(repository_url, directory, { depth: 1 }.merge(options))
     FileUtils.rm_r File.join(repo.dir.to_s, '.git')
   end
