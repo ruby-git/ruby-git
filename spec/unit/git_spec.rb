@@ -100,10 +100,20 @@ RSpec.describe Git do
       end
 
       it 'raises Git::Error with the system error as cause' do
-        expect { result }
-          .to raise_error(Git::Error, /Failed to remove the \.git directory.*Permission denied/) do |error|
-            expect(error.cause).to be_a(Errno::EACCES)
-          end
+        expect { result }.to raise_error(Git::Error, /Permission denied/) do |error|
+          expect(error.cause).to be_a(Errno::EACCES)
+        end
+      end
+
+      # FileUtils.rm_r is not atomic, so a failure leaves the exported files in
+      # place next to whatever part of .git it could not delete. The message has
+      # to say so because nothing else tells the caller what the directory holds.
+      it 'names the directory and says the exported files are in place' do
+        expect { result }.to raise_error(
+          Git::Error,
+          "Failed to remove '/tmp/example/.git'; the exported files are in place, but part of the " \
+          'repository remains and has to be removed by hand: Permission denied - /tmp/example/.git'
+        )
       end
     end
   end
