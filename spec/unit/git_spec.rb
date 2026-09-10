@@ -75,8 +75,10 @@ RSpec.describe Git do
     context 'when options include :remote' do
       let(:options) { { remote: 'upstream' } }
 
-      it 'removes :remote before passing options to clone' do
-        expect(described_class).to receive(:clone).with(repository_url, directory, { depth: 1 }).and_return(repo)
+      it 'forwards :remote to clone so its option validation rejects it' do
+        expect(described_class).to receive(:clone)
+          .with(repository_url, directory, { depth: 1, remote: 'upstream' })
+          .and_return(repo)
         result
       end
     end

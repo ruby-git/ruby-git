@@ -266,16 +266,14 @@ module Git
   # Exports the current HEAD (or the specific branch given in <tt>options[:branch]</tt>)
   # into the given `directory`. It then removes all traces of git from the directory.
   #
-  # Takes the same options as {Git.clone} except that `:remote` is silently ignored
-  # and `:depth` defaults to 1.
+  # Takes the same options as {Git.clone} except that `:depth` defaults to 1.
   #
   # @param repository_url [String, URI, Pathname] the repository to export from
   #
   # @param directory [String, Pathname, nil] the directory to export into; defaults to the
   #   repository basename
   #
-  # @param options [Hash] options forwarded to {Git.clone} (`:remote` is ignored;
-  #   `:depth` defaults to 1)
+  # @param options [Hash] options forwarded to {Git.clone} (`:depth` defaults to 1)
   #
   # @option options [String] :branch the branch or tag to export instead of HEAD.
   #   Give the short name (`main`, `v1.0.0`); a full ref path such as
@@ -287,7 +285,6 @@ module Git
   # @raise [Git::Error] if the `.git` directory cannot be removed
   #
   def self.export(repository_url, directory = nil, options = {})
-    options.delete(:remote)
     repo = clone(repository_url, directory, { depth: 1 }.merge(options))
     git_dir = File.join(repo.dir.to_s, '.git')
     Git::SystemCallGuard.call('Failed to remove the .git directory') { FileUtils.rm_r(git_dir) }

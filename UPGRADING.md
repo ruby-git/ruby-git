@@ -44,6 +44,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git.clone` option renames](#gitclone-option-renames)
     - [`Git::Log` Enumerable interface deprecated](#gitlog-enumerable-interface-deprecated)
     - [`Git::Object::Commit#set_commit` deprecated](#gitobjectcommitset_commit-deprecated)
+    - [`Git.export` `:remote` option deprecated](#gitexport-remote-option-deprecated)
 
 ## Upgrading to v6.x
 
@@ -196,9 +197,13 @@ now falls through to the normal option validation, so passing one raises
 [`Git.clone` option renames](#gitclone-option-renames) entry under "Upgrading to
 v5.x" maps each removed option to its replacement.
 
-`Git.export` still drops a `:remote` option before calling `Git.clone`, as its
-documentation states, so `Git.export(url, dir, remote: name)` does not raise. That
-behavior was never a deprecation and is unchanged.
+`Git.export` no longer drops a `:remote` option before calling `Git.clone`, so
+`Git.export(url, dir, remote: name)` also raises `ArgumentError`. The option was
+deprecated in v5.x (see [`Git.export` `:remote` option
+deprecated](#gitexport-remote-option-deprecated) under "Upgrading to v5.x"). There
+is no replacement: `:remote` renamed the clone's remote, and `Git.export` deletes
+the `.git` directory before returning, so the name was never observable. Delete the
+option from the call.
 
 ### Filesystem errors raised as `Git::Error`
 
@@ -1297,5 +1302,22 @@ effect.
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
 | `commit.set_commit(data)` | `commit.from_data(data)` |
+
+#### `Git.export` `:remote` option deprecated
+
+`Git.export` has always dropped a `:remote` option before calling `Git.clone`
+without telling the caller. Passing it now emits a deprecation warning. The option
+is still dropped, so the export itself is unchanged, and it will be removed in a
+future major release. Once it is removed, passing `:remote` raises `ArgumentError`
+like any other unsupported option (see [Unsupported options raise
+`ArgumentError`](#unsupported-options-raise-argumenterror)).
+
+There is no replacement option. `:remote` renamed the clone's remote, and
+`Git.export` deletes the `.git` directory before returning, so the name was never
+observable in the result. Delete the option from the call.
+
+| Deprecated call (works in v5.x, removed in a future major release) | Replacement |
+|--------------------------------------------------------------------|-------------|
+| `Git.export(url, dir, remote: name)` | `Git.export(url, dir)` |
 
 ---
