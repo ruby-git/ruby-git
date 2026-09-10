@@ -459,5 +459,27 @@ RSpec.describe Git, :integration do
         expect(exported_entries).to eq(['a.txt', 'topic.txt'])
       end
     end
+
+    # The removal is stubbed rather than blocked with chmod: a permission-based
+    # setup behaves differently on Windows and silently no-ops when the suite
+    # runs as root. Only the export's own call is stubbed; the cleanup in the
+    # `after` hook goes through FileUtils.rm_rf, which calls rm_r with keywords.
+    context 'when the .git directory cannot be removed' do
+      before do
+        allow(FileUtils).to receive(:rm_r).and_call_original
+        allow(FileUtils).to receive(:rm_r).with(end_with('.git')).and_raise(Errno::EACCES, 'objects/pack')
+      end
+
+      it 'raises Git::Error saying the exported files are in place' do
+        expect { export }.to raise_error(
+          Git::Error, /the exported files are in place, but part of the repository remains/
+        )
+      end
+
+      it 'leaves the exported files in place next to the .git remnant' do
+        expect { export }.to raise_error(Git::Error)
+        expect(exported_entries).to eq(['.git', 'a.txt', 'b.txt'])
+      end
+    end
   end
 end
