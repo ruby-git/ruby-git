@@ -5,6 +5,25 @@
 
 # Change Log
 
+## [5.5.0](https://github.com/ruby-git/ruby-git/compare/v5.4.1...v5.5.0) (2026-09-10)
+
+
+### Features
+
+* **export:** Warn when the :remote option is passed to Git.export ([55a9810](https://github.com/ruby-git/ruby-git/commit/55a9810b7681a510781e55b17026ec6e13dcbfa5)), closes [#1820](https://github.com/ruby-git/ruby-git/issues/1820)
+
+
+### Bug Fixes
+
+* **export:** Drop the redundant checkout that broke Git.export for tags ([5e8422d](https://github.com/ruby-git/ruby-git/commit/5e8422d2361bff43959a0bba2254118087907a2a)), closes [#1815](https://github.com/ruby-git/ruby-git/issues/1815)
+
+
+### Other Changes
+
+* **export:** Document the deprecated :remote option to Git.export ([3806d2b](https://github.com/ruby-git/ruby-git/commit/3806d2b5a6fdb167006097df83c783573024a521)), closes [#1820](https://github.com/ruby-git/ruby-git/issues/1820)
+* Name the 5.x maintenance branch alongside 4.x ([ad30718](https://github.com/ruby-git/ruby-git/commit/ad30718a61cb89c343c84c71feb1c94cf3995f28))
+* Run the CI, commitlint, release, and cache workflows for the 5.x branch ([7c3fd13](https://github.com/ruby-git/ruby-git/commit/7c3fd13994104c2c6b6564cc41d1e3c4e614255a))
+
 ## [5.4.1](https://github.com/ruby-git/ruby-git/compare/v5.4.0...v5.4.1) (2026-09-04)
 
 
