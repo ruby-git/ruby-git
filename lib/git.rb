@@ -277,7 +277,10 @@ module Git
   # @param options [Hash] options forwarded to {Git.clone} (`:remote` is ignored;
   #   `:depth` defaults to 1)
   #
-  # @option options [String] :branch the branch or tag to export instead of HEAD
+  # @option options [String] :branch the branch or tag to export instead of HEAD.
+  #   Give the short name (`main`, `v1.0.0`); a full ref path such as
+  #   `refs/tags/v1.0.0` or a commit SHA is not accepted. Use `:revision` to
+  #   export a SHA.
   #
   # @return [void]
   #
@@ -286,7 +289,6 @@ module Git
   def self.export(repository_url, directory = nil, options = {})
     options.delete(:remote)
     repo = clone(repository_url, directory, { depth: 1 }.merge(options))
-    repo.checkout("origin/#{options[:branch]}") if options[:branch]
     git_dir = File.join(repo.dir.to_s, '.git')
     Git::SystemCallGuard.call('Failed to remove the .git directory') { FileUtils.rm_r(git_dir) }
   end

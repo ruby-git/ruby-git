@@ -2,11 +2,12 @@
 
 require 'spec_helper'
 
-# Integration tests for the Git module factory entry points: Git.open, Git.bare,
-# Git.init, and Git.clone.
+# Integration tests for the Git module entry points: Git.open, Git.bare, Git.init,
+# Git.clone, and Git.export.
 #
 # These exercise real path resolution against real repositories on disk and verify
-# that each entry point returns a properly configured Git::Repository.
+# that each factory entry point returns a properly configured Git::Repository, and
+# that Git.export writes the requested tree with no git metadata left behind.
 
 RSpec.describe Git, :integration do
   include Git::IntegrationTestHelpers
@@ -338,6 +339,113 @@ RSpec.describe Git, :integration do
       it 'initializes with the specified branch name' do
         head_content = File.read(File.join(repository.repo.to_s, 'HEAD'))
         expect(head_content).to include('trunk')
+      end
+    end
+  end
+
+  describe '.export' do
+    subject(:export) { Git.export(source_dir, export_dir, options) }
+
+    let(:source_dir) { Dir.mktmpdir }
+    let(:parent_dir) { Dir.mktmpdir }
+    let(:export_dir) { File.join(parent_dir, 'exported') }
+    let(:options) { {} }
+    let(:source) { init_test_repo(source_dir) }
+
+    # Dir.children lists dotfiles, so an expected list that omits '.git' also
+    # asserts that the .git directory was removed from the export.
+    let(:exported_entries) { Dir.children(export_dir).sort }
+
+    before do
+      commit_file(source, 'a.txt', 'Initial commit')
+      source.tag_create('v1.0.0')
+      source.tag_create('v2.0.0', annotate: true, message: 'Release 2.0.0')
+
+      source.branch_new('topic')
+      source.checkout('topic')
+      commit_file(source, 'topic.txt', 'Topic commit')
+
+      source.checkout('main')
+      commit_file(source, 'b.txt', 'Second commit')
+    end
+
+    after do
+      FileUtils.rm_rf(source_dir)
+      FileUtils.rm_rf(parent_dir)
+    end
+
+    def commit_file(repo, name, message)
+      File.write(File.join(source_dir, name), name, mode: 'wb')
+      repo.add(name)
+      repo.commit(message)
+    end
+
+    context 'without :branch' do
+      it 'exports the tree of the default branch' do
+        export
+        expect(exported_entries).to eq(['a.txt', 'b.txt'])
+      end
+    end
+
+    # :branch is forwarded to `git clone --branch`, which looks up a ref name the
+    # remote advertises. Branch short names and tag names resolve; full ref paths,
+    # SHAs, and revision expressions do not.
+    context 'with :branch set to a branch short name' do
+      let(:options) { { branch: 'topic' } }
+
+      it 'exports the tree of that branch' do
+        export
+        expect(exported_entries).to eq(['a.txt', 'topic.txt'])
+      end
+    end
+
+    context 'with :branch set to a lightweight tag' do
+      let(:options) { { branch: 'v1.0.0' } }
+
+      it 'exports the tree the tag points at' do
+        export
+        expect(exported_entries).to eq(['a.txt'])
+      end
+    end
+
+    context 'with :branch set to an annotated tag' do
+      let(:options) { { branch: 'v2.0.0' } }
+
+      it 'exports the tree the tag points at' do
+        export
+        expect(exported_entries).to eq(['a.txt'])
+      end
+    end
+
+    context 'with :branch set to a full ref path' do
+      let(:options) { { branch: 'refs/tags/v1.0.0' } }
+
+      it 'raises Git::FailedError' do
+        expect { export }.to raise_error(Git::FailedError, /not found in upstream origin/)
+      end
+
+      it 'leaves no export directory behind' do
+        expect { export }.to raise_error(Git::FailedError)
+        expect(File.exist?(export_dir)).to be(false)
+      end
+    end
+
+    context 'with :branch set to a commit SHA' do
+      let(:options) { { branch: source.rev_parse('HEAD') } }
+
+      it 'raises Git::FailedError' do
+        expect { export }.to raise_error(Git::FailedError, /not found in upstream origin/)
+      end
+    end
+
+    # A SHA is reachable through :revision (`git clone --revision`, git 2.49+),
+    # which export forwards to clone the same way it forwards :branch.
+    context 'with :revision set to a commit SHA' do
+      let(:options) { { revision: source.rev_parse('topic') } }
+
+      it 'exports the tree of that commit' do
+        export
+        expect(exported_entries).to eq(['a.txt', 'topic.txt'])
       end
     end
   end
