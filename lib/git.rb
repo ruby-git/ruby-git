@@ -287,7 +287,10 @@ module Git
   def self.export(repository_url, directory = nil, options = {})
     repo = clone(repository_url, directory, { depth: 1 }.merge(options))
     git_dir = File.join(repo.dir.to_s, '.git')
-    Git::SystemCallGuard.call('Failed to remove the .git directory') { FileUtils.rm_r(git_dir) }
+    Git::SystemCallGuard.call(
+      "Failed to remove '#{git_dir}'; the exported files are in place, but part of the " \
+      'repository remains and has to be removed by hand'
+    ) { FileUtils.rm_r(git_dir) }
   end
 
   # Get or set a git global configuration value
