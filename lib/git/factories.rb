@@ -166,6 +166,14 @@ module Git
     # @raise [Git::UnexpectedResultError] if the cloned directory cannot be
     #   determined from git's output
     #
+    # @note If git fails before the transfer completes, git removes `directory`
+    #   and the separate git directory it created, or empties `directory` when
+    #   it existed before the call. A `:repository` path that already exists is
+    #   refused before the transfer starts. If the transfer completes but the
+    #   checkout fails, or the `:timeout` or the global timeout kills git, what
+    #   git wrote is left in place. If {Git::UnexpectedResultError} is raised,
+    #   the completed clone is left in place.
+    #
     # @api public
     #
     def clone(repository_url, directory = nil, options = {})
@@ -226,6 +234,12 @@ module Git
     # @return [Git::Repository] a repository bound to the newly initialized repository
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    # @note If git exits non-zero after it starts writing, whatever it wrote is
+    #   left in place: `directory` when git created it, and a git directory
+    #   (`.git`, or the `:repository` path and the gitfile pointing at it) that
+    #   git may not recognize as a repository. If git succeeds but the
+    #   repository cannot be opened, the initialized repository is left in place.
     #
     # @api public
     #

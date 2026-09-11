@@ -175,6 +175,10 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @note A refused checkout leaves HEAD, the index, and the working tree as
+      #   they were, and the branch `:new_branch` or `:orphan` names is not
+      #   created.
+      #
       def checkout(branch = nil, opts = {})
         if branch.is_a?(Hash) && opts.empty?
           opts = branch
@@ -284,6 +288,10 @@ module Git
       # @raise [ArgumentError] if unsupported options are provided
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @note git does not stop at the first path it cannot write, so a failure
+      #   leaves the files it did write in place, under `:prefix` when one is
+      #   given.
       #
       def checkout_index(options = {})
         SharedPrivate.assert_valid_opts!(CHECKOUT_INDEX_ALLOWED_OPTS, **options)

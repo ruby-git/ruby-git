@@ -631,6 +631,9 @@ module Git
       #
       # @raise [Git::Error] if the archive file cannot be written
       #
+      # @note A failure leaves nothing behind: the staging and temporary files
+      #   are removed and an existing `file` is not replaced.
+      #
       # @see https://git-scm.com/docs/git-archive git-archive documentation
       #
       def archive(treeish, file = nil, opts = {})

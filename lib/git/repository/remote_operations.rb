@@ -192,6 +192,12 @@ module Git
       #
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
+      # @note The fetch completes before the merge starts, so a failure after the
+      #   fetch leaves `FETCH_HEAD` and any updated remote-tracking branches in
+      #   place. On a conflict, the merge is left in progress as described at
+      #   {#merge}, or the rebase when the repository is configured to pull with
+      #   rebase.
+      #
       def pull(remote = nil, branch = nil, opts = {})
         raise ArgumentError, 'You must specify a remote if a branch is specified' if remote.nil? && !branch.nil?
 

@@ -173,6 +173,9 @@ module Git
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
+    # @note If the checkout fails, a local branch that this method created
+    #   beforehand is left in place.
+    #
     # @deprecated Use {Git::Repository::Branching#checkout} with the branch name instead
     #
     #   {Git::Repository::Branching#checkout} does not create a missing local

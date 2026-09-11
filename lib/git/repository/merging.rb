@@ -82,6 +82,10 @@ module Git
       #
       # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
+      # @note On a conflict, the merge is left in progress: the conflicted paths
+      #   are in the index and working tree, and `MERGE_HEAD` is set until the
+      #   caller commits the resolution or aborts the merge.
+      #
       def merge(branch, message = nil, opts = {})
         SharedPrivate.assert_valid_opts!(MERGE_ALLOWED_OPTS, **opts)
 
@@ -393,6 +397,12 @@ module Git
       # @raise [ArgumentError] when unsupported options are provided
       #
       # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      # @note On a conflict, the revert is left in progress with the conflicted
+      #   paths in the index and working tree until the caller continues, skips,
+      #   or aborts it. When more than one commit is reverted, the revert commits
+      #   made before the conflict are on the branch; aborting the revert removes
+      #   them again.
       #
       def revert(commitish = nil, opts = {})
         commitish = 'HEAD' if commitish.nil?

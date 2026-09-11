@@ -178,6 +178,11 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @note If git exits non-zero, nothing is unwound: whatever git applied stays
+      #   in the working tree and index, including untracked files restored from
+      #   the entry even when git refused to touch the tracked files, and on a
+      #   conflict the conflicted paths are left for the caller to resolve.
+      #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
       def stash_apply(stash = nil, opts = {})
@@ -217,6 +222,10 @@ module Git
       # @raise [ArgumentError] if unsupported options are provided
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @note If git exits non-zero, nothing is unwound, as described at
+      #   {#stash_apply}, and the entry is kept in the stash list rather than
+      #   dropped.
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
@@ -366,6 +375,10 @@ module Git
       # @return [String] git's stdout from the branch command
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @note If applying the entry fails, `branch_name` has already been created
+      #   and checked out, so the repository is left on it with whatever git could
+      #   apply in the working tree, and the entry stays in the stash list.
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
