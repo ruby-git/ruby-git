@@ -98,7 +98,9 @@ Git::Repository (facade — topic modules under lib/git/repository/)
   the right command class, calls parsers, constructs rich response objects.
   **Parser-contract options** (e.g. `no_color: true`, `pretty: 'raw'`,
   `format: FORMAT_STRING`) are passed explicitly at the facade call site — this makes
-  the parser contract auditable by reading the topic module method.
+  the parser contract auditable by reading the topic module method. What a facade
+  method leaves behind when it fails partway through is decided in
+  [ADR-0009](../../../docs/adr/0009-a-failed-operation-leaves-behind-whatever-the-caller-can-use.md): it leaves whatever the caller can use.
 
 `Git::Commands::Base` provides default `#initialize(execution_context)` and `#call`.
 Command classes that need non-zero successful exits declare
