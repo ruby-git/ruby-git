@@ -328,9 +328,11 @@ level after `@raise` and any `@yield` tags and before `@deprecated` and `@see`, 
 order `.yard-lint.yml` enforces.
 
 ```ruby
-# @note If the merge fails, the repository is left checked out on
-#   `target_branch` rather than restored to the original branch. On a
-#   conflict, the merge is also left in progress.
+# @note If the merge or the restore checkout fails, the repository is left
+#   checked out on `target_branch` rather than restored to the original
+#   branch. On a conflict, the merge is also left in progress. When the
+#   restore checkout is the step that fails, the merge has already been
+#   committed on `target_branch`.
 ```
 
 The rule and its reason are in

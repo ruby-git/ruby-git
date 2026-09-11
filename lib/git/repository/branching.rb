@@ -238,9 +238,10 @@ module Git
       # @yieldreturn [Object] a truthy value to commit all changes, a falsy value to
       #   hard-reset
       #
-      # @note If the block, the commit, or the reset raises an exception, the
-      #   repository is left checked out on `branch` rather than restored to the
-      #   original branch.
+      # @note If the block, the commit, the reset, or the restore checkout raises
+      #   an exception, the repository is left checked out on `branch` rather than
+      #   restored to the original branch. When the restore checkout is the step
+      #   that fails, the commit or reset has already run.
       #
       def in_branch(branch, message = 'in branch work')
         SharedPrivate.assert_local_branch!(self, branch)

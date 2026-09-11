@@ -315,8 +315,11 @@ Rules for a method that checks out a branch, does work there, and switches back,
 4. Run the restore checkout only on the success path. A restore that ran on some
    failures and not others would make HEAD's location depend on which failure
    occurred, and a restore that always ran would carry unfinished work onto the
-   original branch. `ensure` is still right for scratch files and temporary
-   directories, which the table above covers.
+   original branch. A scratch file is removed on the failure path, with `rescue`
+   and re-raise, not in `ensure`: `#archive` returns its temporary file as the
+   deliverable when the caller names no destination, and an `ensure` would delete
+   the return value. `ensure` fits only a scratch path that is never returned,
+   such as the temporary directory `with_temp_working` creates.
 
 Rule 5 applies more widely, to any method that switches HEAD, leaves git mid
 operation, or writes to a caller-named path, whether or not it switches back:

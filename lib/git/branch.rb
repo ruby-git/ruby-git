@@ -277,9 +277,12 @@ module Git
     #
     # @yieldreturn [Object] return a truthy value to commit all changes, a falsy value to hard-reset
     #
-    # @note If the block, the commit, or the reset raises an exception, the
-    #   repository will be left checked out on this branch rather than restored to
-    #   the original.
+    # @note If the block, the commit, the reset, or the restore checkout raises
+    #   an exception, the repository will be left checked out on this branch
+    #   rather than restored to the original. When the restore checkout is the
+    #   step that fails, the commit or reset has already run. When HEAD was
+    #   detached before the call, the restore checkout is a no-op and the
+    #   repository stays on this branch even on success.
     #
     # @deprecated Use {Git::Repository::Branching#in_branch} with the branch name instead
     #
@@ -302,7 +305,9 @@ module Git
       # checkout is deprecated too; silence it so one in_branch call emits one warning
       Git::Deprecation.silence { checkout }
       yield ? branch_repository.commit_all(message) : branch_repository.reset(nil, hard: true)
-      # Runs only on success. See ADR-0009.
+      # Runs only on success. See ADR-0009. This deprecated method keeps its v4.x
+      # restore point: `current_branch` reports 'HEAD' when detached, so a detached
+      # HEAD is not restored. The replacement uses SharedPrivate.head_restore_point.
       branch_repository.checkout(old_current)
     end
 
