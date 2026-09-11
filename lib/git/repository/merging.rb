@@ -175,9 +175,11 @@ module Git
       #
       # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
-      # @note If the merge fails, the repository is left checked out on
-      #   `target_branch` rather than restored to the original branch. On a
-      #   conflict, the merge is also left in progress.
+      # @note If the merge or the restore checkout fails, the repository is left
+      #   checked out on `target_branch` rather than restored to the original
+      #   branch. On a conflict, the merge is also left in progress. When the
+      #   restore checkout is the step that fails, the merge has already been
+      #   committed on `target_branch`.
       #
       def merge_into(target_branch, branch, message = nil, opts = {})
         SharedPrivate.assert_valid_opts!(MERGE_INTO_ALLOWED_OPTS, **opts)
