@@ -127,17 +127,12 @@ module Git
       # branch is checked out, so those failures never leave the repository on
       # `target_branch`. Anything rejected later, such as an option value that is
       # not accepted or a source ref that does not exist, surfaces inside {#merge}
-      # after the checkout and follows the Note below.
+      # after the checkout and leaves the repository checked out on `target_branch`.
       #
       # The `:no_commit` option is not accepted: a merge stopped before its commit
       # would leave `target_branch` unchanged and the restore checkout would carry
       # the staged result onto the original branch. To merge without committing,
       # call {#checkout} and {#merge} directly.
-      #
-      # **Note:** the restore checkout is not wrapped in `ensure`. If the merge
-      # fails (for example, on a conflict), the repository is left checked out on
-      # `target_branch` with the merge in progress rather than restored to the
-      # original branch.
       #
       # @example Merge a feature branch into main while staying on the current branch
       #   repo.merge_into('main', 'feature')
@@ -180,6 +175,10 @@ module Git
       #
       # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
+      # @note If the merge fails, the repository is left checked out on
+      #   `target_branch` rather than restored to the original branch. On a
+      #   conflict, the merge is also left in progress.
+      #
       def merge_into(target_branch, branch, message = nil, opts = {})
         SharedPrivate.assert_valid_opts!(MERGE_INTO_ALLOWED_OPTS, **opts)
         raise ArgumentError, 'at least one branch to merge is required' if Array(branch).empty?
@@ -188,6 +187,7 @@ module Git
         restore_point = SharedPrivate.head_restore_point(self)
         checkout(target_branch)
         output = merge(branch, message, opts)
+        # Runs only on success. See ADR-0009.
         checkout(restore_point)
         output
       end

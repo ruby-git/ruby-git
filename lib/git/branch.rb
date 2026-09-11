@@ -260,10 +260,6 @@ module Git
     # given message before switching back to the original branch. If the block returns
     # a falsy value, a hard reset is performed before switching back.
     #
-    # **Note:** the restore checkout is not wrapped in `ensure`. If the block,
-    # the commit, or the reset raises an exception, the repository will be left
-    # checked out on this branch rather than restored to the original.
-    #
     # @example Commit a new file on a feature branch
     #   git.branch('feature').in_branch('Add README') do
     #     File.write('README.md', '# Hello')
@@ -280,6 +276,10 @@ module Git
     # @yield Executes the block with this branch checked out
     #
     # @yieldreturn [Object] return a truthy value to commit all changes, a falsy value to hard-reset
+    #
+    # @note If the block, the commit, or the reset raises an exception, the
+    #   repository will be left checked out on this branch rather than restored to
+    #   the original.
     #
     # @deprecated Use {Git::Repository::Branching#in_branch} with the branch name instead
     #
@@ -302,6 +302,7 @@ module Git
       # checkout is deprecated too; silence it so one in_branch call emits one warning
       Git::Deprecation.silence { checkout }
       yield ? branch_repository.commit_all(message) : branch_repository.reset(nil, hard: true)
+      # Runs only on success. See ADR-0009.
       branch_repository.checkout(old_current)
     end
 
