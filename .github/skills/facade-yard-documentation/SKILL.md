@@ -25,6 +25,7 @@ parser, or execution context that implements the behavior.
   - [Documenting forwarded options with `@overload`](#documenting-forwarded-options-with-overload)
   - [Return type rules](#return-type-rules)
   - [`@raise` rules](#raise-rules)
+  - [`@note` for the failure state](#note-for-the-failure-state)
   - [Cross-referencing the implementation](#cross-referencing-the-implementation)
   - [Common issues](#common-issues)
 - [Workflow](#workflow)
@@ -316,6 +317,25 @@ Scope `@raise` tags by call-shape:
 - Specific to one or more overloads: keep only in those overload blocks
 - Never duplicate identical `@raise` tags at both top level and overload level
 
+### `@note` for the failure state
+
+A facade method that the facade-implementation
+[Failure state](../facade-implementation/REFERENCE.md#failure-state) rules cover (rule
+5 says which) carries a `@note` tag that says what a failure leaves behind. The gem
+does not restore repository state on failure, and a reader cannot infer that from the
+method's shape, so the note is the only place the guarantee is stated. Keep it at top
+level after `@raise` and any `@yield` tags and before `@deprecated` and `@see`, the
+order `.yard-lint.yml` enforces.
+
+```ruby
+# @note If the merge fails, the repository is left checked out on
+#   `target_branch` rather than restored to the original branch. On a
+#   conflict, the merge is also left in progress.
+```
+
+The rule and its reason are in
+[ADR-0009](../../../docs/adr/0009-a-failed-operation-leaves-behind-whatever-the-caller-can-use.md).
+
 ### Cross-referencing the implementation
 
 When useful, cross-link to the underlying components with `@see` tags **at the
@@ -399,6 +419,9 @@ For each facade module file, run through these checks in order:
   the relevant overload only
 - [ ] no duplicate identical `@raise` appears at both top level and overload level
 - [ ] `@see` tags appear at the end and are limited to non-obvious cross-links
+- [ ] `@note` states the failure state on every method the facade-implementation
+  Failure state rules cover (see [`@note` for the
+  failure state](#note-for-the-failure-state))
 
 ### 3. Formatting consistency
 

@@ -46,6 +46,7 @@ is loaded by subagents during the [Facade Implementation](SKILL.md) workflow.
   - [Changing the legacy return type or signature on extraction](#changing-the-legacy-return-type-or-signature-on-extraction)
   - [Bypassing `@execution_context`](#bypassing-execution_context)
   - [Placing an overridable policy default after caller options](#placing-an-overridable-policy-default-after-caller-options)
+  - [Restoring HEAD on failure](#restoring-head-on-failure)
   - [Skipping option whitelisting on opaque opts hashes](#skipping-option-whitelisting-on-opaque-opts-hashes)
   - [Mixing facade and command responsibilities](#mixing-facade-and-command-responsibilities)
   - [Adding a topic module whose methods fit an existing one](#adding-a-topic-module-whose-methods-fit-an-existing-one)
@@ -292,26 +293,39 @@ It does not depend on how many commands the method runs.
 
 | What the failure leaves | Do | Example |
 | --- | --- | --- |
-| A repository stopped mid operation | Leave it | `#merge_into` leaves a conflicted merge on the target branch |
+| A repository left mid operation | Leave it | `#merge_into` leaves a conflicted merge on the target branch |
 | The output the caller asked for | Leave it | `Git.export` leaves the exported files when `.git` cannot be removed |
 | A private scratch file the caller never named | Remove it and re-raise | `#archive` deletes its temporary file |
-| Gem-internal state (`@execution_context`) | Restore it in `ensure` | `#with_working`, `#with_index`, `#with_temp_index` |
 
-Rules for a method that switches HEAD:
+Rules for a method that checks out a branch, does work there, and switches back, as
+`#in_branch` and `#merge_into` do:
 
 1. Validate and whitelist **before the first mutating call**, so a rejected argument
    cannot leave the repository on another branch. `#merge_into` rejects `:no_commit` and
    an empty source list up front for this reason.
 2. Guard the target with `SharedPrivate.assert_local_branch!`. A commit SHA, tag, or
-   remote-tracking branch detaches HEAD, and work committed there would be stranded at a
-   commit nothing references.
-3. Capture the return point with `SharedPrivate.head_restore_point`, never with
+   remote-tracking branch detaches HEAD. The checkout, the merge, and the restore
+   checkout each exit 0, and the restore leaves the commit made there with nothing
+   referencing it. Git has no command for the composite, so it cannot report the loss.
+   This is the
+   [silent-wrong-result exception](../project-context/SKILL.md#the-silent-wrong-result-exception).
+3. Capture the restore point with `SharedPrivate.head_restore_point`, never with
    `current_branch`, which reports `'HEAD'` when detached. The helper also rejects an
    unborn HEAD, which cannot be checked out again by name.
-4. Do **not** wrap the restore checkout in `ensure`. With a conflicted merge in the
-   worktree that checkout fails on its own and the `ensure` masks the original error.
-5. Document the failure state in the method's YARD docs as a bold `**Note:**`, because
-   Ruby convention says a block-taking method restores and this one does not.
+4. Run the restore checkout only on the success path. A restore that ran on some
+   failures and not others would make HEAD's location depend on which failure
+   occurred, and a restore that always ran would carry unfinished work onto the
+   original branch. `ensure` is still right for scratch files and temporary
+   directories, which the table above covers.
+
+Rule 5 applies more widely, to any method that switches HEAD, leaves git mid
+operation, or writes to a caller-named path, whether or not it switches back:
+
+5. Say what a failure leaves behind. ADR-0009 requires every such operation to state
+   it in its YARD docs; a facade method states it in a `@note` tag, in the form
+   [`@note` for the failure state](../facade-yard-documentation/SKILL.md#note-for-the-failure-state)
+   gives. It matters most for a block-taking method, because Ruby convention says
+   one restores and this one does not.
 
 ```ruby
 def merge_into(target_branch, branch, message = nil, opts = {})
@@ -322,7 +336,8 @@ def merge_into(target_branch, branch, message = nil, opts = {})
   restore_point = SharedPrivate.head_restore_point(self)
   checkout(target_branch)
   output = merge(branch, message, opts)
-  checkout(restore_point)   # not in an ensure — see rule 4
+  # Runs only on success. See ADR-0009.
+  checkout(restore_point)
   output
 end
 ```
@@ -950,6 +965,12 @@ Place overridable policy defaults before the caller's `**opts` so the caller's
 value wins on key collision. This does not apply to fixed policy options (not in
 `ALLOWED_OPTS`): `assert_valid_opts!` prevents those keys from reaching the
 command call at all.
+
+### Restoring HEAD on failure
+
+A restore checkout wrapped in `ensure`, or one that runs on some failures and not
+others, breaks ADR-0009. Run it on the success path only. See
+[Failure state](#failure-state) rule 4.
 
 ### Skipping option whitelisting on opaque opts hashes
 

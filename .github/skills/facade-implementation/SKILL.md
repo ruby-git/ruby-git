@@ -106,7 +106,7 @@ See [REFERENCE.md](REFERENCE.md) for the full reference covering:
 
 - Files to generate
 - Topic module selection (existing modules + decision rules for creating a new module)
-- Designing a facade method (return type, signature, body shape)
+- Designing a facade method (return type, signature, body shape, failure state)
 - Topic module skeleton (file layout)
 - The five facade responsibilities as a checklist, plus the `Git::SystemCallGuard`
   rule for filesystem calls a facade method makes itself
@@ -227,6 +227,10 @@ This skill supports three modes. Determine which mode applies before starting:
      [ADR-0005](../../../docs/adr/0005-the-facade-keeps-the-v4x-call-shape.md))
    - has tests that verify call-shape compatibility when classification is
      `legacy-contract` (positional hash and/or keyword-arg / `**opts` forms where required)
+   - follows the [Failure state](REFERENCE.md#failure-state) rules where they
+     apply: a method that checks out a branch and switches back runs the restore
+     checkout only on success and has both `SharedPrivate` guards, and any method
+     the rules cover has a `@note` that says what a failure leaves behind
 
 5. **Run quality gates** — discover the prerequisite tasks for `default`
    and run them sequentially, fixing failures before advancing:
@@ -264,6 +268,7 @@ For **review** mode, produce:
 | Signature shape matches classification | Pass/Fail | ... |
 | Return value matches documented contract | Pass/Fail | ... |
 | Parser/result-class wiring correct | Pass/Fail | ... |
+| Failure state (HEAD restore, guards, `@note`) | Pass/Fail | ... |
 | YARD docs complete | Pass/Fail | ... |
 | Unit + integration coverage | Pass/Fail | ... |
 

@@ -1,60 +1,70 @@
 # A failed operation leaves behind whatever the caller can use
 
-A facade method that fails partway through does not undo its earlier steps. It removes
-only what would be of no use to anyone, and leaves everything else exactly where the
-failure left it. The test is whether the caller can do something with what remains, not
-which layer created it.
+*An operation* is any method a caller invokes that runs one or more git commands: a
+`Git::Repository` facade method, a `Git` module function such as `Git.export`, or a
+method on an object the gem returns, such as `Git::Object::Commit#archive`.
 
-Three kinds of leftover, decided the same way each time. A repository stopped mid
-operation stays: `Git::Repository#merge_into` leaves a conflicted merge checked out on
-the target branch, because `git status` names that state and resolving it is ordinary
-git work. A finished deliverable stays: `Git.export` leaves the exported files in place
-when it cannot remove `.git`, because the files are what the caller asked for and only
-the vestigial `.git` is unwanted. A private scratch file goes: `Git::Repository#archive`
-and its `atomic_replace` helper delete the temporary file they wrote and re-raise, so a
-failure never leaves a partial archive at the caller's destination.
+*A failure* is the operation letting an exception escape.
 
-The rejected alternative in every case is unwinding to the pre-call state. It is the
-obvious-looking option, and it fails for a different reason each time it is tried. In
-`merge_into` and `#in_branch` the restore checkout is deliberately not wrapped in
-`ensure`: with a conflicted merge in the worktree that checkout fails on its own, and
-the `ensure` would raise a second error that masks the real one. In `Git.export` a
-cleanup cannot outrun the failure that triggered it, because the permission wall that
-stopped `.git` from being removed stops the cleanup too, and a cleanup that did succeed
-would delete the exported files, turning a partial success into a total loss. Only the
-scratch-file case has an unwind that is both possible and harmless, which is why it is
-the only one that unwinds.
+A step that fails and is handled within the operation is part of the operation's
+normal flow and is not a failure. An example is when `Git::Repository#no_commits?`
+rescues the `Git::FailedError` raised when `git rev-parse` exits non-zero on an
+unborn HEAD and returns `true`.
 
-Gem-internal state is not covered by any of this and always unwinds.
-`Git::Repository#with_index`, `#with_working`, and `#with_temp_index` restore the
-execution context in `ensure`, because a context left pointing at a removed temporary
-directory breaks every later call on that object and no caller can repair it from a
-shell.
+An operation that fails partway through leaves everything where the failure left it,
+except what would be of no use to the caller. The test is whether the caller can do
+something with what remains. Which layer created it does not matter.
 
-Leaving repository state in place is safe only when git reports it, so the two guards
-that establish that condition run before anything is mutated. `SharedPrivate.assert_local_branch!`
-rejects a commit SHA, tag, or remote-tracking branch, each of which detaches HEAD, so
-that work committed there cannot be stranded at a commit nothing references.
-`SharedPrivate.head_restore_point` rejects an unborn HEAD, which has no ref to return
-to. These are preconditions of the rule rather than incidental validation: without them
-a failure would leave a state git cannot describe and the caller cannot name.
+A failure can leave three kinds of state behind. The test decides each one:
+
+1. **A repository left mid operation.** Leave the repository as the failure left it
+   when the caller can use it. When `Git::Repository#merge_into` fails on a merge
+   conflict, the repository stays checked out on the target branch with the merge in
+   progress. That state can stay because `git status` names it and resolving the
+   conflict is ordinary git work.
+2. **A finished deliverable.** Leave the deliverable in place when the caller can use
+   it. When `Git.export` cannot remove `.git`, the exported files stay where they
+   are. They are what the caller asked for, and only `.git` is unwanted.
+3. **A private scratch file.** Clean up the scratch file because the caller cannot use
+   it. When `Git::Repository#archive` fails, its private helpers delete the
+   temporary file they wrote and re-raise, so no partial archive is left at the
+   caller's destination.
+
+Restoring the pre-call state, a rollback or unwind, is rejected, whether on every
+failure or conditionally when the restore can succeed.
+
+For `#merge_into` and `Git::Repository#in_branch`, a restore that ran on every
+failure would carry unfinished work in the working tree onto the original branch. For
+`#merge_into` a conflicted merge would also make the restore fail on its own and hide
+the error that stopped the merge. A restore that ran conditionally would leave a
+different state after different failure modes of the same step, and the caller would
+have to work out which one happened.
 
 ## Consequences
 
-Ruby convention runs the other way. `File.open`, `Dir.chdir`, and the gem's own
-`with_*` methods all restore on the way out, so a block-taking method reads as a context
-manager. `Git::Repository#in_branch` takes a block, is named like one of them, and does
-not behave like one. Reviewers have raised its missing `ensure` repeatedly, which is the
-convention working as expected rather than a defect in the review.
+Block-taking methods like `File.open`, `Dir.chdir`, and the gem's own `with_*`
+methods all restore on the way out, so a reader assumes any block-taking method puts
+things back when the block ends.
 
-So the guarantee is per-method and stated in the method's own documentation, never
-inferred from its shape. Every facade method that switches HEAD, leaves git mid
-operation, or writes to a caller-named path says in its YARD docs what a failure leaves
-behind. `#in_branch`, `#merge_into`, and `Git.export` each document that today.
+`Git::Repository#in_branch` takes a block, as `with_index` does, but does not put
+things back when the block ends. Reviewers who report its missing `ensure` are right
+about the usual convention and wrong about the code. `#in_branch` breaks the
+convention on purpose, and the reply to the report is this record and the method's
+`@note`, not a change to the code.
 
-A method may still discard state on a path that has not failed. `#in_branch` hard-resets
-the working tree when its block returns a falsy value. That is the documented contract,
-not a failure path, and this record does not speak to it.
+The `with_*` methods are consistent with the record. They restore only the gem's own
+execution context and remove a scratch directory, which is the third case above, and
+they touch no repository state.
 
-The operational rules are normative policy in
-[Facade Implementation - Failure state](../../.github/skills/facade-implementation/REFERENCE.md#failure-state).
+The guarantee is per operation and stated in each operation's own documentation. A
+reader cannot infer it from the operation's shape. An operation that switches HEAD,
+leaves git mid operation, or writes to a caller-named path says in its YARD docs what
+a failure leaves behind. Issue 1831 tracks the operations whose docs do not say so
+yet.
+
+An operation may still discard state on a path that has not failed. `#in_branch`
+hard-resets the working tree when its block returns a falsy value. That is the
+documented contract, not a failure, so this record does not cover it.
+
+The operational rules are normative policy in [Facade Implementation - Failure
+state](../../.github/skills/facade-implementation/REFERENCE.md#failure-state).
