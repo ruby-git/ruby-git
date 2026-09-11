@@ -60,7 +60,7 @@ Evaluate the PR against these criteria:
 
 **Compatibility:** Backward compatible (or marked breaking), Ruby 3.3+, Git 2.43.0+, cross-platform (Windows/macOS/Linux).
 
-**Security:** No command injection, proper escaping via Git::CommandLine, input validation, resource cleanup.
+**Security:** No command injection, proper escaping via Git::CommandLine, input validation, resource cleanup. Before flagging a missing cleanup or restore on a failure path, check the method's `@note` and `docs/adr/`: ADR-0009 decides what a failed operation leaves behind, and some methods leave state behind on purpose.
 
 ## Step 3: Present Review Findings
 
