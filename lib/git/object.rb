@@ -223,6 +223,9 @@ module Git
       #
       # @raise [Git::FailedError] if `git archive` fails
       #
+      # @note A failure leaves nothing behind and does not replace an existing
+      #   `file`; see {Git::Repository::ObjectOperations#archive}.
+      #
       # @api public
       #
       def archive(file = nil, opts = {})

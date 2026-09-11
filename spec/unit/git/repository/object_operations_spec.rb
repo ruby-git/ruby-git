@@ -989,41 +989,81 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
 
-    context 'when the archive command raises during staging' do
-      before do
-        allow(archive_command).to receive(:call).and_raise(RuntimeError, 'archive failed')
-      end
-
-      it 'cleans up the staging temp file and re-raises' do
-        expect { described_instance.archive('HEAD') }.to raise_error(RuntimeError, /archive failed/)
-      end
-    end
-
-    context 'when gzip post-processing raises an error' do
-      before do
-        allow(Zlib::GzipWriter).to receive(:open).and_raise(RuntimeError, 'gzip failed')
-      end
-
-      it 'cleans up temp files and re-raises' do
-        expect { described_instance.archive('HEAD', nil, add_gzip: true) }.to raise_error(RuntimeError, /gzip failed/)
-      end
-    end
-
-    context 'when atomically renaming the staging file to the destination fails' do
-      let(:tmpfile) do
-        t = Tempfile.new(['archive_unit', '.zip'])
-        t.close
-        t
-      end
-
-      after { tmpfile.close! }
+    context 'when a step fails after a staging file is created' do
+      let(:staging_paths) { [] }
 
       before do
-        allow(File).to receive(:rename).and_raise(RuntimeError, 'rename failed')
+        allow(Tempfile).to receive(:create).and_wrap_original do |original, *args, **kwargs|
+          original.call(*args, **kwargs).tap { |file| staging_paths << file.path }
+        end
       end
 
-      it 'cleans up the staging file and re-raises' do
-        expect { described_instance.archive('HEAD', tmpfile.path) }.to raise_error(RuntimeError, /rename failed/)
+      # The first expectation guards against a vacuous pass: the cleanup check
+      # means nothing unless a staging file was created. It couples these
+      # examples to Tempfile.create, but watching Dir.tmpdir instead would be
+      # flaky when other examples or processes write there.
+      def expect_staging_files_removed
+        expect(staging_paths).not_to be_empty
+        expect(staging_paths.select { |path| File.exist?(path) }).to be_empty
+      end
+
+      context 'when the archive command raises during staging' do
+        before do
+          allow(archive_command).to receive(:call).and_raise(RuntimeError, 'archive failed')
+        end
+
+        it 're-raises the error' do
+          expect { described_instance.archive('HEAD') }.to raise_error(RuntimeError, /archive failed/)
+        end
+
+        it 'removes the staging file' do
+          expect { described_instance.archive('HEAD') }.to raise_error(RuntimeError, /archive failed/)
+          expect_staging_files_removed
+        end
+      end
+
+      context 'when gzip post-processing raises an error' do
+        before do
+          allow(Zlib::GzipWriter).to receive(:open).and_raise(RuntimeError, 'gzip failed')
+        end
+
+        it 're-raises the error' do
+          expect { described_instance.archive('HEAD', nil, add_gzip: true) }.to raise_error(RuntimeError, /gzip failed/)
+        end
+
+        it 'removes the staging file' do
+          expect { described_instance.archive('HEAD', nil, add_gzip: true) }.to raise_error(RuntimeError, /gzip failed/)
+          expect_staging_files_removed
+        end
+      end
+
+      context 'when atomically renaming the staging file to the destination fails' do
+        let(:tmpfile) do
+          t = Tempfile.new(['archive_unit', '.zip'])
+          t.close
+          t
+        end
+
+        after { tmpfile.close! }
+
+        before do
+          File.write(tmpfile.path, 'original content', mode: 'wb')
+          allow(File).to receive(:rename).and_raise(RuntimeError, 'rename failed')
+        end
+
+        it 're-raises the error' do
+          expect { described_instance.archive('HEAD', tmpfile.path) }.to raise_error(RuntimeError, /rename failed/)
+        end
+
+        it 'removes the staging file' do
+          expect { described_instance.archive('HEAD', tmpfile.path) }.to raise_error(RuntimeError, /rename failed/)
+          expect_staging_files_removed
+        end
+
+        it 'leaves the destination as it was' do
+          expect { described_instance.archive('HEAD', tmpfile.path) }.to raise_error(RuntimeError, /rename failed/)
+          expect(File.read(tmpfile.path)).to eq('original content')
+        end
       end
     end
 

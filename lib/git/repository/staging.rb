@@ -164,6 +164,11 @@ module Git
       #
       # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
+      # @note If a patch fails to apply, the `git am` session is left in progress
+      #   until the caller continues, skips, or aborts it. The patches applied
+      #   before it are already committed on the current branch; aborting the
+      #   session removes them again.
+      #
       def apply_mail(file)
         return unless File.exist?(file)
 

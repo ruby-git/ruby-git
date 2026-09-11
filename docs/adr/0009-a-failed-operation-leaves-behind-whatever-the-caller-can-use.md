@@ -59,8 +59,8 @@ they touch no repository state.
 The guarantee is per operation and stated in each operation's own documentation. A
 reader cannot infer it from the operation's shape. An operation that switches HEAD,
 leaves git mid operation, or writes to a caller-named path says in its YARD docs what
-a failure leaves behind. Issue 1831 tracks the operations whose docs do not say so
-yet.
+a failure leaves behind. Issue 1831 audited the operations whose docs did not say
+so when this record was written.
 
 An operation may still discard state on a path that has not failed. `#in_branch`
 hard-resets the working tree when its block returns a falsy value. That is the

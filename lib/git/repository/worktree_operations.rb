@@ -93,11 +93,17 @@ module Git
       #
       # @param commitish [String, nil] branch, tag, or commit to check out
       #
-      #   When `nil`, git creates a new branch named after the final path component
+      #   When `nil`, git checks out the branch named after the final path
+      #   component, creating it when no such branch exists
       #
       # @return [String] the output from the git worktree add command
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @note When `commitish` is `nil` and git creates the branch, it does so
+      #   before it creates the worktree, so a failure after that point leaves
+      #   the new branch in place without a worktree. A branch that already
+      #   existed is left as it was.
       #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
       #
