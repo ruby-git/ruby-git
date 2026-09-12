@@ -4,18 +4,22 @@ require 'spec_helper'
 require 'git/repository'
 require 'git/repository/context_helpers'
 
-# Integration-level coverage is provided by the underlying command integration
-# tests. No facade integration spec is needed for this module: the helpers are
-# pure path/context manipulations with no git-command delegation.
+# The with_temp_index and with_temp_working integration specs in
+# spec/integration/git/repository/context_helpers_spec.rb show the yielded
+# repository reading and writing the temporary location against real git. The
+# remaining helpers are pure path/context manipulations with no git-command
+# delegation and are covered here only.
 
 RSpec.describe Git::Repository::ContextHelpers do
   let(:git_dir) { '/repo/.git' }
   let(:work_dir) { '/repo' }
   let(:index_file) { '/repo/.git/index' }
 
+  # A real context rather than a double: it is a value object with no disk
+  # access, and its dup_with is what carries the outer override into a helper
+  # nested inside another.
   let(:execution_context) do
-    instance_double(
-      Git::ExecutionContext::Repository,
+    Git::ExecutionContext::Repository.new(
       git_dir: git_dir,
       git_work_dir: work_dir,
       git_index_file: index_file,
@@ -25,29 +29,6 @@ RSpec.describe Git::Repository::ContextHelpers do
   end
 
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
-
-  # Shared stub: any `dup_with` call on the execution_context double returns a
-  # new double reflecting the requested overrides. Individual describe blocks
-  # override this for tests that require specific assertions on the rebuilt context.
-  before do
-    allow(execution_context).to receive(:dup_with) do |**kwargs|
-      rebuilt = instance_double(
-        Git::ExecutionContext::Repository,
-        git_dir: kwargs.fetch(:git_dir, git_dir),
-        git_work_dir: kwargs.fetch(:git_work_dir, work_dir),
-        git_index_file: kwargs.fetch(:git_index_file, index_file)
-      )
-      allow(rebuilt).to receive(:dup_with) do |**inner|
-        instance_double(
-          Git::ExecutionContext::Repository,
-          git_dir: inner.fetch(:git_dir, git_dir),
-          git_work_dir: inner.fetch(:git_work_dir, work_dir),
-          git_index_file: inner.fetch(:git_index_file, index_file)
-        )
-      end
-      rebuilt
-    end
-  end
 
   # ---------------------------------------------------------------------------
   # #chdir
@@ -119,8 +100,7 @@ RSpec.describe Git::Repository::ContextHelpers do
 
     context 'when the repository is bare (no working directory)' do
       let(:execution_context) do
-        instance_double(
-          Git::ExecutionContext::Repository,
+        Git::ExecutionContext::Repository.new(
           git_dir: git_dir,
           git_work_dir: nil,
           git_index_file: index_file,
@@ -229,41 +209,69 @@ RSpec.describe Git::Repository::ContextHelpers do
   # ---------------------------------------------------------------------------
 
   describe '#with_index' do
-    let(:temp_context) { instance_double(Git::ExecutionContext::Repository) }
+    # A directory the spec owns, so the index file inside it is known not to
+    # exist rather than assumed absent from a shared location such as /tmp.
+    let(:temp_dir) { Dir.mktmpdir('context-helpers-') }
+    let(:new_index) { File.join(temp_dir, 'idx') }
+    let(:expanded_index) { File.expand_path(new_index) }
 
-    before do
-      allow(execution_context).to receive(:dup_with).and_return(temp_context)
-      allow(temp_context).to receive(:git_index_file).and_return('/tmp/idx')
+    after { FileUtils.remove_entry(temp_dir, true) }
+
+    it 'yields a repository other than the receiver bound to the new index' do
+      yielded = nil
+      described_instance.with_index(new_index) { |repo| yielded = repo }
+      expect(yielded).to be_a(Git::Repository)
+      expect(yielded).not_to be(described_instance)
+      expect(yielded.index).to eq(Pathname.new(expanded_index))
     end
 
-    it 'yields self' do
-      expect { |b| described_instance.with_index('/tmp/idx', &b) }
-        .to yield_with_args(described_instance)
+    it 'yields an instance of the receiver class' do
+      subclass_instance = Class.new(Git::Repository).new(execution_context: execution_context)
+      yielded = nil
+      subclass_instance.with_index(new_index) { |repo| yielded = repo }
+      expect(yielded).to be_an_instance_of(subclass_instance.class)
     end
 
     it 'returns the value returned by the block' do
-      result = described_instance.with_index('/tmp/idx') { 'hello' }
+      result = described_instance.with_index(new_index) { 'hello' }
       expect(result).to eq('hello')
     end
 
-    it 'sets the index to the new value during the block' do
-      entered_index = nil
-      described_instance.with_index('/tmp/idx') { entered_index = described_instance.index }
-      expect(entered_index).to eq(Pathname.new('/tmp/idx'))
+    it 'leaves the receiver execution context unchanged inside and after the block' do
+      original_context = described_instance.execution_context
+      context_in_block = nil
+      described_instance.with_index(new_index) { context_in_block = described_instance.execution_context }
+      expect(context_in_block).to be(original_context)
+      expect(described_instance.execution_context).to be(original_context)
     end
 
-    it 'restores the original execution context after the block' do
-      original_ctx = described_instance.execution_context
-      described_instance.with_index('/tmp/idx') { nil }
-      expect(described_instance.execution_context).to be(original_ctx)
+    it 'leaves the receiver execution context unchanged when the block raises' do
+      original_context = described_instance.execution_context
+      expect { described_instance.with_index(new_index) { raise 'block error' } }
+        .to raise_error('block error')
+      expect(described_instance.execution_context).to be(original_context)
     end
 
-    it 'restores the original execution context even when the block raises' do
-      original_ctx = described_instance.execution_context
-      expect do
-        described_instance.with_index('/tmp/idx') { raise 'boom' }
-      end.to raise_error('boom')
-      expect(described_instance.execution_context).to be(original_ctx)
+    it 'does not require the index file to exist' do
+      expect(File.exist?(expanded_index)).to be(false)
+      expect { described_instance.with_index(new_index) { nil } }.not_to raise_error
+    end
+
+    context 'when the path cannot be expanded' do
+      before do
+        # File.expand_path consults Dir.pwd for a relative path, so it fails
+        # when the process working directory has been removed. Other callers
+        # (Dir.mktmpdir, the temp-dir cleanup) must still expand normally.
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('relative/index').and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { described_instance.with_index('relative/index') { nil } }
+          .to raise_error(Git::Error, /Failed to expand the path/) do |error|
+            expect(error.cause).to be_a(Errno::ENOENT)
+          end
+      end
     end
   end
 
@@ -292,27 +300,33 @@ RSpec.describe Git::Repository::ContextHelpers do
       end
     end
 
-    it 'yields self' do
-      expect { |b| described_instance.with_temp_index(&b) }.to yield_with_args(described_instance)
+    it 'yields a repository other than the receiver' do
+      yielded = nil
+      described_instance.with_temp_index { |repo| yielded = repo }
+      expect(yielded).to be_a(Git::Repository)
+      expect(yielded).not_to be(described_instance)
     end
 
-    it 'sets the index to a different temporary path during the block' do
-      index_during_block = nil
-      described_instance.with_temp_index { index_during_block = described_instance.index }
-      expect(index_during_block).not_to eq(Pathname.new(index_file))
+    it 'yields a repository bound to an index inside a new temporary directory' do
+      yielded_index = nil
+      described_instance.with_temp_index { |repo| yielded_index = repo.index }
+      expect(yielded_index).not_to eq(Pathname.new(index_file))
+      expect(yielded_index.basename.to_s).to eq('index')
     end
 
-    it 'restores the original execution context after the block' do
-      original_ctx = described_instance.execution_context
-      described_instance.with_temp_index { nil }
-      expect(described_instance.execution_context).to be(original_ctx)
+    it 'leaves the receiver execution context unchanged inside and after the block' do
+      original_context = described_instance.execution_context
+      context_in_block = nil
+      described_instance.with_temp_index { context_in_block = described_instance.execution_context }
+      expect(context_in_block).to be(original_context)
+      expect(described_instance.execution_context).to be(original_context)
     end
 
     it 'cleans up the temporary directory after the block succeeds' do
       temp_dir = nil
-      described_instance.with_temp_index do
-        temp_dir = File.dirname(described_instance.index.to_s)
-        FileUtils.touch(described_instance.index.to_s)
+      described_instance.with_temp_index do |repo|
+        temp_dir = File.dirname(repo.index.to_s)
+        FileUtils.touch(repo.index.to_s)
       end
       expect(temp_dir).not_to be_nil
       expect(Dir.exist?(temp_dir)).to be(false)
@@ -321,9 +335,9 @@ RSpec.describe Git::Repository::ContextHelpers do
     it 'cleans up the temporary directory even when the block raises' do
       temp_dir = nil
       expect do
-        described_instance.with_temp_index do
-          temp_dir = File.dirname(described_instance.index.to_s)
-          FileUtils.touch(described_instance.index.to_s)
+        described_instance.with_temp_index do |repo|
+          temp_dir = File.dirname(repo.index.to_s)
+          FileUtils.touch(repo.index.to_s)
           raise 'block error'
         end
       end.to raise_error('block error')
@@ -443,18 +457,24 @@ RSpec.describe Git::Repository::ContextHelpers do
     let(:expanded_work_dir) { File.expand_path(real_work_dir) }
 
     after { FileUtils.remove_entry(real_work_dir, true) }
-    let(:temp_context) do
-      instance_double(Git::ExecutionContext::Repository, git_work_dir: expanded_work_dir)
-    end
 
     before do
-      allow(execution_context).to receive(:dup_with).and_return(temp_context)
       allow(Dir).to receive(:chdir).with(expanded_work_dir).and_yield
     end
 
-    it 'yields self' do
-      expect { |b| described_instance.with_working(real_work_dir, &b) }
-        .to yield_with_args(described_instance)
+    it 'yields a repository other than the receiver bound to the new working directory' do
+      yielded = nil
+      described_instance.with_working(real_work_dir) { |repo| yielded = repo }
+      expect(yielded).to be_a(Git::Repository)
+      expect(yielded).not_to be(described_instance)
+      expect(yielded.dir).to eq(Pathname.new(expanded_work_dir))
+    end
+
+    it 'yields an instance of the receiver class' do
+      subclass_instance = Class.new(Git::Repository).new(execution_context: execution_context)
+      yielded = nil
+      subclass_instance.with_working(real_work_dir) { |repo| yielded = repo }
+      expect(yielded).to be_an_instance_of(subclass_instance.class)
     end
 
     it 'returns the value returned by the block' do
@@ -467,18 +487,19 @@ RSpec.describe Git::Repository::ContextHelpers do
       described_instance.with_working(real_work_dir) { nil }
     end
 
-    it 'restores the original execution context after the block' do
-      original_ctx = described_instance.execution_context
-      described_instance.with_working(real_work_dir) { nil }
-      expect(described_instance.execution_context).to be(original_ctx)
+    it 'leaves the receiver execution context unchanged inside and after the block' do
+      original_context = described_instance.execution_context
+      context_in_block = nil
+      described_instance.with_working(real_work_dir) { context_in_block = described_instance.execution_context }
+      expect(context_in_block).to be(original_context)
+      expect(described_instance.execution_context).to be(original_context)
     end
 
-    it 'restores the original execution context even when the block raises' do
-      original_ctx = described_instance.execution_context
-      expect do
-        described_instance.with_working(real_work_dir) { raise 'boom' }
-      end.to raise_error('boom')
-      expect(described_instance.execution_context).to be(original_ctx)
+    it 'leaves the receiver execution context unchanged when the block raises' do
+      original_context = described_instance.execution_context
+      expect { described_instance.with_working(real_work_dir) { raise 'block error' } }
+        .to raise_error('block error')
+      expect(described_instance.execution_context).to be(original_context)
     end
 
     context 'when the working directory cannot be entered' do
@@ -493,10 +514,11 @@ RSpec.describe Git::Repository::ContextHelpers do
           end
       end
 
-      it 'restores the original execution context' do
-        original_ctx = described_instance.execution_context
-        expect { described_instance.with_working(real_work_dir) { nil } }.to raise_error(Git::Error)
-        expect(described_instance.execution_context).to be(original_ctx)
+      it 'leaves the receiver execution context unchanged' do
+        original_context = described_instance.execution_context
+        expect { described_instance.with_working(real_work_dir) { nil } }
+          .to raise_error(Git::Error, /Failed to change directory/)
+        expect(described_instance.execution_context).to be(original_context)
       end
     end
 
@@ -556,19 +578,31 @@ RSpec.describe Git::Repository::ContextHelpers do
       end
     end
 
-    it 'yields self' do
-      expect { |b| described_instance.with_temp_working(&b) }.to yield_with_args(described_instance)
+    it 'yields a repository other than the receiver' do
+      yielded = nil
+      described_instance.with_temp_working { |repo| yielded = repo }
+      expect(yielded).to be_a(Git::Repository)
+      expect(yielded).not_to be(described_instance)
     end
 
-    it 'restores the original execution context after the block' do
-      original_ctx = described_instance.execution_context
-      described_instance.with_temp_working { nil }
-      expect(described_instance.execution_context).to be(original_ctx)
+    it 'yields a repository bound to a new temporary working directory' do
+      yielded_dir = nil
+      described_instance.with_temp_working { |repo| yielded_dir = repo.dir }
+      expect(yielded_dir).not_to eq(Pathname.new(work_dir))
+      expect(yielded_dir.basename.to_s).to start_with('temp-workdir')
+    end
+
+    it 'leaves the receiver execution context unchanged inside and after the block' do
+      original_context = described_instance.execution_context
+      context_in_block = nil
+      described_instance.with_temp_working { context_in_block = described_instance.execution_context }
+      expect(context_in_block).to be(original_context)
+      expect(described_instance.execution_context).to be(original_context)
     end
 
     it 'cleans up the temporary directory after the block succeeds' do
       temp_dir = nil
-      described_instance.with_temp_working { temp_dir = described_instance.dir.to_s }
+      described_instance.with_temp_working { |repo| temp_dir = repo.dir.to_s }
       expect(temp_dir).not_to be_nil
       expect(Dir.exist?(temp_dir)).to be(false)
     end
@@ -576,8 +610,8 @@ RSpec.describe Git::Repository::ContextHelpers do
     it 'cleans up the temporary directory even when the block raises' do
       temp_dir = nil
       expect do
-        described_instance.with_temp_working do
-          temp_dir = described_instance.dir.to_s
+        described_instance.with_temp_working do |repo|
+          temp_dir = repo.dir.to_s
           raise 'block error'
         end
       end.to raise_error('block error')
@@ -591,17 +625,29 @@ RSpec.describe Git::Repository::ContextHelpers do
   # ---------------------------------------------------------------------------
 
   describe 'nested context helpers' do
-    it 'restores the original execution context after nested with_index inside with_working' do
-      original_ctx = described_instance.execution_context
-      allow(Dir).to receive(:chdir).and_yield
+    before { allow(Dir).to receive(:chdir).and_yield }
+
+    it 'yields a repository carrying both the working directory and index overrides' do
+      inner = nil
+      Dir.mktmpdir do |outer_work|
+        described_instance.with_working(outer_work) do |working_repo|
+          working_repo.with_index('/tmp/inner_idx') { |repo| inner = repo }
+        end
+        expect(inner.dir).to eq(Pathname.new(File.expand_path(outer_work)))
+      end
+      expect(inner.index).to eq(Pathname.new(File.expand_path('/tmp/inner_idx')))
+    end
+
+    it 'leaves the receiver execution context unchanged after nested with_index inside with_working' do
+      original_context = described_instance.execution_context
 
       Dir.mktmpdir do |outer_work|
-        described_instance.with_working(outer_work) do
-          described_instance.with_index('/tmp/inner_idx') { nil }
+        described_instance.with_working(outer_work) do |working_repo|
+          working_repo.with_index('/tmp/inner_idx') { nil }
         end
       end
 
-      expect(described_instance.execution_context).to be(original_ctx)
+      expect(described_instance.execution_context).to be(original_context)
     end
   end
 end
