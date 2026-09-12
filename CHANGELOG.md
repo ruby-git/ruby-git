@@ -5,6 +5,18 @@
 
 # Change Log
 
+## [5.6.0](https://github.com/ruby-git/ruby-git/compare/v5.5.0...v5.6.0) (2026-09-12)
+
+
+### Features
+
+* **repository:** Deprecate with_* context helper blocks that declare no parameter ([231b65c](https://github.com/ruby-git/ruby-git/commit/231b65c435e9b3d9cdbf8b113b3aba9313da5110)), closes [#1835](https://github.com/ruby-git/ruby-git/issues/1835)
+
+
+### Other Changes
+
+* **export:** Describe what a failed .git removal leaves behind ([bd08096](https://github.com/ruby-git/ruby-git/commit/bd080964e44a11594202726e3823a8cafad62bd5)), closes [#1823](https://github.com/ruby-git/ruby-git/issues/1823)
+
 ## [5.5.0](https://github.com/ruby-git/ruby-git/compare/v5.4.1...v5.5.0) (2026-09-10)
 
 
