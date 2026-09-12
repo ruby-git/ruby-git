@@ -15,6 +15,8 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Base` compatibility shim removed](#gitbase-compatibility-shim-removed)
   - [`Git.binary_version` and `Git.ls_remote(nil)` removed](#gitbinary_version-and-gitls_remotenil-removed)
   - [`Git.clone` legacy options removed](#gitclone-legacy-options-removed)
+  - [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)
+  - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -69,7 +71,11 @@ To prepare:
    [Deprecated methods](#deprecated-methods) until the suite is clean.
 7. Replace any `rescue Errno::*` around gem calls with `rescue Git::Error` (see
    [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)).
-8. Upgrade to v6.0.0.
+8. Inside a `with_index`, `with_temp_index`, `with_working`, or `with_temp_working`
+   block, call methods on the block parameter rather than on the outer repository
+   (see [Context helpers yield a separate
+   repository](#context-helpers-yield-a-separate-repository)).
+9. Upgrade to v6.0.0.
 
 ### Minimum Ruby version
 
@@ -213,8 +219,9 @@ contradicted the documented contract that the gem raises only `ArgumentError` or
 available through `cause`.
 
 The affected methods are `Git.open` (reading a gitdir pointer file), `Git.export`,
-`Git::Repository#chdir`, `#with_working`, `#with_temp_index`, `#with_temp_working`,
-`#cat_file_contents`, `#each_conflict`, `#conflicts`, `#archive`, and `#repo_size`.
+`Git::Repository#chdir`, `#with_index`, `#with_working`, `#with_temp_index`,
+`#with_temp_working`, `#set_index`, `#set_working`, `#cat_file_contents`,
+`#each_conflict`, `#conflicts`, `#archive`, and `#repo_size`.
 
 ```ruby
 # v5.x
@@ -238,6 +245,86 @@ Code that already rescues `Git::Error` needs no change. A `SystemCallError` rais
 your own block inside `chdir`, `with_working`, `with_temp_index`, `with_temp_working`,
 or the block form of `cat_file_contents` still propagates unchanged, so the gem never
 relabels an error raised by your code.
+
+### Context helpers yield a separate repository
+
+`Git::Repository#with_index`, `#with_temp_index`, `#with_working`, and
+`#with_temp_working` used to rebind the receiver to the other index or working tree
+for the duration of the block and yield the receiver itself. They now build a second
+repository of the receiver's class bound to that index or working tree, yield it,
+and leave the receiver bound to its original index and working tree.
+
+Code that uses the block parameter and finishes with it before the block ends needs
+no change. Code that ignores the parameter and calls methods on the outer repository
+inside the block now runs those calls against the original index or working tree.
+Use the block parameter instead:
+
+```ruby
+# v5.x
+repo.with_temp_index do
+  repo.read_tree('HEAD')
+  repo.write_tree
+end
+
+# v6.x
+repo.with_temp_index do |indexed|
+  indexed.read_tree('HEAD')
+  indexed.write_tree
+end
+```
+
+The same applies to reading `index` or `dir` inside the block to find the temporary
+path: read them on the block parameter.
+
+A helper nested inside another must also be called on the block parameter. A nested
+call on the outer repository derives from the outer repository's original index and
+working tree, so it does not see the outer block's temporary location:
+
+```ruby
+# v5.x
+repo.with_temp_working do
+  repo.with_temp_index do
+    repo.add('.')
+    repo.write_tree
+  end
+end
+
+# v6.x
+repo.with_temp_working do |scratch|
+  scratch.with_temp_index do |indexed|
+    indexed.add('.')
+    indexed.write_tree
+  end
+end
+```
+
+Calling `set_index` or `set_working` on the outer repository inside the block is no
+longer undone when the block ends. In v5.x the block restored the receiver's
+original index and working tree on exit; in v6.x the receiver stays bound to
+whatever `set_index` or `set_working` gave it.
+
+The repository yielded by `with_temp_index` or `with_temp_working` stays bound to
+the temporary path after the block removes it. This is the one case where code that
+already used the block parameter has to change. If the yielded repository escapes
+the block, directly or inside an object that holds it and later runs commands, calls
+against the removed working tree raise `Git::Error`. Against the removed index,
+reads do not raise: git treats the missing index file as an empty index, so
+`ls_files` returns nothing and `status_info` reports every tracked file both as
+deleted and as untracked. Writes such as `add` do raise `Git::Error`. Reads from
+the object database, such as `Git::Object::AbstractObject#contents`, still work. In
+v5.x an escaped object held the outer repository, which had been rebound to the
+original path by then.
+
+The yielded repository is built with `self.class.new(execution_context:)`, so a
+subclass of `Git::Repository` has to accept that call. A subclass whose `initialize`
+takes different keywords raises `ArgumentError` from these helpers. One that takes a
+positional argument instead receives the keywords as a Hash and yields a
+misconfigured repository, so check the constructor rather than waiting for an
+exception.
+
+`with_working` and `with_temp_working` still change the process working directory
+with `Dir.chdir` for the duration of the block, so they remain unsafe to call from
+more than one thread at a time.
 
 ---
 
