@@ -8,6 +8,72 @@ require 'git/repository/context_helpers'
 # tests. No facade integration spec is needed for this module: the helpers are
 # pure path/context manipulations with no git-command delegation.
 
+# Shared coverage for the deprecation of blocks that declare no positional
+# parameter. Each including describe defines `call_helper` as a lambda that
+# forwards its block to the helper under test. The block forms mirror the
+# ArgumentError cases in the v6.0.0 spec so the two branches pin the same rule.
+RSpec.shared_examples 'a context helper that deprecates blocks with no parameter' do |helper|
+  context 'deprecation handling' do
+    let(:expected_warning) do
+      a_string_including("Git::Repository##{helper} ", 'v6.0.0', '|repo|')
+    end
+
+    context 'when the block declares no parameter' do
+      it 'emits a deprecation warning naming the helper, v6.0.0, and the block-parameter form' do
+        expect(Git::Deprecation).to receive(:warn).with(expected_warning, anything)
+        call_helper.call { nil }
+      end
+
+      it 'still returns the value returned by the block' do
+        allow(Git::Deprecation).to receive(:warn)
+        expect(call_helper.call { 'value' }).to eq('value')
+      end
+    end
+
+    context 'when the block declares only a keyword parameter' do
+      it 'emits a deprecation warning' do
+        expect(Git::Deprecation).to receive(:warn).with(expected_warning, anything)
+        call_helper.call { |key: nil| key }
+      end
+    end
+
+    context 'when the block declares a parameter' do
+      it 'does not emit a deprecation warning' do
+        expect(Git::Deprecation).not_to receive(:warn)
+        call_helper.call { |_repo| nil }
+      end
+    end
+
+    context 'when the block declares an optional parameter' do
+      it 'does not emit a deprecation warning' do
+        expect(Git::Deprecation).not_to receive(:warn)
+        call_helper.call { |_repo = nil| nil }
+      end
+    end
+
+    context 'when the block declares a splat parameter' do
+      it 'does not emit a deprecation warning' do
+        expect(Git::Deprecation).not_to receive(:warn)
+        call_helper.call { |*_args| nil }
+      end
+    end
+
+    context 'when the block is a symbol-to-proc' do
+      it 'does not emit a deprecation warning' do
+        expect(Git::Deprecation).not_to receive(:warn)
+        call_helper.call(&:itself)
+      end
+    end
+
+    context 'when no block is given' do
+      it 'raises LocalJumpError without emitting a deprecation warning' do
+        expect(Git::Deprecation).not_to receive(:warn)
+        expect { call_helper.call }.to raise_error(LocalJumpError, /no block given/)
+      end
+    end
+  end
+end
+
 RSpec.describe Git::Repository::ContextHelpers do
   let(:git_dir) { '/repo/.git' }
   let(:work_dir) { '/repo' }
@@ -184,6 +250,8 @@ RSpec.describe Git::Repository::ContextHelpers do
   # ---------------------------------------------------------------------------
 
   describe '#with_index' do
+    let(:call_helper) { ->(&block) { described_instance.with_index('/tmp/idx', &block) } }
+
     let(:temp_context) { instance_double(Git::ExecutionContext::Repository) }
 
     before do
@@ -197,29 +265,31 @@ RSpec.describe Git::Repository::ContextHelpers do
     end
 
     it 'returns the value returned by the block' do
-      result = described_instance.with_index('/tmp/idx') { 'hello' }
+      result = described_instance.with_index('/tmp/idx') { |_repo| 'hello' }
       expect(result).to eq('hello')
     end
 
     it 'sets the index to the new value during the block' do
       entered_index = nil
-      described_instance.with_index('/tmp/idx') { entered_index = described_instance.index }
+      described_instance.with_index('/tmp/idx') { |_repo| entered_index = described_instance.index }
       expect(entered_index).to eq(Pathname.new('/tmp/idx'))
     end
 
     it 'restores the original execution context after the block' do
       original_ctx = described_instance.execution_context
-      described_instance.with_index('/tmp/idx') { nil }
+      described_instance.with_index('/tmp/idx') { |_repo| nil }
       expect(described_instance.execution_context).to be(original_ctx)
     end
 
     it 'restores the original execution context even when the block raises' do
       original_ctx = described_instance.execution_context
       expect do
-        described_instance.with_index('/tmp/idx') { raise 'boom' }
+        described_instance.with_index('/tmp/idx') { |_repo| raise 'boom' }
       end.to raise_error('boom')
       expect(described_instance.execution_context).to be(original_ctx)
     end
+
+    it_behaves_like 'a context helper that deprecates blocks with no parameter', :with_index
   end
 
   # ---------------------------------------------------------------------------
@@ -227,25 +297,27 @@ RSpec.describe Git::Repository::ContextHelpers do
   # ---------------------------------------------------------------------------
 
   describe '#with_temp_index' do
+    let(:call_helper) { ->(&block) { described_instance.with_temp_index(&block) } }
+
     it 'yields self' do
       expect { |b| described_instance.with_temp_index(&b) }.to yield_with_args(described_instance)
     end
 
     it 'sets the index to a different temporary path during the block' do
       index_during_block = nil
-      described_instance.with_temp_index { index_during_block = described_instance.index }
+      described_instance.with_temp_index { |_repo| index_during_block = described_instance.index }
       expect(index_during_block).not_to eq(Pathname.new(index_file))
     end
 
     it 'restores the original execution context after the block' do
       original_ctx = described_instance.execution_context
-      described_instance.with_temp_index { nil }
+      described_instance.with_temp_index { |_repo| nil }
       expect(described_instance.execution_context).to be(original_ctx)
     end
 
     it 'cleans up the temporary directory after the block succeeds' do
       temp_dir = nil
-      described_instance.with_temp_index do
+      described_instance.with_temp_index do |_repo|
         temp_dir = File.dirname(described_instance.index.to_s)
         FileUtils.touch(described_instance.index.to_s)
       end
@@ -256,7 +328,7 @@ RSpec.describe Git::Repository::ContextHelpers do
     it 'cleans up the temporary directory even when the block raises' do
       temp_dir = nil
       expect do
-        described_instance.with_temp_index do
+        described_instance.with_temp_index do |_repo|
           temp_dir = File.dirname(described_instance.index.to_s)
           FileUtils.touch(described_instance.index.to_s)
           raise 'block error'
@@ -265,6 +337,8 @@ RSpec.describe Git::Repository::ContextHelpers do
       expect(temp_dir).not_to be_nil
       expect(Dir.exist?(temp_dir)).to be(false)
     end
+
+    it_behaves_like 'a context helper that deprecates blocks with no parameter', :with_temp_index
   end
 
   # ---------------------------------------------------------------------------
@@ -359,6 +433,8 @@ RSpec.describe Git::Repository::ContextHelpers do
   # ---------------------------------------------------------------------------
 
   describe '#with_working' do
+    let(:call_helper) { ->(&block) { described_instance.with_working(real_work_dir, &block) } }
+
     let(:real_work_dir) { Dir.mktmpdir('context-helpers-') }
     let(:expanded_work_dir) { File.expand_path(real_work_dir) }
 
@@ -378,25 +454,25 @@ RSpec.describe Git::Repository::ContextHelpers do
     end
 
     it 'returns the value returned by the block' do
-      result = described_instance.with_working(real_work_dir) { 'result' }
+      result = described_instance.with_working(real_work_dir) { |_repo| 'result' }
       expect(result).to eq('result')
     end
 
     it 'changes the process directory to the expanded working directory during the block' do
       expect(Dir).to receive(:chdir).with(expanded_work_dir).and_yield
-      described_instance.with_working(real_work_dir) { nil }
+      described_instance.with_working(real_work_dir) { |_repo| nil }
     end
 
     it 'restores the original execution context after the block' do
       original_ctx = described_instance.execution_context
-      described_instance.with_working(real_work_dir) { nil }
+      described_instance.with_working(real_work_dir) { |_repo| nil }
       expect(described_instance.execution_context).to be(original_ctx)
     end
 
     it 'restores the original execution context even when the block raises' do
       original_ctx = described_instance.execution_context
       expect do
-        described_instance.with_working(real_work_dir) { raise 'boom' }
+        described_instance.with_working(real_work_dir) { |_repo| raise 'boom' }
       end.to raise_error('boom')
       expect(described_instance.execution_context).to be(original_ctx)
     end
@@ -406,6 +482,8 @@ RSpec.describe Git::Repository::ContextHelpers do
         described_instance.with_working('/nonexistent/path/for/test')
       end.to raise_error(ArgumentError, /path does not exist/)
     end
+
+    it_behaves_like 'a context helper that deprecates blocks with no parameter', :with_working
   end
 
   # ---------------------------------------------------------------------------
@@ -413,6 +491,8 @@ RSpec.describe Git::Repository::ContextHelpers do
   # ---------------------------------------------------------------------------
 
   describe '#with_temp_working' do
+    let(:call_helper) { ->(&block) { described_instance.with_temp_working(&block) } }
+
     before do
       allow(Dir).to receive(:chdir).and_yield
     end
@@ -423,13 +503,13 @@ RSpec.describe Git::Repository::ContextHelpers do
 
     it 'restores the original execution context after the block' do
       original_ctx = described_instance.execution_context
-      described_instance.with_temp_working { nil }
+      described_instance.with_temp_working { |_repo| nil }
       expect(described_instance.execution_context).to be(original_ctx)
     end
 
     it 'cleans up the temporary directory after the block succeeds' do
       temp_dir = nil
-      described_instance.with_temp_working { temp_dir = described_instance.dir.to_s }
+      described_instance.with_temp_working { |_repo| temp_dir = described_instance.dir.to_s }
       expect(temp_dir).not_to be_nil
       expect(Dir.exist?(temp_dir)).to be(false)
     end
@@ -437,7 +517,7 @@ RSpec.describe Git::Repository::ContextHelpers do
     it 'cleans up the temporary directory even when the block raises' do
       temp_dir = nil
       expect do
-        described_instance.with_temp_working do
+        described_instance.with_temp_working do |_repo|
           temp_dir = described_instance.dir.to_s
           raise 'block error'
         end
@@ -445,6 +525,8 @@ RSpec.describe Git::Repository::ContextHelpers do
       expect(temp_dir).not_to be_nil
       expect(Dir.exist?(temp_dir)).to be(false)
     end
+
+    it_behaves_like 'a context helper that deprecates blocks with no parameter', :with_temp_working
   end
 
   # ---------------------------------------------------------------------------
@@ -457,8 +539,8 @@ RSpec.describe Git::Repository::ContextHelpers do
       allow(Dir).to receive(:chdir).and_yield
 
       Dir.mktmpdir do |outer_work|
-        described_instance.with_working(outer_work) do
-          described_instance.with_index('/tmp/inner_idx') { nil }
+        described_instance.with_working(outer_work) do |_repo|
+          described_instance.with_index('/tmp/inner_idx') { |_repo| nil }
         end
       end
 

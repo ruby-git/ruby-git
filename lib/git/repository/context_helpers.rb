@@ -18,6 +18,10 @@ module Git
     # @api private
     #
     module ContextHelpers
+      # Parameter types from `Proc#parameters` that receive a positional argument
+      CONTEXT_HELPERS_POSITIONAL_PARAMETERS = %i[req opt rest].freeze
+      private_constant :CONTEXT_HELPERS_POSITIONAL_PARAMETERS
+
       # Changes the current working directory to the repository working directory
       # for the duration of the block
       #
@@ -51,9 +55,13 @@ module Git
       # yields `self`, then unconditionally restores the original execution
       # context — even if the block raises an exception.
       #
+      # Deprecated form: a block that declares no positional parameter emits a
+      # deprecation warning, because v6.0.0 yields a separate repository
+      # instead of `self`.
+      #
       # @example Read a tree into a custom index
-      #   repo.with_index('/tmp/custom.index') do
-      #     repo.read_tree('HEAD')
+      #   repo.with_index('/tmp/custom.index') do |r|
+      #     r.read_tree('HEAD')
       #   end
       #
       # @param new_index [String, Pathname] path to the replacement index file
@@ -66,7 +74,8 @@ module Git
       #
       # @yieldreturn [Object] returned as the method's return value
       #
-      def with_index(new_index) # :yields: self
+      def with_index(new_index, &block) # :yields: self
+        context_helpers_warn_if_block_declares_no_parameter(:with_index, block)
         old_context = @execution_context
         set_index(new_index, must_exist: false)
         yield self
@@ -84,10 +93,14 @@ module Git
       # are removed unconditionally after the block exits, even if the block
       # raises an exception.
       #
+      # Deprecated form: a block that declares no positional parameter emits a
+      # deprecation warning, because v6.0.0 yields a separate repository
+      # instead of `self`.
+      #
       # @example Stage changes using a temporary index
-      #   repo.with_temp_index do
-      #     repo.read_tree('HEAD')
-      #     repo.write_tree
+      #   repo.with_temp_index do |r|
+      #     r.read_tree('HEAD')
+      #     r.write_tree
       #   end
       #
       # @return [Object] the value returned by the block
@@ -98,13 +111,17 @@ module Git
       #
       # @yieldreturn [Object] returned as the method's return value
       #
-      def with_temp_index(&) # :yields: self
+      def with_temp_index(&block) # :yields: self
+        context_helpers_warn_if_block_declares_no_parameter(:with_temp_index, block)
         # Use a unique temp directory so the index file path is collision-free
         # and does not exist until git writes it. An existing empty file would
         # be treated as a corrupt index by git.
         temp_dir = Dir.mktmpdir('git-temp-index-')
         begin
-          with_index(File.join(temp_dir, 'index'), &)
+          # The inner block declares a parameter so with_index does not warn a
+          # second time under its own name; forwarding &block would.
+          # rubocop:disable-next Style/ExplicitBlockArgument
+          with_index(File.join(temp_dir, 'index')) { |repo| yield repo }
         ensure
           FileUtils.remove_entry(temp_dir, true)
         end
@@ -118,10 +135,14 @@ module Git
       # `self`, then unconditionally restores the original execution context —
       # even if the block raises an exception.
       #
+      # Deprecated form: a block that declares no positional parameter emits a
+      # deprecation warning, because v6.0.0 yields a separate repository
+      # instead of `self`.
+      #
       # @example Commit changes from a different worktree path
-      #   repo.with_working('/path/to/worktree') do
-      #     repo.add('.')
-      #     repo.commit('chore: automated update')
+      #   repo.with_working('/path/to/worktree') do |r|
+      #     r.add('.')
+      #     r.commit('chore: automated update')
       #   end
       #
       # @param work_dir [String, Pathname] path to the replacement working
@@ -138,7 +159,8 @@ module Git
       #
       # @yieldreturn [Object] returned as the method's return value
       #
-      def with_working(work_dir) # :yields: self
+      def with_working(work_dir, &block) # :yields: self
+        context_helpers_warn_if_block_declares_no_parameter(:with_working, block)
         old_context = @execution_context
         set_working(work_dir)
         Dir.chdir(dir.to_s) { yield self }
@@ -153,9 +175,14 @@ module Git
       # The temporary directory is removed unconditionally after the block
       # exits, even if the block raises an exception.
       #
+      # Deprecated form: a block that declares no positional parameter emits a
+      # deprecation warning, because v6.0.0 yields a separate repository
+      # instead of `self`.
+      #
       # @example Write files in an isolated temporary working directory
-      #   repo.with_temp_working do
+      #   repo.with_temp_working do |r|
       #     File.write('scratch.txt', 'temporary content')
+      #     r.add('scratch.txt')
       #   end
       #
       # @return [Object] the value returned by the block
@@ -168,7 +195,11 @@ module Git
       # @yieldreturn [Object] returned as the method's return value
       #
       def with_temp_working(&block) # :yields: self
-        Dir.mktmpdir('temp-workdir') { |temp_dir| with_working(temp_dir, &block) }
+        context_helpers_warn_if_block_declares_no_parameter(:with_temp_working, block)
+        # The inner block declares a parameter so with_working does not warn a
+        # second time under its own name; forwarding &block would.
+        # rubocop:disable-next Style/ExplicitBlockArgument
+        Dir.mktmpdir('temp-workdir') { |temp_dir| with_working(temp_dir) { |repo| yield repo } }
       end
 
       # Sets the git index to `index_file` and rebuilds the execution context
@@ -230,6 +261,42 @@ module Git
       end
 
       private
+
+      # Emits a deprecation warning when `block` declares no positional parameter
+      #
+      # In v6.0.0 the `with_*` helpers yield a separate repository instead of
+      # rebinding the receiver, so a block that calls methods on the receiver
+      # (the v5.x form) acts on the wrong repository there. v6.0.0 raises
+      # `ArgumentError` for that form using this same rule: the block must
+      # declare a required, optional, or splat positional parameter. The rule
+      # reads `Proc#parameters` rather than arity because an optional parameter
+      # gives a proc an arity of zero although it receives the repository,
+      # while keyword and block parameters cannot receive it.
+      #
+      # A missing block is not checked here; the helper's `yield` raises
+      # `LocalJumpError` as before.
+      #
+      # The warning reports the helper's caller, not this helper's caller, so
+      # the location points at the block that needs changing.
+      #
+      # @param helper [Symbol] the public helper name used in the warning
+      #
+      # @param block [Proc, nil] the block passed to the helper
+      #
+      # @return [void]
+      #
+      def context_helpers_warn_if_block_declares_no_parameter(helper, block)
+        return if block.nil?
+        return if block.parameters.any? { |type, _name| CONTEXT_HELPERS_POSITIONAL_PARAMETERS.include?(type) }
+
+        Git::Deprecation.warn(
+          "Calling Git::Repository##{helper} with a block that declares no positional " \
+          'parameter is deprecated and will be removed in v6.0.0, where the helper ' \
+          'yields a separate repository instead of self. Declare a block parameter and ' \
+          "call methods on it instead: #{helper} { |repo| repo.some_method }",
+          caller_locations(2)
+        )
+      end
 
       # Resolves deprecated `check` argument semantics with `must_exist:`
       #
