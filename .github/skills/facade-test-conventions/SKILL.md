@@ -117,7 +117,11 @@ Setup invariants:
   Modules are mixed into the class; tests must exercise the class to reflect
   real call sites.
 - `execution_context` is an `instance_double(Git::ExecutionContext::Repository)`
-  — never a `double('ExecutionContext')` and never a real context.
+  — never a `double('ExecutionContext')`. The one exception is a facade whose
+  behavior under test is deriving a new context (`dup_with`): there a real
+  `Git::ExecutionContext::Repository` is allowed because it is a value object
+  with no disk access, and a stub of `dup_with` would re-implement it. Say so
+  in a comment on the `let`.
 - Each command class is stubbed with `allow(Klass).to receive(:new).with(execution_context).and_return(...)`
   so the facade's command construction (with the right execution context) is
   verified by the stub.
@@ -211,8 +215,9 @@ end
   on the CLI tokens that reach git.
 - **Parser internals.** Stub the parser class method and assert the facade calls
   it with the right input. Parser parsing is covered by `spec/unit/git/parsers/`.
-- **Real command execution.** Facade unit tests must not exercise
-  `Git::ExecutionContext::Repository` for real. Use `instance_double`.
+- **Real command execution.** Facade unit tests must not run commands through
+  `Git::ExecutionContext::Repository`. Use `instance_double`, except for the
+  derived-context case named under "Setup invariants".
 - **Multiple input strings exercising the same code path** — one test per
   argument type is sufficient (string vs. array vs. nil), not one per value.
 - **`#initialize` of the facade module.** The module is mixed into

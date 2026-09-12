@@ -22,11 +22,21 @@ module Git
     # so a subclass of {Git::Repository} must accept that constructor call for
     # the helpers to yield an instance of the subclass.
     #
+    # Each `with_*` helper requires a block that declares a positional parameter
+    # for the yielded repository and raises `ArgumentError` otherwise. A block with no
+    # positional parameter is the v5.x form, which relied on the receiver being
+    # rebound; failing fast keeps that form from running against the original
+    # index or working directory.
+    #
     # Included by {Git::Repository}.
     #
     # @api private
     #
     module ContextHelpers
+      # Parameter types from `Proc#parameters` that receive a positional argument
+      CONTEXT_HELPERS_POSITIONAL_PARAMETERS = %i[req opt rest].freeze
+      private_constant :CONTEXT_HELPERS_POSITIONAL_PARAMETERS
+
       # Changes the current working directory to the repository working directory
       # for the duration of the block
       #
@@ -70,6 +80,9 @@ module Git
       #
       # @return [Object] the value returned by the block
       #
+      # @raise [ArgumentError] if no block is given or the block declares no
+      #   positional parameter
+      #
       # @raise [Git::Error] if `new_index` cannot be expanded to an absolute path
       #
       # @yield [repo] the repository bound to `new_index`
@@ -79,7 +92,8 @@ module Git
       #
       # @yieldreturn [Object] returned as the method's return value
       #
-      def with_index(new_index)
+      def with_index(new_index, &block)
+        context_helpers_require_repository_block(block)
         new_path = context_helpers_validate_path(new_index, false)
         yield context_helpers_derived_repository(git_index_file: new_path.to_s)
       end
@@ -103,6 +117,9 @@ module Git
       #
       # @return [Object] the value returned by the block
       #
+      # @raise [ArgumentError] if no block is given or the block declares no
+      #   positional parameter
+      #
       # @raise [Git::Error] if the temporary directory cannot be created
       #
       # @yield [repo] the repository bound to the temporary index
@@ -115,21 +132,22 @@ module Git
       # @note The yielded repository stays bound to the temporary index path
       #   after the directory that held it is removed. Do not let it, or an
       #   object that holds it and later runs commands against the index,
-      #   escape the block. Git treats the missing index file as an empty
-      #   index, so reads such as {Git::Repository::StatusOperations#ls_files}
+      #   escape the block. Git treats the missing index file, even with its
+      #   directory gone, as an empty index, so reads such as {Git::Repository::StatusOperations#ls_files}
       #   return nothing and {Git::Repository::StatusOperations#status_info}
       #   reports every tracked file both as deleted and as untracked; writes
       #   such as {Git::Repository::Staging#add} raise {Git::Error}. Reads from
       #   the object database, such as {Git::Object::AbstractObject#contents},
       #   still work.
       #
-      def with_temp_index(&)
+      def with_temp_index(&block)
+        context_helpers_require_repository_block(block)
         # Use a unique temp directory so the index file path is collision-free
         # and does not exist until git writes it. An existing empty file would
         # be treated as a corrupt index by git.
         temp_dir = context_helpers_mktmpdir('git-temp-index-')
         begin
-          with_index(File.join(temp_dir, 'index'), &)
+          with_index(File.join(temp_dir, 'index'), &block)
         ensure
           FileUtils.remove_entry(temp_dir, true)
         end
@@ -159,7 +177,8 @@ module Git
       #
       # @return [Object] the value returned by the block
       #
-      # @raise [ArgumentError] if `work_dir` does not exist on disk
+      # @raise [ArgumentError] if `work_dir` does not exist on disk, if no block
+      #   is given, or if the block declares no positional parameter
       #
       # @raise [Git::Error] if `work_dir` cannot be expanded to an absolute path
       #   or cannot be entered
@@ -171,7 +190,8 @@ module Git
       #
       # @yieldreturn [Object] returned as the method's return value
       #
-      def with_working(work_dir)
+      def with_working(work_dir, &block)
+        context_helpers_require_repository_block(block)
         new_path = context_helpers_validate_path(work_dir, true)
         repo = context_helpers_derived_repository(git_work_dir: new_path.to_s)
         context_helpers_chdir(new_path.to_s) { yield repo }
@@ -195,6 +215,9 @@ module Git
       #
       # @return [Object] the value returned by the block
       #
+      # @raise [ArgumentError] if no block is given or the block declares no
+      #   positional parameter
+      #
       # @raise [Git::Error] if the temporary directory cannot be created or
       #   removed
       #
@@ -212,9 +235,10 @@ module Git
       #   {Git::Error}. Reads from the object database, such as
       #   {Git::Object::AbstractObject#contents}, still work.
       #
-      def with_temp_working(&)
+      def with_temp_working(&block)
+        context_helpers_require_repository_block(block)
         Git::SystemCallGuard.call('Failed to create or remove a temporary directory') do |guard|
-          Dir.mktmpdir('temp-workdir') { |temp_dir| guard.unguarded { with_working(temp_dir, &) } }
+          Dir.mktmpdir('temp-workdir') { |temp_dir| guard.unguarded { with_working(temp_dir, &block) } }
         end
       end
 
@@ -243,7 +267,7 @@ module Git
       def set_index(index_file, check = nil, must_exist: nil)
         must_exist = context_helpers_deprecate_check_argument(check, must_exist)
         new_path = context_helpers_validate_path(index_file, must_exist)
-        @execution_context = context_helpers_derived_context(git_index_file: new_path.to_s)
+        @execution_context = @execution_context.dup_with(git_index_file: new_path.to_s)
         nil
       end
 
@@ -272,7 +296,7 @@ module Git
       def set_working(work_dir, check = nil, must_exist: nil)
         must_exist = context_helpers_deprecate_check_argument(check, must_exist)
         new_path = context_helpers_validate_path(work_dir, must_exist)
-        @execution_context = context_helpers_derived_context(git_work_dir: new_path.to_s)
+        @execution_context = @execution_context.dup_with(git_work_dir: new_path.to_s)
         nil
       end
 
@@ -305,6 +329,31 @@ module Git
         Git::SystemCallGuard.call('Failed to change directory') do |guard|
           Dir.chdir(path) { guard.unguarded(&block) }
         end
+      end
+
+      # Raises unless `block` declares a positional parameter for the yielded
+      # repository
+      #
+      # A block with no positional parameter is the v5.x form that relied on
+      # the receiver being rebound; it fails fast rather than running against
+      # the original index or working directory. The check reads the block's
+      # parameter list rather than its arity because an optional parameter
+      # (`|repo = nil|`) gives a proc an arity of zero although it receives the
+      # repository, while keyword and block parameters cannot receive it.
+      #
+      # @param block [Proc, nil] the block passed to a `with_*` helper
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if `block` is nil or declares no positional
+      #   parameter
+      #
+      # @api private
+      #
+      def context_helpers_require_repository_block(block)
+        return if block&.parameters&.any? { |type, _name| CONTEXT_HELPERS_POSITIONAL_PARAMETERS.include?(type) }
+
+        raise ArgumentError, 'a block that accepts the yielded repository is required'
       end
 
       # Creates a temporary directory, raising {Git::Error} on failure
@@ -369,27 +418,6 @@ module Git
         end
       end
 
-      # Copies this execution context with selected overrides applied
-      #
-      # The single place the gem derives one repository context from another.
-      # {#set_index} and {#set_working} assign the result to the receiver; the
-      # `with_*` helpers wrap it in a second repository instead.
-      #
-      # @param overrides [Hash] execution-context attributes to override
-      #
-      # @option overrides [String, nil] :git_index_file replacement index file path
-      #
-      # @option overrides [String, nil] :git_work_dir replacement working directory
-      #   path
-      #
-      # @return [Git::ExecutionContext::Repository] the derived execution context
-      #
-      # @api private
-      #
-      def context_helpers_derived_context(**overrides)
-        @execution_context.dup_with(**overrides)
-      end
-
       # Builds a repository of the receiver's class bound to a copy of this
       # execution context with selected overrides, leaving the receiver untouched
       #
@@ -405,7 +433,7 @@ module Git
       # @api private
       #
       def context_helpers_derived_repository(**overrides)
-        self.class.new(execution_context: context_helpers_derived_context(**overrides))
+        self.class.new(execution_context: @execution_context.dup_with(**overrides))
       end
     end
   end
