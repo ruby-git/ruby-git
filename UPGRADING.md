@@ -71,8 +71,9 @@ To prepare:
    [Deprecated methods](#deprecated-methods) until the suite is clean.
 7. Replace any `rescue Errno::*` around gem calls with `rescue Git::Error` (see
    [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)).
-8. Inside a `with_index`, `with_temp_index`, `with_working`, or `with_temp_working`
-   block, call methods on the block parameter rather than on the outer repository
+8. Give every `with_index`, `with_temp_index`, `with_working`, and
+   `with_temp_working` block a parameter and call methods on it rather than on the
+   outer repository; v5.6.0 and later warn for a block with no positional parameter
    (see [Context helpers yield a separate
    repository](#context-helpers-yield-a-separate-repository)).
 9. Upgrade to v6.0.0.
@@ -255,9 +256,13 @@ repository of the receiver's class bound to that index or working tree, yield it
 and leave the receiver bound to its original index and working tree.
 
 Code that uses the block parameter and finishes with it before the block ends needs
-no change. Code that ignores the parameter and calls methods on the outer repository
-inside the block now runs those calls against the original index or working tree.
-Use the block parameter instead:
+no change. A block that declares no positional parameter, the v5.x form, now raises
+`ArgumentError` before the block runs. Starting in v5.6.0 that form warns through
+`Git::Deprecation`, so clear the warning on the latest v5.x release before upgrading.
+A call with no block raises `ArgumentError` instead of `LocalJumpError`. Code that
+declares the parameter but ignores it and calls methods on the outer repository
+inside the block runs those calls against the original index or working tree. Use the
+block parameter instead:
 
 ```ruby
 # v5.x
@@ -274,7 +279,9 @@ end
 ```
 
 The same applies to reading `index` or `dir` inside the block to find the temporary
-path: read them on the block parameter.
+path: read them on the block parameter. A block that needs only the changed process
+directory, such as one that writes files inside `with_temp_working`, still declares
+the parameter (`do |_scratch|`).
 
 A helper nested inside another must also be called on the block parameter. A nested
 call on the outer repository derives from the outer repository's original index and

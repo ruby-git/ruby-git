@@ -30,6 +30,38 @@ RSpec.describe Git::Repository::ContextHelpers do
 
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
+  # All four with_* helpers route through one private block guard. This group
+  # pins its contract once; each helper runs it through `call_helper`, a lambda
+  # that forwards the given block to the helper under test.
+  shared_examples 'a helper that requires a repository block' do
+    it 'raises ArgumentError when no block is given' do
+      expect { call_helper.call }
+        .to raise_error(ArgumentError, /block that accepts the yielded repository/)
+    end
+
+    it 'raises ArgumentError when the block declares no parameter' do
+      expect { call_helper.call { nil } }
+        .to raise_error(ArgumentError, /block that accepts the yielded repository/)
+    end
+
+    it 'raises ArgumentError when the block declares only a keyword parameter' do
+      expect { call_helper.call { |**_opts| nil } }
+        .to raise_error(ArgumentError, /block that accepts the yielded repository/)
+    end
+
+    it 'accepts a block that declares an unused parameter' do
+      expect { call_helper.call { |_| nil } }.not_to raise_error
+    end
+
+    it 'accepts a block that declares an optional parameter' do
+      expect { call_helper.call { |_repo = nil| nil } }.not_to raise_error
+    end
+
+    it 'accepts a block that takes a splat' do
+      expect { call_helper.call { |*| nil } }.not_to raise_error
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # #chdir
   # ---------------------------------------------------------------------------
@@ -100,12 +132,11 @@ RSpec.describe Git::Repository::ContextHelpers do
 
     context 'when the repository is bare (no working directory)' do
       let(:execution_context) do
-        Git::ExecutionContext::Repository.new(
+        instance_double(
+          Git::ExecutionContext::Repository,
           git_dir: git_dir,
           git_work_dir: nil,
-          git_index_file: index_file,
-          binary_path: '/usr/bin/git',
-          git_ssh: nil
+          git_index_file: index_file
         )
       end
 
@@ -217,6 +248,10 @@ RSpec.describe Git::Repository::ContextHelpers do
 
     after { FileUtils.remove_entry(temp_dir, true) }
 
+    it_behaves_like 'a helper that requires a repository block' do
+      let(:call_helper) { ->(&block) { described_instance.with_index(new_index, &block) } }
+    end
+
     it 'yields a repository other than the receiver bound to the new index' do
       yielded = nil
       described_instance.with_index(new_index) { |repo| yielded = repo }
@@ -232,29 +267,37 @@ RSpec.describe Git::Repository::ContextHelpers do
       expect(yielded).to be_an_instance_of(subclass_instance.class)
     end
 
+    it 'leaves a set_index made on the receiver inside the block in place after the block' do
+      other_index = '/repo/.git/other.index'
+      described_instance.with_index(new_index) do |_repo|
+        described_instance.set_index(other_index, must_exist: false)
+      end
+      expect(described_instance.index).to eq(Pathname.new(File.expand_path(other_index)))
+    end
+
     it 'returns the value returned by the block' do
-      result = described_instance.with_index(new_index) { 'hello' }
+      result = described_instance.with_index(new_index) { |_repo| 'hello' }
       expect(result).to eq('hello')
     end
 
     it 'leaves the receiver execution context unchanged inside and after the block' do
       original_context = described_instance.execution_context
       context_in_block = nil
-      described_instance.with_index(new_index) { context_in_block = described_instance.execution_context }
+      described_instance.with_index(new_index) { |_repo| context_in_block = described_instance.execution_context }
       expect(context_in_block).to be(original_context)
       expect(described_instance.execution_context).to be(original_context)
     end
 
     it 'leaves the receiver execution context unchanged when the block raises' do
       original_context = described_instance.execution_context
-      expect { described_instance.with_index(new_index) { raise 'block error' } }
+      expect { described_instance.with_index(new_index) { |_repo| raise 'block error' } }
         .to raise_error('block error')
       expect(described_instance.execution_context).to be(original_context)
     end
 
     it 'does not require the index file to exist' do
       expect(File.exist?(expanded_index)).to be(false)
-      expect { described_instance.with_index(new_index) { nil } }.not_to raise_error
+      expect { described_instance.with_index(new_index) { |_repo| nil } }.not_to raise_error
     end
 
     context 'when the path cannot be expanded' do
@@ -267,7 +310,7 @@ RSpec.describe Git::Repository::ContextHelpers do
       end
 
       it 'raises Git::Error with the system error as cause' do
-        expect { described_instance.with_index('relative/index') { nil } }
+        expect { described_instance.with_index('relative/index') { |_repo| nil } }
           .to raise_error(Git::Error, /Failed to expand the path/) do |error|
             expect(error.cause).to be_a(Errno::ENOENT)
           end
@@ -280,13 +323,26 @@ RSpec.describe Git::Repository::ContextHelpers do
   # ---------------------------------------------------------------------------
 
   describe '#with_temp_index' do
+    it_behaves_like 'a helper that requires a repository block' do
+      let(:call_helper) { ->(&block) { described_instance.with_temp_index(&block) } }
+    end
+
+    context 'when the block cannot receive the repository' do
+      it 'does not create a temporary directory before rejecting the block' do
+        allow(Dir).to receive(:mktmpdir).and_call_original
+        expect { described_instance.with_temp_index { nil } }
+          .to raise_error(ArgumentError, /block that accepts the yielded repository/)
+        expect(Dir).not_to have_received(:mktmpdir)
+      end
+    end
+
     context 'when the temporary directory cannot be created' do
       before do
         allow(Dir).to receive(:mktmpdir).and_raise(Errno::EACCES, '/tmp')
       end
 
       it 'raises Git::Error with the system error as cause' do
-        expect { described_instance.with_temp_index { nil } }
+        expect { described_instance.with_temp_index { |_repo| nil } }
           .to raise_error(Git::Error, /Failed to create a temporary directory.*Permission denied/) do |error|
             expect(error.cause).to be_a(Errno::EACCES)
           end
@@ -295,7 +351,7 @@ RSpec.describe Git::Repository::ContextHelpers do
 
     context 'when the block raises a SystemCallError' do
       it 'lets the SystemCallError propagate unchanged' do
-        expect { described_instance.with_temp_index { raise Errno::ENOENT, 'caller.txt' } }
+        expect { described_instance.with_temp_index { |_repo| raise Errno::ENOENT, 'caller.txt' } }
           .to raise_error(Errno::ENOENT, /caller\.txt/)
       end
     end
@@ -317,7 +373,7 @@ RSpec.describe Git::Repository::ContextHelpers do
     it 'leaves the receiver execution context unchanged inside and after the block' do
       original_context = described_instance.execution_context
       context_in_block = nil
-      described_instance.with_temp_index { context_in_block = described_instance.execution_context }
+      described_instance.with_temp_index { |_repo| context_in_block = described_instance.execution_context }
       expect(context_in_block).to be(original_context)
       expect(described_instance.execution_context).to be(original_context)
     end
@@ -462,6 +518,10 @@ RSpec.describe Git::Repository::ContextHelpers do
       allow(Dir).to receive(:chdir).with(expanded_work_dir).and_yield
     end
 
+    it_behaves_like 'a helper that requires a repository block' do
+      let(:call_helper) { ->(&block) { described_instance.with_working(real_work_dir, &block) } }
+    end
+
     it 'yields a repository other than the receiver bound to the new working directory' do
       yielded = nil
       described_instance.with_working(real_work_dir) { |repo| yielded = repo }
@@ -478,26 +538,26 @@ RSpec.describe Git::Repository::ContextHelpers do
     end
 
     it 'returns the value returned by the block' do
-      result = described_instance.with_working(real_work_dir) { 'result' }
+      result = described_instance.with_working(real_work_dir) { |_repo| 'result' }
       expect(result).to eq('result')
     end
 
     it 'changes the process directory to the expanded working directory during the block' do
       expect(Dir).to receive(:chdir).with(expanded_work_dir).and_yield
-      described_instance.with_working(real_work_dir) { nil }
+      described_instance.with_working(real_work_dir) { |_repo| nil }
     end
 
     it 'leaves the receiver execution context unchanged inside and after the block' do
       original_context = described_instance.execution_context
       context_in_block = nil
-      described_instance.with_working(real_work_dir) { context_in_block = described_instance.execution_context }
+      described_instance.with_working(real_work_dir) { |_repo| context_in_block = described_instance.execution_context }
       expect(context_in_block).to be(original_context)
       expect(described_instance.execution_context).to be(original_context)
     end
 
     it 'leaves the receiver execution context unchanged when the block raises' do
       original_context = described_instance.execution_context
-      expect { described_instance.with_working(real_work_dir) { raise 'block error' } }
+      expect { described_instance.with_working(real_work_dir) { |_repo| raise 'block error' } }
         .to raise_error('block error')
       expect(described_instance.execution_context).to be(original_context)
     end
@@ -508,7 +568,7 @@ RSpec.describe Git::Repository::ContextHelpers do
       end
 
       it 'raises Git::Error with the system error as cause' do
-        expect { described_instance.with_working(real_work_dir) { nil } }
+        expect { described_instance.with_working(real_work_dir) { |_repo| nil } }
           .to raise_error(Git::Error, /Failed to change directory.*No such file or directory/) do |error|
             expect(error.cause).to be_a(Errno::ENOENT)
           end
@@ -516,7 +576,7 @@ RSpec.describe Git::Repository::ContextHelpers do
 
       it 'leaves the receiver execution context unchanged' do
         original_context = described_instance.execution_context
-        expect { described_instance.with_working(real_work_dir) { nil } }
+        expect { described_instance.with_working(real_work_dir) { |_repo| nil } }
           .to raise_error(Git::Error, /Failed to change directory/)
         expect(described_instance.execution_context).to be(original_context)
       end
@@ -524,14 +584,14 @@ RSpec.describe Git::Repository::ContextHelpers do
 
     context 'when the block raises a SystemCallError' do
       it 'lets the SystemCallError propagate unchanged' do
-        expect { described_instance.with_working(real_work_dir) { raise Errno::ENOENT, 'caller.txt' } }
+        expect { described_instance.with_working(real_work_dir) { |_repo| raise Errno::ENOENT, 'caller.txt' } }
           .to raise_error(Errno::ENOENT, /caller\.txt/)
       end
     end
 
     it 'raises ArgumentError when work_dir does not exist' do
       expect do
-        described_instance.with_working('/nonexistent/path/for/test')
+        described_instance.with_working('/nonexistent/path/for/test') { |_| nil }
       end.to raise_error(ArgumentError, /path does not exist/)
     end
   end
@@ -545,13 +605,26 @@ RSpec.describe Git::Repository::ContextHelpers do
       allow(Dir).to receive(:chdir).and_yield
     end
 
+    it_behaves_like 'a helper that requires a repository block' do
+      let(:call_helper) { ->(&block) { described_instance.with_temp_working(&block) } }
+    end
+
+    context 'when the block cannot receive the repository' do
+      it 'does not create a temporary directory before rejecting the block' do
+        allow(Dir).to receive(:mktmpdir).and_call_original
+        expect { described_instance.with_temp_working { nil } }
+          .to raise_error(ArgumentError, /block that accepts the yielded repository/)
+        expect(Dir).not_to have_received(:mktmpdir)
+      end
+    end
+
     context 'when the temporary directory cannot be created' do
       before do
         allow(Dir).to receive(:mktmpdir).and_raise(Errno::EACCES, '/tmp')
       end
 
       it 'raises Git::Error with the system error as cause' do
-        expect { described_instance.with_temp_working { nil } }
+        expect { described_instance.with_temp_working { |_repo| nil } }
           .to raise_error(Git::Error, /Failed to create or remove a temporary directory.*Permission denied/) do |error|
             expect(error.cause).to be_a(Errno::EACCES)
           end
@@ -564,7 +637,7 @@ RSpec.describe Git::Repository::ContextHelpers do
       end
 
       it 'raises Git::Error with the system error as cause' do
-        expect { described_instance.with_temp_working { nil } }
+        expect { described_instance.with_temp_working { |_repo| nil } }
           .to raise_error(Git::Error, /Failed to create or remove a temporary directory.*Permission denied/) do |error|
             expect(error.cause).to be_a(Errno::EACCES)
           end
@@ -573,7 +646,7 @@ RSpec.describe Git::Repository::ContextHelpers do
 
     context 'when the block raises a SystemCallError' do
       it 'lets the SystemCallError propagate unchanged' do
-        expect { described_instance.with_temp_working { raise Errno::ENOENT, 'caller.txt' } }
+        expect { described_instance.with_temp_working { |_repo| raise Errno::ENOENT, 'caller.txt' } }
           .to raise_error(Errno::ENOENT, /caller\.txt/)
       end
     end
@@ -595,7 +668,7 @@ RSpec.describe Git::Repository::ContextHelpers do
     it 'leaves the receiver execution context unchanged inside and after the block' do
       original_context = described_instance.execution_context
       context_in_block = nil
-      described_instance.with_temp_working { context_in_block = described_instance.execution_context }
+      described_instance.with_temp_working { |_repo| context_in_block = described_instance.execution_context }
       expect(context_in_block).to be(original_context)
       expect(described_instance.execution_context).to be(original_context)
     end
@@ -638,12 +711,22 @@ RSpec.describe Git::Repository::ContextHelpers do
       expect(inner.index).to eq(Pathname.new(File.expand_path('/tmp/inner_idx')))
     end
 
+    it 'derives a nested call on the outer repository from the outer repository, not the outer block' do
+      inner = nil
+      Dir.mktmpdir do |outer_work|
+        described_instance.with_working(outer_work) do |_working_repo|
+          described_instance.with_index('/tmp/inner_idx') { |repo| inner = repo }
+        end
+      end
+      expect(inner.dir).to eq(Pathname.new(work_dir))
+    end
+
     it 'leaves the receiver execution context unchanged after nested with_index inside with_working' do
       original_context = described_instance.execution_context
 
       Dir.mktmpdir do |outer_work|
         described_instance.with_working(outer_work) do |working_repo|
-          working_repo.with_index('/tmp/inner_idx') { nil }
+          working_repo.with_index('/tmp/inner_idx') { |_repo| nil }
         end
       end
 

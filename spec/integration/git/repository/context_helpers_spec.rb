@@ -56,6 +56,16 @@ RSpec.describe Git::Repository::ContextHelpers, :integration do
       expect(described_instance.index).to eq(original_index)
       expect(described_instance.ls_files.keys).to contain_exactly('tracked.txt')
     end
+
+    it 'leaves an escaped repository bound to the removed index' do
+      escaped = described_instance.with_temp_index do |temp_repo|
+        temp_repo.read_tree('HEAD')
+        temp_repo
+      end
+      expect(escaped.ls_files).to be_empty
+      expect { escaped.add('extra.txt') }.to raise_error(Git::Error)
+      expect(escaped.object('HEAD:tracked.txt').contents).to eq('tracked')
+    end
   end
 
   describe '#with_temp_working' do
@@ -71,13 +81,13 @@ RSpec.describe Git::Repository::ContextHelpers, :integration do
 
     it 'changes the process directory back after the block returns' do
       original_pwd = File.realpath(Dir.pwd)
-      described_instance.with_temp_working { nil }
+      described_instance.with_temp_working { |_repo| nil }
       expect(File.realpath(Dir.pwd)).to eq(original_pwd)
     end
 
     it 'changes the process directory back even when the block raises' do
       original_pwd = File.realpath(Dir.pwd)
-      expect { described_instance.with_temp_working { raise 'block error' } }.to raise_error('block error')
+      expect { described_instance.with_temp_working { |_repo| raise 'block error' } }.to raise_error('block error')
       expect(File.realpath(Dir.pwd)).to eq(original_pwd)
     end
 
@@ -98,7 +108,7 @@ RSpec.describe Git::Repository::ContextHelpers, :integration do
       original_dir = described_instance.dir
       receiver_dir = nil
       receiver_untracked = nil
-      described_instance.with_temp_working do
+      described_instance.with_temp_working do |_repo|
         File.write('scratch.txt', "scratch\n")
         receiver_dir = described_instance.dir
         receiver_untracked = described_instance.untracked_files
@@ -115,6 +125,12 @@ RSpec.describe Git::Repository::ContextHelpers, :integration do
         temp_repo.add('scratch.txt')
       end
       expect(described_instance.ls_files.keys).to contain_exactly('tracked.txt', 'scratch.txt')
+    end
+
+    it 'leaves an escaped repository bound to the removed working directory' do
+      escaped = described_instance.with_temp_working { |temp_repo| temp_repo }
+      expect { escaped.untracked_files }.to raise_error(Git::Error)
+      expect(escaped.object('HEAD:tracked.txt').contents).to eq('tracked')
     end
   end
 end
