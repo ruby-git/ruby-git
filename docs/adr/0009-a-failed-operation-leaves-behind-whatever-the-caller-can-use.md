@@ -42,19 +42,21 @@ have to work out which one happened.
 
 ## Consequences
 
-Block-taking methods like `File.open`, `Dir.chdir`, and the gem's own `with_*`
-methods all restore on the way out, so a reader assumes any block-taking method puts
-things back when the block ends.
+Block-taking methods like `File.open` and `Dir.chdir` restore on the way out, so a
+reader assumes any block-taking method puts things back when the block ends.
 
-`Git::Repository#in_branch` takes a block, as `with_index` does, but does not put
+`Git::Repository#in_branch` takes a block, as `File.open` does, but does not put
 things back when the block ends. Reviewers who report its missing `ensure` are right
 about the usual convention and wrong about the code. `#in_branch` breaks the
 convention on purpose, and the reply to the report is this record and the method's
 `@note`, not a change to the code.
 
-The `with_*` methods are consistent with the record. They restore only the gem's own
-execution context and remove a scratch directory, which is the third case above, and
-they touch no repository state.
+The `with_*` methods are consistent with this ADR. Each yields a second repository
+of the receiver's class bound to the other index or working tree and leaves the
+receiver bound to its original index and working tree, so there is nothing on the
+receiver to restore when the block ends. The working directory variants change the
+process working directory back afterward, as `Dir.chdir` does. The temporary
+variants remove the scratch directory they created, which is the third case above.
 
 The guarantee is per operation and stated in each operation's own documentation. A
 reader cannot infer it from the operation's shape. An operation that switches HEAD,
