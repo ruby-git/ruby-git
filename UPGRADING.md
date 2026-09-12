@@ -35,6 +35,7 @@ to update your code when upgrading from the preceding major version.
     - [`Git::Log` Enumerable interface deprecated](#gitlog-enumerable-interface-deprecated)
     - [`Git::Object::Commit#set_commit` deprecated](#gitobjectcommitset_commit-deprecated)
     - [`Git.export` `:remote` option deprecated](#gitexport-remote-option-deprecated)
+    - [Context helper blocks that declare no parameter deprecated](#context-helper-blocks-that-declare-no-parameter-deprecated)
 
 ## Upgrading to v6.0.0
 
@@ -1134,5 +1135,41 @@ observable in the result. Delete the option from the call.
 | Deprecated call (works in v5.x, removed in a future major release) | Replacement |
 |--------------------------------------------------------------------|-------------|
 | `Git.export(url, dir, remote: name)` | `Git.export(url, dir)` |
+
+#### Context helper blocks that declare no parameter deprecated
+
+`Git::Repository#with_index`, `#with_temp_index`, `#with_working`, and
+`#with_temp_working` yield `self` in v5.x, so a block could ignore the yielded
+value and call methods on the receiver. Calling one of these helpers with a block
+that declares no positional parameter (`do ... end`, `{ }`, `{ || }`, or a block
+with only keyword or block parameters) now emits a deprecation warning. The
+behavior is otherwise unchanged: the helpers still yield `self`, and a call with
+no block still raises `LocalJumpError`.
+
+In v6.0.0 these helpers yield a separate repository bound to the other index or
+working tree instead of rebinding the receiver, and they raise `ArgumentError` for
+a block that declares no positional parameter. A call with no block also raises
+`ArgumentError` in v6.0.0 instead of `LocalJumpError`. Declare a block parameter
+and call methods on it. The parameter is required even when the block never uses
+the repository, for example a `with_temp_working` block that only writes files
+(`do |_scratch|`). Blocks that already declare a positional parameter (`|repo|`,
+`|_|`, `|repo = nil|`, `|*args|`, or a symbol-to-proc such as `&:write_tree`) do
+not warn. Both versions read the block's parameter list rather than its arity, so
+the v5.x warning and the v6.0.0 error agree on every block form.
+
+The warning detects only the block's parameter list. Adding an unused parameter
+(`|_|`) silences it but does not fix a block that still calls methods on the outer
+repository; that block does not warn and acts on the wrong repository in v6.0.0,
+so review those blocks by hand.
+
+| Deprecated call (works in v5.x, raises in v6.0.0) | Replacement |
+|---------------------------------------------------|-------------|
+| `g.with_index(path) { g.read_tree('HEAD') }` | `g.with_index(path) { \|r\| r.read_tree('HEAD') }` |
+| `g.with_temp_index { g.read_tree('HEAD') }` | `g.with_temp_index { \|r\| r.read_tree('HEAD') }` |
+| `g.with_working(dir) { g.add('.') }` | `g.with_working(dir) { \|r\| r.add('.') }` |
+| `g.with_temp_working { g.add('.') }` | `g.with_temp_working { \|r\| r.add('.') }` |
+
+`chdir` is not part of this deprecation. It yields the directory path in both
+versions.
 
 ---
