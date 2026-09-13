@@ -24,6 +24,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Repository#remotes`, `Git::Branch#stashes`, and `allow_unknown_type` removed](#gitrepositoryremotes-gitbranchstashes-and-allow_unknown_type-removed)
   - [`Git::Author` removed](#gitauthor-removed)
   - [`Git::Status` removed](#gitstatus-removed)
+  - [Legacy stash API removed](#legacy-stash-api-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -423,7 +424,7 @@ v6.0.0 removes three small APIs that v5.x deprecated:
   `Git::Repository#remote_list`, which returns `Array<Git::RemoteInfo>`, or
   `Git::Repository#remote_names` when only the names are needed.
 - `Git::Branch#stashes` is gone, so calling it raises `NoMethodError`. It ignored
-  the branch it was called on; use `Git::Repository#stash_infos`, which returns
+  the branch it was called on; use `Git::Repository#stash_list`, which returns
   the same entries as `Array<Git::StashInfo>`.
 - The `allow_unknown_type:` option of `Git::Commands::CatFile::Raw` is gone, so
   passing it raises `ArgumentError` like any other unsupported option. There is
@@ -465,6 +466,40 @@ status characters and clean tracked paths are no longer listed, so read the
 v5.x" before changing `status` to `status_info`: it describes those
 differences and maps every removed reader, predicate, and `StatusFile` field to
 its replacement.
+
+### Legacy stash API removed
+
+v6.0.0 removes the stash API that v5.4.0 deprecated: `Git::Stash`,
+`Git::Stashes`, `Git::Repository#stashes_all`, and `Git::Repository#stash_save`.
+Referencing either constant raises `NameError` and calling either method raises
+`NoMethodError`. In the same release `Git::Repository#stash_list` changes its
+return type: it returns `Array<Git::StashInfo>`, newest first, the same value as
+`Git::Repository#stash_infos`, which stays as a permanent alias.
+
+> **`stash_list` return type change.** In v5.x, `g.stash_list` returned the
+> `git stash list` text as a `String` and emitted a `Git::Deprecation` warning
+> on every call. A project that silences or ignores deprecation warnings never
+> acts on that notice, and in v6.0.0 the call keeps working with a different
+> return type. Search for `stash_list` before upgrading. Code that needs the
+> text builds it from the entries:
+> `g.stash_list.map { |s| "#{s.name}: #{s.message}" }.join("\n")`.
+
+Two differences from `stashes_all` and `Git::Stash` carry over from the v5.x
+entry and still apply when moving to `stash_list`:
+
+- **Ordering.** `g.stashes_all` returned entries oldest first with its own
+  sequential index. `g.stash_list` returns them newest first, the order
+  `git stash list` uses, and `Git::StashInfo#index` is git's own `stash@{N}`
+  number (`0` is the newest). `g.stashes_all.first` is `g.stash_list.last`.
+- **Message content.** `g.stashes_all` and `Git::Stash#message` stripped the
+  `WIP on <branch>:` or `On <branch>:` prefix. `Git::StashInfo#message` keeps
+  the full message git stores, and `Git::StashInfo#branch` holds the branch
+  name (or `"(no branch)"` for a stash created from a detached HEAD).
+
+The [Legacy stash API deprecated](#legacy-stash-api-deprecated) entry under
+"Upgrading to v5.x" maps every removed call, reader, and collection method to its
+replacement. The `stash_infos` calls it shows keep working in v6.0.0, since
+`stash_infos` is an alias of `stash_list`.
 
 ---
 
