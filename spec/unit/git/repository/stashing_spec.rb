@@ -35,8 +35,8 @@ RSpec.describe Git::Repository::Stashing do
     allow(Git::Commands::Stash::Push).to receive(:new).with(execution_context).and_return(push_command)
   end
 
-  describe '#stash_infos' do
-    subject(:result) { described_instance.stash_infos }
+  describe '#stash_list' do
+    subject(:result) { described_instance.stash_list }
 
     let(:list_result) { command_result('fixture') }
     let(:parsed_stashes) { [build_stash_info(index: 0, oid: 'a' * 40), build_stash_info(index: 1, oid: 'b' * 40)] }
@@ -739,147 +739,9 @@ RSpec.describe Git::Repository::Stashing do
     end
   end
 
-  describe '#stashes_all' do
-    subject(:result) { described_instance.stashes_all }
-
-    let(:list_result) { command_result('fixture') }
-    let(:parsed_stashes) { [] }
-
-    before do
-      allow(Git::Deprecation).to receive(:warn)
-      allow(list_command).to receive(:call).with(no_args).and_return(list_result)
-      allow(Git::Parsers::Stash).to receive(:parse_list).with('fixture').and_return(parsed_stashes)
-    end
-
-    it 'emits a deprecation warning pointing at stash_infos' do
-      expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#stashes_all is deprecated and will be removed in v6.0.0. ' \
-        'Use Git::Repository#stash_infos instead.'
-      )
-      result
-    end
-
-    context 'when there are no stash entries' do
-      it 'returns an empty array' do
-        expect(result).to eq([])
-      end
-    end
-
-    context 'when there are stash entries with branch-prefixed messages' do
-      let(:stash_info_older) { instance_double(Git::StashInfo, message: 'On main: Fix bug') }
-      let(:stash_info_newer) { instance_double(Git::StashInfo, message: 'On main: Add feature') }
-      # parse_list returns newest-first; stashes_all reverses to oldest-first
-      let(:parsed_stashes) { [stash_info_newer, stash_info_older] }
-
-      it 'calls Git::Commands::Stash::List#call with no arguments' do
-        expect(list_command).to receive(:call).with(no_args).and_return(list_result)
-        result
-      end
-
-      it 'passes the command stdout to Git::Parsers::Stash.parse_list' do
-        expect(Git::Parsers::Stash).to receive(:parse_list).with('fixture').and_return(parsed_stashes)
-        result
-      end
-
-      it 'returns stash entries in oldest-first order with sequential indices and the branch prefix stripped' do
-        expect(result).to eq([[0, 'Fix bug'], [1, 'Add feature']])
-      end
-    end
-
-    context 'when a stash entry has no branch prefix (custom message)' do
-      let(:parsed_stashes) { [instance_double(Git::StashInfo, message: 'custom message')] }
-
-      it 'returns the message unchanged' do
-        expect(result).to eq([[0, 'custom message']])
-      end
-    end
-
-    context 'when a stash entry has a message with an internal colon (e.g. "saving: note")' do
-      let(:parsed_stashes) { [instance_double(Git::StashInfo, message: 'On main: saving: note')] }
-
-      it 'strips only the first prefix, keeping subsequent colons in the message' do
-        expect(result).to eq([[0, 'saving: note']])
-      end
-    end
-  end
-
-  describe '#stash_save' do
-    subject(:result) { described_instance.stash_save('WIP: feature work') }
-
-    let(:push_result) { command_result('Saved working directory and index state On main: WIP: feature work') }
-
-    before do
-      allow(Git::Deprecation).to receive(:warn)
-      allow(push_command).to receive(:call).with(message: 'WIP: feature work').and_return(push_result)
-    end
-
-    it 'emits a deprecation warning pointing at stash_push' do
-      expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#stash_save is deprecated and will be removed in v6.0.0. ' \
-        'Use Git::Repository#stash_push(message: ...) instead.'
-      )
-      result
-    end
-
-    context 'when there are local changes to save' do
-      it 'calls Git::Commands::Stash::Push with the given message' do
-        expect(push_command).to receive(:call).with(message: 'WIP: feature work').and_return(push_result)
-        result
-      end
-
-      it 'returns true' do
-        expect(result).to be(true)
-      end
-    end
-
-    context 'when there are no local changes to save' do
-      let(:push_result) { command_result('No local changes to save') }
-
-      it 'returns false' do
-        expect(result).to be(false)
-      end
-    end
-  end
-
-  describe '#stash_list' do
-    subject(:result) { described_instance.stash_list }
-
-    let(:list_result) { command_result('fixture') }
-    let(:parsed_stashes) { [] }
-
-    before do
-      allow(Git::Deprecation).to receive(:warn)
-      allow(list_command).to receive(:call).with(no_args).and_return(list_result)
-      allow(Git::Parsers::Stash).to receive(:parse_list).with('fixture').and_return(parsed_stashes)
-    end
-
-    it 'emits a deprecation warning pointing at stash_infos' do
-      expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#stash_list is deprecated and will be removed in v6.0.0. ' \
-        'Use Git::Repository#stash_infos instead.'
-      )
-      result
-    end
-
-    context 'when there are stash entries' do
-      let(:stash_info_first) { instance_double(Git::StashInfo, name: 'stash@{0}', message: 'On main: WIP') }
-      let(:stash_info_second) { instance_double(Git::StashInfo, name: 'stash@{1}', message: 'On main: Fix bug') }
-      let(:parsed_stashes) { [stash_info_first, stash_info_second] }
-
-      it 'passes the command stdout to Git::Parsers::Stash.parse_list' do
-        expect(Git::Parsers::Stash).to receive(:parse_list).with('fixture').and_return(parsed_stashes)
-        result
-      end
-
-      it 'returns a newline-joined "stash@{n}: <full message>" string' do
-        expect(result).to eq("stash@{0}: On main: WIP\nstash@{1}: On main: Fix bug")
-      end
-    end
-
-    context 'when there are no stash entries' do
-      it 'returns an empty string' do
-        expect(result).to eq('')
-      end
+  describe '#stash_infos' do
+    it 'is an alias for stash_list' do
+      expect(described_instance.method(:stash_infos)).to eq(described_instance.method(:stash_list))
     end
   end
 end

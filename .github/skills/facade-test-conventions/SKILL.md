@@ -319,7 +319,7 @@ RSpec.describe Git::Repository::Stashing, :integration do
   describe '#stash_save_and_list' do
     it 'returns the new stash entry after saving' do
       result = described_instance.stash_save_and_list(message: 'wip')
-      expect(result).to all(be_a(Git::Stash))
+      expect(result).to all(be_a(Git::StashInfo))
       expect(result.first.message).to include('wip')
     end
   end

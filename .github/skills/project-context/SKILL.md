@@ -56,7 +56,7 @@ coding standard details, or implementation constraints.
 | `Git::Branch/Branches` | Branch management (local + remote) |
 | `Git::Remote` | Remote repository references |
 | `Git::Worktree/Worktrees` | Worktree support |
-| `Git::Stash/Stashes` | Stash management |
+| `Git::StashInfo` | Immutable stash entry returned by `Git::Repository#stash_list` and `#stash_push`; stash operations are name-based facade methods |
 
 **Key directories:**
 
