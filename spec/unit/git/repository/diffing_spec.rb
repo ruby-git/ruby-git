@@ -619,50 +619,11 @@ RSpec.describe Git::Repository::Diffing do
       end
     end
 
-    context 'when the deprecated :path option is provided' do
+    context 'when the removed :path option is provided' do
       let(:opts) { { path: 'lib/' } }
 
-      before do
-        allow(diff_command).to receive(:call).with(
-          'HEAD',
-          raw: true, numstat: true, shortstat: true,
-          src_prefix: 'a/', dst_prefix: 'b/',
-          path: ['lib/']
-        ).and_return(diff_result)
-        allow(Git::Deprecation).to receive(:warn)
-      end
-
-      it 'emits a deprecation warning naming the facade method' do
-        expect(Git::Deprecation).to receive(:warn).with(
-          'Git::Repository#diff_path_status :path option is deprecated and will be removed in v6.0.0. ' \
-          'Use :path_limiter instead.'
-        )
-        subject
-      end
-
-      it 'uses the :path value as the path limiter' do
-        expect(diff_command).to receive(:call).with(
-          'HEAD',
-          raw: true, numstat: true, shortstat: true,
-          src_prefix: 'a/', dst_prefix: 'b/',
-          path: ['lib/']
-        ).and_return(diff_result)
-        subject
-      end
-    end
-
-    context 'when both :path_limiter and :path are provided' do
-      let(:opts) { { path_limiter: 'lib/', path: 'other/' } }
-
-      it 'uses :path_limiter and does not emit a deprecation warning' do
-        expect(Git::Deprecation).not_to receive(:warn)
-        expect(diff_command).to receive(:call).with(
-          'HEAD',
-          raw: true, numstat: true, shortstat: true,
-          src_prefix: 'a/', dst_prefix: 'b/',
-          path: ['lib/']
-        ).and_return(diff_result)
-        subject
+      it 'raises an ArgumentError naming the unknown key' do
+        expect { subject }.to raise_error(ArgumentError, /Unknown options: path/)
       end
     end
 

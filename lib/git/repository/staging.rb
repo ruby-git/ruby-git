@@ -330,10 +330,6 @@ module Git
       end
 
       # Option keys accepted by {#clean}
-      #
-      # The deprecated `:ff` and `:force_force` keys are handled by
-      # {Git::Repository::Staging::Private.migrate_clean_legacy_options} before this
-      # whitelist is enforced, so they are intentionally absent here.
       CLEAN_ALLOWED_OPTS = %i[d force f dry_run n quiet q exclude e x X pathspec].freeze
       private_constant :CLEAN_ALLOWED_OPTS
 
@@ -382,13 +378,11 @@ module Git
       #
       # @return [String] git's stdout from the clean
       #
-      # @raise [ArgumentError] when unsupported options are provided, or when a
-      #   deprecated `:ff`/`:force_force` value is not `true`, `false`, or `nil`
+      # @raise [ArgumentError] when unsupported options are provided
       #
       # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def clean(opts = {})
-        opts = Private.migrate_clean_legacy_options(opts)
         SharedPrivate.assert_valid_opts!(CLEAN_ALLOWED_OPTS, **opts)
         Git::Commands::Clean.new(@execution_context).call(**opts).stdout
       end
@@ -421,151 +415,6 @@ module Git
       #
       module Private
         module_function
-
-        # Translate deprecated `git clean` option keys into their modern form
-        #
-        # Maps the legacy `:ff` and `:force_force` boolean options onto the
-        # `:force` option, emitting a deprecation warning for each.
-        #
-        # @param opts [Hash] the caller-provided clean options
-        #
-        # @option opts [Boolean, nil] :ff (nil) deprecated alias for requesting a
-        #   double-force clean
-        #
-        # @option opts [Boolean, nil] :force_force (nil) deprecated alias for
-        #   requesting a double-force clean
-        #
-        # @option opts [Boolean, Integer, nil] :force (nil) existing force value
-        #   merged with deprecated options when present
-        #
-        # @return [Hash] a new options hash with deprecated keys translated
-        #
-        # @raise [ArgumentError] when a deprecated value is not `true`, `false`, or `nil`
-        #
-        def migrate_clean_legacy_options(opts)
-          opts = deprecate_clean_option(
-            :ff,
-            ':ff option is deprecated and will be removed in v6.0.0. Use force: 2 instead.',
-            opts
-          )
-
-          deprecate_clean_option(
-            :force_force,
-            ':force_force option is deprecated and will be removed in v6.0.0. Use force: 2 instead.',
-            opts
-          )
-        end
-
-        # Translate a single deprecated clean option key onto `:force`
-        #
-        # @param key [Symbol] the deprecated option key (`:ff` or `:force_force`)
-        #
-        # @param message [String] the deprecation message to emit
-        #
-        # @param opts [Hash] the clean options
-        #
-        # @option opts [Boolean, nil] :ff (nil) deprecated alias for requesting a
-        #   double-force clean
-        #
-        # @option opts [Boolean, nil] :force_force (nil) deprecated alias for
-        #   requesting a double-force clean
-        #
-        # @option opts [Boolean, Integer, nil] :force (nil) existing force value
-        #   updated when the deprecated key is true
-        #
-        # @return [Hash] a new options hash with the deprecated key removed
-        #
-        # @raise [ArgumentError] when the deprecated value is not `true`, `false`,
-        #   or `nil`
-        #
-        def deprecate_clean_option(key, message, opts)
-          return opts unless opts.key?(key)
-
-          opts = opts.dup
-          deprecated_value = opts.delete(key)
-          validate_deprecated_clean_option_value!(key, deprecated_value)
-
-          Git::Deprecation.warn(message)
-          return opts unless deprecated_value
-
-          opts[:force] = merge_clean_force_option(opts[:force], force_specified: force_option_specified?(opts))
-          opts
-        end
-
-        # Whether the caller explicitly set a non-nil `:force` value
-        #
-        # @param opts [Hash] the clean options
-        #
-        # @option opts [Boolean, Integer, nil] :force (nil) the clean force value
-        #   to inspect
-        #
-        # @return [Boolean] true if `:force` was set to a non-nil value, false
-        #   otherwise
-        #
-        def force_option_specified?(opts)
-          opts.key?(:force) && !opts[:force].nil?
-        end
-
-        # Validate the value passed to a deprecated clean option
-        #
-        # @param key [Symbol] the deprecated option key
-        #
-        # @param value [Object] the value provided for the deprecated key
-        #
-        # @return [void]
-        #
-        # @raise [ArgumentError] when `value` is not `true`, `false`, or `nil`
-        #
-        def validate_deprecated_clean_option_value!(key, value)
-          return if value.nil? || value == true || value == false
-
-          raise ArgumentError, "#{key} option only accepts true, false, or nil"
-        end
-
-        # Merge a deprecated force request into the existing `:force` value
-        #
-        # @param existing_force [Boolean, Integer, nil] the caller's `:force` value
-        #
-        # @param force_specified [Boolean] whether the caller explicitly set `:force`
-        #
-        # @return [Integer] the resolved `:force` value
-        #
-        def merge_clean_force_option(existing_force, force_specified: false)
-          return 2 unless force_specified
-
-          normalized_force = normalize_clean_force_option(existing_force)
-
-          case normalized_force
-          when Integer then merge_integer_clean_force_option(normalized_force)
-          when false then 2
-          else normalized_force
-          end
-        end
-
-        # Merge an integer `:force` value with the deprecated force request
-        #
-        # @param normalized_force [Integer] the caller's normalized `:force` value
-        #
-        # @return [Integer] the resolved `:force` value
-        #
-        def merge_integer_clean_force_option(normalized_force)
-          return normalized_force if normalized_force < 1
-
-          [normalized_force, 2].max
-        end
-
-        # Normalize a `:force` value, coercing `true` to the integer `1`
-        #
-        # @param value [Boolean, Integer, nil] the `:force` value
-        #
-        # @return [Integer, Boolean, nil] the normalized value
-        #
-        def normalize_clean_force_option(value)
-          case value
-          when true then 1
-          else value
-          end
-        end
 
         # Unescape a git-quoted path
         #

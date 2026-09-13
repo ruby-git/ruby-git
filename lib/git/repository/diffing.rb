@@ -299,7 +299,7 @@ module Git
       #
       # @api private
       #
-      DIFF_PATH_STATUS_ALLOWED_OPTS = %i[path_limiter path].freeze
+      DIFF_PATH_STATUS_ALLOWED_OPTS = %i[path_limiter].freeze
       private_constant :DIFF_PATH_STATUS_ALLOWED_OPTS
 
       # Returns the file path status between two trees
@@ -349,9 +349,6 @@ module Git
       # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
       #   limit the status report to the given path(s)
       #
-      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path (nil)
-      #   **deprecated** — use `:path_limiter` instead
-      #
       # @return [Git::DiffPathStatus] the name-status report for the comparison
       #
       # @raise [ArgumentError] if unsupported options are provided
@@ -366,8 +363,7 @@ module Git
         SharedPrivate.assert_valid_opts!(DIFF_PATH_STATUS_ALLOWED_OPTS, **opts)
         raise ArgumentError, 'Invalid arguments: `from` is nil but `to` is not' if from.nil? && !to.nil?
 
-        path_limiter = Private.resolve_path_limiter(opts)
-        pathspecs = Private.normalize_pathspecs(path_limiter, 'path limiter')
+        pathspecs = Private.normalize_pathspecs(opts[:path_limiter], 'path limiter')
 
         result = Private.call_diff_command(@execution_context, from, to, pathspecs)
         Git::DiffPathStatus.new(Private.extract_name_status_from_raw(result.stdout))
@@ -494,35 +490,6 @@ module Git
       #
       module Private
         module_function
-
-        # Resolves the effective path limiter from the options hash
-        #
-        # When `:path_limiter` is present it is used directly and no warning is
-        # emitted. When only `:path` is present a deprecation warning is emitted
-        # and its value is used. Returns `nil` when neither key is present.
-        #
-        # @param opts [Hash] the options hash from {#diff_path_status}
-        #
-        # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
-        #   primary path limiter value used as-is when present
-        #
-        # @option opts [String, Pathname, Array<String, Pathname>, nil] :path (nil)
-        #   **deprecated** — fallback path limiter when `:path_limiter` is not provided
-        #
-        # @return [String, Pathname, Array<String, Pathname>, nil]
-        #   the effective path limiter
-        #
-        def resolve_path_limiter(opts)
-          if opts.key?(:path_limiter)
-            opts[:path_limiter]
-          elsif opts.key?(:path)
-            Git::Deprecation.warn(
-              'Git::Repository#diff_path_status :path option is deprecated and will be removed in v6.0.0. ' \
-              'Use :path_limiter instead.'
-            )
-            opts[:path]
-          end
-        end
 
         # Extracts only the patch text from combined diff command output
         #
