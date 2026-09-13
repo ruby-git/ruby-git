@@ -22,6 +22,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
   - [v4.x-style configuration API removed](#v4x-style-configuration-api-removed)
   - [`Git::Repository#remotes`, `Git::Branch#stashes`, and `allow_unknown_type` removed](#gitrepositoryremotes-gitbranchstashes-and-allow_unknown_type-removed)
+  - [`Git::Author` removed](#gitauthor-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -435,6 +436,18 @@ The [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated),
 deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated) entries
 under "Upgrading to v5.x" map each removed call to its replacement and describe
 the return type and order differences.
+
+### `Git::Author` removed
+
+v6.0.0 removes `Git::Author`, the mutable identity class that v5.3.0 deprecated.
+Referencing the constant raises `NameError`. No method has returned it since
+v5.3.0: `Git::Object::Commit#author`, `Git::Object::Commit#committer`, and
+`Git::TagInfo#tagger` return `Git::AuthorInfo`, which exposes the same `name`,
+`email`, and `date` readers. Build an identity from a raw git identity string
+with `Git::AuthorInfo.parse`, and replace the `name=`, `email=`, and `date=`
+writers with `Git::AuthorInfo#with`, which returns a modified copy. The
+[`Git::Author` deprecated](#gitauthor-deprecated) entry under "Upgrading to
+v5.x" maps each removed usage to its replacement.
 
 ---
 
