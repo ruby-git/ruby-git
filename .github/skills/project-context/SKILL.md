@@ -215,8 +215,8 @@ and silently ignores it (a no-op produces no wrong answer). Delegate both.
 `Git::Commands::CatFile::Raw` once declared
 `requires_one_of :t, :s, when: :allow_unknown_type`, duplicating a check git
 2.28-2.49 performs itself and git 2.50 removed along with the unknown-type
-feature; the constraint was removed and the flag now passes through — see the note
-in
+feature; the constraint was removed and the flag passed through until v6.0.0
+removed the option — see the note in
 [Command Implementation](../command-implementation/REFERENCE.md#options-completeness--consult-the-latest-version-docs-first).
 
 #### Why the semantic checks are delegated

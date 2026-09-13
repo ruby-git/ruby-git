@@ -74,52 +74,6 @@ RSpec.describe Git::Commands::CatFile::Raw do
       end
     end
 
-    context 'with :allow_unknown_type option' do
-      it 'passes --allow-unknown-type' do
-        allow(Git::Deprecation).to receive(:warn)
-        expect_command_capturing('cat-file', '-t', '--allow-unknown-type', '--', 'HEAD')
-          .and_return(command_result('commit'))
-
-        command.call('HEAD', t: true, allow_unknown_type: true)
-      end
-
-      it 'passes --allow-unknown-type through in other modes and lets git respond' do
-        allow(Git::Deprecation).to receive(:warn)
-        expect_command_capturing('cat-file', '-e', '--allow-unknown-type', '--', 'HEAD')
-          .and_return(command_result(''))
-
-        command.call('HEAD', e: true, allow_unknown_type: true)
-      end
-
-      it 'emits a deprecation warning via Git::Deprecation.warn' do
-        allow(execution_context).to receive(:command_capturing).and_return(command_result('commit'))
-        expect(Git::Deprecation).to receive(:warn).with(a_string_including('allow_unknown_type'))
-
-        command.call('HEAD', t: true, allow_unknown_type: true)
-      end
-
-      it 'does not emit a deprecation warning when the option is not passed' do
-        allow(execution_context).to receive(:command_capturing).and_return(command_result('commit'))
-        expect(Git::Deprecation).not_to receive(:warn)
-
-        command.call('HEAD', t: true)
-      end
-
-      it 'emits a deprecation warning when the option is passed as false' do
-        allow(execution_context).to receive(:command_capturing).and_return(command_result('commit'))
-        expect(Git::Deprecation).to receive(:warn).with(a_string_including('allow_unknown_type'))
-
-        command.call('HEAD', t: true, allow_unknown_type: false)
-      end
-
-      it 'emits a deprecation warning when the option is passed as nil' do
-        allow(execution_context).to receive(:command_capturing).and_return(command_result('commit'))
-        expect(Git::Deprecation).to receive(:warn).with(a_string_including('allow_unknown_type'))
-
-        command.call('HEAD', t: true, allow_unknown_type: nil)
-      end
-    end
-
     context 'with out: execution option (streaming)' do
       it 'dispatches to command_streaming when out: is given' do
         out_io = instance_double(File)

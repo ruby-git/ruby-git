@@ -21,6 +21,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
   - [v4.x-style configuration API removed](#v4x-style-configuration-api-removed)
+  - [`Git::Repository#remotes`, `Git::Branch#stashes`, and `allow_unknown_type` removed](#gitrepositoryremotes-gitbranchstashes-and-allow_unknown_type-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -411,6 +412,29 @@ The [v4.x-style configuration methods](#v4x-style-configuration-methods) and
 [`Git` module mixin deprecations](#git-module-mixin-deprecations) entries under
 "Upgrading to v5.x" map each removed call to its replacement and describe the
 return type differences.
+
+### `Git::Repository#remotes`, `Git::Branch#stashes`, and `allow_unknown_type` removed
+
+v6.0.0 removes three small APIs that v5.x deprecated:
+
+- `Git::Repository#remotes` is gone, so calling it raises `NoMethodError`. Use
+  `Git::Repository#remote_list`, which returns `Array<Git::RemoteInfo>`, or
+  `Git::Repository#remote_names` when only the names are needed.
+- `Git::Branch#stashes` is gone, so calling it raises `NoMethodError`. It ignored
+  the branch it was called on; use `Git::Repository#stash_infos`, which returns
+  the same entries as `Array<Git::StashInfo>`.
+- The `allow_unknown_type:` option of `Git::Commands::CatFile::Raw` is gone, so
+  passing it raises `ArgumentError` like any other unsupported option. There is
+  no replacement: git 2.50 removed the unknown-type feature and accepts the flag
+  as a no-op, and on git 2.43 through 2.49 the ability to query the type and size
+  of an object of unknown type goes with the option.
+
+The [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated),
+[`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated), and
+[`Git::Commands::CatFile::Raw` `allow_unknown_type` option
+deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated) entries
+under "Upgrading to v5.x" map each removed call to its replacement and describe
+the return type and order differences.
 
 ---
 

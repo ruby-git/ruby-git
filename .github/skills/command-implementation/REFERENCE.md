@@ -636,9 +636,11 @@ error. This is acceptable and expected; the ruby-git library does not gate indiv
 options by version.
 
 The same rule applies at the other edge. An option git has retired — whether removed
-outright or kept as an accepted no-op, like `--allow-unknown-type` on git 2.50+ —
-stays in the DSL while any git version in the supported range still honors it; newer
-git reports or ignores it, and the option's comment documents the version split.
+outright or kept as an accepted no-op — stays in the DSL while any git version in the
+supported range still honors it; newer git reports or ignores it, and the option's
+comment documents the version split. `--allow-unknown-type`, retired in git 2.50, is
+the case that set this rule; [ADR-0004](../../../docs/adr/0004-the-option-surface-is-the-union-of-the-supported-git-range.md)
+records why v6.0.0 removed it ahead of the floor as a private, proven-unused exception.
 Scaffolding reconciles both endpoints of the range: the latest-version docs are the
 primary authority, and the `Git::MINIMUM_GIT_VERSION` docs (already fetched during
 the [Input](SKILL.md#git-documentation-for-the-git-command) phase) are diffed against

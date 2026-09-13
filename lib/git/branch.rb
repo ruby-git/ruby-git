@@ -91,7 +91,6 @@ module Git
     def initialize(base, branch_info_or_name)
       @base = base
       @gcommit = nil
-      @stashes = nil
 
       initialize_from_argument(branch_info_or_name)
     end
@@ -121,37 +120,6 @@ module Git
       )
       @gcommit ||= branch_repository.gcommit(@full)
       @gcommit
-    end
-
-    # Returns the stash list for this repository
-    #
-    # This method ignores the branch receiver and returns every stash in the
-    # repository, so `git.branch('feature').stashes` and
-    # `git.branch('main').stashes` return the same entries. It is deprecated and
-    # will be removed in v6.0.0.
-    #
-    # The result is memoized after the first call.
-    #
-    # @example Iterate over stash entries (deprecated)
-    #   git.branch('main').stashes.each { |s| puts s }
-    #
-    # @example The replacement
-    #   repo.stash_infos.each { |info| puts info.message }
-    #
-    # @return [Git::Stashes] the stash list
-    #
-    # @deprecated Use {Git::Repository#stash_infos} instead
-    #
-    # @see Git::Repository#stash_infos
-    #
-    def stashes
-      Git::Deprecation.warn(
-        'Git::Branch#stashes is deprecated and will be removed in v6.0.0. ' \
-        'It ignores the branch and returns all repository stashes. ' \
-        'Use Git::Repository#stash_infos instead.'
-      )
-      # Git::Stashes is deprecated too; silence it so one stashes call emits one warning
-      @stashes ||= Git::Deprecation.silence { Git::Stashes.new(branch_repository) }
     end
 
     # Checks out this branch, attempting to create it first if it does not already exist

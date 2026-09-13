@@ -20,7 +20,7 @@ module Git
     #
     # @api private
     #
-    module RemoteOperations # rubocop:disable Metrics/ModuleLength
+    module RemoteOperations
       # Key normalizations for {#fetch} options
       #
       # Maps dash-style option keys (which the 4.x `Git::Lib#fetch` accepted)
@@ -551,37 +551,6 @@ module Git
           'Use Git::Repository#remote_list.find { |r| r.name == name } instead.'
         )
         Git::Remote.new(self, name)
-      end
-
-      # Returns all configured remotes as {Git::Remote} objects
-      #
-      # @example List all remotes
-      #   repo.remotes  #=> [#<Git::Remote 'origin'>, #<Git::Remote 'upstream'>]
-      #
-      # @return [Array<Git::Remote>] one {Git::Remote} for each configured remote
-      #
-      #   Returns an empty array when no remotes are configured.
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#remote_list} instead
-      #
-      #   {#remote_list} returns `Array<Git::RemoteInfo>` (immutable value
-      #   objects) rather than `Array<Git::Remote>`. Call the corresponding
-      #   {Git::Repository} method (e.g. {#fetch}, {#remote_remove}) for
-      #   operations on a remote. Each {Git::Remote} this method constructs
-      #   emits its own deprecation warning, so a call produces one warning
-      #   for this method plus one per remote returned.
-      #
-      # @see #remote_list
-      #
-      def remotes
-        Git::Deprecation.warn(
-          'Git::Repository#remotes is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#remote_list instead.'
-        )
-        result = Git::Commands::Remote::List.new(@execution_context).call
-        result.stdout.split("\n").map { |name| Git::Remote.new(self, name) }
       end
 
       # Returns the names of all configured remotes
