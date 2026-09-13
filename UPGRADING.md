@@ -20,6 +20,7 @@ to update your code when upgrading from the preceding major version.
   - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
+  - [v4.x-style configuration API removed](#v4x-style-configuration-api-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -387,6 +388,29 @@ deprecated](#gitlog-enumerable-interface-deprecated) and
 [`Git::Object::Commit#set_commit`
 deprecated](#gitobjectcommitset_commit-deprecated) entries under "Upgrading to
 v5.x" map each removed call to its replacement.
+
+### v4.x-style configuration API removed
+
+v6.0.0 removes the v4.x-style configuration methods that dispatched on their
+argument count to read, write, or list git configuration:
+
+- `Git::Repository#config` and `Git::Repository#global_config` are gone, so
+  calling either raises `NoMethodError`. Use `config_get`, `config_set`, and
+  `config_list`; pass `global: true` for the global scope.
+- `Git.global_config` is gone, so calling it raises `NoMethodError`. Use
+  `Git.config_get`, `Git.config_set`, and `Git.config_list` with `global: true`.
+- The `Git` module no longer defines instance methods, so `include Git` and
+  `extend Git` add nothing to the host, and calling `config` or `global_config`
+  as bare methods after mixing in `Git` raises `NoMethodError`. Call
+  `Git.config_get`, `Git.config_set`, and `Git.config_list` instead.
+
+`Git.config` (the gem-configuration accessor used as `Git.config.binary_path`)
+and `Git.configure` are not part of this removal and are unchanged.
+
+The [v4.x-style configuration methods](#v4x-style-configuration-methods) and
+[`Git` module mixin deprecations](#git-module-mixin-deprecations) entries under
+"Upgrading to v5.x" map each removed call to its replacement and describe the
+return type differences.
 
 ---
 
