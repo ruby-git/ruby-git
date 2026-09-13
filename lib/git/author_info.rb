@@ -4,8 +4,7 @@ module Git
   # Immutable value object representing an author or committer identity
   #
   # This is a lightweight, immutable data structure holding the identity data
-  # git records for commit authors, committers, and taggers. It replaces the
-  # mutable {Git::Author}, which is deprecated.
+  # git records for commit authors, committers, and taggers.
   #
   # @example Construct from individual values
   #   info = Git::AuthorInfo.new(
