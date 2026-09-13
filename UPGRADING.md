@@ -17,6 +17,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git.clone` legacy options removed](#gitclone-legacy-options-removed)
   - [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)
   - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
+  - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -332,6 +333,28 @@ exception.
 `with_working` and `with_temp_working` still change the process working directory
 with `Dir.chdir` for the duration of the block, so they remain unsafe to call from
 more than one thread at a time.
+
+### `Git::Repository` option shims removed
+
+v6.0.0 removes the four v4.x option and argument shapes that `Git::Repository`
+methods accepted with a deprecation warning throughout v5.x:
+
+- `clean` no longer accepts `:ff` or `:force_force`. Pass `force: 2` to run
+  `git clean -ff`.
+- `diff_path_status` no longer accepts `:path`. Use `:path_limiter`, which takes
+  the same values.
+- `commit` no longer accepts `:add_all`. Use `:all`.
+- `set_working` and `set_index` no longer take a positional `check` argument.
+  Pass `must_exist:` instead; it defaults to `true`. An explicit `must_exist:
+  nil` no longer means "not given": v5.x treated it as `true`, and v6.0.0 treats
+  it as `false` like any other falsy value. Omit the keyword to get the default.
+
+The removed option keys now fall through to the normal option validation, so
+passing one raises `ArgumentError` (see [Unsupported options raise
+`ArgumentError`](#unsupported-options-raise-argumenterror)). A positional `check`
+argument raises `ArgumentError` for the wrong number of arguments. The
+[`Git::Repository` option renames](#gitrepository-option-renames) entry under
+"Upgrading to v5.x" maps each removed form to its replacement.
 
 ---
 

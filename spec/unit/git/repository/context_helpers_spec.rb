@@ -206,31 +206,10 @@ RSpec.describe Git::Repository::ContextHelpers do
       end
     end
 
-    context 'signature compatibility (legacy-contract)' do
-      it 'accepts a positional check argument with a deprecation warning' do
-        expect(Git::Deprecation).to receive(:warn).once
-        expect { described_instance.set_index('/nonexistent/index', false) }.not_to raise_error
-      end
-
-      it 'warns with the documented "check" argument deprecation message' do
-        expect(Git::Deprecation).to receive(:warn).with(
-          'The "check" argument is deprecated and will be removed in v6.0.0. ' \
-          'Use "must_exist:" instead.'
-        )
-        described_instance.set_index('/nonexistent/index', false)
-      end
-
-      it 'performs existence check when both check=true and must_exist: false are given (more restrictive wins)' do
-        expect(Git::Deprecation).to receive(:warn).once
-        expect { described_instance.set_index('/nonexistent/index', true, must_exist: false) }
-          .to raise_error(ArgumentError, /path does not exist/)
-      end
-
-      it 'raises when both check=false and must_exist: true are given (more restrictive wins)' do
-        # must_exist: true | check: false → true → raises
-        expect(Git::Deprecation).to receive(:warn).once
-        expect { described_instance.set_index('/nonexistent/index', false, must_exist: true) }
-          .to raise_error(ArgumentError, /path does not exist/)
+    context 'with the removed positional check argument' do
+      it 'raises ArgumentError' do
+        expect { described_instance.set_index('/nonexistent/index', false) }
+          .to raise_error(ArgumentError, /wrong number of arguments/)
       end
     end
   end
@@ -476,30 +455,10 @@ RSpec.describe Git::Repository::ContextHelpers do
       end
     end
 
-    context 'signature compatibility (legacy-contract)' do
-      it 'accepts a positional check argument with a deprecation warning' do
-        expect(Git::Deprecation).to receive(:warn).once
-        expect { described_instance.set_working('/nonexistent/dir', false) }.not_to raise_error
-      end
-
-      it 'warns with the documented "check" argument deprecation message' do
-        expect(Git::Deprecation).to receive(:warn).with(
-          'The "check" argument is deprecated and will be removed in v6.0.0. ' \
-          'Use "must_exist:" instead.'
-        )
-        described_instance.set_working('/nonexistent/dir', false)
-      end
-
-      it 'performs existence check when both check=true and must_exist: false are given (more restrictive wins)' do
-        expect(Git::Deprecation).to receive(:warn).once
-        expect { described_instance.set_working('/nonexistent/dir', true, must_exist: false) }
-          .to raise_error(ArgumentError, /path does not exist/)
-      end
-
-      it 'raises when both check=false and must_exist: true are given (more restrictive wins)' do
-        expect(Git::Deprecation).to receive(:warn).once
-        expect { described_instance.set_working('/nonexistent/dir', false, must_exist: true) }
-          .to raise_error(ArgumentError, /path does not exist/)
+    context 'with the removed positional check argument' do
+      it 'raises ArgumentError' do
+        expect { described_instance.set_working('/nonexistent/dir', false) }
+          .to raise_error(ArgumentError, /wrong number of arguments/)
       end
     end
   end

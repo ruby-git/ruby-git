@@ -16,7 +16,7 @@ require 'git/repository/committing'
 #   spec/integration/git/repository/committing_spec.rb
 #
 # The unit specs below cover the facade's own behavior: option whitelisting,
-# argument pre-processing, deprecation handling, and delegation contracts.
+# argument pre-processing, and delegation contracts.
 
 RSpec.describe Git::Repository::Committing do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
@@ -170,20 +170,20 @@ RSpec.describe Git::Repository::Committing do
       end
     end
 
-    context 'with deprecated :add_all option' do
+    context 'with the removed :add_all option' do
       subject(:result) { described_instance.commit('msg', add_all: true) }
 
-      it 'emits a deprecation warning' do
-        allow(commit_command).to receive(:call).and_return(commit_result)
-        expect(Git::Deprecation).to receive(:warn).with(a_string_including(':add_all'))
-        result
+      it 'raises ArgumentError' do
+        expect { result }.to raise_error(ArgumentError, /Unknown options: add_all/)
       end
 
-      it 'converts :add_all to :all and forwards to the command' do
-        allow(Git::Deprecation).to receive(:warn)
-        expect(commit_command).to receive(:call).with(no_edit: true, message: 'msg',
-                                                      all: true).and_return(commit_result)
-        result
+      it 'does not call Git::Commands::Commit' do
+        expect(commit_command).not_to receive(:call)
+        begin
+          result
+        rescue ArgumentError
+          # expected
+        end
       end
     end
 
@@ -209,15 +209,6 @@ RSpec.describe Git::Repository::Committing do
         opts = { all: true }
         allow(commit_command).to receive(:call).and_return(commit_result)
         expect { described_instance.commit('msg', opts) }.not_to raise_error
-      end
-
-      it 'does not mutate the caller-provided Hash when :add_all is present' do
-        opts = { add_all: true }
-        original = opts.dup
-        allow(Git::Deprecation).to receive(:warn)
-        allow(commit_command).to receive(:call).and_return(commit_result)
-        described_instance.commit('msg', opts)
-        expect(opts).to eq(original)
       end
     end
   end

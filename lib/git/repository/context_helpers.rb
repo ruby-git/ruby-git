@@ -253,10 +253,7 @@ module Git
       #
       # @param index_file [String, Pathname] path to the new index file
       #
-      # @param check [Boolean, nil] deprecated positional argument — use
-      #   `must_exist:` instead; emits a deprecation warning when non-`nil`
-      #
-      # @param must_exist [Boolean, nil] when `true` (the default), raises
+      # @param must_exist [Boolean] when `true` (the default), raises
       #   `ArgumentError` if `index_file` does not exist on disk
       #
       # @return [void]
@@ -264,8 +261,7 @@ module Git
       # @raise [ArgumentError] if `must_exist: true` (the default) and
       #   `index_file` does not exist
       #
-      def set_index(index_file, check = nil, must_exist: nil)
-        must_exist = context_helpers_deprecate_check_argument(check, must_exist)
+      def set_index(index_file, must_exist: true)
         new_path = context_helpers_validate_path(index_file, must_exist)
         @execution_context = @execution_context.dup_with(git_index_file: new_path.to_s)
         nil
@@ -282,10 +278,7 @@ module Git
       #
       # @param work_dir [String, Pathname] path to the new working directory
       #
-      # @param check [Boolean, nil] deprecated positional argument — use
-      #   `must_exist:` instead; emits a deprecation warning when non-`nil`
-      #
-      # @param must_exist [Boolean, nil] when `true` (the default), raises
+      # @param must_exist [Boolean] when `true` (the default), raises
       #   `ArgumentError` if `work_dir` does not exist on disk
       #
       # @return [void]
@@ -293,8 +286,7 @@ module Git
       # @raise [ArgumentError] if `must_exist: true` (the default) and
       #   `work_dir` does not exist
       #
-      def set_working(work_dir, check = nil, must_exist: nil)
-        must_exist = context_helpers_deprecate_check_argument(check, must_exist)
+      def set_working(work_dir, must_exist: true)
         new_path = context_helpers_validate_path(work_dir, must_exist)
         @execution_context = @execution_context.dup_with(git_work_dir: new_path.to_s)
         nil
@@ -368,33 +360,6 @@ module Git
       #
       def context_helpers_mktmpdir(prefix)
         Git::SystemCallGuard.call('Failed to create a temporary directory') { Dir.mktmpdir(prefix) }
-      end
-
-      # Resolves deprecated `check` argument semantics with `must_exist:`
-      #
-      # @param check [Boolean, nil] deprecated positional existence-check value
-      #
-      # @param must_exist [Boolean, nil] keyword existence-check override
-      #
-      # @return [Boolean] whether path existence must be enforced
-      #
-      def context_helpers_deprecate_check_argument(check, must_exist)
-        if !check.nil? && defined?(Git::Deprecation)
-          Git::Deprecation.warn(
-            'The "check" argument is deprecated and will be removed in v6.0.0. ' \
-            'Use "must_exist:" instead.'
-          )
-        end
-        # Preserve the original Git::Base semantics: when both the deprecated
-        # positional `check` and the new `must_exist:` keyword are given, OR
-        # them so the more restrictive value wins.
-        #
-        # NilClass#| is defined in Ruby: nil | false → false, nil | true → true.
-        # This means single-argument callers (check only, or must_exist: only)
-        # are handled correctly without any nil-special-casing.
-        return true if must_exist.nil? && check.nil?
-
-        must_exist | check
       end
 
       # Expands `path` and validates existence when required

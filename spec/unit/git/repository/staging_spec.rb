@@ -387,59 +387,11 @@ RSpec.describe Git::Repository::Staging do
       end
     end
 
-    context 'with the deprecated :ff option set to true' do
+    context 'with the removed :ff option' do
       subject(:result) { described_instance.clean(ff: true) }
 
-      it 'warns about the deprecation' do
-        allow(clean_command).to receive(:call).and_return(clean_result)
-        expect(Git::Deprecation).to receive(:warn).with(/:ff option is deprecated/)
-        result
-      end
-
-      it 'translates :ff to force: 2' do
-        allow(Git::Deprecation).to receive(:warn)
-        expect(clean_command).to receive(:call).with(force: 2).and_return(clean_result)
-        result
-      end
-    end
-
-    context 'with the deprecated :ff option set to false' do
-      subject(:result) { described_instance.clean(ff: false) }
-
-      it 'warns about the deprecation' do
-        allow(clean_command).to receive(:call).and_return(clean_result)
-        expect(Git::Deprecation).to receive(:warn).with(/:ff option is deprecated/)
-        result
-      end
-
-      it 'does not pass force to Git::Commands::Clean#call' do
-        allow(Git::Deprecation).to receive(:warn)
-        expect(clean_command).to receive(:call).with(no_args).and_return(clean_result)
-        result
-      end
-    end
-
-    context 'with the deprecated :force_force option set to true' do
-      subject(:result) { described_instance.clean(force_force: true) }
-
-      it 'warns about the deprecation' do
-        allow(clean_command).to receive(:call).and_return(clean_result)
-        expect(Git::Deprecation).to receive(:warn).with(/:force_force option is deprecated/)
-        result
-      end
-
-      it 'translates :force_force to force: 2' do
-        allow(Git::Deprecation).to receive(:warn)
-        expect(clean_command).to receive(:call).with(force: 2).and_return(clean_result)
-        result
-      end
-    end
-
-    context 'with the deprecated :ff option set to a non-boolean value' do
-      subject(:result) { described_instance.clean(ff: 0) }
-
       it 'raises ArgumentError' do
-        expect { result }.to raise_error(ArgumentError, /ff option only accepts true, false, or nil/)
+        expect { result }.to raise_error(ArgumentError, /Unknown options: ff/)
       end
 
       it 'does not call Git::Commands::Clean' do
@@ -452,71 +404,20 @@ RSpec.describe Git::Repository::Staging do
       end
     end
 
-    context 'with the deprecated :ff option combined with an explicit force: true' do
-      subject(:result) { described_instance.clean(ff: true, force: true) }
+    context 'with the removed :force_force option' do
+      subject(:result) { described_instance.clean(force_force: true) }
 
-      before { allow(Git::Deprecation).to receive(:warn) }
-
-      it 'normalizes force: true to 1 then raises it to force: 2' do
-        expect(clean_command).to receive(:call).with(force: 2).and_return(clean_result)
-        result
+      it 'raises ArgumentError' do
+        expect { result }.to raise_error(ArgumentError, /Unknown options: force_force/)
       end
-    end
 
-    context 'with the deprecated :ff option combined with an explicit force: false' do
-      subject(:result) { described_instance.clean(ff: true, force: false) }
-
-      before { allow(Git::Deprecation).to receive(:warn) }
-
-      it 'translates the explicit false force to force: 2' do
-        expect(clean_command).to receive(:call).with(force: 2).and_return(clean_result)
-        result
-      end
-    end
-
-    context 'with the deprecated :ff option combined with an explicit integer force >= 1' do
-      subject(:result) { described_instance.clean(ff: true, force: 3) }
-
-      before { allow(Git::Deprecation).to receive(:warn) }
-
-      it 'keeps the larger of the explicit force and 2' do
-        expect(clean_command).to receive(:call).with(force: 3).and_return(clean_result)
-        result
-      end
-    end
-
-    context 'with the deprecated :ff option combined with an explicit force: 0' do
-      subject(:result) { described_instance.clean(ff: true, force: 0) }
-
-      it 'emits the deprecation warning and propagates the ArgumentError from the command' do
-        # The facade passes force: 0 through to the Clean command, which rejects
-        # values <= 0. The ff: true should not mask the invalid force value.
-        allow(Git::Commands::Clean).to receive(:new).with(execution_context).and_call_original
-        expected_message = ':ff option is deprecated and will be removed in v6.0.0. Use force: 2 instead.'
-        expect(Git::Deprecation).to receive(:warn).with(expected_message)
-        expect { result }.to raise_error(ArgumentError, /force.*positive Integer/)
-      end
-    end
-
-    context 'with the deprecated :ff option combined with an explicit force: nil' do
-      subject(:result) { described_instance.clean(ff: true, force: nil) }
-
-      before { allow(Git::Deprecation).to receive(:warn) }
-
-      it 'treats the explicit nil as unspecified and applies the ff default of force: 2' do
-        expect(clean_command).to receive(:call).with(force: 2).and_return(clean_result)
-        result
-      end
-    end
-
-    context 'with the deprecated :ff option combined with a non-integer force value' do
-      subject(:result) { described_instance.clean(ff: true, force: 1.5) }
-
-      before { allow(Git::Deprecation).to receive(:warn) }
-
-      it 'forwards the non-integer force value unchanged' do
-        expect(clean_command).to receive(:call).with(force: 1.5).and_return(clean_result)
-        result
+      it 'does not call Git::Commands::Clean' do
+        expect(clean_command).not_to receive(:call)
+        begin
+          result
+        rescue ArgumentError
+          # expected
+        end
       end
     end
 
