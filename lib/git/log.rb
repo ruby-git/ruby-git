@@ -9,10 +9,10 @@ module Git
   # return every matching commit. Calling {#all} adds the `--all` flag to include
   # all refs in the search but does not change the number of commits returned.
   #
-  # The query is lazily executed when results are requested either via the modern
-  # `#execute` method or the deprecated Enumerable methods.
+  # The query runs when {#execute} is called and returns a {Git::Log::Result}
+  # holding the matching commits.
   #
-  # @example Using the modern `execute` API
+  # @example Running a query
   #   log = git.log.max_count(50).between('v1.0', 'v1.1').author('Scott')
   #   results = log.execute
   #   puts "Found #{results.size} commits."
@@ -21,8 +21,6 @@ module Git
   # @api public
   #
   class Log
-    include Enumerable
-
     # An immutable, Enumerable collection of `Git::Object::Commit` objects.
     # Returned by `Git::Log#execute`.
     #
@@ -235,76 +233,6 @@ module Git
       run_log_if_dirty
       Result.new(@commits)
     end
-
-    # @!group Deprecated Enumerable Interface
-
-    # @deprecated Use {#execute} and call `each` on the result.
-    def each(&)
-      Git::Deprecation.warn(
-        'Calling Git::Log#each is deprecated and will be removed in v6.0.0. ' \
-        'Call #execute and then #each on the result object.'
-      )
-      run_log_if_dirty
-      @commits.each(&)
-    end
-
-    # @deprecated Use {#execute} and call `size` on the result.
-    def size
-      Git::Deprecation.warn(
-        'Calling Git::Log#size is deprecated and will be removed in v6.0.0. ' \
-        'Call #execute and then #size on the result object.'
-      )
-      run_log_if_dirty
-      @commits.size
-    end
-
-    # @deprecated Use {#execute} and call `to_s` on the result.
-    def to_s
-      Git::Deprecation.warn(
-        'Calling Git::Log#to_s is deprecated and will be removed in v6.0.0. ' \
-        'Call #execute and then #to_s on the result object.'
-      )
-      run_log_if_dirty
-      @commits.join("\n")
-    end
-
-    # @deprecated Use {#execute} and call the method on the result.
-    def first
-      Git::Deprecation.warn(
-        'Calling Git::Log#first is deprecated and will be removed in v6.0.0. ' \
-        'Call #execute and then #first on the result object.'
-      )
-      run_log_if_dirty
-      @commits.first
-    end
-
-    # @deprecated Use {#execute} and call the method on the result.
-    def last
-      Git::Deprecation.warn(
-        'Calling Git::Log#last is deprecated and will be removed in v6.0.0. ' \
-        'Call #execute and then #last on the result object.'
-      )
-      run_log_if_dirty
-      @commits.last
-    end
-
-    # @param index [Integer, Range] the commit index or range to retrieve
-    #
-    # @return [Git::Object::Commit, Array<Git::Object::Commit>, nil] the selected
-    #   commit or commits
-    #
-    # @deprecated Use {#execute} and call the method on the result.
-    #
-    def [](index)
-      Git::Deprecation.warn(
-        'Calling Git::Log#[] is deprecated and will be removed in v6.0.0. ' \
-        'Call #execute and then #[] on the result object.'
-      )
-      run_log_if_dirty
-      @commits[index]
-    end
-
-    # @!endgroup
 
     private
 
