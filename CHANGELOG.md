@@ -5,6 +5,84 @@
 
 # Change Log
 
+## [6.0.0](https://github.com/ruby-git/ruby-git/compare/v5.4.1...v6.0.0) (2026-09-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* **repository:** Git::Repository#clean no longer accepts :ff or :force_force, diff_path_status no longer accepts :path, and commit no longer accepts :add_all; each raises ArgumentError. set_working and set_index no longer take a positional check argument. Use force: 2, :path_limiter, :all, and must_exist: instead.
+* **repository:** with_index, with_temp_index, with_working, and with_temp_working raise ArgumentError when called without a block or with a block that declares no positional parameter. Declare the parameter and call methods on it. See UPGRADING.md.
+* **repository:** with_index, with_temp_index, with_working, and with_temp_working yield a separate Git::Repository bound to the temporary index or working tree instead of rebinding the receiver. Code that ignores the block parameter and calls the outer repository inside the block now runs against the original index or working tree; use the block parameter. See UPGRADING.md.
+* **export:** Git.export(url, dir, remote: name) raises ArgumentError instead of silently ignoring the option. Delete the option from the call; there is no replacement because the remote name was never observable in the exported tree.
+* Git.clone no longer accepts :path, :recursive, or :remote and raises ArgumentError when given one. Use :chdir, :recurse_submodules, and :origin instead.
+* Git.binary_version no longer exists; use Git.git_version (call .to_a for the legacy Array). Git.ls_remote(nil) raises ArgumentError; omit the argument or pass '.'.
+* The Git::Base constant no longer exists, so is_a?(Git::Base) checks and monkeypatches of Git::Base raise NameError. Include an application-owned module into Git::Repository instead.
+* Git::Repository#lib no longer exists. Call the facade method directly on the repository object.
+* Git::CommandLineResult no longer exists. Use
+* Git::Object::Tag no longer exists, Git::Repository no longer defines tag, tags, or tag_add, and Git::Object.new no longer accepts an is_tag argument. Use tag_list and tag_create on Git::Repository, which return
+* Git::Repository no longer defines add_remote, remove_remote, set_remote_url, add_tag, or delete_tag. Call remote_add, remote_remove, remote_set_url, tag_create, and tag_delete instead.
+* addressable 2.9.0 or later is required. Applications whose bundle caps addressable below 2.9.0 must update that dependency or stay on the latest v5.x release.
+* git 2.43.0 or later is required. Ubuntu 22.04 users must install a newer git or stay on v5.x.
+* Ruby 3.3.0 or later is required. Applications on Ruby 3.2 must upgrade Ruby or stay on the latest v5.x release.
+
+### Features
+
+* **export:** Reject the :remote option to Git.export ([6d46862](https://github.com/ruby-git/ruby-git/commit/6d468624f5253b094a2aa0af545b6c77693fbe66)), closes [#1820](https://github.com/ruby-git/ruby-git/issues/1820)
+* Raise the minimum supported git version to 2.43.0 ([103a8da](https://github.com/ruby-git/ruby-git/commit/103a8da449c509ac801800a928b886f6efb5ffcf)), closes [#1140](https://github.com/ruby-git/ruby-git/issues/1140)
+* Remove Git::CommandLineResult ([cff038a](https://github.com/ruby-git/ruby-git/commit/cff038a17dbeb5d17dfdea9f6c0d7bb504141a8c)), closes [#1770](https://github.com/ruby-git/ruby-git/issues/1770)
+* Remove Git::Object::Tag ([d826a0a](https://github.com/ruby-git/ruby-git/commit/d826a0a6fa2cbfc0759f186c564078052ca1d172)), closes [#1726](https://github.com/ruby-git/ruby-git/issues/1726)
+* Remove Git::Repository#lib ([5778196](https://github.com/ruby-git/ruby-git/commit/5778196619ff05117c2a86e0366aa0375e05001e)), closes [#1769](https://github.com/ruby-git/ruby-git/issues/1769)
+* Remove Git.binary_version and the Git.ls_remote(nil) shim ([a31e9db](https://github.com/ruby-git/ruby-git/commit/a31e9db2f9f27ee75f87ed4ead9672daab630b16)), closes [#1773](https://github.com/ruby-git/ruby-git/issues/1773)
+* Remove the five renamed facade methods ([bde6f52](https://github.com/ruby-git/ruby-git/commit/bde6f52ab39d1704fdb35058b7072559ccdf91df)), closes [#1772](https://github.com/ruby-git/ruby-git/issues/1772)
+* Remove the Git::Base compatibility shim ([70d3e27](https://github.com/ruby-git/ruby-git/commit/70d3e279bf26c34a6d24203b054c9418eeda3dbb)), closes [#1768](https://github.com/ruby-git/ruby-git/issues/1768)
+* Remove the Git.clone legacy options (:path, :recursive, :remote) ([bde02ee](https://github.com/ruby-git/ruby-git/commit/bde02eee7cfc24a7a510d5a3fcb67fa9818b4cd6)), closes [#1774](https://github.com/ruby-git/ruby-git/issues/1774)
+* **repository:** Remove the v4.x option shims from clean, diff_path_status, commit, and set_* ([65fed59](https://github.com/ruby-git/ruby-git/commit/65fed59669e228d1480a3afe52768fba0bb4c756)), closes [#1776](https://github.com/ruby-git/ruby-git/issues/1776)
+* **repository:** Require a block parameter on the with_* context helpers ([6f7776e](https://github.com/ruby-git/ruby-git/commit/6f7776e637fb84c8436e454cb561821a40c7d4cf))
+
+
+### Bug Fixes
+
+* **errors:** Raise Git::Error instead of a bare SystemCallError from filesystem calls ([c6aa107](https://github.com/ruby-git/ruby-git/commit/c6aa107af294483e7f53ee0cf3095f61364ee089)), closes [#1804](https://github.com/ruby-git/ruby-git/issues/1804)
+* **export:** Drop the redundant checkout that broke Git.export for tags ([5b444b4](https://github.com/ruby-git/ruby-git/commit/5b444b44ddc3a648d2f543ba56cf3472108a8647)), closes [#1815](https://github.com/ruby-git/ruby-git/issues/1815)
+* **export:** Say what the destination holds when removing .git fails ([510713d](https://github.com/ruby-git/ruby-git/commit/510713d5bccd7d76b38ab4d3a2fcade57baafbcb))
+
+
+### Other Changes
+
+* **commands:** Drop version gates below the 2.43.0 floor ([bd97b2f](https://github.com/ruby-git/ruby-git/commit/bd97b2f3240546fbe0d07ab6f7f303b4246a4c83))
+* Describe the with_* helpers in ADR-0009 as yielding a derived repository ([f99194c](https://github.com/ruby-git/ruby-git/commit/f99194cd64bf812a2bbb90363afac48121df818e)), closes [#1830](https://github.com/ruby-git/ruby-git/issues/1830)
+* **export:** Cover the state Git.export leaves when removing .git fails ([8fe1fdd](https://github.com/ruby-git/ruby-git/commit/8fe1fdddb3e178d953534e43799cb2a59ee99c4e))
+* **export:** Describe what a failed .git removal leaves behind ([7995d83](https://github.com/ruby-git/ruby-git/commit/7995d83197b9664d51904aaa6c9be6c8db33ca85))
+* Name Git::CommandLine::Result in spec descriptions ([406b396](https://github.com/ruby-git/ruby-git/commit/406b396537d1b9e0e93ab931c80f7b349505c34c))
+* Name the 5.x maintenance branch alongside 4.x ([f264747](https://github.com/ruby-git/ruby-git/commit/f2647470ac064fc1ac8c48e974fe3bd1faf0ae99))
+* Name the restore checkout in the failure-state notes ([bec03f8](https://github.com/ruby-git/ruby-git/commit/bec03f8e9f7b3f6bdaf46d665f1f4f6586ab7f2b))
+* **path_resolver:** Remove the unreachable git-binary-not-found rescue ([3623f59](https://github.com/ruby-git/ruby-git/commit/3623f5954b2b68b38cd41f37d8fc9af4d34f3cf2))
+* Raise required_ruby_version to 3.3 and drop the Ruby 3.3 gates on yard-lint ([a551fb4](https://github.com/ruby-git/ruby-git/commit/a551fb4231bca57db4964f3527ae344d91208aa7)), closes [#1722](https://github.com/ruby-git/ruby-git/issues/1722)
+* **readme:** Announce the 5.x branch and the v6.0.0 line on main ([4510e7d](https://github.com/ruby-git/ruby-git/commit/4510e7dabf1952447a6a66883a14c627158dcb59))
+* **readme:** Announce the deletion of the v1 and master branches ([6c8251f](https://github.com/ruby-git/ruby-git/commit/6c8251f617481a143206cb9f513336e3b442701c)), closes [#1786](https://github.com/ruby-git/ruby-git/issues/1786)
+* **readme:** Derive the JRuby and TruffleRuby floors from the MRI floor ([16558cf](https://github.com/ruby-git/ruby-git/commit/16558cfedd153796cc18c5ddd190c26d39ceb556))
+* **readme:** Replace the v5.0.0 release banner with a v6.0.0 development note ([6bb4e80](https://github.com/ruby-git/ruby-git/commit/6bb4e80cf3d7df1531b3ed919e5274174238c1cf))
+* Record ADR-0008 on converting errors from outside the gem at the boundary ([64344da](https://github.com/ruby-git/ruby-git/commit/64344daa40f22d2b26cd87b7139b27a81a7a8a4b))
+* Record ADR-0009 on what a failed operation leaves behind ([1cedde3](https://github.com/ruby-git/ruby-git/commit/1cedde35421505f88dc9a62b5ecffaf9e0708be8))
+* Release v6.0.0 as the next version from main ([dbee8b9](https://github.com/ruby-git/ruby-git/commit/dbee8b9abfdb224893b6ca26e7531f53c241c448))
+* Remove git version skips at or below 2.43.0 ([61a87b1](https://github.com/ruby-git/ruby-git/commit/61a87b1d5e43e65b7735b5abd983cdd46f783bb0))
+* Replace Ruby 3.2 with 3.3 in the CI and cache-warming matrices ([6970c25](https://github.com/ruby-git/ruby-git/commit/6970c2532c79f5189b7b1454fc2287f90468d172))
+* Replace the release-as config pin with a Release-As commit footer ([ebb7605](https://github.com/ruby-git/ruby-git/commit/ebb7605183b766759ef078ea48e41881f48ef5fb))
+* **repository:** State the failure state of in_branch and merge_into in a note tag ([a4a5059](https://github.com/ruby-git/ruby-git/commit/a4a5059de5183662811cd1203f2c69956937395f))
+* **repository:** Yield a derived repository from the with_* context helpers ([56e7a35](https://github.com/ruby-git/ruby-git/commit/56e7a356219d1c9abca1f3acc0c10775458d2286)), closes [#1830](https://github.com/ruby-git/ruby-git/issues/1830)
+* Require addressable 2.9 or later ([e790d13](https://github.com/ruby-git/ruby-git/commit/e790d13a0ebfc877c003c874178faa55bd295600)), closes [#1221](https://github.com/ruby-git/ruby-git/issues/1221)
+* Review the prose in README.md and UPGRADING.md ([be7f48c](https://github.com/ruby-git/ruby-git/commit/be7f48c2355a58c35c8ef957908ff9670cd21852))
+* Rework ADR-0009 after review and link it from the facade skills ([44c41f5](https://github.com/ruby-git/ruby-git/commit/44c41f5a905bbed594f203a44049a724eb807154))
+* **skills:** Add the README banner swaps to the release checklists ([54ed695](https://github.com/ruby-git/ruby-git/commit/54ed695f714b496ba4926f58df3b24be2bcf999d))
+* **skills:** Check the failure-state note before flagging a missing restore ([b18e1f1](https://github.com/ruby-git/ruby-git/commit/b18e1f1c6aa29a7f506c59f7f8d3ab4aaf70685a))
+* **skills:** Record the Git::CommandLineResult removal in the skill references ([070c73b](https://github.com/ruby-git/ruby-git/commit/070c73b7ab85257a1e613498c81f965cb7a45d8f))
+* **skills:** Record the Git::Object::Tag removal in the skill references ([6503b7a](https://github.com/ruby-git/ruby-git/commit/6503b7a84ec5e69aa99e49798c69e227b2230e71))
+* **skills:** Record the Release-As pin and two-PR shape of a maintenance branch cut ([4db3834](https://github.com/ruby-git/ruby-git/commit/4db383464f3e6ea73d2d41ac6e89311208ac94d8))
+* **skills:** Update the tag example in the facade-implementation guardrail ([3a9f1a0](https://github.com/ruby-git/ruby-git/commit/3a9f1a028162f46a3c742a313286f46031b3a851))
+* State the Ruby 3.3 floor in UPGRADING.md, CONTRIBUTING.md, and the agent skills ([00ecc30](https://github.com/ruby-git/ruby-git/commit/00ecc30b6f5de576089db8c9e70154119ff08b05))
+* State what a failure leaves behind for the operations ADR-0009 covers ([a136d72](https://github.com/ruby-git/ruby-git/commit/a136d72aa8ab03a42c1504bd5ca8418fca28361d)), closes [#1831](https://github.com/ruby-git/ruby-git/issues/1831)
+* **upgrading:** Name the v6 section by series ([d3ad986](https://github.com/ruby-git/ruby-git/commit/d3ad986e731159bdcef8e2342a52d0a7871fe5d0))
+
 ## [5.4.1](https://github.com/ruby-git/ruby-git/compare/v5.4.0...v5.4.1) (2026-09-04)
 
 
