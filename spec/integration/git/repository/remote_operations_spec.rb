@@ -125,36 +125,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   end
 
   # ---------------------------------------------------------------------------
-  # #remotes
-  # ---------------------------------------------------------------------------
-
-  describe '#remotes' do
-    # Each Git::Remote that #remotes builds emits its own deprecation warning
-    before { allow(Git::Deprecation).to receive(:warn) }
-
-    it 'emits a deprecation warning' do
-      expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#remotes is deprecated and will be removed in v6.0.0. ' \
-        'Use Git::Repository#remote_list instead.'
-      )
-      described_instance.remotes
-    end
-
-    it 'includes each configured remote by name' do
-      described_instance.remote_add('upstream', bare_dir)
-      expect(described_instance.remotes.map(&:name)).to contain_exactly('origin', 'upstream')
-    end
-
-    context 'when the repository has no remotes' do
-      before { described_instance.remote_remove('origin') }
-
-      it 'returns an empty array' do
-        expect(described_instance.remotes).to eq([])
-      end
-    end
-  end
-
-  # ---------------------------------------------------------------------------
   # #remote_names
   # ---------------------------------------------------------------------------
 

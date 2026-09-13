@@ -1048,56 +1048,6 @@ RSpec.describe Git::Repository::RemoteOperations do
   end
 
   # ---------------------------------------------------------------------------
-  # #remotes
-  # ---------------------------------------------------------------------------
-
-  describe '#remotes' do
-    let(:list_command) { instance_double(Git::Commands::Remote::List) }
-
-    before do
-      allow(Git::Commands::Remote::List)
-        .to receive(:new).with(execution_context).and_return(list_command)
-      allow(list_command).to receive(:call).and_return(command_result("origin\nupstream\n"))
-      allow(Git::Remote).to receive(:new) { |_base, name| instance_double(Git::Remote, name: name) }
-      allow(Git::Deprecation).to receive(:warn)
-    end
-
-    it 'emits a deprecation warning via Git::Deprecation.warn' do
-      expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#remotes is deprecated and will be removed in v6.0.0. ' \
-        'Use Git::Repository#remote_list instead.'
-      )
-      described_instance.remotes
-    end
-
-    it 'delegates to Git::Commands::Remote::List.new with the execution_context' do
-      expect(Git::Commands::Remote::List)
-        .to receive(:new).with(execution_context).and_return(list_command)
-      described_instance.remotes
-    end
-
-    it 'returns a Git::Remote for each configured remote' do
-      expect(described_instance.remotes.map(&:name)).to eq(%w[origin upstream])
-    end
-
-    it 'builds each Git::Remote with the repository and remote name' do
-      expect(Git::Remote).to receive(:new).with(described_instance, 'origin')
-      expect(Git::Remote).to receive(:new).with(described_instance, 'upstream')
-      described_instance.remotes
-    end
-
-    context 'when no remotes are configured' do
-      before do
-        allow(list_command).to receive(:call).and_return(command_result(''))
-      end
-
-      it 'returns an empty array' do
-        expect(described_instance.remotes).to eq([])
-      end
-    end
-  end
-
-  # ---------------------------------------------------------------------------
   # #remote_names
   # ---------------------------------------------------------------------------
 

@@ -20,9 +20,9 @@ applied across branches, and the caller has no reason to doubt a method that han
 plausible results.
 
 So ruby-git will offer no `branch.stashes`, no `stashes_for(branch)`, and no other
-signature implying the stash stack is partitioned by branch. `Git::Branch#stashes` is
-still present and is scheduled for removal under issue #1637. The replacement is
-`Git::Repository#stashes_all`, which reads the same stack and returns a different
+signature implying the stash stack is partitioned by branch. `Git::Branch#stashes` was
+deprecated under issue #1637 and removed in v6.0.0. The replacement is
+`Git::Repository#stash_infos`, which reads the same stack and returns a different
 shape.
 
 ## Scope
