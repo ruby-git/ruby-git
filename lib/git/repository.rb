@@ -15,7 +15,6 @@ require 'git/repository/maintenance'
 require 'git/repository/merging'
 require 'git/repository/object_operations'
 require 'git/repository/remote_operations'
-require 'git/repository/shared_private'
 require 'git/repository/staging'
 require 'git/repository/stashing'
 require 'git/repository/status_operations'
@@ -47,7 +46,7 @@ module Git
   #
   # @api public
   #
-  class Repository # rubocop:disable Metrics/ClassLength
+  class Repository
     include Git::Configuring
     include Git::Repository::Branching
     include Git::Repository::ContextHelpers
@@ -63,39 +62,6 @@ module Git
     include Git::Repository::Stashing
     include Git::Repository::StatusOperations
     include Git::Repository::WorktreeOperations
-
-    # Allowed keyword options for deprecated config write operations
-    #
-    # @return [Array<Symbol>] accepted option keys
-    #
-    CONFIG_SET_ALLOWED_OPTS = %i[file].freeze
-    private_constant :CONFIG_SET_ALLOWED_OPTS
-
-    # Allowed keyword options for deprecated config read operations
-    #
-    # @return [Array<Symbol>] accepted option keys
-    #
-    CONFIG_READ_ALLOWED_OPTS = %i[file].freeze
-    private_constant :CONFIG_READ_ALLOWED_OPTS
-
-    # Deprecation warning emitted by {#config}
-    #
-    # @return [String] the warning message shown to callers
-    #
-    CONFIG_DEPRECATION_WARNING =
-      'Git::Repository#config is deprecated and will be removed in v6.0.0. ' \
-      'Use config_get(name), config_set(name, value), or config_list instead.'
-    private_constant :CONFIG_DEPRECATION_WARNING
-
-    # Deprecation warning emitted by {#global_config}
-    #
-    # @return [String] the warning message shown to callers
-    #
-    GLOBAL_CONFIG_DEPRECATION_WARNING =
-      'Git::Repository#global_config is deprecated and will be removed in v6.0.0. ' \
-      'Use config_get(name, global: true), config_set(name, value, global: true), ' \
-      'or config_list(global: true) instead.'
-    private_constant :GLOBAL_CONFIG_DEPRECATION_WARNING
 
     # @return [Git::ExecutionContext::Repository] the execution context used to run
     #   git commands for this repository
@@ -185,111 +151,6 @@ module Git
     # @api private
     def binary_path = execution_context.binary_path
 
-    # Reads or writes a git configuration entry
-    #
-    # Dispatches to one of three modes depending on the arguments supplied:
-    #
-    # * **List** — `config()` returns all visible config entries as a `Hash`.
-    # * **Get** — `config(name)` returns the value for a single key as a `String`.
-    # * **Set** — `config(name, value)` writes a value and returns the raw
-    #   command result.
-    #
-    # @example List all config entries
-    #   repo.config #=> { "user.name" => "Alice", "core.bare" => "false" }
-    #
-    # @example Read a config value
-    #   repo.config('user.name') #=> "Alice"
-    #
-    # @example Set a config value
-    #   repo.config('user.name', 'Alice')
-    #
-    # @param name [String, Hash, nil] the dotted config key, or an options hash
-    #   for list mode when `value` and `options` are omitted
-    #
-    # @param value [#to_s, Hash, nil] the value to set, or an options hash in the
-    #   legacy `config(name, options)` call shape
-    #
-    # @param options [Hash] options forwarded to git config
-    #
-    # @option options [String, nil] :file (nil) path to a custom config file
-    #
-    # @return [Hash{String => String}, String, Git::CommandLine::Result] all config
-    #   entries, a single value, or the command result for set mode
-    #
-    # @raise [ArgumentError] if unsupported options are provided
-    #
-    # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    def config(name = nil, value = nil, options = {})
-      Git::Deprecation.warn(CONFIG_DEPRECATION_WARNING)
-      name, value, options = deprecated_normalize_config_args(name, value, options)
-
-      if !name.nil? && !value.nil?
-        deprecated_config_set(name, value, **options)
-      elsif name
-        deprecated_config_get(name, **options)
-      else
-        deprecated_config_list(**options)
-      end
-    end
-
-    # Read or write a global git configuration entry
-    #
-    # Dispatches to one of three modes depending on the arguments supplied,
-    # targeting the git global config scope (`git config --global`):
-    #
-    # * **List** — `global_config()` returns all global config entries as a `Hash`.
-    # * **Get** — `global_config(name)` returns the value for a single key as a `String`.
-    # * **Set** — `global_config(name, value)` writes a value and returns the raw
-    #   command result.
-    #
-    # @overload global_config
-    #
-    #   @example List all global config entries
-    #     repo.global_config #=> { "user.name" => "Alice", "core.autocrlf" => "false" }
-    #
-    #   @return [Hash{String => String}] all global config entries, keyed by their
-    #     full dotted key names (e.g. `"user.name"`)
-    #
-    #   @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    # @overload global_config(name)
-    #
-    #   @example Read the global committer name
-    #     repo.global_config('user.name') #=> "Alice"
-    #
-    #   @param name [String] the dotted config key to look up (e.g. `"user.name"`)
-    #
-    #   @return [String] the value of the global config entry
-    #
-    #   @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    # @overload global_config(name, value)
-    #
-    #   @example Set the global committer name
-    #     repo.global_config('user.name', 'Alice')
-    #
-    #   @param name [String] the dotted config key to write (e.g. `"user.name"`)
-    #
-    #   @param value [#to_s] the value to assign; any object is accepted and
-    #     converted to a String via `#to_s` before being passed to git
-    #
-    #   @return [Git::CommandLine::Result] the raw result of
-    #     `git config --global <name> <value>`
-    #
-    #   @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    def global_config(name = nil, value = nil)
-      Git::Deprecation.warn(GLOBAL_CONFIG_DEPRECATION_WARNING)
-      if !name.nil? && !value.nil?
-        deprecated_global_config_set(name, value)
-      elsif !name.nil?
-        deprecated_global_config_get(name)
-      else
-        deprecated_global_config_list
-      end
-    end
-
     # Returns the size of the repository directory in bytes
     #
     # Sums the sizes of every regular file under the repository (`.git`)
@@ -335,147 +196,6 @@ module Git
         next
       end
       total
-    end
-
-    # Normalizes deprecated `config` call shapes into positional arguments
-    #
-    # @param name [String, Hash, nil] config key or an options hash
-    #
-    # @param value [#to_s, Hash, nil] config value or an options hash
-    #
-    # @param options [Hash] explicit options hash argument
-    #
-    # @option options [String, nil] :file (nil) path to a custom config file
-    #
-    # @return [Array((String, nil), (#to_s, nil), Hash)] normalized
-    #   `[name, value, options]`
-    #
-    # @raise [ArgumentError] if deprecated arguments mix an options hash with
-    #   unexpected additional positional arguments
-    #
-    def deprecated_normalize_config_args(name, value, options)
-      if name.is_a?(Hash)
-        raise ArgumentError, 'unexpected positional arguments after options hash' if !value.nil? || !options.empty?
-
-        [nil, nil, name]
-      elsif value.is_a?(Hash)
-        raise ArgumentError, 'unexpected third argument when second argument is options hash' unless options.empty?
-
-        [name, nil, value]
-      else
-        [name, value, options]
-      end
-    end
-
-    # Writes a config value using the deprecated `config(name, value, ...)` path
-    #
-    # @overload deprecated_config_set(name, value, **options)
-    #
-    #   @param name [String] the dotted config key to write
-    #
-    #   @param value [#to_s] the value to assign
-    #
-    #   @param options [Hash] command options
-    #
-    #   @option options [String, nil] :file (nil) path to a custom config file
-    #
-    #   @return [Git::CommandLine::Result] the command result
-    #
-    #   @raise [ArgumentError] if unsupported options are provided
-    #
-    #   @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    def deprecated_config_set(name, value, **)
-      SharedPrivate.assert_valid_opts!(CONFIG_SET_ALLOWED_OPTS, **)
-      Git::Commands::ConfigOptionSyntax::Set.new(@execution_context).call(name, value, **)
-    end
-
-    # Reads a config value using the deprecated `config(name, ...)` path
-    #
-    # @param name [String] the dotted config key to read
-    #
-    # @param options [Hash] command options
-    #
-    # @option options [String, nil] :file (nil) path to a custom config file
-    #
-    # @return [String] the config value
-    #
-    # @raise [ArgumentError] if unsupported options are provided
-    #
-    # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    def deprecated_config_get(name, **options)
-      SharedPrivate.assert_valid_opts!(CONFIG_READ_ALLOWED_OPTS, **options)
-      opts = options[:file] ? { file: options[:file] } : {}
-      result = Git::Commands::ConfigOptionSyntax::Get.new(@execution_context).call(name, **opts)
-      raise Git::FailedError, result if result.status.exitstatus != 0
-
-      result.stdout
-    end
-
-    # Lists config entries using the deprecated `config(...)` path
-    #
-    # @param options [Hash] command options
-    #
-    # @option options [String, nil] :file (nil) path to a custom config file
-    #
-    # @return [Hash{String => String}] all visible config entries keyed by name
-    #
-    # @raise [ArgumentError] if unsupported options are provided
-    #
-    # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    def deprecated_config_list(**options)
-      SharedPrivate.assert_valid_opts!(CONFIG_READ_ALLOWED_OPTS, **options)
-      opts = options[:file] ? { file: options[:file] } : {}
-      lines = Git::Commands::ConfigOptionSyntax::List.new(@execution_context).call(**opts).stdout.split("\n")
-      lines.each_with_object({}) do |line, hsh|
-        key, value = line.split('=', 2)
-        hsh[key] = value || ''
-      end
-    end
-
-    # Reads a global config value using the deprecated `global_config(name)` path
-    #
-    # @param name [String] the dotted config key to read
-    #
-    # @return [String] the config value
-    #
-    # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    def deprecated_global_config_get(name)
-      result = Git::Commands::ConfigOptionSyntax::Get.new(@execution_context).call(name, global: true)
-      raise Git::FailedError, result if result.status.exitstatus != 0
-
-      result.stdout
-    end
-
-    # Lists global config entries using the deprecated `global_config` path
-    #
-    # @return [Hash{String => String}] all global config entries keyed by name
-    #
-    # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    def deprecated_global_config_list
-      lines = Git::Commands::ConfigOptionSyntax::List.new(@execution_context).call(global: true).stdout.split("\n")
-      lines.each_with_object({}) do |line, hsh|
-        key, value = line.split('=', 2)
-        hsh[key] = value || ''
-      end
-    end
-
-    # Writes a global config value using the deprecated `global_config` path
-    #
-    # @param name [String] the dotted config key to write
-    #
-    # @param value [#to_s] the value to assign
-    #
-    # @return [Git::CommandLine::Result] the command result
-    #
-    # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    def deprecated_global_config_set(name, value)
-      Git::Commands::ConfigOptionSyntax::Set.new(@execution_context).call(name, value, global: true)
     end
 
     # All git config scopes are valid in a repository context

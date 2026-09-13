@@ -119,40 +119,6 @@ module Git
   #
   MINIMUM_GIT_VERSION = Version.parse('2.43.0')
 
-  # Gets or sets local git configuration options
-  #
-  # @overload config(name, value)
-  #   Set the value for the git named configuration option
-  #
-  #   @param name [String] the name of the git configuration option
-  #
-  #   @param value [String, Boolean] the value to set for the git configuration option
-  #
-  #   @return [Git::CommandLine::Result] the result of the git configuration command
-  #
-  # @overload config(name)
-  #   Get the value for the git named configuration option
-  #
-  #   @param name [String] the name of the git configuration option
-  #
-  #   @return [String] the value of the git configuration option
-  #
-  # @overload config()
-  #   List all git configuration options
-  #
-  #   @return [Hash{String => String}] a hash of all git configuration options
-  #
-  # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
-  #   Use `Git.config_get(name)`, `Git.config_set(name, value)`, or `Git.config_list` instead.
-  #
-  def config(name = nil, value = nil)
-    Git::Deprecation.warn(
-      'Git#config is deprecated and will be removed in v6.0.0. ' \
-      'Use Git.config_get(name), Git.config_set(name, value), or Git.config_list instead.'
-    )
-    Git.__send__(:legacy_config_set_get_list, name, value, global: false)
-  end
-
   # Configures the gem by yielding {Git::Config.instance} to the block
   #
   # @example Set the global git binary path
@@ -180,41 +146,6 @@ module Git
   #
   def self.config
     Git::Config.instance
-  end
-
-  # Gets or sets global git configuration options
-  #
-  # @overload global_config(name, value)
-  #   Set the value for the git named configuration option
-  #
-  #   @param name [String] the name of the git configuration option
-  #
-  #   @param value [String, Boolean] the value to set for the git configuration option
-  #
-  #   @return [Git::CommandLine::Result] the result of the git configuration command
-  #
-  # @overload global_config(name)
-  #   Get the value for the git named configuration option
-  #
-  #   @param name [String] the name of the git configuration option
-  #
-  #   @return [String] the value of the git configuration option
-  #
-  # @overload global_config()
-  #   List all git configuration options
-  #
-  #   @return [Hash{String => String}] a hash of all git configuration options
-  #
-  # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
-  #   Use `Git.config_get(name, global: true)`, `Git.config_set(name, value, global: true)`, or
-  #   `Git.config_list(global: true)` instead.
-  def global_config(name = nil, value = nil)
-    Git::Deprecation.warn(
-      'Git#global_config is deprecated and will be removed in v6.0.0. ' \
-      'Use Git.config_get(name, global: true), Git.config_set(name, value, global: true), ' \
-      'or Git.config_list(global: true) instead.'
-    )
-    Git.__send__(:legacy_config_set_get_list, name, value, global: true)
   end
 
   # Returns the name of the default branch of the given repository
@@ -298,39 +229,6 @@ module Git
       "Failed to remove '#{git_dir}'; the exported files are in place, but part of the " \
       'repository remains and has to be removed by hand'
     ) { FileUtils.rm_r(git_dir) }
-  end
-
-  # Get or set a git global configuration value
-  #
-  # @example Set a value
-  #   Git.global_config('user.name', 'Scott Chacon')
-  #
-  # @example Get a value
-  #   Git.global_config('user.name')  # => 'Scott Chacon'
-  #
-  # @example List all global config entries
-  #   Git.global_config  # => { 'user.name' => 'Scott Chacon', ... }
-  #
-  # @param name [String, nil] the config key to get or set; omit to list all
-  #
-  # @param value [Object, nil] the value to set; omit to get or list
-  #
-  # @return [String, Hash, Git::CommandLine::Result] the config value, all entries,
-  #   or the result of the set command
-  #
-  # @deprecated Use {Git.config_get}, {Git.config_set}, or {Git.config_list} instead.
-  #
-  #   - `Git.global_config('user.name')` → `Git.config_get('user.name', global: true)`
-  #   - `Git.global_config('user.name', 'Bob')` → `Git.config_set('user.name', 'Bob', global: true)`
-  #   - `Git.global_config` → `Git.config_list(global: true)`
-  #
-  def self.global_config(name = nil, value = nil)
-    Git::Deprecation.warn(
-      'Git.global_config is deprecated and will be removed in v6.0.0. ' \
-      'Use Git.config_get(name, global: true), Git.config_set(name, value, global: true), ' \
-      'or Git.config_list(global: true) instead.'
-    )
-    legacy_config_set_get_list(name, value, global: true)
   end
 
   # Option keys accepted by {.ls_remote}
@@ -512,123 +410,6 @@ module Git
     Git::Version.parse(output)
   end
   private_class_method :run_git_version
-
-  # Get or set a git config value
-  #
-  # @overload legacy_config_set_get_list(name, value, global:)
-  #
-  #   Set the value of a git configuration option
-  #
-  #   @param name [String] the name of the git configuration value to set
-  #
-  #   @param value [String, Boolean] the value to set
-  #
-  #   @param global [Boolean] true to use the global git configuration, false for the
-  #     local repo config
-  #
-  #   @return [Git::CommandLine::Result] the result of the git config command
-  #
-  # @overload legacy_config_set_get_list(name, global:)
-  #
-  #   Get the value of a git configuration option
-  #
-  #   @param name [String] the name of the git configuration value to get
-  #
-  #   @param global [Boolean] true to use the global git configuration, false for the
-  #     local repo config
-  #
-  #   @return [String] the value of the git configuration option
-  #
-  # @overload legacy_config_set_get_list(global:)
-  #
-  #   Get all git configuration options
-  #
-  #   @param global [Boolean] true to use the global git configuration, false for the
-  #     local repo config
-  #
-  #   @return [Hash{String => String}] all git configuration options
-  #
-  # @raise [Git::FailedError] if the git config command fails
-  #
-  # @api private
-  #
-  def self.legacy_config_set_get_list(name, value, global:)
-    if !name.nil? && !value.nil?
-      legacy_config_set(name, value, global:)
-    elsif !name.nil?
-      legacy_config_get(name, global:)
-    else
-      legacy_config_list(global:)
-    end
-  end
-  private_class_method :legacy_config_set_get_list
-
-  # Set the value of a git configuration option
-  #
-  # @param name [String] the name of the git configuration value to set
-  #
-  # @param value [String, Boolean] the value to set
-  #
-  # @param global [Boolean] whether to use the global git configuration
-  #
-  # @api private
-  #
-  def self.legacy_config_set(name, value, global:)
-    options = global ? { global: true } : {}
-    Git::Commands::ConfigOptionSyntax::Set.new(execution_context).call(name, value, **options)
-  end
-  private_class_method :legacy_config_set
-
-  # Get the value of a git configuration option
-  #
-  # @param name [String] the name of the git configuration option
-  #
-  # @param global [Boolean] whether to use the global git configuration
-  #
-  # @return [String] the value of the git configuration option
-  #
-  # @api private
-  #
-  def self.legacy_config_get(name, global:)
-    options = global ? { global: true } : {}
-    result = Git::Commands::ConfigOptionSyntax::Get.new(execution_context).call(name, **options)
-    raise Git::FailedError, result if result.status.exitstatus != 0
-
-    result.stdout
-  end
-  private_class_method :legacy_config_get
-
-  # Get a list of all git configuration options
-  #
-  # @param global [Boolean] true to use the global git configuration, false for the
-  #     local repo config
-  #
-  # @return [Hash{String => String}] all git configuration options
-  #
-  # @api private
-  #
-  def self.legacy_config_list(global:)
-    options = global ? { global: true } : {}
-    output = Git::Commands::ConfigOptionSyntax::List.new(execution_context).call(**options).stdout
-    parse_config_list(output.split("\n"))
-  end
-  private_class_method :legacy_config_list
-
-  # Parse the output of `git config --list` into a hash
-  #
-  # @param lines [Array<String>] the lines of output from `git config --list`
-  #
-  # @return [Hash{String => String}] the parsed git configuration options
-  #
-  # @api private
-  #
-  def self.parse_config_list(lines)
-    lines.each_with_object({}) do |line, hsh|
-      key, value = line.split('=', 2)
-      hsh[key] = value || ''
-    end
-  end
-  private_class_method :parse_config_list
 
   # @api private
   def self.execution_context
