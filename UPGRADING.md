@@ -9,6 +9,7 @@ to update your code when upgrading from the preceding major version.
   - [Minimum git version](#minimum-git-version)
   - [Minimum addressable version](#minimum-addressable-version)
   - [Renamed facade methods removed](#renamed-facade-methods-removed)
+  - [Renamed `Git::Repository` methods removed](#renamed-gitrepository-methods-removed)
   - [`Git::Object::Tag` removed](#gitobjecttag-removed)
   - [`Git::CommandLineResult` removed](#gitcommandlineresult-removed)
   - [`Git::Repository#lib` removed](#gitrepositorylib-removed)
@@ -136,6 +137,17 @@ the migration reference. For `add_tag`, go straight to `tag_create`: the `tag_ad
 that the v5.x warning names is removed too (see
 [`Git::Object::Tag` removed](#gitobjecttag-removed)).
 
+### Renamed `Git::Repository` methods removed
+
+v6.0.0 removes the seven `Git::Repository` methods that v5.x renamed: `empty?`,
+`reset_hard`, `conflicts`, `is_local_branch?`, `is_remote_branch?`, `is_branch?`,
+and `branches_all`. Each one warned throughout v5.x and named its replacement:
+`no_commits?`, `reset(commitish, hard: true)`, `each_conflict`, `local_branch?`,
+`remote_branch?`, `branch?`, and `branch_list`. The [`Git::Repository` method
+renames](#gitrepository-method-renames) table under "Upgrading to v5.x" is the
+migration reference, including the expression that reproduces the `branches_all`
+tuples from `branch_list`.
+
 ### `Git::Object::Tag` removed
 
 v6.0.0 removes `Git::Object::Tag`, the three `Git::Repository` methods that
@@ -223,7 +235,7 @@ available through `cause`.
 The affected methods are `Git.open` (reading a gitdir pointer file), `Git.export`,
 `Git::Repository#chdir`, `#with_index`, `#with_working`, `#with_temp_index`,
 `#with_temp_working`, `#set_index`, `#set_working`, `#cat_file_contents`,
-`#each_conflict`, `#conflicts`, `#archive`, and `#repo_size`.
+`#each_conflict`, `#archive`, and `#repo_size`.
 
 ```ruby
 # v5.x

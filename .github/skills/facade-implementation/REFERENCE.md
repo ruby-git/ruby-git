@@ -238,7 +238,7 @@ When the facade method needs pre-processing, multiple commands, parsing, or resu
 assembly, expand the body into explicit phases:
 
 ```ruby
-def branches_all
+def branch_list
   result = Git::Commands::Branch::List.new(@execution_context).call(
     all: true,
     format: Git::Parsers::Branch::FORMAT_STRING

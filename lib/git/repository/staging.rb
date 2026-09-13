@@ -92,38 +92,6 @@ module Git
         Git::Commands::Reset.new(@execution_context).call(commitish, **opts).stdout
       end
 
-      # Reset the current HEAD to a specified state with `--hard`
-      #
-      # @example Hard reset to HEAD
-      #   repo.reset_hard
-      #
-      # @example Hard reset to a specific commit
-      #   repo.reset_hard('HEAD~1')
-      #
-      # @param commitish [String, nil] the commit or tree-ish to reset to;
-      #   defaults to HEAD when `nil`
-      #
-      # @param opts [Hash] options passed through to {#reset}
-      #
-      # @option opts [Boolean, nil] :hard (nil) ignored; this method always forces
-      #   `hard: true`
-      #
-      # @return [String] git's stdout from the reset
-      #
-      # @raise [ArgumentError] when unsupported options are provided
-      #
-      # @raise [Git::FailedError] when git exits with a non-zero exit status
-      #
-      # @deprecated Use {#reset} with `hard: true` instead
-      #
-      def reset_hard(commitish = nil, opts = {})
-        Git::Deprecation.warn(
-          'Git::Repository#reset_hard is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#reset(commitish, hard: true) instead.'
-        )
-        reset(commitish, **opts, hard: true)
-      end
-
       # Apply a patch file to the working tree
       #
       # Reads the unified diff in `file` and applies it to the working tree via

@@ -354,71 +354,6 @@ module Git
         local_branch?(branch) || remote_branch?(branch)
       end
 
-      # Checks whether the named branch exists locally
-      #
-      # @example Check whether main exists locally
-      #   repo.is_local_branch?('main')  # => true
-      #
-      # @param branch [String] the local branch name to look up
-      #
-      # @return [Boolean] `true` if the branch exists locally, `false` otherwise
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated use {#local_branch?} instead
-      #
-      def is_local_branch?(branch) # rubocop:disable Naming/PredicatePrefix
-        Git::Deprecation.warn(
-          'Git::Repository#is_local_branch? is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#local_branch? instead.'
-        )
-        local_branch?(branch)
-      end
-
-      # Checks whether the named branch exists as a remote-tracking branch
-      #
-      # @example Check whether master exists on any remote
-      #   repo.is_remote_branch?('master')  # => true
-      #
-      # @param branch [String] the short branch name to look up across all remotes
-      #
-      # @return [Boolean] `true` if a remote-tracking branch with that short name
-      #   exists, `false` otherwise
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated use {#remote_branch?} instead
-      #
-      def is_remote_branch?(branch) # rubocop:disable Naming/PredicatePrefix
-        Git::Deprecation.warn(
-          'Git::Repository#is_remote_branch? is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#remote_branch? instead.'
-        )
-        remote_branch?(branch)
-      end
-
-      # Checks whether the named branch exists locally or as a remote-tracking branch
-      #
-      # @example Check whether main exists anywhere
-      #   repo.is_branch?('main')  # => true
-      #
-      # @param branch [String] the branch name to look up
-      #
-      # @return [Boolean] `true` if the branch exists locally or remotely,
-      #   `false` otherwise
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated use {#branch?} instead
-      #
-      def is_branch?(branch) # rubocop:disable Naming/PredicatePrefix
-        Git::Deprecation.warn(
-          'Git::Repository#is_branch? is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#branch? instead.'
-        )
-        branch?(branch)
-      end
-
       # Option keys accepted by {#branch_new}
       #
       BRANCH_NEW_ALLOWED_OPTS = %i[].freeze
@@ -632,30 +567,6 @@ module Git
           *patterns, all: true, format: Git::Parsers::Branch::FORMAT_STRING
         )
         Git::Parsers::Branch.parse_list(result.stdout, remote_names:)
-      end
-
-      # Returns all local and remote-tracking branches in the 4.x-compatible format
-      #
-      # Each entry is a 4-element array: `[refname, current, worktree, symref]`.
-      # The `refname` uses the short form (`main`, `remotes/origin/main`) to
-      # match the output of the legacy `Git::Lib#branches_all` method.
-      #
-      # @return [Array<Array>] array of `[refname, current, worktree, symref]` tuples
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#branch_list} instead, which returns richer
-      #   {Git::BranchInfo} objects.
-      #
-      def branches_all
-        Git::Deprecation.warn(
-          'Git::Repository#branches_all is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#branch_list instead.'
-        )
-        branch_list.map do |info|
-          refname = info.remote? ? "remotes/#{info.remote_name}/#{info.short_name}" : info.short_name
-          [refname, info.current, info.other_worktree?, info.symref]
-        end
       end
 
       # Update a branch ref to point to a new commit
