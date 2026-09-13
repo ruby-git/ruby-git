@@ -5,7 +5,6 @@ require 'git/commands/rev_parse'
 require 'git/commands/status'
 require 'git/escaped_path'
 require 'git/parsers/status'
-require 'git/status'
 require 'git/status_info'
 
 module Git
@@ -77,8 +76,7 @@ module Git
       # way git does in this repository. Every entry type git reports is
       # represented, including renames, copies, and merge conflicts. Clean
       # tracked paths are not reported by `git status`, so they are absent from
-      # the result; the deprecated {#status} listed them, and {#ls_files} still
-      # does.
+      # the result; {#ls_files} lists them.
       #
       # @example Check which files are modified
       #   repo.status_info.changed
@@ -108,36 +106,6 @@ module Git
         files = Git::Parsers::Status.parse(result.stdout)
         ignore_case = config_get('core.ignoreCase', type: 'bool')&.value == 'true'
         Git::StatusInfo.new(files: files, ignore_case: ignore_case)
-      end
-
-      # Returns a {Git::Status} object describing the working tree and index state
-      #
-      # Constructs a {Git::Status} for this repository by collecting information from
-      # `git ls-files --stage`, `git ls-files --others`, `git diff-files`, and
-      # `git diff-index HEAD` (the last only when at least one commit exists). The
-      # result identifies which files have been modified, added, deleted, or are
-      # untracked.
-      #
-      # Emits one deprecation warning per call. The {Git::Status} it constructs is
-      # built with warnings silenced so the caller does not see a second one.
-      #
-      # @example Check which files are modified (deprecated; use status_info)
-      #   repo.status.changed.keys      #=> ["lib/foo.rb"]
-      #   repo.status_info.changed.keys #=> ["lib/foo.rb"]
-      #
-      # @return [Git::Status] the status of the repository
-      #
-      # @raise [Git::FailedError] if any underlying git command exits with a
-      #   non-zero exit status
-      #
-      # @deprecated Use {#status_info} instead
-      #
-      def status
-        Git::Deprecation.warn(
-          'Git::Repository#status is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#status_info instead.'
-        )
-        Git::Deprecation.silence { Git::Status.new(self) }
       end
 
       # List all files tracked in the index

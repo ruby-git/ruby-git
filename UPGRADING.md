@@ -23,6 +23,7 @@ to update your code when upgrading from the preceding major version.
   - [v4.x-style configuration API removed](#v4x-style-configuration-api-removed)
   - [`Git::Repository#remotes`, `Git::Branch#stashes`, and `allow_unknown_type` removed](#gitrepositoryremotes-gitbranchstashes-and-allow_unknown_type-removed)
   - [`Git::Author` removed](#gitauthor-removed)
+  - [`Git::Status` removed](#gitstatus-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -448,6 +449,22 @@ with `Git::AuthorInfo.parse`, and replace the `name=`, `email=`, and `date=`
 writers with `Git::AuthorInfo#with`, which returns a modified copy. The
 [`Git::Author` deprecated](#gitauthor-deprecated) entry under "Upgrading to
 v5.x" maps each removed usage to its replacement.
+
+### `Git::Status` removed
+
+v6.0.0 removes `Git::Status` and `Git::Status::StatusFile`, the status classes
+that v5.4.0 deprecated, and `Git::Repository#status`, the only method that
+returned them. Referencing either constant raises `NameError` and calling
+`g.status` raises `NoMethodError`. Read the index and working tree state
+through `Git::Repository#status_info`, which returns an immutable
+`Git::StatusInfo` holding one `Git::StatusFileInfo` per path that `git status`
+reports. The `changed`, `added`, `deleted`, and `untracked` readers and their
+predicates keep their names, but the categories are derived from both porcelain
+status characters and clean tracked paths are no longer listed, so read the
+[`Git::Status` deprecated](#gitstatus-deprecated) entry under "Upgrading to
+v5.x" before changing `status` to `status_info`: it describes those
+differences and maps every removed reader, predicate, and `StatusFile` field to
+its replacement.
 
 ---
 

@@ -860,9 +860,10 @@ query until something asks for a result, which is a different design and not thi
 migration. `Git::Object::Commit`, `Tree`, and `Blob` are the exception recorded in
 ADR-0002. `Git::Object::Tag` was not exempt and was removed in v6.0.0.
 
-`Git::Status` is a target too, despite looking like the query objects above. Its
-constructor calls `StatusFileFactory#construct_files` immediately, so it is eager rather
-than deferred. Issue #1636 tracks it and the rest of the remaining candidates.
+`Git::Status` was a target too, despite looking like the query objects above: its
+constructor built every `StatusFile` immediately, so it was eager rather than deferred.
+It was deprecated in v5.4.0 and removed in v6.0.0 in favor of `Git::StatusInfo`. Issue
+#1636 tracks the remaining candidates.
 
 Four steps, in order:
 

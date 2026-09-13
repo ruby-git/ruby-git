@@ -212,31 +212,6 @@ RSpec.describe Git::Repository::StatusOperations do
     end
   end
 
-  describe '#status' do
-    subject(:result) { described_instance.status }
-
-    let(:status) { instance_double(Git::Status) }
-
-    before do
-      allow(Git::Status).to receive(:new).with(described_instance).and_return(status)
-      allow(Git::Deprecation).to receive(:warn)
-    end
-
-    it 'emits a deprecation warning naming Git::Repository#status_info as the replacement' do
-      expect(Git::Deprecation).to receive(:warn).with(/status is deprecated.*Use Git::Repository#status_info/)
-      result
-    end
-
-    it 'constructs Git::Status with the repository instance as the base' do
-      expect(Git::Status).to receive(:new).with(described_instance).and_return(status)
-      result
-    end
-
-    it 'returns the Git::Status instance' do
-      expect(result).to eq(status)
-    end
-  end
-
   describe '#status_info' do
     subject(:result) { described_instance.status_info }
 
