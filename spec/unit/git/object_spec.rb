@@ -577,22 +577,6 @@ RSpec.describe Git::Object::Commit do
     end
   end
 
-  describe '#set_commit' do
-    before do
-      allow(Git::Deprecation).to receive(:warn)
-    end
-
-    it 'emits a deprecation warning' do
-      described_instance.set_commit(commit_data)
-      expect(Git::Deprecation).to have_received(:warn).with(a_string_including('deprecated'))
-    end
-
-    it 'populates the commit attributes from the given data hash' do
-      described_instance.set_commit(commit_data)
-      expect(described_instance.message).to eq('Initial commit')
-    end
-  end
-
   describe '#commit?' do
     subject(:result) { described_instance.commit? }
 

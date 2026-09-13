@@ -19,6 +19,7 @@ to update your code when upgrading from the preceding major version.
   - [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)
   - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
+  - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -367,6 +368,25 @@ passing one raises `ArgumentError` (see [Unsupported options raise
 argument raises `ArgumentError` for the wrong number of arguments. The
 [`Git::Repository` option renames](#gitrepository-option-renames) entry under
 "Upgrading to v5.x" maps each removed form to its replacement.
+
+### `Git::Log` Enumerable interface and `Commit#set_commit` removed
+
+v6.0.0 removes the Enumerable interface from the `Git::Log` query builder.
+`Git::Log` no longer includes `Enumerable` and no longer defines `each`, `size`,
+`to_s`, `first`, `last`, or `[]`. Calling any of them, or any other `Enumerable`
+method such as `map` or `count`, raises `NoMethodError`. Call `Git::Log#execute`
+to run the query; it returns a `Git::Log::Result`, which includes `Enumerable`
+and provides the same methods. The chainable query methods on `Git::Log`
+(`since`, `author`, `between`, `path`, `max_count`, and so on) are unchanged.
+
+`Git::Object::Commit#set_commit` is removed as well. Call `from_data` instead; it
+takes the same parsed commit data hash.
+
+The [`Git::Log` Enumerable interface
+deprecated](#gitlog-enumerable-interface-deprecated) and
+[`Git::Object::Commit#set_commit`
+deprecated](#gitobjectcommitset_commit-deprecated) entries under "Upgrading to
+v5.x" map each removed call to its replacement.
 
 ---
 

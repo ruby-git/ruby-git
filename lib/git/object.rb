@@ -484,22 +484,6 @@ module Git
         diff(parent)
       end
 
-      # Sets parsed commit data on this commit object
-      #
-      # @param data [Hash] parsed commit data
-      #
-      # @return [void]
-      #
-      # @deprecated use {#from_data} instead
-      #
-      def set_commit(data) # rubocop:disable Naming/AccessorMethodName
-        Git::Deprecation.warn(
-          'Git::Object::Commit#set_commit is deprecated and will be removed in v6.0.0. ' \
-          'Use #from_data instead.'
-        )
-        from_data(data)
-      end
-
       # Loads parsed commit data into this commit object
       #
       # @param data [Hash] parsed commit data from `git cat-file commit`
