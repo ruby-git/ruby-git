@@ -61,7 +61,7 @@ Facade Implementation review: Git::Repository::Committing#commit.
 
 The user provides:
 
-1. **Method name** — the public Ruby method name (e.g. `add`, `branches_all`,
+1. **Method name** — the public Ruby method name (e.g. `add`, `branch_list`,
    `commit`).
 2. **Git operation(s)** — which `Git::Commands::*` class(es) the method orchestrates.
    If the relevant command class does not exist yet, scaffold it first via

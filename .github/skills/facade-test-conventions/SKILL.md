@@ -185,7 +185,7 @@ it 'lists branches then parses the output' do
         .ordered
   )
 
-  expect(described_instance.branches_all).to eq(parsed_branches)
+  expect(described_instance.branch_list).to eq(parsed_branches)
 end
 ```
 
