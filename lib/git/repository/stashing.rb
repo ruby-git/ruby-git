@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'git/commands/rev_parse'
 require 'git/commands/stash'
 require 'git/parsers/stash'
 require 'git/repository/shared_private'
@@ -420,7 +421,13 @@ module Git
 
       # Add a stash commit created by {#stash_create} to the stash list
       #
-      # The stash list is read after the store to return the new top entry.
+      # `commit` is resolved to the full object id of the commit with
+      # `git rev-parse` and that id is what is stored, so an annotated tag stores
+      # the tagged commit rather than the tag object (which `git stash store`
+      # accepts but `git stash list` cannot show). Because the id is what git
+      # sees, a failure from `git stash store` names the resolved id rather than
+      # the revision as it was given. The stash list is read after the store and
+      # the entry whose object id equals that id is returned.
       #
       # @example Store a stash commit
       #   oid = repo.stash_create
@@ -428,7 +435,17 @@ module Git
       #   info.name    #=> "stash@{0}"
       #   info.message #=> "saved for later"
       #
-      # @param commit [String] the object id of the stash commit to store
+      # @example Store a stash commit named by a ref
+      #   repo.stash_store('refs/tmp/wip').oid #=> "9b9b31e704c0b85ffdd8d2af2ded85170a5af87d"
+      #
+      # @param commit [String, #to_s] the stash commit to store, as any revision
+      #   that resolves to it
+      #
+      #   Full or abbreviated object ids, branch, tag, and other ref names,
+      #   `stash@{N}`, and `:/<text>` searches all resolve with `git rev-parse`,
+      #   and a {Git::StashInfo} resolves through its `#to_s`. A `:/<text>` search
+      #   finds only commits reachable from a ref, so it cannot name a commit from
+      #   {#stash_create} until that commit is stored or a ref points at it.
       #
       # @param opts [Hash] options for the store
       #
@@ -442,18 +459,34 @@ module Git
       #
       # @option opts [Boolean, nil] :q (nil) alias for `:quiet`
       #
-      # @return [Git::StashInfo] the stored entry, now at the top of the stash list
+      # @return [Git::StashInfo] the stored entry
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
+      # @raise [ArgumentError] if `commit` is `nil` or starts with a hyphen or a
+      #   caret
+      #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @raise [Git::UnexpectedResultError] if the stash listing cannot be parsed
+      #   or does not contain the stored commit
+      #
+      #   The entry is missing when another process dropped or cleared it between
+      #   the store and the lookup.
+      #
+      # @note Storing the commit that is already at the top of the stash list
+      #   adds no entry: `git stash store` writes nothing to the `refs/stash`
+      #   reflog, any `:message` given is discarded, and the existing top entry
+      #   is returned.
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
       def stash_store(commit, opts = {})
         SharedPrivate.assert_valid_opts!(STASH_STORE_ALLOWED_OPTS, **opts)
-        Git::Commands::Stash::Store.new(@execution_context).call(commit, **opts)
-        stash_list.first
+        oid = Private.resolve_commit_oid(@execution_context, commit)
+        Git::Commands::Stash::Store.new(@execution_context).call(oid, **opts)
+        stash_list.find { |entry| entry.oid == oid } ||
+          raise(Git::UnexpectedResultError, "stash was stored but not found in the stash list: #{oid}")
       end
 
       # Remove all stash entries
@@ -481,6 +514,55 @@ module Git
       #
       module Private
         module_function
+
+        # Resolve a commit-ish to the full object id of the commit it names
+        #
+        # The revision is peeled with `git rev-parse --verify <commit>^{commit}`,
+        # so an annotated tag yields the tagged commit, an abbreviated or uppercase
+        # id yields the full lowercase id, and an id that names no object fails
+        # (a bare `--verify <id>` echoes a well-formed id back without looking it
+        # up). A `:/<text>` search consumes the rest of the revision string, so it
+        # is passed without the suffix; such a search only ever names a commit.
+        # {Git::Repository::ObjectOperations#rev_parse} is not used because it
+        # runs `--revs-only`, which prints both ends of a range and exits zero
+        # instead of failing.
+        #
+        # {Git::Commands::RevParse} places its operand after `--end-of-options`,
+        # so the arguments DSL does not reject a `nil` or option-like operand, and
+        # `--verify` accepts a negated revision such as `^HEAD` and prints the id
+        # back with its caret. This method raises `ArgumentError` for all three
+        # before running git.
+        #
+        # @example With an annotated tag
+        #   Private.resolve_commit_oid(execution_context, 'v1.0.0')
+        #   #=> "9b9b31e704c0b85ffdd8d2af2ded85170a5af87d"
+        #
+        # @example With a range
+        #   Private.resolve_commit_oid(execution_context, 'main..topic')
+        #   #=> raises Git::FailedError
+        #
+        # @param execution_context [Git::ExecutionContext] the context to run git in
+        #
+        # @param commit [String, #to_s] a revision that resolves to a commit or
+        #   peels to one
+        #
+        # @return [String] the full object id of the commit
+        #
+        # @raise [ArgumentError] if `commit` is `nil` or starts with a hyphen or a
+        #   caret
+        #
+        # @raise [Git::FailedError] when `commit` does not resolve to a single
+        #   revision or does not peel to a commit
+        #
+        def resolve_commit_oid(execution_context, commit)
+          raise ArgumentError, 'commit is required' if commit.nil?
+
+          commit = commit.to_s
+          raise ArgumentError, "Invalid commit: '#{commit}'" if commit.start_with?('-', '^')
+
+          revision = commit.start_with?(':/') ? commit : "#{commit}^{commit}"
+          Git::Commands::RevParse.new(execution_context).call(revision, verify: true).stdout.strip
+        end
 
         # Separate the stash operand from a positional options Hash
         #

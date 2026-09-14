@@ -219,15 +219,119 @@ RSpec.describe Git::Repository::Stashing, :integration do
   end
 
   describe '#stash_store' do
+    let(:oid) { described_instance.stash_create('created work') }
+
     before { write_file('file.txt', 'modified content') }
 
-    it 'returns the stored entry from the top of the stash list' do
-      oid = described_instance.stash_create('created work')
-
+    it 'stores the commit and returns its entry' do
       result = described_instance.stash_store(oid, message: 'stored work')
 
       expect(result).to be_a(Git::StashInfo)
       expect(result).to have_attributes(name: 'stash@{0}', oid: oid, message: 'stored work')
+    end
+
+    it 'returns the existing top entry without adding one when the commit is already stash@{0}' do
+      described_instance.stash_store(oid, message: 'first store')
+
+      result = described_instance.stash_store(oid, message: 'second store')
+
+      expect(result).to have_attributes(name: 'stash@{0}', oid: oid, message: 'first store')
+      expect(described_instance.stash_list.size).to eq(1)
+    end
+
+    context 'when the commit is given as a revision other than the full object id' do
+      it 'resolves an abbreviated object id' do
+        result = described_instance.stash_store(oid[0, 7])
+        expect(result).to have_attributes(name: 'stash@{0}', oid: oid)
+      end
+
+      it 'resolves an uppercase object id' do
+        result = described_instance.stash_store(oid.upcase)
+        expect(result).to have_attributes(name: 'stash@{0}', oid: oid)
+      end
+
+      it 'resolves a branch name' do
+        repo.update_ref('wip', oid)
+        result = described_instance.stash_store('wip')
+        expect(result).to have_attributes(name: 'stash@{0}', oid: oid)
+      end
+
+      it 'resolves a full ref name outside refs/heads' do
+        repo.update_ref('remotes/origin/wip', oid)
+        result = described_instance.stash_store('refs/remotes/origin/wip')
+        expect(result).to have_attributes(name: 'stash@{0}', oid: oid)
+      end
+
+      it 'resolves a :/<text> commit message search' do
+        repo.update_ref('wip', oid)
+        result = described_instance.stash_store(':/created work')
+        expect(result).to have_attributes(name: 'stash@{0}', oid: oid)
+      end
+
+      it 'resolves a revision that already carries a ^{commit} suffix' do
+        result = described_instance.stash_store("#{oid}^{commit}")
+        expect(result).to have_attributes(name: 'stash@{0}', oid: oid)
+      end
+
+      it 'resolves a stash@{N} name to the same commit' do
+        described_instance.stash_store(oid)
+        result = described_instance.stash_store('stash@{0}')
+        expect(result).to have_attributes(name: 'stash@{0}', oid: oid)
+      end
+
+      it 'resolves a Git::StashInfo through its String form' do
+        entry = described_instance.stash_store(oid)
+        result = described_instance.stash_store(entry)
+        expect(result).to have_attributes(name: 'stash@{0}', oid: oid)
+      end
+
+      it 'stores the commit an annotated tag points to, not the tag object' do
+        repo.tag_create('wip', oid, message: 'annotated')
+
+        result = described_instance.stash_store('wip')
+
+        expect(result).to have_attributes(name: 'stash@{0}', oid: oid)
+        expect(repo.rev_parse('refs/stash')).to eq(oid)
+      end
+    end
+
+    # These examples depart from the facade-test-conventions guidance against
+    # error-path assertions in integration tests: stash_store resolves the commit
+    # with `git rev-parse --verify` before storing it, and these examples pin
+    # which forms of the argument that call rejects, with what message, and that
+    # nothing is stored when it does. The nil, option-like, and negated cases
+    # never reach git and are covered by the unit spec.
+    context 'when the commit cannot be stored' do
+      it 'raises Git::FailedError without storing anything when the commit is an empty string' do
+        expect { described_instance.stash_store('') }.to raise_error(Git::FailedError, /Needed a single revision/)
+        expect(described_instance.stash_list).to eq([])
+      end
+
+      it 'raises Git::FailedError without storing anything when the commit does not resolve' do
+        expect { described_instance.stash_store('refs/nope') }
+          .to raise_error(Git::FailedError, /Needed a single revision/)
+        expect(described_instance.stash_list).to eq([])
+      end
+
+      it 'raises Git::FailedError without storing anything when given a range instead of a single commit' do
+        expect { described_instance.stash_store("HEAD..#{oid}") }
+          .to raise_error(Git::FailedError, /Needed a single revision/)
+        expect(described_instance.stash_list).to eq([])
+      end
+
+      it 'raises Git::FailedError without storing anything when the revision does not peel to a commit' do
+        expect { described_instance.stash_store('HEAD^{tree}') }
+          .to raise_error(Git::FailedError, /expected commit type/)
+        expect(described_instance.stash_list).to eq([])
+      end
+
+      it 'raises Git::FailedError naming the resolved id when the commit is not a stash commit' do
+        head = repo.rev_parse('HEAD')
+
+        expect { described_instance.stash_store('HEAD') }
+          .to raise_error(Git::FailedError, /'#{head}' is not a stash-like commit/)
+        expect(described_instance.stash_list).to eq([])
+      end
     end
   end
 end
