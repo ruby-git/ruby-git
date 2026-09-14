@@ -1039,9 +1039,10 @@ it constructs, and `g.worktree(dir).add` emits one for `g.worktree` and one for
 > **`worktree_add` return type in v6.0.0:** on v5.x, `worktree_add` returns the
 > `git worktree add` output (`"HEAD is now at …"`). In v6.0.0 it returns the new
 > `Git::WorktreeInfo` instead. To get the entry today, look it up after the add:
-> `g.worktree_list.find { |w| w.path == File.realpath(dir) }`. Use
-> `File.realpath`, not `File.expand_path`: git stores worktree paths with
-> symlinks resolved, so `/tmp/...` on macOS is listed as `/private/tmp/...`.
+> `g.worktree_list.find { |w| File.identical?(w.path, dir) }`. Compare with
+> `File.identical?`, not string equality: git stores worktree paths with
+> symlinks resolved, so `/tmp/...` on macOS is listed as `/private/tmp/...`,
+> and on case-insensitive filesystems the listed casing may differ from `dir`.
 
 In the table, `dir` is the worktree path, `wt` is a `Git::Worktree`, and `info`
 is the `Git::WorktreeInfo` that replaces it.
