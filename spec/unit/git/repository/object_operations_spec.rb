@@ -1455,6 +1455,16 @@ RSpec.describe Git::Repository::ObjectOperations do
       expect(described_instance.tag_create('v1.0.0')).to be(tag_info)
     end
 
+    context 'when the listing has no entry for the tag' do
+      before do
+        allow(Git::Parsers::Tag).to receive(:parse_list).with('raw-stdout').and_return([])
+      end
+
+      it 'raises Git::UnexpectedResultError naming the tag' do
+        expect { described_instance.tag_create('v1.0.0') }.to raise_error(Git::UnexpectedResultError, /v1\.0\.0/)
+      end
+    end
+
     context 'with no target and no options' do
       it 'calls the create command with a nil commit and no options' do
         expect(create_command).to receive(:call).with('v1.0.0', nil).and_return(create_result)

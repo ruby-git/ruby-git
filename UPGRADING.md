@@ -169,6 +169,14 @@ to v5.x" maps every removed call, including the readers and operations on a
 `Git::Object::Tag`, to its replacement, and describes where the replacement's
 return shape or error behavior differs.
 
+> **`tag_create` return value change.** In v5.x, `g.tag_create` returned `nil`
+> when the tag it had just created was missing from the tag list (for example,
+> another process deleted it before the lookup) and never emitted a deprecation
+> warning, since the method keeps its name. In v6.0.0 it raises
+> `Git::UnexpectedResultError` instead, so its return value is always a
+> `Git::TagInfo`. Search for `tag_create` before upgrading and remove any check
+> for a `nil` result.
+
 ### `Git::CommandLineResult` removed
 
 v6.0.0 removes `Git::CommandLineResult`. In v5.x a `Git.const_missing` hook
@@ -1414,6 +1422,12 @@ warn.
 >
 > **Missing tags.** `g.tag(name)` raises `Git::UnexpectedResultError` when no tag
 > has that name. `g.tag_list(name).first` returns `nil`.
+>
+> **`tag_create` when the new tag is missing in v6.0.0:** on v5.x, `g.tag_create`
+> returns `nil` when the tag it has just created is missing from the tag list
+> (for example, another process deleted it before the lookup). In v6.0.0 it
+> raises `Git::UnexpectedResultError` instead, so its return value is always a
+> `Git::TagInfo`.
 >
 > **Deleting through `tag_add`.** `g.tag_add(name, d: true)`, which was already
 > deprecated, deletes the tag and emits a second warning pointing at
