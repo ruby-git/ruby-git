@@ -1009,7 +1009,7 @@ and are removed in v6.0.0. Read worktree data through
 object per worktree, and call the repository-level operations (`worktree_add`,
 `worktree_remove`, `worktree_move`, `worktree_lock`, `worktree_unlock`,
 `worktree_repair`, and `worktree_prune`) with the worktree path or its
-`Git::WorktreeInfo`. Return values are unchanged. Calling `g.worktree`,
+`Git::WorktreeInfo`. Return values are unchanged on v5.x. Calling `g.worktree`,
 `g.worktrees`, or `g.worktrees_all`, constructing a `Git::Worktrees`, and calling
 `gcommit`, `add`, or `remove` on a `Git::Worktree` each emit a deprecation
 warning; the `dir`, `full`, `to_s`, and `to_a` readers on `Git::Worktree` do not.
@@ -1035,6 +1035,13 @@ it constructs, and `g.worktree(dir).add` emits one for `g.worktree` and one for
 > **`full` and `to_s`:** `Git::Worktree#full` and `#to_s` append the commitish
 > given at construction to the path, so entries from `g.worktrees` read
 > `"/path/to/wt <sha>"`. `Git::WorktreeInfo#to_s` is the path alone.
+>
+> **`worktree_add` return type in v6.0.0:** on v5.x, `worktree_add` returns the
+> `git worktree add` output (`"HEAD is now at …"`). In v6.0.0 it returns the new
+> `Git::WorktreeInfo` instead. To get the entry today, look it up after the add:
+> `g.worktree_list.find { |w| w.path == File.realpath(dir) }`. Use
+> `File.realpath`, not `File.expand_path`: git stores worktree paths with
+> symlinks resolved, so `/tmp/...` on macOS is listed as `/private/tmp/...`.
 
 In the table, `dir` is the worktree path, `wt` is a `Git::Worktree`, and `info`
 is the `Git::WorktreeInfo` that replaces it.
