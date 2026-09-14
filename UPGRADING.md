@@ -481,7 +481,8 @@ v6.0.0 removes the stash API that v5.4.0 deprecated: `Git::Stash`,
 Referencing either constant raises `NameError` and calling either method raises
 `NoMethodError`. In the same release `Git::Repository#stash_list` changes its
 return type: it returns `Array<Git::StashInfo>`, newest first, the same value as
-`Git::Repository#stash_infos`, which stays as a permanent alias.
+`Git::Repository#stash_infos`, which stays as a permanent alias, and
+`Git::Repository#stash_store` stops returning `nil`.
 
 > **`stash_list` return type change.** In v5.x, `g.stash_list` returned the
 > `git stash list` text as a `String` and emitted a `Git::Deprecation` warning
@@ -490,6 +491,20 @@ return type: it returns `Array<Git::StashInfo>`, newest first, the same value as
 > return type. Search for `stash_list` before upgrading. Code that needs the
 > text builds it from the entries:
 > `g.stash_list.map { |s| "#{s.name}: #{s.message}" }.join("\n")`.
+
+> **`stash_store` return value change.** In v5.x, `g.stash_store` returned the
+> top entry of the stash list after the store, so it returned `nil` when the
+> list was empty and another process's entry when one had been pushed in
+> between. It never emitted a deprecation warning, since the method keeps its
+> name. In v6.0.0 it returns the entry for the commit it stored and raises
+> `Git::UnexpectedResultError` when that entry is missing, so its return value
+> is always a `Git::StashInfo`. A commit that does not resolve raises
+> `Git::FailedError` before anything is stored. A `nil` commit or one that
+> begins with `-` raises `ArgumentError` as in v5.x, with a different message;
+> one that begins with `^` raises `ArgumentError` where v5.x raised
+> `Git::FailedError`. An annotated tag name now stores the tagged commit; v5.x
+> stored the tag object, which hid every entry from `git stash list`. Search
+> for `stash_store` before upgrading and remove any check for a `nil` result.
 
 Two differences from `stashes_all` and `Git::Stash` carry over from the v5.x
 entry and still apply when moving to `stash_list`:
@@ -1151,6 +1166,13 @@ check such as `if g.stash_push(message: 'WIP')` still works.
 `Array<Git::StashInfo>`, the same value as `stash_infos`, and `stash_infos` stays as
 a permanent alias. Move String callers of `stash_list` to `stash_infos` before
 upgrading so the return type change cannot go unnoticed.
+
+> **`stash_store` return value in v6.0.0:** on v5.x, `g.stash_store` returns
+> the top entry of the stash list after the store, which is `nil` when the list
+> is empty. In v6.0.0 it returns the entry for the commit it stored and raises
+> `Git::UnexpectedResultError` when that entry is missing, so its return value
+> is always a `Git::StashInfo`. An annotated tag name then stores the tagged
+> commit rather than the tag object.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
