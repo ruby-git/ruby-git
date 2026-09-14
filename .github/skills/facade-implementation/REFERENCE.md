@@ -864,7 +864,7 @@ ADR-0002. `Git::Object::Tag` was not exempt and was removed in v6.0.0.
 `Git::Status` was a target too, despite looking like the query objects above: its
 constructor built every `StatusFile` immediately, so it was eager rather than deferred.
 It was deprecated in v5.4.0 and removed in v6.0.0 in favor of `Git::StatusInfo`. Issue
-#1636 tracks the remaining candidates.
+#1636 was the umbrella for this migration.
 
 Four steps, in order:
 
