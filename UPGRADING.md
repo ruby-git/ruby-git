@@ -867,6 +867,13 @@ warn.
 > **Missing tags:** `g.tag(name)` raises `Git::UnexpectedResultError` when no tag
 > has that name. `g.tag_list(name).first` returns `nil`.
 >
+> **`tag_create` when the new tag is missing in v6.0.0:** on v5.x, `g.tag_create`
+> returns `nil` when the tag it has just created is missing from the tag list
+> (for example, another process deleted it before the lookup). In v6.0.0 it
+> raises `Git::UnexpectedResultError` instead, so its return value is always a
+> `Git::TagInfo`. A `nil` check on the result keeps working today and becomes
+> unreachable in v6.0.0.
+>
 > **Deleting through `tag_add`:** `g.tag_add(name, d: true)`, which was already
 > deprecated, deletes the tag and emits a second warning pointing at
 > `g.tag_delete`. `g.tag_create` rejects `:d` and `:delete` with `ArgumentError`.

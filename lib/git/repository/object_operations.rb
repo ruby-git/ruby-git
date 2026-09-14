@@ -928,7 +928,9 @@ module Git
       #   @option options [Boolean, nil] :create_reflog (nil) create a reflog for
       #     the tag
       #
-      #   @return [Git::TagInfo] the newly created tag
+      #   @return [Git::TagInfo, nil] the newly created tag, or `nil` when the tag
+      #     is missing from the tag list after the create (for example, another
+      #     process deleted it before the lookup)
       #
       # @overload tag_create(name, target, options = {})
       #
@@ -945,7 +947,9 @@ module Git
       #   @param options [Hash] options for creating the tag (same keys as the
       #     first overload)
       #
-      #   @return [Git::TagInfo] the newly created tag
+      #   @return [Git::TagInfo, nil] the newly created tag, or `nil` when the tag
+      #     is missing from the tag list after the create (for example, another
+      #     process deleted it before the lookup)
       #
       # @raise [ArgumentError] if unsupported options are provided, including the
       #   `:d` and `:delete` keys that {#tag_add} accepts; use {#tag_delete} to
@@ -959,6 +963,12 @@ module Git
       #   arguments and tagged the first
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @note In v6.0.0 this method raises {Git::UnexpectedResultError} instead of
+      #   returning `nil` when the tag it has just created is missing from the tag
+      #   list, so its return value is always a {Git::TagInfo}. Code that checks
+      #   the result for `nil` today can be left as is; the check becomes
+      #   unreachable in v6.0.0.
       #
       # @see https://git-scm.com/docs/git-tag git-tag
       #
