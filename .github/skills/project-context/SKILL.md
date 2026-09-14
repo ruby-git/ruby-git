@@ -53,7 +53,7 @@ coding standard details, or implementation constraints.
 | `Git::StatusInfo` | Immutable working-directory status returned by `Git::Repository#status_info`; holds one `Git::StatusFileInfo` per reported path |
 | `Git::Diff` | Diff operations (enumerable `DiffFile` collection) |
 | `Git::Log` | Chainable commit-history query builder |
-| `Git::Branch/Branches` | Branch management (local + remote) |
+| `Git::BranchInfo` | Immutable branch entry returned by `Git::Repository#branch_list`; branch operations are name-based facade methods |
 | `Git::Remote` | Remote repository references |
 | `Git::WorktreeInfo` | Immutable worktree entry returned by `Git::Repository#worktree_list` and `#worktree_add`; worktree operations are path-based facade methods |
 | `Git::StashInfo` | Immutable stash entry returned by `Git::Repository#stash_list` and `#stash_push`; stash operations are name-based facade methods |
@@ -338,9 +338,7 @@ Converting errors from outside the gem:
   unchanged because the caller configured that behavior.
 - A site may recover instead of raise when it has a fallback. `tag_sha` reads the
   loose ref with a local `rescue SystemCallError` and falls through to
-  `git show-ref`. Never swallow an exception silently. The deprecated `Git::Branch`
-  paths slated for removal, which swallow errors in `check_if_create`, predate the
-  rule and are not held to it.
+  `git show-ref`. Never swallow an exception silently.
 
 ### Path Handling
 
