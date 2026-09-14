@@ -32,6 +32,36 @@ RSpec.describe Git::Commands::Branch::Delete, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(1)
       end
+
+      it 'returns exit code 1 and keeps the branch when it is checked out' do
+        current = repo.current_branch
+
+        result = command.call(current)
+
+        expect(result.status.exitstatus).to eq(1)
+        expect(repo.local_branch?(current)).to be(true)
+      end
+
+      context 'with remotes: true' do
+        let(:bare_dir) { Dir.mktmpdir('bare_repo') }
+
+        before do
+          Git.init(bare_dir, bare: true, initial_branch: 'main')
+          repo.remote_add('origin', bare_dir)
+          repo.branch_new('feature')
+          repo.push('origin', 'feature')
+        end
+
+        after { FileUtils.rm_rf(bare_dir) }
+
+        it 'deletes the remote-tracking ref and keeps the same-named local branch' do
+          result = command.call('origin/feature', remotes: true)
+
+          expect(result.status.exitstatus).to eq(0)
+          expect(repo.local_branch?('feature')).to be(true)
+          expect(repo.remote_branch?('feature')).to be(false)
+        end
+      end
     end
 
     describe 'when the command fails' do

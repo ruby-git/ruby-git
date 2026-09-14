@@ -21,6 +21,15 @@ RSpec.describe Git::Commands::Branch::Create, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
+
+      it 'creates the branch without switching to it' do
+        current = repo.current_branch
+
+        command.call('feature-branch')
+
+        expect(repo.local_branch?('feature-branch')).to be(true)
+        expect(repo.current_branch).to eq(current)
+      end
     end
 
     context 'when the command fails' do

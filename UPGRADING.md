@@ -21,7 +21,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
   - [v4.x-style configuration API removed](#v4x-style-configuration-api-removed)
-  - [`Git::Repository#remotes`, `Git::Branch#stashes`, and `allow_unknown_type` removed](#gitrepositoryremotes-gitbranchstashes-and-allow_unknown_type-removed)
+  - [`Git::Repository#remotes` and `allow_unknown_type` removed](#gitrepositoryremotes-and-allow_unknown_type-removed)
   - [`Git::Author` removed](#gitauthor-removed)
   - [`Git::Status` removed](#gitstatus-removed)
   - [Legacy stash API removed](#legacy-stash-api-removed)
@@ -419,25 +419,20 @@ The [v4.x-style configuration methods](#v4x-style-configuration-methods) and
 "Upgrading to v5.x" map each removed call to its replacement and describe the
 return type differences.
 
-### `Git::Repository#remotes`, `Git::Branch#stashes`, and `allow_unknown_type` removed
+### `Git::Repository#remotes` and `allow_unknown_type` removed
 
-v6.0.0 removes three small APIs that v5.x deprecated:
+v6.0.0 removes two small APIs that v5.x deprecated:
 
 - `Git::Repository#remotes` is gone, so calling it raises `NoMethodError`. Use
   `Git::Repository#remote_list`, which returns `Array<Git::RemoteInfo>`, or
   `Git::Repository#remote_names` when only the names are needed.
-- `Git::Branch#stashes` is gone, along with `Git::Branch` itself (see
-  [`Git::Branch` and `Git::Branches` removed](#gitbranch-and-gitbranches-removed)).
-  It ignored the branch it was called on; use `Git::Repository#stash_list`,
-  which returns the same entries as `Array<Git::StashInfo>`.
 - The `allow_unknown_type:` option of `Git::Commands::CatFile::Raw` is gone, so
   passing it raises `ArgumentError` like any other unsupported option. There is
   no replacement: git 2.50 removed the unknown-type feature and accepts the flag
   as a no-op, and on git 2.43 through 2.49 the ability to query the type and size
   of an object of unknown type goes with the option.
 
-The [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated),
-[`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated), and
+The [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated) and
 [`Git::Commands::CatFile::Raw` `allow_unknown_type` option
 deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated) entries
 under "Upgrading to v5.x" map each removed call to its replacement and describe
@@ -551,7 +546,8 @@ Referencing either constant raises `NameError` and calling either method raises
 returns one `Git::BranchInfo` per local and remote-tracking branch, and call the
 repository-level operations (`checkout`, `branch_new`, `branch_delete`, `merge`,
 `merge_into`, `in_branch`, `update_ref`, `archive`, and so on) with the branch
-name.
+name. For a remote-tracking branch the argument differs by operation; the v5.x
+table linked below shows the form each one takes.
 
 Three differences carry over from the v5.x entry and still apply when moving to
 `branch_list`:
@@ -580,6 +576,8 @@ The [`Git::Branch` and `Git::Branches`
 deprecated](#gitbranch-and-gitbranches-deprecated) entry under "Upgrading to
 v5.x" maps every removed call, reader, and collection method to its replacement
 and describes the `in_branch` and `merge_into` differences in full.
+`Git::Branch#stashes` has its own entry, [`Git::Branch#stashes`
+deprecated](#gitbranchstashes-deprecated).
 
 ### `Git::Remote` removed
 
@@ -587,9 +585,7 @@ v6.0.0 removes the remote API that v5.3.0 deprecated: `Git::Remote`,
 `Git::Repository#remote`, and `Git::Repository#config_remote`. Referencing the
 constant raises `NameError` and calling either method raises `NoMethodError`.
 Read a remote's configuration through `Git::Repository#remote_list`, which
-returns one `Git::RemoteInfo` per configured remote, and call the
-repository-level operations (`fetch`, `merge`, `branch_list`, `remote_remove`)
-with the remote name.
+returns one `Git::RemoteInfo` per configured remote.
 
 Two differences carry over from the v5.x entry and still apply when moving to
 `remote_list`:
@@ -1189,7 +1185,8 @@ with N remotes produces N + 1 warnings per call.
 > the last one configured, so use `r.url.last` to reproduce that exact value.
 > Likewise, `Git::Remote#fetch_opts` returned only the last configured fetch
 > refspec, while `fetch` holds all of them. Operations that lived on
-> `Git::Remote` are called on the repository with the remote name instead.
+> `Git::Remote` are called on the repository instead; the table below shows
+> the argument each one takes.
 >
 > **Order change.** `remotes` lists remotes in the order `git remote` prints
 > them, while `remote_list` keeps the order in which remotes first appear in the
@@ -1208,8 +1205,8 @@ with N remotes produces N + 1 warnings per call.
 | `remote.fetch(opts)` | `g.fetch(remote.name, opts)`. Same options hash |
 | `remote.merge` | `g.merge("#{remote.name}/#{g.current_branch}")` |
 | `remote.merge(branch)` | `g.merge("#{remote.name}/#{branch}")` |
-| `remote.branch` | `g.branch_list("#{remote.name}/#{g.current_branch}").first`. Returns a `Git::BranchInfo` |
-| `remote.branch(name)` | `g.branch_list("#{remote.name}/#{name}").first`. Returns a `Git::BranchInfo` |
+| `remote.branch` | `g.branch_list("#{remote.name}/#{g.current_branch}").find(&:remote?)`. Returns a `Git::BranchInfo` |
+| `remote.branch(name)` | `g.branch_list("#{remote.name}/#{name}").find(&:remote?)`. Returns a `Git::BranchInfo` |
 | `remote.remove` | `g.remote_remove(remote.name)` |
 
 #### `Git::Remote` deprecated
@@ -1217,13 +1214,13 @@ with N remotes produces N + 1 warnings per call.
 `Git::Remote`, `Git::Repository#remote`, and `Git::Repository#config_remote` are
 deprecated and are removed in v6.0.0. Read a remote's configuration through
 `Git::Repository#remote_list`, which returns one `Git::RemoteInfo` value object per
-remote, and call the repository-level operations (`fetch`, `merge`, `branch_list`,
-`remote_remove`) with the remote name. Return values are unchanged. Constructing a
-`Git::Remote` directly emits one deprecation warning, and so does calling
-`g.config_remote`. Calling `g.remote` emits two: one for `Git::Repository#remote`
-and one for the `Git::Remote` it constructs. Likewise `g.remotes` emits one warning
-for itself plus one per `Git::Remote` it returns (N + 1 for N remotes). The extra
-warnings from `g.remote` and `g.remotes` are expected, not a bug.
+remote; the table below shows the replacement for each operation. Return values
+are unchanged. Constructing a `Git::Remote` directly emits one deprecation warning,
+and so does calling `g.config_remote`. Calling `g.remote` emits two: one for
+`Git::Repository#remote` and one for the `Git::Remote` it constructs. Likewise
+`g.remotes` emits one warning for itself plus one per `Git::Remote` it returns
+(N + 1 for N remotes). The extra warnings from `g.remote` and `g.remotes` are
+expected, not a bug.
 
 > **Return type changes.** `Git::RemoteInfo#url` and `Git::RemoteInfo#fetch` are
 > frozen `Array<String>` because a remote may carry more than one URL or fetch
@@ -1238,8 +1235,9 @@ warnings from `g.remote` and `g.remotes` are expected, not a bug.
 > Code that reads custom keys should filter `g.config_list` instead (see the
 > table); that yields the same `Hash{String => String}` as `config_remote`.
 > `Git::Remote#branch` returned a `Git::Branch`. Its replacement,
-> `g.branch_list("#{name}/#{branch}").first`, returns a `Git::BranchInfo` value
-> object, or `nil` when the remote-tracking branch does not exist.
+> `g.branch_list("#{name}/#{branch}").find(&:remote?)`, returns a
+> `Git::BranchInfo` value object, or `nil` when the remote-tracking branch does
+> not exist.
 
 In the table, `name` is the remote name (`g.remote` defaults it to `'origin'`).
 
@@ -1256,8 +1254,8 @@ In the table, `name` is the remote name (`g.remote` defaults it to `'origin'`).
 | `remote.fetch(opts)` | `g.fetch(name, opts)`. Same option keys |
 | `remote.merge` | `g.merge("#{name}/#{g.current_branch}")` |
 | `remote.merge(branch)` | `g.merge("#{name}/#{branch}")` |
-| `remote.branch` | `g.branch_list("#{name}/#{g.current_branch}").first`. Returns a `Git::BranchInfo` |
-| `remote.branch(branch)` | `g.branch_list("#{name}/#{branch}").first`. Returns a `Git::BranchInfo` |
+| `remote.branch` | `g.branch_list("#{name}/#{g.current_branch}").find(&:remote?)`. Returns a `Git::BranchInfo` |
+| `remote.branch(branch)` | `g.branch_list("#{name}/#{branch}").find(&:remote?)`. Returns a `Git::BranchInfo` |
 | `remote.remove` | `g.remote_remove(name)` |
 
 #### `Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated
@@ -1287,10 +1285,12 @@ that constructs the command class directly is affected.
 data through `Git::Repository#branch_list`, which returns one `Git::BranchInfo`
 value object per local and remote-tracking branch, and call the repository-level
 operations (`checkout`, `branch_new`, `branch_delete`, `merge`, `merge_into`,
-`in_branch`, and so on) with the branch name. Calling `g.branch` or `g.branches`,
-constructing a `Git::Branches`, and calling any operation on a `Git::Branch` each
-emit a deprecation warning; their return values are unchanged. The `full`,
-`name`, `remote`, `to_s`, and `to_a` readers on `Git::Branch` do not warn.
+`in_branch`, and so on) with the branch name. For a remote-tracking branch the
+argument differs by operation; the table below shows the form each one takes.
+Calling `g.branch` or `g.branches`, constructing a `Git::Branches`, and calling
+any operation on a `Git::Branch` each emit a deprecation warning; their return
+values are unchanged. The `full`, `name`, `remote`, `to_s`, and `to_a` readers
+on `Git::Branch` do not warn.
 
 > **Return shape change.** `Git::Branch` exposes `full` (`main` or
 > `remotes/origin/main`), `name`, and `remote` (a `Git::Remote`, or `nil`).

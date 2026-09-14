@@ -1105,7 +1105,7 @@ RSpec.describe Git::Repository::Branching do
           .to receive(:call).with('refs/remotes/origin/main', 'abc1234').and_return(update_ref_result)
       end
 
-      it 'routes to refs/remotes/<remote>/<name> for backward compatibility' do
+      it 'routes to refs/remotes/<remote>/<name>' do
         expect(update_ref_command)
           .to receive(:call).with('refs/remotes/origin/main', 'abc1234').and_return(update_ref_result)
         result
@@ -1120,7 +1120,7 @@ RSpec.describe Git::Repository::Branching do
           .to receive(:call).with('refs/remotes/origin/main', 'abc1234').and_return(update_ref_result)
       end
 
-      it 'routes to refs/remotes/<remote>/<name> for backward compatibility' do
+      it 'routes to refs/remotes/<remote>/<name>' do
         expect(update_ref_command)
           .to receive(:call).with('refs/remotes/origin/main', 'abc1234').and_return(update_ref_result)
         result
