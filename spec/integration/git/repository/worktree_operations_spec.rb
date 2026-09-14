@@ -5,23 +5,22 @@ require 'securerandom'
 require 'git/repository'
 require 'git/repository/worktree_operations'
 
-# worktree_add and worktree_prune are one-line delegators with no facade-owned
-# post-processing. Baseline coverage for their happy paths comes from the command
-# integration tests (spec/integration/git/commands/worktree/). Their integration
-# tests below cover only real-git behaviors that need an unborn (no-commit)
-# repository or multi-worktree state to reproduce.
+# worktree_prune is a one-line delegator with no facade-owned post-processing.
+# Baseline coverage for its happy path comes from the command integration test
+# (spec/integration/git/commands/worktree/prune_spec.rb). Its integration test
+# below covers only the multi-worktree state that real git needs to reproduce it.
 #
-# worktree_list and worktrees_all turn porcelain output into Ruby values; their
-# integration tests verify that post-processing against actual git output,
-# including a bare repository, which worktree_list reports and worktrees_all omits.
+# worktree_add looks the new worktree up in worktree_list by the resolved path of
+# the directory; its integration tests verify that lookup against the paths git
+# records for relative and symlinked directories.
+#
+# worktree_list turns porcelain output into Ruby values; its integration tests
+# verify that post-processing against actual git output, including a bare
+# repository.
 #
 # worktree_remove, worktree_move, worktree_lock, worktree_unlock, and
 # worktree_repair accept a Git::WorktreeInfo in place of a path; their integration
 # tests verify that a Git::WorktreeInfo argument reaches git as the worktree path.
-#
-# worktree and worktrees are deprecated factory methods that construct domain
-# objects (Git::Worktree and Git::Worktrees) without running git commands directly;
-# they have no integration tests and are fully covered by the unit tests.
 
 RSpec.describe Git::Repository::WorktreeOperations, :integration do
   include_context 'in an empty repository'
@@ -35,7 +34,7 @@ RSpec.describe Git::Repository::WorktreeOperations, :integration do
 
   # The Git::WorktreeInfo that worktree_list reports for the given path
   def info_for(path)
-    described_instance.worktree_list.find { |info| info.path == File.realpath(path) }
+    described_instance.worktree_list.find { |info| File.identical?(info.path, path) }
   end
 
   before do
@@ -103,28 +102,94 @@ RSpec.describe Git::Repository::WorktreeOperations, :integration do
     end
   end
 
-  describe '#worktrees_all' do
-    it 'returns a [directory, sha] pair for each worktree reported by worktree_list' do
-      infos = described_instance.worktree_list
-      result = Git::Deprecation.silence { described_instance.worktrees_all }
+  describe '#worktree_add' do
+    let(:worktree_path) { new_worktree_path }
 
-      expect(result).to eq(infos.map { |info| [info.path, info.head] })
+    after { FileUtils.rm_rf(worktree_path) }
+
+    it 'returns the Git::WorktreeInfo for the new worktree' do
+      result = described_instance.worktree_add(worktree_path)
+
+      expect(result).to be_a(Git::WorktreeInfo)
+      expect(result).to eq(info_for(worktree_path))
+      expect(result).to have_attributes(
+        path: File.realpath(worktree_path), branch: "refs/heads/#{File.basename(worktree_path)}"
+      )
+      expect(result.head).to match(/\A[0-9a-f]{40}\z/)
     end
 
-    context 'when the repository is bare' do
-      let(:bare_dir) { Dir.mktmpdir('bare_repo') }
-      let(:bare_instance) { Git::Repository.new(execution_context: Git.init(bare_dir, bare: true).execution_context) }
+    context 'when a commitish is given' do
+      before { repo.branch_new('feature') }
 
-      after { FileUtils.rm_rf(bare_dir) }
+      it 'returns the entry with that branch checked out' do
+        result = described_instance.worktree_add(worktree_path, 'feature')
 
-      it 'omits the bare main worktree that worktree_list includes' do
-        expect(bare_instance.worktree_list.size).to eq(1)
-        expect(Git::Deprecation.silence { bare_instance.worktrees_all }).to eq([])
+        expect(result).to have_attributes(path: File.realpath(worktree_path), branch: 'refs/heads/feature')
       end
     end
-  end
 
-  describe '#worktree_add' do
+    context 'when the path is relative to the current directory' do
+      let(:worktree_path) { File.basename(new_worktree_path) }
+
+      around do |example|
+        Dir.chdir(File.dirname(repo_dir)) { example.run }
+      end
+
+      it 'returns the entry at the resolved absolute path' do
+        result = described_instance.worktree_add(worktree_path)
+
+        expect(result.path).to eq(File.realpath(worktree_path))
+      end
+    end
+
+    context 'when the path goes through a symlinked directory' do
+      let(:target_dir) { Dir.mktmpdir('worktree_target') }
+      let(:link_path) { File.join(File.dirname(repo_dir), "link-#{SecureRandom.hex(4)}") }
+      let(:worktree_path) { File.join(link_path, 'wt') }
+
+      before do
+        skip 'Creating a symlink on Windows needs a privilege the CI runner lacks' if Gem.win_platform?
+        File.symlink(target_dir, link_path)
+      end
+
+      after do
+        File.unlink(link_path) if File.symlink?(link_path)
+        FileUtils.rm_rf(target_dir)
+      end
+
+      it 'returns the entry at the path with the symlink resolved' do
+        result = described_instance.worktree_add(worktree_path)
+
+        expect(result.path).to eq(File.join(File.realpath(target_dir), 'wt'))
+        expect(result.path).not_to include(File.basename(link_path))
+      end
+    end
+
+    context 'when the path differs in case from an existing parent directory' do
+      # git records the path as given, so the listed path keeps the caller's
+      # casing while File.realpath would return the on-disk casing
+      let(:parent_dir) { File.dirname(new_worktree_path) }
+      let(:worktree_path) { File.join(parent_dir.swapcase, 'wt') }
+
+      before do
+        skip 'Requires a case-insensitive filesystem' unless File.identical?(parent_dir, parent_dir.swapcase)
+      end
+
+      it 'returns the entry at the path as git recorded it' do
+        result = described_instance.worktree_add(worktree_path)
+
+        expect(result).to eq(info_for(worktree_path))
+      end
+    end
+
+    context 'when the add fails' do
+      it 'raises Git::FailedError and adds no worktree' do
+        expect { described_instance.worktree_add(worktree_path, 'no-such-ref') }.to raise_error(Git::FailedError)
+
+        expect(described_instance.worktree_list.size).to eq(1)
+      end
+    end
+
     context 'when the repository has no commits' do
       let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
       let(:unborn_repo) { init_test_repo(unborn_repo_dir) }
