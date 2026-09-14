@@ -2,9 +2,7 @@
 
 require 'git/commands/worktree'
 require 'git/parsers/worktree'
-require 'git/worktree'
 require 'git/worktree_info'
-require 'git/worktrees'
 
 module Git
   class Repository
@@ -46,59 +44,37 @@ module Git
         Git::Parsers::Worktree.parse_list(result.stdout)
       end
 
-      # Returns all worktrees as an array of directory and SHA pairs
-      #
-      # Lists the main worktree and all linked worktrees. The main worktree of
-      # a bare repository has no checked-out commit and is omitted.
-      #
-      # @example List all worktrees
-      #   repo.worktrees_all
-      #   #=> [["/path/to/main", "4bef5ab..."], ["/tmp/worktree-1", "b8c6320..."]]
-      #
-      # @return [Array<Array(String, String)>] array of `[directory, sha]` pairs
-      #
-      #   `directory` is the worktree path reported by git (absolute or relative,
-      #   depending on repository configuration); `sha` is the full SHA of the
-      #   checked-out HEAD commit
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#worktree_list} instead
-      #
-      #   {#worktree_list} returns one {Git::WorktreeInfo} per worktree, with
-      #   `path` and `head` in place of the pair, and includes the main worktree
-      #   of a bare repository.
-      #
-      # @see #worktree_list
-      #
-      # @see https://git-scm.com/docs/git-worktree git-worktree documentation
-      #
-      def worktrees_all
-        Git::Deprecation.warn(
-          'Git::Repository#worktrees_all is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#worktree_list instead.'
-        )
-        worktree_list.reject { |worktree| worktree.head.nil? }.map { |worktree| [worktree.path, worktree.head] }
-      end
-
       # Create a new linked worktree at the given directory
       #
+      # Returns the entry that {#worktree_list} reports for the new worktree.
+      # Its `path` is the directory as git records it: absolute, with symlinks
+      # resolved, so `/tmp/feature` on macOS comes back as
+      # `/private/tmp/feature`.
+      #
       # @example Create a worktree at a path (auto-creates a branch)
-      #   repo.worktree_add('/tmp/feature')
+      #   info = repo.worktree_add('/tmp/feature')
+      #   info.path    #=> "/private/tmp/feature"
+      #   info.branch  #=> "refs/heads/feature"
       #
       # @example Create a worktree and check out an existing commitish
-      #   repo.worktree_add('/tmp/hotfix', 'main')
+      #   repo.worktree_add('/tmp/hotfix', 'main').head
+      #   #=> "4bef5ab0c8e7c19c6be2c0f55ccd45eec1f3d32a"
       #
-      # @param dir [String] filesystem path for the new worktree
+      # @param dir [String] filesystem path for the new worktree, absolute or
+      #   relative to the current directory
       #
       # @param commitish [String, nil] branch, tag, or commit to check out
       #
       #   When `nil`, git checks out the branch named after the final path
       #   component, creating it when no such branch exists
       #
-      # @return [String] the output from the git worktree add command
+      # @return [Git::WorktreeInfo] the new worktree's entry from {#worktree_list}
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @raise [Git::UnexpectedResultError] if the worktree listing cannot be
+      #   parsed or does not contain an entry for the new worktree's directory
+      #   (for example, it was removed by another process before the lookup)
       #
       # @note When `commitish` is `nil` and git creates the branch, it does so
       #   before it creates the worktree, so a failure after that point leaves
@@ -111,7 +87,13 @@ module Git
         args = [dir]
         args << commitish unless commitish.nil?
 
-        Git::Commands::Worktree::Add.new(@execution_context).call(*args).stdout
+        Git::Commands::Worktree::Add.new(@execution_context).call(*args)
+
+        # git records the path as given with symlinks resolved, so compare by
+        # identity rather than by string: this covers symlinks, case-insensitive
+        # filesystems, and Unicode normalization on macOS
+        worktree_list.find { |worktree| File.identical?(worktree.path, dir) } ||
+          raise(Git::UnexpectedResultError, "worktree was created but not found in the worktree list: #{dir}")
       end
 
       # Remove a linked worktree
@@ -264,79 +246,6 @@ module Git
       #
       def worktree_prune
         Git::Commands::Worktree::Prune.new(@execution_context).call.stdout
-      end
-
-      # Return a {Git::Worktree} object for the given directory and optional commitish
-      #
-      # This is a factory method — it constructs the domain object but does not
-      # immediately execute any git commands.
-      #
-      # @example Get a worktree object for a new path
-      #   wt = repo.worktree('/tmp/feature')
-      #
-      # @example Get a worktree object for a specific branch or commit
-      #   wt = repo.worktree('/tmp/hotfix', 'main')
-      #
-      # @param dir [String] filesystem path for the worktree
-      #
-      # @param commitish [String, nil] branch, tag, or commit to associate with
-      #   the worktree; `nil` means no commitish is specified
-      #
-      # @return [Git::Worktree] a worktree domain object for the given path
-      #
-      # @deprecated Use {#worktree_add} and {#worktree_remove} instead
-      #
-      #   `repo.worktree(dir, commitish).add` becomes
-      #   `repo.worktree_add(dir, commitish)` and `repo.worktree(dir).remove`
-      #   becomes `repo.worktree_remove(dir)`. Read a worktree's checked-out
-      #   commit from {Git::WorktreeInfo#head} via {#worktree_list}.
-      #
-      # @see #worktree_add
-      #
-      # @see #worktree_remove
-      #
-      def worktree(dir, commitish = nil)
-        Git::Deprecation.warn(
-          'Git::Repository#worktree is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#worktree_add and Git::Repository#worktree_remove instead.'
-        )
-        Git::Worktree.new(self, dir, commitish)
-      end
-
-      # Return a {Git::Worktrees} collection of all worktrees (main and linked)
-      #
-      # The collection is populated eagerly when this method is called (git runs
-      # at construction time). It is enumerable and supports indexed access by
-      # worktree path.
-      #
-      # @example Iterate over all worktrees
-      #   repo.worktrees.each { |wt| puts wt.dir }
-      #
-      # @example Count worktrees
-      #   repo.worktrees.size
-      #
-      # @example Access a specific worktree by path
-      #   repo.worktrees['/tmp/feature']
-      #
-      # @return [Git::Worktrees] an enumerable collection of all worktrees
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#worktree_list} instead
-      #
-      #   {#worktree_list} returns `Array<Git::WorktreeInfo>`. Look a worktree up
-      #   by path with `worktree_list.find { |w| w.path == path }` in place of
-      #   `worktrees[path]`, and call {#worktree_prune} in place of
-      #   `worktrees.prune`. Calling this method emits one deprecation warning.
-      #
-      # @see #worktree_list
-      #
-      def worktrees
-        Git::Deprecation.warn(
-          'Git::Repository#worktrees is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#worktree_list instead.'
-        )
-        Git::Worktrees.new(self)
       end
     end
   end

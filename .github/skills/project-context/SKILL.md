@@ -55,7 +55,7 @@ coding standard details, or implementation constraints.
 | `Git::Log` | Chainable commit-history query builder |
 | `Git::Branch/Branches` | Branch management (local + remote) |
 | `Git::Remote` | Remote repository references |
-| `Git::Worktree/Worktrees` | Worktree support |
+| `Git::WorktreeInfo` | Immutable worktree entry returned by `Git::Repository#worktree_list` and `#worktree_add`; worktree operations are path-based facade methods |
 | `Git::StashInfo` | Immutable stash entry returned by `Git::Repository#stash_list` and `#stash_push`; stash operations are name-based facade methods |
 
 **Key directories:**

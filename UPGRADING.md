@@ -25,6 +25,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Author` removed](#gitauthor-removed)
   - [`Git::Status` removed](#gitstatus-removed)
   - [Legacy stash API removed](#legacy-stash-api-removed)
+  - [Legacy worktree API removed](#legacy-worktree-api-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -500,6 +501,43 @@ The [Legacy stash API deprecated](#legacy-stash-api-deprecated) entry under
 "Upgrading to v5.x" maps every removed call, reader, and collection method to its
 replacement. The `stash_infos` calls it shows keep working in v6.0.0, since
 `stash_infos` is an alias of `stash_list`.
+
+### Legacy worktree API removed
+
+v6.0.0 removes the worktree API that v5.4.0 deprecated: `Git::Worktree`,
+`Git::Worktrees`, `Git::Repository#worktree`, `Git::Repository#worktrees`, and
+`Git::Repository#worktrees_all`. Referencing either constant raises `NameError`
+and calling any of the three methods raises `NoMethodError`. Read worktree data
+through `Git::Repository#worktree_list`, which returns one `Git::WorktreeInfo`
+per worktree, and call the repository-level operations (`worktree_add`,
+`worktree_remove`, `worktree_move`, `worktree_lock`, `worktree_unlock`,
+`worktree_repair`, and `worktree_prune`) with the worktree path or its
+`Git::WorktreeInfo`.
+
+> **`worktree_add` return type change.** In v4.x and v5.x, `g.worktree_add`
+> returned the `git worktree add` output (`"HEAD is now at …"`) as a `String`
+> and never emitted a deprecation warning, since the method keeps its name. In
+> v6.0.0 it returns the new worktree's `Git::WorktreeInfo`, the same entry
+> `g.worktree_list` reports for it. Search for `worktree_add` before upgrading.
+> Code that used the return value as a `String` reads `info.path`, `info.head`,
+> and `info.branch` instead; `Git::WorktreeInfo#to_s` is the path, so string
+> interpolation of the result yields the worktree path.
+
+Two notes carry over from the v5.x entry and still apply to callers jumping
+from v4.x:
+
+- **`gcommit` return type.** `Git::Worktree#gcommit` returned a
+  `Git::Object::Commit` for a worktree from `g.worktree(dir)` and a raw SHA
+  `String` for one from `g.worktrees`. `Git::WorktreeInfo#head` is always a
+  `String` (or `nil` for a bare main worktree); call `g.gcommit(info.head)` for
+  the commit object.
+- **`full` and `to_s`.** `Git::Worktree#full` and `#to_s` appended the commitish
+  to the path, so entries from `g.worktrees` read `"/path/to/wt <sha>"`.
+  `Git::WorktreeInfo#to_s` is the path alone.
+
+The [`Git::Worktree` and `Git::Worktrees`
+deprecated](#gitworktree-and-gitworktrees-deprecated) entry under "Upgrading to
+v5.x" maps every removed call, reader, and collection method to its replacement.
 
 ---
 
@@ -1454,7 +1492,7 @@ and are removed in v6.0.0. Read worktree data through
 object per worktree, and call the repository-level operations (`worktree_add`,
 `worktree_remove`, `worktree_move`, `worktree_lock`, `worktree_unlock`,
 `worktree_repair`, and `worktree_prune`) with the worktree path or its
-`Git::WorktreeInfo`. Return values are unchanged. Calling `g.worktree`,
+`Git::WorktreeInfo`. Return values are unchanged on v5.x. Calling `g.worktree`,
 `g.worktrees`, or `g.worktrees_all`, constructing a `Git::Worktrees`, and calling
 `gcommit`, `add`, or `remove` on a `Git::Worktree` each emit a deprecation
 warning; the `dir`, `full`, `to_s`, and `to_a` readers on `Git::Worktree` do not.
@@ -1480,6 +1518,14 @@ it constructs, and `g.worktree(dir).add` emits one for `g.worktree` and one for
 > **`full` and `to_s`.** `Git::Worktree#full` and `#to_s` append the commitish
 > given at construction to the path, so entries from `g.worktrees` read
 > `"/path/to/wt <sha>"`. `Git::WorktreeInfo#to_s` is the path alone.
+>
+> **`worktree_add` return type in v6.0.0:** on v5.x, `worktree_add` returns the
+> `git worktree add` output (`"HEAD is now at …"`). In v6.0.0 it returns the new
+> `Git::WorktreeInfo` instead. To get the entry today, look it up after the add:
+> `g.worktree_list.find { |w| File.identical?(w.path, dir) }`. Compare with
+> `File.identical?`, not string equality: git stores worktree paths with
+> symlinks resolved, so `/tmp/...` on macOS is listed as `/private/tmp/...`,
+> and on case-insensitive filesystems the listed casing may differ from `dir`.
 
 In the table, `dir` is the worktree path, `wt` is a `Git::Worktree`, and `info`
 is the `Git::WorktreeInfo` that replaces it.

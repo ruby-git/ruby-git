@@ -5,18 +5,13 @@ require 'git/repository'
 require 'git/repository/worktree_operations'
 
 # Integration-level coverage for facade methods in Git::Repository::WorktreeOperations:
-#   worktree_add and worktree_prune are one-line delegators to single
-#   Git::Commands::Worktree::* classes with no post-processing. Their end-to-end
-#   coverage comes from the command integration tests:
-#     spec/integration/git/commands/worktree/add_spec.rb   (worktree_add)
-#     spec/integration/git/commands/worktree/prune_spec.rb (worktree_prune)
-#   worktree_list and worktrees_all (parser post-processing) and worktree_remove,
-#   worktree_move, worktree_lock, worktree_unlock, and worktree_repair (a
-#   Git::WorktreeInfo argument reaching git) are covered in
-#   spec/integration/git/repository/worktree_operations_spec.rb.
-#   worktree and worktrees are deprecated factory methods that construct domain
-#   objects (Git::Worktree and Git::Worktrees) without running git commands
-#   directly; their behavior is fully covered by the unit tests below.
+#   worktree_prune is a one-line delegator to Git::Commands::Worktree::Prune with
+#   no post-processing. Its end-to-end coverage comes from the command integration
+#   test spec/integration/git/commands/worktree/prune_spec.rb.
+#   worktree_list (parser post-processing), worktree_add (looking the new entry
+#   up by its resolved path), and worktree_remove, worktree_move, worktree_lock,
+#   worktree_unlock, and worktree_repair (a Git::WorktreeInfo argument reaching
+#   git) are covered in spec/integration/git/repository/worktree_operations_spec.rb.
 
 RSpec.describe Git::Repository::WorktreeOperations do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
@@ -42,8 +37,6 @@ RSpec.describe Git::Repository::WorktreeOperations do
       path: '/tmp/feature', head: 'b8c63202c3c0ebd37b7e45fd0c22e6c20d5bead1', branch: 'refs/heads/feature'
     )
   end
-
-  let(:bare_info) { worktree_info(path: '/path/to/repo.git', head: nil, bare: true) }
 
   describe '#worktree_list' do
     subject(:result) { described_instance.worktree_list }
@@ -81,74 +74,29 @@ RSpec.describe Git::Repository::WorktreeOperations do
     end
   end
 
-  describe '#worktrees_all' do
-    subject(:result) { described_instance.worktrees_all }
-
-    let(:list_command) { instance_double(Git::Commands::Worktree::List) }
-    let(:list_result) { command_result('porcelain output') }
-    let(:parsed_worktrees) { [main_info, linked_info] }
-
-    before do
-      allow(Git::Deprecation).to receive(:warn)
-      allow(Git::Commands::Worktree::List).to receive(:new).with(execution_context).and_return(list_command)
-      allow(list_command).to receive(:call).with(porcelain: true).and_return(list_result)
-      allow(Git::Parsers::Worktree).to receive(:parse_list).with('porcelain output').and_return(parsed_worktrees)
-    end
-
-    it 'emits a deprecation warning via Git::Deprecation.warn' do
-      expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#worktrees_all is deprecated and will be removed in v6.0.0. ' \
-        'Use Git::Repository#worktree_list instead.'
-      )
-      result
-    end
-
-    it 'lists worktrees in porcelain format then parses the output' do
-      expect(list_command).to receive(:call).with(porcelain: true).and_return(list_result).ordered
-      expect(Git::Parsers::Worktree).to(
-        receive(:parse_list).with('porcelain output').and_return(parsed_worktrees).ordered
-      )
-
-      result
-    end
-
-    it 'returns a [directory, sha] pair for each worktree' do
-      expect(result).to eq(
-        [
-          ['/path/to/main', '4bef5ab0c8e7c19c6be2c0f55ccd45eec1f3d32a'],
-          ['/tmp/feature', 'b8c63202c3c0ebd37b7e45fd0c22e6c20d5bead1']
-        ]
-      )
-    end
-
-    context 'when no worktrees are reported' do
-      let(:parsed_worktrees) { [] }
-
-      it 'returns an empty array' do
-        expect(result).to eq([])
-      end
-    end
-
-    context 'when the listing includes a bare main worktree' do
-      let(:parsed_worktrees) { [bare_info, linked_info] }
-
-      it 'omits the bare worktree, which has no HEAD' do
-        expect(result).to eq([['/tmp/feature', 'b8c63202c3c0ebd37b7e45fd0c22e6c20d5bead1']])
-      end
-    end
-  end
-
   describe '#worktree_add' do
     subject(:result) { described_instance.worktree_add(dir, commitish) }
 
     let(:dir) { '/tmp/feature' }
     let(:commitish) { nil }
     let(:add_command) { instance_double(Git::Commands::Worktree::Add) }
-    let(:add_result) { command_result("Preparing worktree (new branch 'feature')\n") }
+    let(:add_result) { command_result("HEAD is now at b8c6320 Add feature\n") }
+
+    # git records the resolved path, which differs from dir when dir goes
+    # through a symlink (/tmp on macOS) or differs in case, so the lookup must
+    # compare by File.identical? rather than by string
+    let(:added_info) do
+      worktree_info(
+        path: '/private/tmp/feature', head: 'b8c63202c3c0ebd37b7e45fd0c22e6c20d5bead1', branch: 'refs/heads/feature'
+      )
+    end
 
     before do
       allow(Git::Commands::Worktree::Add).to receive(:new).with(execution_context).and_return(add_command)
       allow(add_command).to receive(:call).and_return(add_result)
+      allow(File).to receive(:identical?).and_return(false)
+      allow(File).to receive(:identical?).with('/private/tmp/feature', dir).and_return(true)
+      allow(described_instance).to receive(:worktree_list).and_return([main_info, added_info])
     end
 
     it 'constructs Git::Commands::Worktree::Add with the execution context' do
@@ -156,14 +104,21 @@ RSpec.describe Git::Repository::WorktreeOperations do
       described_instance.worktree_add(dir)
     end
 
+    it 'runs the add before listing the worktrees' do
+      expect(add_command).to receive(:call).with(dir).and_return(add_result).ordered
+      expect(described_instance).to receive(:worktree_list).and_return([main_info, added_info]).ordered
+
+      described_instance.worktree_add(dir)
+    end
+
+    it 'returns the Git::WorktreeInfo whose path is the same directory' do
+      expect(result).to eq(added_info)
+    end
+
     context 'when no commitish is given (nil)' do
       it 'calls #call with only the directory' do
         expect(add_command).to receive(:call).with(dir).and_return(add_result)
         described_instance.worktree_add(dir)
-      end
-
-      it 'returns the stdout string' do
-        expect(result).to eq("Preparing worktree (new branch 'feature')\n")
       end
     end
 
@@ -174,9 +129,28 @@ RSpec.describe Git::Repository::WorktreeOperations do
         expect(add_command).to receive(:call).with(dir, commitish).and_return(add_result)
         described_instance.worktree_add(dir, commitish)
       end
+    end
 
-      it 'returns the stdout string' do
-        expect(result).to eq("Preparing worktree (new branch 'feature')\n")
+    context 'when the listing has no entry for the directory' do
+      before do
+        allow(described_instance).to receive(:worktree_list).and_return([main_info])
+      end
+
+      it 'raises Git::UnexpectedResultError naming the directory' do
+        expect { result }.to raise_error(Git::UnexpectedResultError, %r{/tmp/feature})
+      end
+    end
+
+    context 'when the add fails' do
+      let(:failed_result) { command_result('', stderr: "fatal: '/tmp/feature' already exists\n", exitstatus: 128) }
+
+      before do
+        allow(add_command).to receive(:call).and_raise(Git::FailedError.new(failed_result))
+      end
+
+      it 'raises Git::FailedError without listing the worktrees' do
+        expect(described_instance).not_to receive(:worktree_list)
+        expect { result }.to raise_error(Git::FailedError)
       end
     end
   end
@@ -429,67 +403,6 @@ RSpec.describe Git::Repository::WorktreeOperations do
 
     it 'returns the stdout string' do
       expect(result).to eq('')
-    end
-  end
-
-  describe '#worktree' do
-    subject(:result) { described_instance.worktree(dir, commitish) }
-
-    let(:dir) { '/tmp/feature' }
-    let(:commitish) { nil }
-    let(:worktree_double) { instance_double(Git::Worktree) }
-
-    before do
-      allow(Git::Deprecation).to receive(:warn)
-      allow(Git::Worktree).to receive(:new).and_return(worktree_double)
-    end
-
-    it 'emits a deprecation warning via Git::Deprecation.warn' do
-      expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#worktree is deprecated and will be removed in v6.0.0. ' \
-        'Use Git::Repository#worktree_add and Git::Repository#worktree_remove instead.'
-      )
-      result
-    end
-
-    context 'when called without a commitish' do
-      it 'returns a Git::Worktree for the directory with no commitish' do
-        expect(Git::Worktree).to receive(:new).with(described_instance, dir, nil).and_return(worktree_double)
-        expect(result).to eq(worktree_double)
-      end
-    end
-
-    context 'when called with a commitish' do
-      let(:commitish) { 'main' }
-
-      it 'returns a Git::Worktree for the directory and commitish' do
-        expect(Git::Worktree).to receive(:new).with(described_instance, dir, commitish).and_return(worktree_double)
-        expect(result).to eq(worktree_double)
-      end
-    end
-  end
-
-  describe '#worktrees' do
-    subject(:result) { described_instance.worktrees }
-
-    let(:worktrees_collection) { instance_double(Git::Worktrees) }
-
-    before do
-      allow(Git::Deprecation).to receive(:warn)
-      allow(Git::Worktrees).to receive(:new).with(described_instance).and_return(worktrees_collection)
-    end
-
-    it 'emits a deprecation warning via Git::Deprecation.warn' do
-      expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#worktrees is deprecated and will be removed in v6.0.0. ' \
-        'Use Git::Repository#worktree_list instead.'
-      )
-      result
-    end
-
-    it 'returns a Git::Worktrees collection for all worktrees' do
-      expect(Git::Worktrees).to receive(:new).with(described_instance).and_return(worktrees_collection)
-      expect(result).to eq(worktrees_collection)
     end
   end
 end

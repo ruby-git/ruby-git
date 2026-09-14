@@ -847,15 +847,15 @@ reusable across facade methods.
 
 Several older classes predate the current design and mix data with operations while
 holding a repository reference. The tell is a `def initialize(base, ...)` constructor on
-a class that also performs git operations. `Git::Branch`, `Git::Remote`, and
-`Git::Worktree` are the ones on this path. Each is being replaced by an immutable value
-object plus name-based facade operations, following the route `Git::BranchInfo` and
-`Git::RemoteInfo` already took, and that `Git::Stash` completed when v6.0.0 removed it
-in favor of `Git::StashInfo`.
+a class that also performs git operations. `Git::Branch` and `Git::Remote` are the ones
+on this path. Each is being replaced by an immutable value object plus name-based facade
+operations, following the route `Git::BranchInfo` and `Git::RemoteInfo` already took,
+and that `Git::Stash` and `Git::Worktree` completed when v6.0.0 removed them in favor of
+`Git::StashInfo` and `Git::WorktreeInfo`.
 
 The tell over-matches, so check what you have found before starting. Several classes
-take a `base`. The collections (`Git::Branches`, `Git::Worktrees`) go with their
-element class under step 4 rather than getting their own value object.
+take a `base`. A collection such as `Git::Branches` goes with its element class under
+step 4 rather than getting its own value object.
 `Git::Diff`, `Git::Log`, and `Git::DiffStats` hold a repository because they defer the
 query until something asks for a result, which is a different design and not this
 migration. `Git::Object::Commit`, `Tree`, and `Blob` are the exception recorded in
