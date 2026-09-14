@@ -847,11 +847,11 @@ reusable across facade methods.
 
 Several older classes predate the current design and mix data with operations while
 holding a repository reference. The tell is a `def initialize(base, ...)` constructor on
-a class that also performs git operations. `Git::Remote` is the one on this path. It is
-being replaced by an immutable value object plus name-based facade operations, following
-the route `Git::RemoteInfo` already took, and that `Git::Branch`, `Git::Stash`, and
-`Git::Worktree` completed when v6.0.0 removed them in favor of `Git::BranchInfo`,
-`Git::StashInfo`, and `Git::WorktreeInfo`.
+a class that also performs git operations. No class is on this path today: `Git::Branch`,
+`Git::Remote`, `Git::Stash`, and `Git::Worktree` each went through it, replaced by an
+immutable value object plus name-based facade operations, and v6.0.0 removed them in
+favor of `Git::BranchInfo`, `Git::RemoteInfo`, `Git::StashInfo`, and `Git::WorktreeInfo`.
+The steps stay here for any class that turns up with the same shape.
 
 The tell over-matches, so check what you have found before starting. Several classes
 take a `base`. A collection (as `Git::Branches` was for `Git::Branch`) goes with its
