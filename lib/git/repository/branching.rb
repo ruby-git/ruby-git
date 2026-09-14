@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
 require 'pathname'
-require 'git/branch'
 require 'git/branch_info'
-require 'git/branches'
 require 'git/commands/branch/create'
 require 'git/commands/branch/delete'
 require 'git/commands/branch/list'
@@ -201,14 +199,13 @@ module Git
       # checked out again. The hard reset discards changes to tracked files only;
       # untracked files created by the block are left in place.
       #
-      # Unlike `Git::Branch#in_branch`, this method does not create `branch`. The
-      # branch must be an existing local branch. Unlike {#checkout}, a commit SHA,
-      # tag, or remote-tracking branch is rejected before any checkout happens:
-      # those detach HEAD, and a commit made there would be left dangling once the
-      # original branch is restored. HEAD must
-      # be on a branch with at least one commit, or detached: an unborn branch (no
-      # commits yet) cannot be checked out again by name, so it is rejected before
-      # any checkout happens.
+      # This method does not create `branch`: it must be an existing local
+      # branch. Unlike {#checkout}, a commit SHA, tag, or remote-tracking branch
+      # is rejected before any checkout happens: those detach HEAD, and a commit
+      # made there would be left dangling once the original branch is restored.
+      # HEAD must be on a branch with at least one commit, or detached: an unborn
+      # branch (no commits yet) cannot be checked out again by name, so it is
+      # rejected before any checkout happens.
       #
       # @example Commit a new file on a feature branch
       #   repo.in_branch('feature', 'Add README') do
@@ -604,89 +601,6 @@ module Git
         Git::Commands::UpdateRef::Update.new(@execution_context).call(ref, commit)
       end
 
-      # Returns a {Git::Branch} object for the given branch name
-      #
-      # @example Get a branch object for 'main'
-      #   repo.branch('main')  #=> #<Git::Branch 'main'>
-      #
-      # @example Get a branch object for the current branch
-      #   repo.branch  #=> #<Git::Branch 'main'>
-      #
-      # @param branch_name [String] the branch name (defaults to the current branch)
-      #
-      # @return [Git::Branch] the branch object
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use `branch_list(name).first` and the name-based branch
-      #   operations instead
-      #
-      #   {#branch_list} returns immutable {Git::BranchInfo} value objects
-      #   rather than {Git::Branch}. It takes `git branch --list` patterns, so
-      #   pass the short name of a local branch or `"#{remote}/#{name}"` for a
-      #   remote-tracking branch; the `remotes/` and `refs/` prefixes this
-      #   method accepts match nothing. A `"#{remote}/#{name}"` pattern also
-      #   matches a local branch of that name, so take `find(&:remote?)` rather
-      #   than `first` for a remote-tracking branch. With no argument this
-      #   method wraps {#current_branch}, which is `'HEAD'` when HEAD is
-      #   detached; {#branch_list} has no entry for a detached or unborn HEAD,
-      #   so use {#current_branch_state} in those states. Call the
-      #   corresponding {Git::Repository} method (e.g. {#checkout},
-      #   {#branch_new}, {#branch_delete}) for operations on a branch.
-      #
-      # @see #branch_list
-      #
-      def branch(branch_name = current_branch)
-        Git::Deprecation.warn(
-          'Git::Repository#branch is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#branch_list(name).first for a local branch, ' \
-          'Git::Repository#branch_list("remote/name").find(&:remote?) for a remote-tracking branch, ' \
-          'and the name-based branch operations instead.'
-        )
-        Git::Branch.new(self, branch_name)
-      end
-
-      # Returns a {Git::Branches} collection of all branches in the repository
-      #
-      # @example List all branches
-      #   repo.branches
-      #   # => #<Git::Branches ...>
-      #
-      # @example Iterate over all branches
-      #   repo.branches.each { |b| puts b.name }
-      #
-      # @example Access local branches only
-      #   repo.branches.local
-      #
-      # @example Access remote-tracking branches only
-      #   repo.branches.remote
-      #
-      # @example Look up a branch by name
-      #   repo.branches['main']  # => #<Git::Branch 'main'>
-      #
-      # @return [Git::Branches] a collection wrapping all local and
-      #   remote-tracking branches in the repository
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#branch_list} instead
-      #
-      #   {#branch_list} returns `Array<Git::BranchInfo>` (immutable value
-      #   objects) rather than a {Git::Branches} collection. Filter it with
-      #   `select(&:remote?)` or `reject(&:remote?)` in place of
-      #   `branches.remote` and `branches.local`, and look a branch up by name
-      #   with `branch_list(name).first` in place of `branches[name]`.
-      #
-      # @see #branch_list
-      #
-      def branches
-        Git::Deprecation.warn(
-          'Git::Repository#branches is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#branch_list instead.'
-        )
-        Git::Branches.new(self)
-      end
-
       # Private helpers local to {Git::Repository::Branching}
       #
       # @api private
@@ -859,9 +773,6 @@ module Git
         end
 
         # Builds the full git ref string from a branch name argument
-        #
-        # Mirrors the routing logic of `Git::Branch#update_ref` for backward
-        # compatibility:
         #
         # - `remotes/<remote>/<name>` or `refs/remotes/<remote>/<name>` →
         #   `refs/remotes/<remote>/<name>`

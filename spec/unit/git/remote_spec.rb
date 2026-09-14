@@ -142,30 +142,6 @@ RSpec.describe Git::Remote do
   end
 
   # ---------------------------------------------------------------------------
-  # #branch
-  # ---------------------------------------------------------------------------
-
-  describe '#branch' do
-    context 'when branch is specified explicitly' do
-      it 'returns a Git::Branch for <remote>/<branch>' do
-        result = described_instance.branch('main')
-        expect(result).to be_a(Git::Branch)
-        expect(result.full).to eq('origin/main')
-      end
-    end
-
-    context 'when branch defaults to current_branch' do
-      before { allow(base).to receive(:current_branch).and_return('develop') }
-
-      it 'returns a Git::Branch for <remote>/<current_branch>' do
-        result = described_instance.branch
-        expect(result).to be_a(Git::Branch)
-        expect(result.full).to eq('origin/develop')
-      end
-    end
-  end
-
-  # ---------------------------------------------------------------------------
   # #to_s
   # ---------------------------------------------------------------------------
 

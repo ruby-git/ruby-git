@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require 'git/branch'
-require 'git/branch_info'
-
 module Git
   # A remote in a Git repository
   #
@@ -128,30 +125,6 @@ module Git
       branch ||= remote_repository.current_branch
       remote_tracking_branch = "#{@name}/#{branch}"
       remote_repository.merge(remote_tracking_branch)
-    end
-
-    # Returns a {Git::Branch} object for the given branch on this remote
-    #
-    # @example Get the remote-tracking branch object
-    #   git.remote('origin').branch('main')  #=> #<Git::Branch 'origin/main'>
-    #
-    # @param branch [String] the branch name on this remote (defaults to current branch)
-    #
-    # @return [Git::Branch] a branch object representing `<remote>/<branch>`
-    #
-    # @deprecated Use
-    #   `Git::Repository#branch_list("#{name}/#{branch || current_branch}").first`
-    #   instead
-    #
-    #   With no argument this method falls back to the current branch, so the
-    #   replacement has to supply `Git::Repository#current_branch` itself. The
-    #   replacement returns a {Git::BranchInfo} value object rather than a
-    #   {Git::Branch}, and returns `nil` when the remote-tracking branch does
-    #   not exist.
-    #
-    def branch(branch = nil)
-      branch ||= remote_repository.current_branch
-      Git::Branch.new(@base, "#{@name}/#{branch}")
     end
 
     # Removes this remote from the repository

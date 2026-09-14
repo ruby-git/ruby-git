@@ -374,15 +374,6 @@ RSpec.describe Git::Repository::Branching, :integration do
     end
   end
 
-  # ---------------------------------------------------------------------------
-  # #update_ref
-  # ---------------------------------------------------------------------------
-
-  # ---------------------------------------------------------------------------
-  # #branch (factory): upstream data is not populated by git.branch(name) —
-  # use git.branch_list to obtain BranchInfo with upstream tracking data.
-  # ---------------------------------------------------------------------------
-
   #
   # current_branch_state calls both ShowCurrent and RevParse, so integration
   # tests confirm the multi-command orchestration produces the correct HeadState

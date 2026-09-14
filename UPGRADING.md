@@ -26,6 +26,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Status` removed](#gitstatus-removed)
   - [Legacy stash API removed](#legacy-stash-api-removed)
   - [Legacy worktree API removed](#legacy-worktree-api-removed)
+  - [`Git::Branch` and `Git::Branches` removed](#gitbranch-and-gitbranches-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -424,9 +425,10 @@ v6.0.0 removes three small APIs that v5.x deprecated:
 - `Git::Repository#remotes` is gone, so calling it raises `NoMethodError`. Use
   `Git::Repository#remote_list`, which returns `Array<Git::RemoteInfo>`, or
   `Git::Repository#remote_names` when only the names are needed.
-- `Git::Branch#stashes` is gone, so calling it raises `NoMethodError`. It ignored
-  the branch it was called on; use `Git::Repository#stash_list`, which returns
-  the same entries as `Array<Git::StashInfo>`.
+- `Git::Branch#stashes` is gone, along with `Git::Branch` itself (see
+  [`Git::Branch` and `Git::Branches` removed](#gitbranch-and-gitbranches-removed)).
+  It ignored the branch it was called on; use `Git::Repository#stash_list`,
+  which returns the same entries as `Array<Git::StashInfo>`.
 - The `allow_unknown_type:` option of `Git::Commands::CatFile::Raw` is gone, so
   passing it raises `ArgumentError` like any other unsupported option. There is
   no replacement: git 2.50 removed the unknown-type feature and accepts the flag
@@ -538,6 +540,45 @@ from v4.x:
 The [`Git::Worktree` and `Git::Worktrees`
 deprecated](#gitworktree-and-gitworktrees-deprecated) entry under "Upgrading to
 v5.x" maps every removed call, reader, and collection method to its replacement.
+
+### `Git::Branch` and `Git::Branches` removed
+
+v6.0.0 removes the branch API that v5.3.0 deprecated: `Git::Branch`,
+`Git::Branches`, `Git::Repository#branch`, and `Git::Repository#branches`.
+Referencing either constant raises `NameError` and calling either method raises
+`NoMethodError`. Read branch data through `Git::Repository#branch_list`, which
+returns one `Git::BranchInfo` per local and remote-tracking branch, and call the
+repository-level operations (`checkout`, `branch_new`, `branch_delete`, `merge`,
+`merge_into`, `in_branch`, `update_ref`, `archive`, and so on) with the branch
+name.
+
+Three differences carry over from the v5.x entry and still apply when moving to
+`branch_list`:
+
+- **Return shape.** `Git::BranchInfo#refname` is the full ref
+  (`refs/remotes/origin/main`), not the `remotes/origin/main` form
+  `Git::Branch#full` and `#to_s` returned, and `remote_name` is a `String`
+  rather than a `Git::Remote`. `branch_list` takes `git branch --list`
+  patterns: `'main'` matches the local branch, `'origin/main'` matches the
+  remote-tracking branch, and the `remotes/...` and `refs/...` forms match
+  nothing.
+- **`checkout` no longer creates the branch.** `g.branch('x').checkout`
+  created `x` when it was missing and ignored any error from the attempt.
+  `g.checkout('x')` fails for a missing local branch unless git's own remote
+  guess applies; call `g.branch_new('x') unless g.local_branch?('x')` first.
+- **`in_branch` and `merge_into`.** `g.in_branch` and `g.merge_into` take an
+  existing local branch and raise `ArgumentError` for anything else, restore a
+  detached HEAD to its original commit, and do no hard reset after a merge.
+
+The string constructor that `g.branch(name)` used could mis-split a
+remote-tracking name when the remote name itself contains a slash
+(`remotes/team/upstream/main`). `branch_list` resolves configured remote names
+and has no such limitation.
+
+The [`Git::Branch` and `Git::Branches`
+deprecated](#gitbranch-and-gitbranches-deprecated) entry under "Upgrading to
+v5.x" maps every removed call, reader, and collection method to its replacement
+and describes the `in_branch` and `merge_into` differences in full.
 
 ---
 

@@ -198,8 +198,8 @@ The [`Git::Repository`](https://rubydoc.info/gems/git/Git/Repository) reference
 covers everything else: reading history, diffs, branches, remotes, worktrees,
 staging, and low-level index and tree work. It documents every method and the object
 type each one returns (such as `Git::Log`, `Git::Object::Commit`, `Git::Diff`,
-`Git::Branch`, and `Git::WorktreeInfo`), so you can follow the links from a method to
-the full API of its result.
+`Git::BranchInfo`, and `Git::WorktreeInfo`), so you can follow the links from a method
+to the full API of its result.
 
 ## Errors raised by this gem
 
