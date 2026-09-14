@@ -883,13 +883,18 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @raise [Git::UnexpectedResultError] if the tag listing cannot be parsed
+      #   or does not contain the new tag (for example, it was deleted by another
+      #   process before the lookup)
+      #
       # @see https://git-scm.com/docs/git-tag git-tag
       #
       def tag_create(name, *args)
         target, options = Private.tag_target_and_options(args)
         SharedPrivate.assert_valid_opts!(TAG_CREATE_ALLOWED_OPTS, **options)
         Private.create_tag(@execution_context, name, target, options)
-        tag_list(name).first
+        tag_list(name).first ||
+          raise(Git::UnexpectedResultError, "tag was created but not found in the tag list: #{name}")
       end
 
       # Delete a tag

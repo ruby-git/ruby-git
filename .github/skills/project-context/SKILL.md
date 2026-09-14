@@ -308,7 +308,8 @@ The gem raises only `ArgumentError` or errors that subclass `Git::Error`:
   (killed by signal), `Git::TimeoutError` (exceeded timeout, subclass of
   `SignaledError`)
 - `Git::ProcessIOError` — I/O with the git process failed
-- `Git::UnexpectedResultError` — git output did not parse
+- `Git::UnexpectedResultError` — git output did not parse, or a command succeeded
+  but the entry it should have produced is missing from the follow-up listing
 - `Git::VersionError` — the installed git does not meet a version requirement
 - `ArgumentError` — a caller mistake. Deliberately not a `Git::Error`, so a broad
   `rescue Git::Error` cannot hide a programming error. A deprecated call under the
