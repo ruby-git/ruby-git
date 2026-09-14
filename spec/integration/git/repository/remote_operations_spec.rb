@@ -71,27 +71,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   end
 
   # ---------------------------------------------------------------------------
-  # #config_remote
-  # ---------------------------------------------------------------------------
-
-  describe '#config_remote' do
-    it 'includes the url key' do
-      result = Git::Deprecation.silence { described_instance.config_remote('origin') }
-      expect(result).to have_key('url')
-    end
-
-    it 'includes the fetch key' do
-      result = Git::Deprecation.silence { described_instance.config_remote('origin') }
-      expect(result).to have_key('fetch')
-    end
-
-    it 'returns an empty hash for an unknown remote name' do
-      result = Git::Deprecation.silence { described_instance.config_remote('nonexistent-remote') }
-      expect(result).to eq({})
-    end
-  end
-
-  # ---------------------------------------------------------------------------
   # #remote_list
   # ---------------------------------------------------------------------------
 

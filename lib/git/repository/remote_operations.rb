@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'git/commands/config_option_syntax'
 require 'git/commands/fetch'
 require 'git/commands/ls_remote'
 require 'git/commands/pull'
@@ -8,7 +7,6 @@ require 'git/commands/push'
 require 'git/commands/remote'
 require 'git/parsers/ls_remote'
 require 'git/parsers/remote'
-require 'git/remote'
 
 require 'git/repository/shared_private'
 
@@ -436,65 +434,6 @@ module Git
         nil
       end
 
-      # Return the git configuration entries for a named remote
-      #
-      # Reads `git config --list` and returns all entries whose keys begin with
-      # `remote.<name>.`, with the `remote.<name>.` prefix stripped. This
-      # typically yields at least `"url"` and `"fetch"` for a configured remote.
-      #
-      # @example Retrieve the config for the 'origin' remote
-      #   repo.config_remote('origin')
-      #   #=> {
-      #   #     'url'   => 'https://github.com/user/repo.git',
-      #   #     'fetch' => '+refs/heads/*:refs/remotes/origin/*'
-      #   #   }
-      #
-      # @param name [String] the name of the remote (e.g. `"origin"`)
-      #
-      # @return [Hash{String => String}] configuration entries for the remote,
-      #   keyed without the `remote.<name>.` prefix
-      #
-      #   Returns an empty hash when no entries are found.
-      #
-      # @raise [Git::FailedError] when git exits with a non-zero status
-      #
-      # @deprecated Use `remote_list.find { |r| r.name == name }` for the fields
-      #   {Git::RemoteInfo} models, or filter {Git::Configuring#config_list} on
-      #   the `remote.<name>.` key prefix to keep every entry
-      #
-      #   {#remote_list} returns a {Git::RemoteInfo} per remote. Its `url` and
-      #   `fetch` members hold every configured value as `Array<String>`,
-      #   whereas this method returns a flat hash in which a repeated `url` or
-      #   `fetch` key overwrites the earlier value.
-      #
-      #   {Git::RemoteInfo} models only the remote variables git defines and
-      #   drops any other `remote.<name>.*` entry, whereas this method returns
-      #   every entry. Callers that read custom keys should filter
-      #   {Git::Configuring#config_list} instead, which returns the same hash
-      #   (shown here for the `origin` remote):
-      #
-      #     prefix = 'remote.origin.'
-      #     repo.config_list
-      #         .select { |entry| entry.key.start_with?(prefix) }
-      #         .to_h { |entry| [entry.key.delete_prefix(prefix), entry.value] }
-      #
-      # @see #remote_list
-      #
-      # @see Git::Configuring#config_list
-      #
-      def config_remote(name)
-        Git::Deprecation.warn(
-          'Git::Repository#config_remote is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#remote_list.find { |r| r.name == name } for the fields ' \
-          'Git::RemoteInfo models, or filter Git::Repository#config_list on the ' \
-          '"remote.<name>." key prefix to keep every entry.'
-        )
-        prefix = "remote.#{name}."
-        Private.config_list(@execution_context).each_with_object({}) do |(key, value), hsh|
-          hsh[key.delete_prefix(prefix)] = value if key.start_with?(prefix)
-        end
-      end
-
       # List all configured remotes as {Git::RemoteInfo} objects
       #
       # Reads the repository configuration via {Git::Configuring#config_list} and
@@ -521,36 +460,6 @@ module Git
       #
       def remote_list
         Git::Parsers::Remote.parse_list(config_list)
-      end
-
-      # Returns a {Git::Remote} object for the named remote
-      #
-      # @example Get the default 'origin' remote
-      #   repo.remote  #=> #<Git::Remote 'origin'>
-      #
-      # @example Get a named remote
-      #   repo.remote('upstream')  #=> #<Git::Remote 'upstream'>
-      #
-      # @param name [String] the remote name (defaults to `'origin'`)
-      #
-      # @return [Git::Remote] the remote object
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use `remote_list.find { |r| r.name == name }` instead
-      #
-      #   {#remote_list} returns immutable {Git::RemoteInfo} value objects
-      #   rather than {Git::Remote}. Call the corresponding {Git::Repository}
-      #   method (e.g. {#fetch}, {#remote_remove}) for operations on a remote.
-      #
-      # @see #remote_list
-      #
-      def remote(name = 'origin')
-        Git::Deprecation.warn(
-          'Git::Repository#remote is deprecated and will be removed in v6.0.0. ' \
-          'Use Git::Repository#remote_list.find { |r| r.name == name } instead.'
-        )
-        Git::Remote.new(self, name)
       end
 
       # Returns the names of all configured remotes
@@ -855,29 +764,6 @@ module Git
           normalized = opts.dup
           normalized[:fetch] = normalized.delete(:with_fetch) if normalized.key?(:with_fetch)
           normalized
-        end
-
-        # Retrieve all config entries as a flat hash
-        #
-        # Runs `git config --list` and parses each `key=value` line into a hash.
-        # When no value is present for a key, the value defaults to an empty string.
-        #
-        # @param execution_context [Git::ExecutionContext::Repository] the
-        #   execution context for the repository
-        #
-        # @return [Hash{String => String}] all visible config entries, keyed by
-        #   their full dotted key names
-        #
-        #   For example, `"remote.origin.url"` is a valid key.
-        #
-        # @api private
-        #
-        def config_list(execution_context)
-          lines = Git::Commands::ConfigOptionSyntax::List.new(execution_context).call.stdout.split("\n")
-          lines.each_with_object({}) do |line, hsh|
-            key, value = line.split('=', 2)
-            hsh[key] = value || ''
-          end
         end
       end
       private_constant :Private

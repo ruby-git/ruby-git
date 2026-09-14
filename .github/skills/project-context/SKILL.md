@@ -54,7 +54,7 @@ coding standard details, or implementation constraints.
 | `Git::Diff` | Diff operations (enumerable `DiffFile` collection) |
 | `Git::Log` | Chainable commit-history query builder |
 | `Git::BranchInfo` | Immutable branch entry returned by `Git::Repository#branch_list`; branch operations are name-based facade methods |
-| `Git::Remote` | Remote repository references |
+| `Git::RemoteInfo` | Immutable remote entry returned by `Git::Repository#remote_list`; remote operations are name-based facade methods |
 | `Git::WorktreeInfo` | Immutable worktree entry returned by `Git::Repository#worktree_list` and `#worktree_add`; worktree operations are path-based facade methods |
 | `Git::StashInfo` | Immutable stash entry returned by `Git::Repository#stash_list` and `#stash_push`; stash operations are name-based facade methods |
 

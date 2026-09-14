@@ -27,6 +27,7 @@ to update your code when upgrading from the preceding major version.
   - [Legacy stash API removed](#legacy-stash-api-removed)
   - [Legacy worktree API removed](#legacy-worktree-api-removed)
   - [`Git::Branch` and `Git::Branches` removed](#gitbranch-and-gitbranches-removed)
+  - [`Git::Remote` removed](#gitremote-removed)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -579,6 +580,33 @@ The [`Git::Branch` and `Git::Branches`
 deprecated](#gitbranch-and-gitbranches-deprecated) entry under "Upgrading to
 v5.x" maps every removed call, reader, and collection method to its replacement
 and describes the `in_branch` and `merge_into` differences in full.
+
+### `Git::Remote` removed
+
+v6.0.0 removes the remote API that v5.3.0 deprecated: `Git::Remote`,
+`Git::Repository#remote`, and `Git::Repository#config_remote`. Referencing the
+constant raises `NameError` and calling either method raises `NoMethodError`.
+Read a remote's configuration through `Git::Repository#remote_list`, which
+returns one `Git::RemoteInfo` per configured remote, and call the
+repository-level operations (`fetch`, `merge`, `branch_list`, `remote_remove`)
+with the remote name.
+
+Two differences carry over from the v5.x entry and still apply when moving to
+`remote_list`:
+
+- **Multi-value fields.** `Git::RemoteInfo#url` and `#fetch` are frozen
+  `Array<String>`, because a remote may carry more than one URL or fetch
+  refspec. `Git::Remote#url` and `#fetch_opts` returned only the last
+  configured value, so `r.url.last` and `r.fetch.last` reproduce them;
+  `r.url.first` is the URL git fetches from.
+- **Custom keys.** `Git::RemoteInfo` models only the remote variables git
+  defines. `config_remote` returned every `remote.<name>.*` entry as a flat
+  `Hash{String => String}`; code that reads custom keys filters
+  `g.config_list` on the `remote.<name>.` prefix instead, which yields the same
+  hash (the v5.x entry shows the expression).
+
+The [`Git::Remote` deprecated](#gitremote-deprecated) entry under "Upgrading to
+v5.x" maps every removed call and reader to its replacement.
 
 ---
 
