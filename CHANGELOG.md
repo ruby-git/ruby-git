@@ -5,6 +5,16 @@
 
 # Change Log
 
+## [5.6.1](https://github.com/ruby-git/ruby-git/compare/v5.6.0...v5.6.1) (2026-09-14)
+
+
+### Other Changes
+
+* **remote:** Correct the argument forms in the Git::Remote and Git::Branch entries ([cea622a](https://github.com/ruby-git/ruby-git/commit/cea622a14cce54a90c2203953a457b13b298aa22)), closes [#1852](https://github.com/ruby-git/ruby-git/issues/1852)
+* **tag:** Note that tag_create raises UnexpectedResultError in v6.0.0 ([050aa44](https://github.com/ruby-git/ruby-git/commit/050aa443136156d7ecab47ad6fb44f436d9c2b7f)), closes [#1856](https://github.com/ruby-git/ruby-git/issues/1856)
+* **worktree:** Look the new worktree up with File.identical? in the v5.x note ([0c941ec](https://github.com/ruby-git/ruby-git/commit/0c941ec34204ef5c3aeb6cf1de9e61f33212a0d9))
+* **worktree:** Note that worktree_add returns Git::WorktreeInfo in v6.0.0 ([24af07e](https://github.com/ruby-git/ruby-git/commit/24af07e24199303727d823804063732fcaa98c98)), closes [#1845](https://github.com/ruby-git/ruby-git/issues/1845)
+
 ## [5.6.0](https://github.com/ruby-git/ruby-git/compare/v5.5.0...v5.6.0) (2026-09-12)
 
 
