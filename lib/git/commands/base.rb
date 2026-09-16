@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
+require 'git/system_call_guard'
 require 'git/version'
 require 'git/version_constraint'
 
@@ -462,6 +463,9 @@ module Git
       #
       # @return [Object] the value returned by the block
       #
+      # @raise [Git::Error] if the pipe cannot be created (for example, when the
+      #   process is out of file descriptors); the `SystemCallError` is the `cause`
+      #
       # @yield [reader] the read end of the pipe
       #
       # @yieldparam reader [IO] the read end of the pipe; valid only for the
@@ -470,11 +474,11 @@ module Git
       # @yieldreturn [Object] the block's return value, which becomes the method's return value
       #
       def with_stdin(content)
-        reader, writer = IO.pipe
+        reader, writer = Git::SystemCallGuard.call('Failed to create a pipe for stdin') { IO.pipe }
         writer_thread = start_stdin_writer(content, writer)
         yield reader
       ensure
-        reader.close unless reader.closed?
+        reader.close unless reader.nil? || reader.closed?
         writer_thread&.join
       end
 
