@@ -319,11 +319,23 @@ RSpec.describe Git::Commands::Base do
       # write end itself and skip writer_thread&.join
       before { allow(Thread).to receive(:new).and_raise(ThreadError, "can't alloc thread") }
 
-      it 'raises the ThreadError and closes both ends of the pipe' do
+      it 'raises Git::Error with the thread failure message' do
+        expect { command.call('content') }.to raise_error(
+          Git::Error, "Failed to start the stdin writer thread: can't alloc thread"
+        )
+      end
+
+      it 'sets the ThreadError as the cause of the Git::Error' do
+        expect { command.call('content') }.to raise_error(Git::Error) do |error|
+          expect(error.cause).to be_a(ThreadError)
+        end
+      end
+
+      it 'closes both ends of the pipe' do
         real_reader, real_writer = IO.pipe
         allow(IO).to receive(:pipe).and_return([real_reader, real_writer])
 
-        expect { command.call('content') }.to raise_error(ThreadError, /can't alloc thread/)
+        expect { command.call('content') }.to raise_error(Git::Error, /Failed to start the stdin writer thread/)
 
         expect([real_reader, real_writer]).to all(be_closed)
       end
