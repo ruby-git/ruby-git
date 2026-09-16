@@ -5,8 +5,20 @@ module Git
 
   # Base class for all custom git module errors
   #
-  # The git gem will only raise an `ArgumentError` or an error that is a subclass of
-  # `Git::Error`. It does not explicitly raise any other types of errors.
+  # Errors the git gem raises deliberately are either `ArgumentError` or a subclass
+  # of `Git::Error`. The exceptions described below come from Ruby's standard
+  # library and are not converted.
+  #
+  # The gem's own filesystem operations, such as reading a `.git` pointer file,
+  # creating a temporary file, or changing directory, do not convert operating
+  # system errors. These can be raised as a bare `SystemCallError` (for example
+  # `Errno::ENOENT` or `Errno::EACCES`) rather than `Git::Error`. Gzip compression
+  # in `archive` can likewise raise a `Zlib::Error`. Rescue `SystemCallError` and
+  # `Zlib::Error` alongside `Git::Error` if your code needs to handle them. Any
+  # method that captures git output can also raise
+  # `Encoding::ConverterNotFoundError` when a line's detected encoding has no Ruby
+  # converter. See the "Errors raised by this gem" section of the README for the
+  # affected methods.
   #
   # It is recommended to rescue `Git::Error` to catch any runtime error raised by
   # this gem unless you need more specific error handling.

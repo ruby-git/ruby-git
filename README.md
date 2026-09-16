@@ -201,11 +201,41 @@ the full API of its result.
 
 ## Errors raised by this gem
 
-The git gem raises only `ArgumentError` or errors that subclass `Git::Error`. It
-does not explicitly raise any other types of errors.
+Errors the git gem raises deliberately are either `ArgumentError` or a subclass of
+`Git::Error`, with one exception: with the `raise` behavior described under
+[Deprecations](#deprecations), a deprecated call raises
+`ActiveSupport::DeprecationException`, which is intentionally not a `Git::Error` so a
+broad rescue cannot hide a deprecation your code opted to treat as fatal. The errors
+described below come from Ruby's standard library and are not converted.
 
-Rescue `Git::Error` to catch any runtime error raised by this gem, unless you need
-more specific error handling.
+The gem's own filesystem operations, such as reading a `.git` pointer file,
+creating a temporary file, or changing directory, do not convert operating system
+errors. These can be raised as a bare `SystemCallError` (for example `Errno::ENOENT`
+or `Errno::EACCES`) rather than `Git::Error`. Gzip compression in `archive` can
+likewise raise a `Zlib::Error`. Rescue `SystemCallError` and `Zlib::Error` alongside
+`Git::Error` if your code needs to handle them.
+
+The affected methods are `Git.open` when the `.git` file is a gitdir pointer or the
+path is relative, `Git.init`, `Git.bare`, and `Git.clone` when the path is relative,
+`Git.export`, and these `Git::Repository` methods: `#chdir`, `#with_index`,
+`#with_working`, `#with_temp_index`, `#with_temp_working`, `#set_index`,
+`#set_working`, `#cat_file_contents` in block form, `#each_conflict`, `#conflicts`,
+`#archive` (including the gzip step), `#repo_size`, and `#tag_sha` when it reads a
+loose ref.
+
+Any method that captures git output can also raise
+`Encoding::ConverterNotFoundError` when the output contains a line whose detected
+encoding, such as UTF-7, has no Ruby converter.
+
+Starting with v6.0.0, the filesystem and gzip errors are raised as `Git::Error`
+with the original error available through `cause`, except that `#tag_sha` falls
+back to `git show-ref` instead of raising. Lines with no Ruby converter are
+scrubbed instead of raising.
+
+Rescue `Git::Error` to catch the runtime errors this gem raises itself, and add
+`SystemCallError`, `Zlib::Error`, and `Encoding::ConverterNotFoundError` where the
+paragraphs above say they can escape. Rescue a more specific subclass when you need
+finer-grained handling.
 
 ```ruby
 begin
