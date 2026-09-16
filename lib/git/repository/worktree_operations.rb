@@ -101,10 +101,11 @@ module Git
       #
       # @note In v6.0.0 this method returns the new {Git::WorktreeInfo} instead of
       #   the command output. To get the entry today, look it up after the add:
-      #   `worktree_list.find { |w| w.path == File.realpath(dir) }`.
-      #   Use `File.realpath`, not `File.expand_path`: git stores worktree paths
-      #   with symlinks resolved, so `/tmp/...` on macOS is listed as
-      #   `/private/tmp/...`.
+      #   `worktree_list.find { |w| File.identical?(w.path, dir) }`.
+      #   Compare with `File.identical?`, not string equality: git stores
+      #   worktree paths with symlinks resolved, so `/tmp/...` on macOS is
+      #   listed as `/private/tmp/...`, and on case-insensitive filesystems the
+      #   listed casing may differ from `dir`.
       #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
       #
