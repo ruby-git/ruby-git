@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [4.4.6](https://github.com/ruby-git/ruby-git/compare/v4.4.5...v4.4.6) (2026-09-16)
+
+
+### Other Changes
+
+* **errors:** Document that filesystem and gzip errors can escape unconverted ([87d270f](https://github.com/ruby-git/ruby-git/commit/87d270f4f3a81c08c9727cc5106248d32b856c75)), closes [#1809](https://github.com/ruby-git/ruby-git/issues/1809)
+
 ## [4.4.5](https://github.com/ruby-git/ruby-git/compare/v4.4.4...v4.4.5) (2026-09-10)
 
 
