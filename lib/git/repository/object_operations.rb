@@ -629,7 +629,8 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      # @raise [Git::Error] if the archive file cannot be written
+      # @raise [Git::Error] if the archive file cannot be written or gzip
+      #   compression fails
       #
       # @note A failure leaves nothing behind: the staging and temporary files
       #   are removed and an existing `file` is not replaced.
@@ -919,7 +920,7 @@ module Git
       #
       # @api private
       #
-      module Private
+      module Private # rubocop:disable Metrics/ModuleLength
         module_function
 
         # Splits the variadic `*args` of {ObjectOperations#tag_create} into the
@@ -1333,16 +1334,41 @@ module Git
         #
         # @return [void]
         #
+        # @raise [Git::Error] if zlib fails during compression, with the
+        #   `Zlib::Error` as `cause`
+        #
         # @api private
         #
         def apply_gzip(file)
           gz_tmp = Tempfile.create('archive_gz', File.dirname(file)).tap(&:close).path
-          Zlib::GzipWriter.open(gz_tmp) { |gz| File.open(file, 'rb') { |f| IO.copy_stream(f, gz) } }
+          gzip_file(file, gz_tmp)
           FileUtils.rm_f(file)
           File.rename(gz_tmp, file)
         rescue StandardError
           FileUtils.rm_f(gz_tmp) if gz_tmp
           raise
+        end
+
+        # Stream `src` through a {Zlib::GzipWriter} into `dest`
+        #
+        # A `Zlib::Error` is not a `SystemCallError`, so {Git::SystemCallGuard}
+        # does not convert it; this method does, per ADR-0008.
+        #
+        # @param src [String] path to the file to compress
+        #
+        # @param dest [String] path to write the gzip stream to
+        #
+        # @return [void]
+        #
+        # @raise [Git::Error] if zlib fails during compression, with the
+        #   `Zlib::Error` as `cause`
+        #
+        # @api private
+        #
+        def gzip_file(src, dest)
+          Zlib::GzipWriter.open(dest) { |gz| File.open(src, 'rb') { |f| IO.copy_stream(f, gz) } }
+        rescue Zlib::Error => e
+          raise Git::Error, "Failed to gzip the archive: #{e.message}"
         end
       end
       private_constant :Private

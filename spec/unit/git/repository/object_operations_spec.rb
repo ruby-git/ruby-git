@@ -1037,6 +1037,24 @@ RSpec.describe Git::Repository::ObjectOperations do
         end
       end
 
+      context 'when gzip post-processing raises a Zlib::Error' do
+        before do
+          allow(Zlib::GzipWriter).to receive(:open).and_raise(Zlib::BufError, 'buffer error')
+        end
+
+        it 'raises Git::Error with the Zlib::Error as cause' do
+          expect { described_instance.archive('HEAD', nil, add_gzip: true) }
+            .to raise_error(Git::Error, /Failed to gzip the archive.*buffer error/) do |error|
+              expect(error.cause).to be_a(Zlib::BufError)
+            end
+        end
+
+        it 'removes the staging file' do
+          expect { described_instance.archive('HEAD', nil, add_gzip: true) }.to raise_error(Git::Error)
+          expect_staging_files_removed
+        end
+      end
+
       context 'when atomically renaming the staging file to the destination fails' do
         let(:tmpfile) do
           t = Tempfile.new(['archive_unit', '.zip'])

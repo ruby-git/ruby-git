@@ -17,6 +17,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git.binary_version` and `Git.ls_remote(nil)` removed](#gitbinary_version-and-gitls_remotenil-removed)
   - [`Git.clone` legacy options removed](#gitclone-legacy-options-removed)
   - [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)
+  - [Gzip failures in `archive` raised as `Git::Error`](#gzip-failures-in-archive-raised-as-giterror)
   - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
@@ -276,6 +277,13 @@ Code that already rescues `Git::Error` needs no change. A `SystemCallError` rais
 your own block inside `chdir`, `with_working`, `with_temp_index`, `with_temp_working`,
 or the block form of `cat_file_contents` still propagates unchanged, so the gem never
 relabels an error raised by your code.
+
+### Gzip failures in `archive` raised as `Git::Error`
+
+`Git::Repository#archive` with `format: 'tgz'` or `add_gzip: true` used to let a
+`Zlib::Error` subclass escape when compression failed. It now raises `Git::Error`, with
+the `Zlib::Error` available through `cause`. Code that already rescues `Git::Error`
+needs no change.
 
 ### Context helpers yield a separate repository
 
