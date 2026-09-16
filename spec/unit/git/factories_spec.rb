@@ -184,7 +184,7 @@ RSpec.describe Git::Factories do
     it 'resolves paths using the working directory for non-bare clones' do
       repository
       expect(Git::PathResolver).to(
-        have_received(:resolve_paths).with(working_directory: 'ruby-git', index: nil)
+        have_received(:resolve_paths).with(working_directory: 'ruby-git', repository: nil, index: nil)
       )
     end
 
@@ -226,7 +226,7 @@ RSpec.describe Git::Factories do
       it 'prefixes the clone directory with chdir' do
         repository
         expect(Git::PathResolver).to(
-          have_received(:resolve_paths).with(working_directory: '/output/ruby-git', index: nil)
+          have_received(:resolve_paths).with(working_directory: '/output/ruby-git', repository: nil, index: nil)
         )
       end
 
@@ -241,7 +241,7 @@ RSpec.describe Git::Factories do
         it 'uses the absolute path as-is (ignores :chdir)' do
           repository
           expect(Git::PathResolver).to(
-            have_received(:resolve_paths).with(working_directory: '/abs/path', index: nil)
+            have_received(:resolve_paths).with(working_directory: '/abs/path', repository: nil, index: nil)
           )
         end
       end
@@ -310,14 +310,14 @@ RSpec.describe Git::Factories do
 
       before do
         allow(Git::PathResolver).to receive(:resolve_paths)
-          .with(working_directory: 'ruby-git', index: '/custom/index')
+          .with(working_directory: 'ruby-git', repository: nil, index: '/custom/index')
           .and_return(resolved_with_index)
       end
 
       it 'forwards :index to path resolution' do
         repository
         expect(Git::PathResolver).to(
-          have_received(:resolve_paths).with(working_directory: 'ruby-git', index: '/custom/index')
+          have_received(:resolve_paths).with(working_directory: 'ruby-git', repository: nil, index: '/custom/index')
         )
       end
 
@@ -421,7 +421,7 @@ RSpec.describe Git::Factories do
 
       before do
         allow(Git::PathResolver).to receive(:resolve_paths)
-          .with(repository: directory, bare: true)
+          .with(repository: directory, bare: true, index: nil)
           .and_return(resolved_bare_paths)
       end
 
@@ -433,8 +433,19 @@ RSpec.describe Git::Factories do
       it 'opens the result as a bare repository' do
         repository
         expect(Git::PathResolver).to(
-          have_received(:resolve_paths).with(repository: directory, bare: true)
+          have_received(:resolve_paths).with(repository: directory, bare: true, index: nil)
         )
+      end
+
+      context 'with :index option' do
+        let(:options) { { bare: true, index: '/custom/index' } }
+
+        it 'forwards :index to path resolution' do
+          repository
+          expect(Git::PathResolver).to(
+            have_received(:resolve_paths).with(repository: directory, bare: true, index: '/custom/index')
+          )
+        end
       end
     end
 
@@ -590,7 +601,7 @@ RSpec.describe Git::Factories do
     it 'resolves the paths as a bare repository' do
       repository
       expect(Git::PathResolver).to(
-        have_received(:resolve_paths).with(repository: git_dir, bare: true)
+        have_received(:resolve_paths).with(repository: git_dir, bare: true, index: nil)
       )
     end
 
@@ -599,6 +610,17 @@ RSpec.describe Git::Factories do
       expect(Git::ExecutionContext::Repository).to(
         have_received(:from_hash).with(options.merge(resolved_paths), logger: nil)
       )
+    end
+
+    context 'with :index option' do
+      let(:options) { { index: '/custom/index' } }
+
+      it 'forwards :index to path resolution' do
+        repository
+        expect(Git::PathResolver).to(
+          have_received(:resolve_paths).with(repository: git_dir, bare: true, index: '/custom/index')
+        )
+      end
     end
   end
 end
