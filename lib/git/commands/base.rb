@@ -470,6 +470,10 @@ module Git
       # @raise [Git::Error] if the pipe cannot be created (for example, when the
       #   process is out of file descriptors); the `SystemCallError` is the `cause`
       #
+      # @raise [Git::Error] if the writer thread cannot be started (for example,
+      #   when the process cannot allocate another thread); the `ThreadError` is
+      #   the `cause`
+      #
       # @yield [reader] the read end of the pipe
       #
       # @yieldparam reader [IO] the read end of the pipe; valid only for the
@@ -499,6 +503,9 @@ module Git
       #
       # @return [Thread] thread writing content to the pipe
       #
+      # @raise [Git::Error] if the thread cannot be started; the `ThreadError` is
+      #   the `cause`
+      #
       def start_stdin_writer(content, writer)
         Thread.new do
           writer.write(content) unless content.empty?
@@ -507,6 +514,8 @@ module Git
         ensure
           writer.close unless writer.closed?
         end
+      rescue ThreadError => e
+        raise Git::Error, "Failed to start the stdin writer thread: #{e.message}"
       end
     end
   end
