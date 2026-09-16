@@ -452,6 +452,10 @@ module Git
       # Pass an empty string when the process should receive no input (e.g.
       # when `--batch-all-objects` is used and git enumerates objects itself).
       #
+      # Both ends of the pipe are closed by the time this method returns or
+      # raises, whether the failure happens in the block, in the writer thread,
+      # or before the writer thread can be started.
+      #
       # @example Feed bound object names to a git batch command
       #   bound = args_definition.bind(*args, **kwargs)
       #   stdin_content = Array(bound.object).map { |object| "#{object}\n" }.join
@@ -479,6 +483,9 @@ module Git
         yield reader
       ensure
         reader.close unless reader.nil? || reader.closed?
+        # The writer thread owns writer and closes it when it finishes. Close it
+        # here only when the thread was never started (Thread.new raised).
+        writer.close if writer_thread.nil? && !(writer.nil? || writer.closed?)
         writer_thread&.join
       end
 

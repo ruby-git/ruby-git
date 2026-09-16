@@ -315,11 +315,17 @@ RSpec.describe Git::Commands::Base do
     end
 
     context 'when Thread.new raises before writer_thread can be assigned' do
-      it 'handles nil writer_thread in ensure without raising' do
-        # Thread.new raises before writer_thread can be assigned, so writer_thread
-        # is nil in the ensure block — covers the else branch of writer_thread&.join
-        allow(Thread).to receive(:new).and_raise(ThreadError, "can't alloc thread")
-        expect { command.call('content') }.to raise_error(ThreadError)
+      # writer_thread is nil in the ensure block, so with_stdin must close the
+      # write end itself and skip writer_thread&.join
+      before { allow(Thread).to receive(:new).and_raise(ThreadError, "can't alloc thread") }
+
+      it 'raises the ThreadError and closes both ends of the pipe' do
+        real_reader, real_writer = IO.pipe
+        allow(IO).to receive(:pipe).and_return([real_reader, real_writer])
+
+        expect { command.call('content') }.to raise_error(ThreadError, /can't alloc thread/)
+
+        expect([real_reader, real_writer]).to all(be_closed)
       end
     end
 
