@@ -185,6 +185,40 @@ RSpec.describe Git, :integration do
     it 'reports a positive repository size through #repo_size' do
       expect(repository.repo_size).to be > 0
     end
+
+    context 'with :index option' do
+      subject(:repository) { Git.bare(bare_dir, index: scratch_index) }
+
+      let(:source_dir) { Dir.mktmpdir }
+      let(:scratch_dir) { Dir.mktmpdir }
+      let(:scratch_index) { File.join(scratch_dir, 'scratch.index') }
+
+      before do
+        source = init_test_repo(source_dir)
+        File.write(File.join(source_dir, 'README.md'), '# Test', mode: 'wb')
+        source.add('README.md')
+        source.commit('Initial commit')
+        source.push(bare_dir, 'main')
+      end
+
+      after do
+        FileUtils.rm_rf(source_dir)
+        FileUtils.rm_rf(scratch_dir)
+      end
+
+      it 'uses the given index path' do
+        expect(repository.index).to eq(Pathname.new(scratch_index))
+      end
+
+      it 'reads and writes trees through the given index without touching the repository index' do
+        repository.read_tree('main')
+        tree_sha = repository.write_tree
+
+        expect(tree_sha).to match(/\A\h{40,64}\z/)
+        expect(File).to exist(scratch_index)
+        expect(File).not_to exist(File.join(bare_dir, 'index'))
+      end
+    end
   end
 
   describe '.clone' do

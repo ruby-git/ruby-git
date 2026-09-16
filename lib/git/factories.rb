@@ -229,8 +229,6 @@ module Git
     # @option options [String, nil] :index custom index path for the returned
     #   repository
     #
-    #   Ignored when `:bare` is `true`.
-    #
     # @return [Git::Repository] a repository bound to the newly initialized repository
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
@@ -272,6 +270,9 @@ module Git
     #
     # @option options [String, nil] :index a non-standard path to the index file
     #
+    #   A relative path is expanded against the git directory, not the process
+    #   working directory (unlike {Git::Repository::ContextHelpers#set_index}).
+    #
     # @option options [Logger, nil] :log logger used for git operations
     #
     # @option options [String, nil, :use_global_config] :git_ssh
@@ -305,10 +306,8 @@ module Git
 
       working_dir = resolve_open_working_dir(working_dir, options) unless options[:repository]
 
-      paths = PathResolver.resolve_paths(
-        working_directory: working_dir,
-        repository: options[:repository],
-        index: options[:index]
+      paths = resolve_repository_paths(
+        working_dir, bare: false, repository: options[:repository], index: options[:index]
       )
 
       from_paths(options, paths)
@@ -319,9 +318,19 @@ module Git
     # @example Open a bare repository
     #   repository = Git.bare('/path/to/repo.git')
     #
+    # @example Bind a bare repository to a scratch index
+    #   repository = Git.bare('/srv/repo.git', index: '/tmp/scratch.index')
+    #   repository.read_tree('HEAD')
+    #   tree_sha = repository.write_tree
+    #
     # @param git_dir [String] the path to the bare repository directory
     #
     # @param options [Hash] options used to configure the repository instance
+    #
+    # @option options [String, nil] :index a non-standard path to the index file
+    #
+    #   A relative path is expanded against the git directory, not the process
+    #   working directory (unlike {Git::Repository::ContextHelpers#set_index}).
     #
     # @option options [Logger, nil] :log logger used for git operations
     #
@@ -344,7 +353,7 @@ module Git
     # @api public
     #
     def bare(git_dir, options = {})
-      paths = PathResolver.resolve_paths(repository: git_dir, bare: true)
+      paths = resolve_repository_paths(git_dir, bare: true, index: options[:index])
 
       from_paths(options, paths)
     end
@@ -422,7 +431,7 @@ module Git
       clone_dir = File.join(chdir, clone_dir) if chdir && !Pathname.new(clone_dir).absolute?
 
       bare = opts[:bare] || opts[:mirror] || cloned_bare
-      resolve_clone_paths(clone_dir, bare, context_opts[:index])
+      resolve_repository_paths(clone_dir, bare: bare, index: context_opts[:index])
     end
 
     # Build repository construction options from clone context options
@@ -590,20 +599,24 @@ module Git
       opts[:separate_git_dir] = repository_val if repository_val
     end
 
-    # Resolve paths for the cloned repository
+    # Resolve the repository, working directory, and index paths for a repository
     #
-    # @param clone_dir [String] the directory reported by `git clone`
+    # @param dir [String] the bare git directory, or the working directory of a
+    #   non-bare repository
     #
-    # @param bare [Boolean] whether the clone is bare
+    # @param bare [Boolean] whether the repository is bare
     #
     # @param index [String, nil] optional custom index path
+    #
+    # @param repository [String, nil] optional custom `.git` directory path;
+    #   ignored when `bare` is `true`
     #
     # @return [Hash{Symbol => (String, nil)}] resolved path hash
     #
     # @api private
     #
-    def resolve_clone_paths(clone_dir, bare, index)
-      args = bare ? { repository: clone_dir, bare: true } : { working_directory: clone_dir }
+    def resolve_repository_paths(dir, bare:, index:, repository: nil)
+      args = bare ? { repository: dir, bare: true } : { working_directory: dir, repository: repository }
       PathResolver.resolve_paths(**args, index: index)
     end
 
@@ -687,6 +700,9 @@ module Git
     #
     # @option options [Logger, nil] :log logger used for git operations
     #
+    # @option options [String, nil] :index custom index path for the returned
+    #   repository
+    #
     # @return [Hash{Symbol => Object}] options accepted by {.open} and {.bare}
     #
     # @api private
@@ -697,6 +713,7 @@ module Git
         binary_path: options.fetch(:binary_path, :use_global_config)
       }.tap do |open_opts|
         open_opts[:log] = options[:log] if options[:log]
+        open_opts[:index] = options[:index] if options[:index]
       end
     end
 
@@ -723,7 +740,6 @@ module Git
     #
     def worktree_open_options_after_init(options)
       base_open_options_after_init(options).tap do |open_opts|
-        open_opts[:index] = options[:index] if options[:index]
         open_opts[:repository] = options[:repository] if options[:repository]
       end
     end
