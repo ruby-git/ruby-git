@@ -333,6 +333,22 @@ RSpec.describe Git::Commands::Base do
         expect { command.call('') }.not_to raise_error
       end
     end
+
+    context 'when IO.pipe raises a SystemCallError' do
+      before { allow(IO).to receive(:pipe).and_raise(Errno::EMFILE) }
+
+      it 'raises Git::Error with the pipe failure message' do
+        expect { command.call('content') }.to raise_error(
+          Git::Error, 'Failed to create a pipe for stdin: Too many open files'
+        )
+      end
+
+      it 'sets the SystemCallError as the cause of the Git::Error' do
+        expect { command.call('content') }.to raise_error(Git::Error) do |error|
+          expect(error.cause).to be_a(Errno::EMFILE)
+        end
+      end
+    end
   end
 
   describe '#call with version validation' do
