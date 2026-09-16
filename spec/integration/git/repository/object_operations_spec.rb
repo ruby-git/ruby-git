@@ -517,6 +517,19 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         expect(described_instance.tag_list('nonexistent').first).to be_nil
       end
     end
+
+    context 'with a tag whose name starts with the UTF-7 byte-order mark and is not valid UTF-8' do
+      # rchardet names UTF-7 for this line and Ruby has no UTF-7 converter. A
+      # loose ref with this name cannot be created on every filesystem, so the
+      # tag is written to packed-refs directly.
+      before do
+        write_file('.git/packed-refs', "#{head_sha} refs/tags/+/v8-caf\xE9\n", encoding: 'ASCII-8BIT')
+      end
+
+      it 'returns the tag with the invalid byte replaced' do
+        expect(described_instance.tag_list.map(&:name)).to eq(["+/v8-caf\uFFFD"])
+      end
+    end
   end
 
   describe '#tag_create' do

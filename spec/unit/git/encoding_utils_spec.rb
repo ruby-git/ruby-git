@@ -75,5 +75,18 @@ RSpec.describe Git::EncodingUtils do
         expect(normalized.encoding.name).to eq(described_class.default_encoding)
       end
     end
+
+    context 'when CharDet names an encoding Ruby cannot convert from' do
+      # rchardet answers UTF-7 for a line that starts with the UTF-7 byte-order mark.
+      # Ruby has no converter for UTF-7, so String#encode raises
+      # Encoding::ConverterNotFoundError. Detection is deliberately not stubbed:
+      # the real answer from rchardet is what triggers the failure.
+      let(:str) { "+/v8-caf\xE9 日本\n".dup.force_encoding(Encoding::UTF_8) }
+
+      it 'replaces the invalid bytes and keeps the valid multibyte characters' do
+        expect(normalized).to eq("+/v8-caf\uFFFD 日本\n")
+        expect(normalized.encoding.name).to eq(described_class.default_encoding)
+      end
+    end
   end
 end
