@@ -10,11 +10,15 @@ module Git
   # Resolves and normalizes the filesystem paths that locate a Git repository
   #
   # `PathResolver` is the single home for the path-resolution logic used by the
-  # `Git::Repository` factory class methods ({Git::Repository.open} and
-  # {Git::Repository.bare}). It computes the absolute working-directory,
-  # repository (`.git`), and index paths from the caller-supplied values,
-  # following the same rules Git itself uses (including gitdir-pointer files for
-  # submodules and linked worktrees).
+  # `Git` factory methods ({Git.open}, {Git.bare}, {Git.init}, and {Git.clone}).
+  # It computes the absolute working-directory, repository (`.git`), and index
+  # paths from the caller-supplied values, following the same rules Git itself
+  # uses (including gitdir-pointer files for submodules and linked worktrees).
+  #
+  # A relative path given by the caller is expanded against the process working
+  # directory, as git does for a path on its command line. Only the defaults are
+  # derived from the layout: an omitted repository is `<working_directory>/.git`
+  # and an omitted index is `<repository>/index`.
   #
   # @api private
   #
@@ -50,8 +54,7 @@ module Git
     #
     def resolve_paths(working_directory: nil, repository: nil, index: nil, bare: false)
       working_dir = resolve_working_directory(working_directory, bare: bare)
-      # For bare repos, use working_directory as the default repository location
-      repo_path = resolve_repository(repository, working_dir, bare: bare, bare_default: working_directory)
+      repo_path = resolve_repository(repository, working_dir)
       index_path = resolve_index(index, repo_path)
 
       {
@@ -113,9 +116,7 @@ module Git
     #
     def execute_rev_parse_toplevel(working_dir, binary_path: :use_global_config, git_ssh: :use_global_config)
       execution_context = Git::ExecutionContext::Global.new(binary_path: binary_path, git_ssh: git_ssh)
-      expanded_dir = Git::SystemCallGuard.call('Failed to expand the working directory path') do
-        File.expand_path(working_dir)
-      end
+      expanded_dir = expand_path(working_dir, 'Failed to expand the working directory path')
 
       Git::Commands::RevParse.new(execution_context).call(show_toplevel: true, chdir: expanded_dir).stdout
     rescue Git::FailedError
@@ -139,7 +140,7 @@ module Git
     def resolve_working_directory(path, bare:)
       return nil if bare
 
-      Git::SystemCallGuard.call('Failed to resolve the working directory') { File.expand_path(path || Dir.pwd) }
+      expand_path(path, 'Failed to resolve the working directory')
     end
     private_class_method :resolve_working_directory
 
@@ -149,13 +150,9 @@ module Git
     #
     # @param path [String, nil] the repository path or `nil`
     #
-    # @param working_dir [String, nil] the working directory used for relative
-    #   path resolution
-    #
-    # @param bare [Boolean] whether this is a bare repository
-    #
-    # @param bare_default [String, nil] for bare repos, used as the default when
-    #   `path` is `nil`
+    # @param working_dir [String, nil] the working directory whose `.git` is the
+    #   default when `path` is `nil`, or `nil` for a bare repository, whose
+    #   default is the process working directory
     #
     # @return [String] the absolute path to the repository
     #
@@ -164,14 +161,13 @@ module Git
     #
     # @api private
     #
-    def resolve_repository(path, working_dir, bare:, bare_default: nil)
-      initial_path = Git::SystemCallGuard.call('Failed to resolve the repository directory') do
-        if bare
-          File.expand_path(path || bare_default || Dir.pwd)
+    def resolve_repository(path, working_dir)
+      initial_path =
+        if working_dir && path.nil?
+          File.join(working_dir, '.git')
         else
-          File.expand_path(path || '.git', working_dir)
+          expand_path(path, 'Failed to resolve the repository directory')
         end
-      end
 
       resolve_gitdir_pointer(initial_path)
     end
@@ -208,16 +204,41 @@ module Git
     #
     # @param path [String, nil] the index path or `nil`
     #
-    # @param repository [String] the repository directory used for relative
-    #   path resolution
+    # @param repository [String] the repository directory whose `index` is the
+    #   default when `path` is `nil`
     #
     # @return [String] the absolute path to the index file
+    #
+    # @raise [Git::Error] if the path cannot be expanded, which happens when the
+    #   process working directory has been removed
     #
     # @api private
     #
     def resolve_index(path, repository)
-      File.expand_path(path || 'index', repository)
+      return File.join(repository, 'index') unless path
+
+      expand_path(path, 'Failed to resolve the index file')
     end
     private_class_method :resolve_index
+
+    # Expand a path against the process working directory
+    #
+    # @param path [String, nil] the path to expand, or `nil` for the process
+    #   working directory itself
+    #
+    # @param message [String] the message of the {Git::Error} raised when the
+    #   expansion fails
+    #
+    # @return [String] the absolute path
+    #
+    # @raise [Git::Error] if the path cannot be expanded, which happens when the
+    #   process working directory has been removed
+    #
+    # @api private
+    #
+    def expand_path(path, message)
+      Git::SystemCallGuard.call(message) { File.expand_path(path || Dir.pwd) }
+    end
+    private_class_method :expand_path
   end
 end

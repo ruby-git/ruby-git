@@ -6,6 +6,7 @@ require 'git/execution_context/global'
 require 'git/execution_context/repository'
 require 'git/path_resolver'
 require 'git/repository'
+require 'git/system_call_guard'
 require 'pathname'
 
 module Git
@@ -17,7 +18,7 @@ module Git
   #
   # @api private
   #
-  module Factories
+  module Factories # rubocop:disable Metrics/ModuleLength
     # Clone a repository into a new directory
     #
     # @example Clone into the default directory
@@ -153,6 +154,9 @@ module Git
     #
     # @option options [String, nil] :index a non-standard path to the index file
     #
+    #   A relative path is expanded against `:chdir` when given, like
+    #   `directory`, and against the process working directory otherwise.
+    #
     # @option options [String, Pathname, nil] :chdir run `git clone` from within
     #   this directory
     #
@@ -162,6 +166,9 @@ module Git
     # @raise [ArgumentError] if unsupported options are provided
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    # @raise [Git::Error] if a filesystem call made while resolving the paths
+    #   fails
     #
     # @raise [Git::UnexpectedResultError] if the cloned directory cannot be
     #   determined from git's output
@@ -208,7 +215,9 @@ module Git
     #
     # @option options [String, nil] :repository path for the `.git` directory
     #
-    #   Writes a gitfile in the working tree. Alias: `:separate_git_dir`.
+    #   Writes a gitfile in the working tree. Alias: `:separate_git_dir`. A
+    #   relative path is expanded against the process working directory, as
+    #   `git init --separate-git-dir` does.
     #
     # @option options [String, nil] :separate_git_dir alias for `:repository`
     #
@@ -229,9 +238,14 @@ module Git
     # @option options [String, nil] :index custom index path for the returned
     #   repository
     #
+    #   A relative path is expanded against the process working directory.
+    #
     # @return [Git::Repository] a repository bound to the newly initialized repository
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    # @raise [Git::Error] if a filesystem call made while resolving the paths
+    #   fails
     #
     # @note If git exits non-zero after it starts writing, whatever it wrote is
     #   left in place: `directory` when git created it, and a git directory
@@ -266,12 +280,12 @@ module Git
     #   `.git` directory
     #
     #   When given, `working_dir` is used as-is (the working tree root is not
-    #   auto-detected).
+    #   auto-detected). A relative path is expanded against the process working
+    #   directory, not against `working_dir`.
     #
     # @option options [String, nil] :index a non-standard path to the index file
     #
-    #   A relative path is expanded against the git directory, not the process
-    #   working directory (unlike {Git::Repository::ContextHelpers#set_index}).
+    #   A relative path is expanded against the process working directory.
     #
     # @option options [Logger, nil] :log logger used for git operations
     #
@@ -329,8 +343,7 @@ module Git
     #
     # @option options [String, nil] :index a non-standard path to the index file
     #
-    #   A relative path is expanded against the git directory, not the process
-    #   working directory (unlike {Git::Repository::ContextHelpers#set_index}).
+    #   A relative path is expanded against the process working directory.
     #
     # @option options [Logger, nil] :log logger used for git operations
     #
@@ -423,15 +436,59 @@ module Git
     #
     # @raise [Git::UnexpectedResultError] if the clone directory cannot be parsed
     #
+    # @raise [Git::Error] if the index path cannot be expanded against `:chdir`
+    #
     # @api private
     #
     def resolve_paths_from_clone_result(clone_result, opts, context_opts)
       clone_dir, cloned_bare = parse_clone_stderr(clone_result.stderr)
       chdir = opts[:chdir]
-      clone_dir = File.join(chdir, clone_dir) if chdir && !Pathname.new(clone_dir).absolute?
+      clone_dir = prefix_with_chdir(clone_dir, chdir)
+      index = expand_against_chdir(context_opts[:index], chdir)
 
       bare = opts[:bare] || opts[:mirror] || cloned_bare
-      resolve_repository_paths(clone_dir, bare: bare, index: context_opts[:index])
+      resolve_repository_paths(clone_dir, bare: bare, index: index)
+    end
+
+    # Join the relative clone directory git reported onto the `:chdir` it ran in
+    #
+    # The directory is joined, not expanded, because git created it as given:
+    # git does not expand `~` in a path on its command line.
+    #
+    # @param path [String] the clone directory reported by `git clone`
+    #
+    # @param chdir [String, Pathname, nil] the directory git ran in, or `nil`
+    #
+    # @return [String] `path` prefixed with `chdir` when `chdir` is given and
+    #   `path` is relative; otherwise `path` unchanged
+    #
+    def prefix_with_chdir(path, chdir)
+      return path if chdir.nil? || Pathname.new(path).absolute?
+
+      File.join(chdir, path)
+    end
+
+    # Expand the `:index` option of {.clone} against the `:chdir` git ran in
+    #
+    # Unlike the clone directory, the index is never given to git, so it follows
+    # Ruby's `File.expand_path` rules: an absolute path is unchanged, `~` is the
+    # home directory, and a relative path is joined onto `chdir`.
+    #
+    # @param path [String, nil] the index path, or `nil` when not given
+    #
+    # @param chdir [String, Pathname, nil] the directory git ran in, or `nil` to
+    #   leave the expansion to {Git::PathResolver}
+    #
+    # @return [String, nil] the expanded path, or `path` unchanged when either
+    #   argument is `nil`
+    #
+    # @raise [Git::Error] if the path cannot be expanded, which happens when
+    #   `chdir` is relative and the process working directory has been removed
+    #
+    def expand_against_chdir(path, chdir)
+      return path if path.nil? || chdir.nil?
+
+      Git::SystemCallGuard.call('Failed to resolve the index file') { File.expand_path(path, chdir) }
     end
 
     # Build repository construction options from clone context options
