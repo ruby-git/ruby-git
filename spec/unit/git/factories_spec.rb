@@ -235,6 +235,60 @@ RSpec.describe Git::Factories do
         expect(clone_command).to have_received(:call).with(repository_url, nil, chdir: '/output')
       end
 
+      context 'with a relative :index option' do
+        let(:options) { { chdir: '/output', index: 'scratch.index' } }
+
+        it 'expands the index against chdir' do
+          repository
+          expect(Git::PathResolver).to(
+            have_received(:resolve_paths).with(
+              working_directory: '/output/ruby-git',
+              repository: nil,
+              index: File.expand_path('scratch.index', '/output')
+            )
+          )
+        end
+      end
+
+      context 'with an absolute :index option' do
+        let(:options) { { chdir: '/output', index: '/abs/scratch.index' } }
+
+        it 'ignores :chdir' do
+          repository
+          expect(Git::PathResolver).to(
+            have_received(:resolve_paths).with(
+              working_directory: '/output/ruby-git', repository: nil, index: File.expand_path('/abs/scratch.index')
+            )
+          )
+        end
+      end
+
+      context 'with a ~-prefixed :index option' do
+        let(:options) { { chdir: '/output', index: '~/scratch.index' } }
+
+        it 'expands ~ to the home directory instead of joining it onto :chdir' do
+          repository
+          expect(Git::PathResolver).to(
+            have_received(:resolve_paths).with(
+              working_directory: '/output/ruby-git', repository: nil, index: File.join(Dir.home, 'scratch.index')
+            )
+          )
+        end
+      end
+
+      context 'when the :index option cannot be expanded' do
+        let(:options) { { chdir: 'output', index: 'scratch.index' } }
+
+        before do
+          allow(File).to receive(:expand_path).and_call_original
+          allow(File).to receive(:expand_path).with('scratch.index', 'output').and_raise(Errno::ENOENT)
+        end
+
+        it 'raises Git::Error' do
+          expect { repository }.to raise_error(Git::Error, /Failed to resolve the index file/)
+        end
+      end
+
       context 'when the reported clone directory is absolute' do
         let(:clone_stderr) { "Cloning into '/abs/path'...\n" }
 

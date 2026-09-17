@@ -367,6 +367,15 @@ RSpec.describe Git, :integration do
       end
     end
 
+    context 'with a relative :repository option' do
+      subject(:repository) { Dir.chdir(init_dir) { Git.init('worktree', repository: 'separate.git') } }
+
+      it 'sets #repo to the directory git created relative to the process working directory' do
+        expect(repository.repo).to eq(Pathname.new(File.join(File.realpath(init_dir), 'separate.git')))
+        expect(repository.repo.directory?).to be(true)
+      end
+    end
+
     context 'with :initial_branch option' do
       subject(:repository) { Git.init(init_dir, initial_branch: 'trunk') }
 

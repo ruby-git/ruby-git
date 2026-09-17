@@ -51,6 +51,51 @@ RSpec.describe Git::PathResolver do
       end
     end
 
+    context 'with a relative path' do
+      around { |example| Dir.chdir(Dir.tmpdir) { example.run } }
+
+      context 'for the index' do
+        let(:args) { { working_directory: '/repo', index: 'scratch.index' } }
+
+        it 'expands the index against the process working directory' do
+          expect(paths[:index]).to eq(File.join(Dir.pwd, 'scratch.index'))
+        end
+      end
+
+      context 'for the repository' do
+        let(:args) { { working_directory: '/repo', repository: 'sep.git' } }
+
+        it 'expands the repository against the process working directory' do
+          expect(paths[:repository]).to eq(File.join(Dir.pwd, 'sep.git'))
+        end
+      end
+    end
+
+    shared_examples 'a relative path that cannot be expanded' do |option, path, message|
+      let(:args) { { working_directory: '/repo', option => path } }
+
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with(path).and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error with the system error as cause' do
+        expect { paths }.to raise_error(Git::Error, /#{message}/) do |error|
+          expect(error.cause).to be_a(Errno::ENOENT)
+        end
+      end
+    end
+
+    context 'when the working directory has been removed and the index path is relative' do
+      it_behaves_like 'a relative path that cannot be expanded',
+                      :index, 'scratch.index', 'Failed to resolve the index file'
+    end
+
+    context 'when the working directory has been removed and the repository path is relative' do
+      it_behaves_like 'a relative path that cannot be expanded',
+                      :repository, 'sep.git', 'Failed to resolve the repository directory'
+    end
+
     context 'when the repository is bare' do
       let(:args) { { repository: '/repo.git', bare: true } }
 

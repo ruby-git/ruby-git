@@ -18,6 +18,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git.clone` legacy options removed](#gitclone-legacy-options-removed)
   - [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)
   - [Gzip failures in `archive` raised as `Git::Error`](#gzip-failures-in-archive-raised-as-giterror)
+  - [Relative `:repository` and `:index` paths](#relative-repository-and-index-paths)
   - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
@@ -284,6 +285,30 @@ relabels an error raised by your code.
 `Zlib::Error` subclass escape when compression failed. It now raises `Git::Error`, with
 the `Zlib::Error` available through `cause`. Code that already rescues `Git::Error`
 needs no change.
+
+### Relative `:repository` and `:index` paths
+
+A relative `:repository` option of `Git.open` or `Git.init`, and a relative `:index`
+option of `Git.open`, `Git.init`, or `Git.clone`, is now expanded against the process
+working directory, the same way the positional directory argument, `set_index`, and
+`set_working` treat a relative path. A relative `:repository` used to be expanded
+against the working directory, and a relative `:index` against the git directory.
+For `Git.clone` with the `:chdir` option, a relative `:index` is expanded against
+`:chdir` instead, like the clone directory itself.
+
+Omitted options resolve as before: `:repository` defaults to `<working_dir>/.git` and
+`:index` to `<git_dir>/index`. Absolute paths are unaffected. The `:repository`
+option of `Git.clone` is unchanged: git resolves it, so it stays relative to the
+directory git runs in.
+
+```ruby
+# v5.x: the index is bound to /path/to/repo/.git/scratch.index
+repo = Git.open('/path/to/repo', index: 'scratch.index')
+
+# v6.x: the index is bound to scratch.index in the process working directory.
+# Join the path yourself to keep the v5.x location.
+repo = Git.open('/path/to/repo', index: '/path/to/repo/.git/scratch.index')
+```
 
 ### Context helpers yield a separate repository
 
