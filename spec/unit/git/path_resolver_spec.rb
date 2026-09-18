@@ -354,4 +354,78 @@ RSpec.describe Git::PathResolver do
       end
     end
   end
+
+  describe '.expand_path' do
+    subject(:expanded) { described_class.expand_path(path, 'Failed to resolve the directory', base: base) }
+
+    let(:base) { nil }
+
+    context 'with a relative path and no base' do
+      let(:path) { 'scratch' }
+
+      it 'expands the path against the process working directory' do
+        expect(expanded).to eq(File.join(Dir.pwd, 'scratch'))
+      end
+    end
+
+    context 'with a relative path and a base' do
+      let(:path) { 'scratch' }
+      let(:base) { '/output' }
+
+      it 'expands the path against the base' do
+        expect(expanded).to eq(File.expand_path('/output/scratch'))
+      end
+    end
+
+    context 'with an absolute path and a base' do
+      let(:path) { '/abs/scratch' }
+      let(:base) { '/output' }
+
+      it 'ignores the base' do
+        expect(expanded).to eq(File.expand_path('/abs/scratch'))
+      end
+    end
+
+    context 'with a nil path and a base' do
+      let(:path) { nil }
+      let(:base) { '/output' }
+
+      it 'returns the process working directory instead of the base' do
+        expect(expanded).to eq(Dir.pwd)
+      end
+    end
+
+    context 'with a ~user path for a user that does not exist' do
+      let(:path) { '~no-such-user-for-ruby-git/scratch' }
+
+      it 'raises ArgumentError' do
+        expect { expanded }.to raise_error(ArgumentError, /user no-such-user-for-ruby-git/)
+      end
+    end
+
+    context 'with a ~-prefixed path and a base' do
+      let(:path) { '~/scratch' }
+      let(:base) { '/output' }
+
+      it 'expands ~ to the home directory instead of joining it onto the base' do
+        expect(expanded).to eq(File.join(Dir.home, 'scratch'))
+      end
+    end
+
+    context 'when the path cannot be expanded' do
+      let(:path) { 'scratch' }
+      let(:base) { 'output' }
+
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('scratch', 'output').and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error with the given message and the system error as cause' do
+        expect { expanded }.to raise_error(Git::Error, /Failed to resolve the directory/) do |error|
+          expect(error.cause).to be_a(Errno::ENOENT)
+        end
+      end
+    end
+  end
 end
