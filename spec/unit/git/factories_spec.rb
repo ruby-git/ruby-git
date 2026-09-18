@@ -134,6 +134,20 @@ RSpec.describe Git::Factories do
         expect { repository }.to raise_error(ArgumentError, /is not a directory/)
       end
     end
+
+    context 'when an unknown option key is given' do
+      let(:options) { { bogus: 1, respository: '/x' } }
+
+      it 'raises ArgumentError naming the unknown keys' do
+        expect { repository }.to raise_error(ArgumentError, 'Unknown options: bogus, respository')
+      end
+
+      it 'raises before touching the filesystem' do
+        allow(Dir).to receive(:exist?).with(working_dir).and_return(false)
+        expect { repository }.to raise_error(ArgumentError, /Unknown options/)
+        expect(Dir).not_to have_received(:exist?)
+      end
+    end
   end
 
   describe '.clone' do
@@ -632,6 +646,31 @@ RSpec.describe Git::Factories do
         repository
       end
     end
+
+    context 'with every supported option' do
+      let(:every_option) do
+        {
+          initial_branch: 'main', repository: '/custom/git', index: '/custom/index',
+          log: instance_double(Logger), git_ssh: '/custom/ssh', binary_path: '/custom/git-bin'
+        }
+      end
+
+      context 'when opening a worktree' do
+        let(:options) { every_option }
+
+        it 'opens without raising' do
+          expect(repository).to be_a(Git::Repository)
+        end
+      end
+
+      context 'when opening a bare repository' do
+        let(:options) { every_option.merge(bare: true) }
+
+        it 'opens without raising' do
+          expect(repository).to be_a(Git::Repository)
+        end
+      end
+    end
   end
 
   describe '.bare' do
@@ -674,6 +713,19 @@ RSpec.describe Git::Factories do
         expect(Git::PathResolver).to(
           have_received(:resolve_paths).with(repository: git_dir, bare: true, index: '/custom/index')
         )
+      end
+    end
+
+    context 'when an unknown option key is given' do
+      let(:options) { { bogus: 1, repository: '/x' } }
+
+      it 'raises ArgumentError naming the unknown keys' do
+        expect { repository }.to raise_error(ArgumentError, 'Unknown options: bogus, repository')
+      end
+
+      it 'raises before resolving any path' do
+        expect { repository }.to raise_error(ArgumentError, /Unknown options/)
+        expect(Git::PathResolver).not_to have_received(:resolve_paths)
       end
     end
   end
