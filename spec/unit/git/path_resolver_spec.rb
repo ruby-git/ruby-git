@@ -77,7 +77,7 @@ RSpec.describe Git::PathResolver do
 
       before do
         allow(File).to receive(:expand_path).and_call_original
-        allow(File).to receive(:expand_path).with(path).and_raise(Errno::ENOENT, 'getcwd')
+        allow(File).to receive(:expand_path).with(path, nil).and_raise(Errno::ENOENT, 'getcwd')
       end
 
       it 'raises Git::Error with the system error as cause' do
@@ -185,7 +185,10 @@ RSpec.describe Git::PathResolver do
     context 'when the working directory has been removed' do
       let(:args) { {} }
 
-      before { allow(Dir).to receive(:pwd).and_raise(Errno::ENOENT, 'getcwd') }
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('.', nil).and_raise(Errno::ENOENT, 'getcwd')
+      end
 
       it 'raises Git::Error with the system error as cause' do
         expect { paths }.to raise_error(Git::Error, /Failed to resolve the working directory/) do |error|
@@ -197,7 +200,10 @@ RSpec.describe Git::PathResolver do
     context 'when the bare repository path cannot be expanded' do
       let(:args) { { bare: true } }
 
-      before { allow(Dir).to receive(:pwd).and_raise(Errno::ENOENT, 'getcwd') }
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('.', nil).and_raise(Errno::ENOENT, 'getcwd')
+      end
 
       it 'raises Git::Error with the system error as cause' do
         expect { paths }.to raise_error(Git::Error, /Failed to resolve the repository directory/) do |error|
@@ -335,7 +341,7 @@ RSpec.describe Git::PathResolver do
       before do
         # A relative path is expanded against Dir.pwd, which fails when the
         # process working directory has been removed.
-        allow(File).to receive(:expand_path).with(working_dir).and_raise(Errno::ENOENT, 'getcwd')
+        allow(File).to receive(:expand_path).with(working_dir, nil).and_raise(Errno::ENOENT, 'getcwd')
       end
 
       it 'raises Git::Error with the system error as cause' do
@@ -353,6 +359,82 @@ RSpec.describe Git::PathResolver do
 
       it 'raises ArgumentError indicating the directory is not in a working tree' do
         expect { root }.to raise_error(ArgumentError, /is not in a git working tree/)
+      end
+    end
+  end
+
+  describe '.expand_path' do
+    subject(:expanded) { described_class.expand_path(path, 'Failed to resolve the directory', base: base) }
+
+    let(:base) { nil }
+
+    context 'with a relative path and no base' do
+      let(:path) { 'scratch' }
+
+      it 'expands the path against the process working directory' do
+        expect(expanded).to eq(File.join(Dir.pwd, 'scratch'))
+      end
+    end
+
+    context 'with a relative path and a base' do
+      let(:path) { 'scratch' }
+      let(:base) { '/output' }
+
+      it 'expands the path against the base' do
+        expect(expanded).to eq(File.expand_path('/output/scratch'))
+      end
+    end
+
+    context 'with an absolute path and a base' do
+      let(:path) { '/abs/scratch' }
+      let(:base) { '/output' }
+
+      it 'ignores the base' do
+        expect(expanded).to eq(File.expand_path('/abs/scratch'))
+      end
+    end
+
+    context 'with a nil path and a base' do
+      let(:path) { nil }
+      let(:base) { '/output' }
+
+      it 'returns the base' do
+        expect(expanded).to eq(File.expand_path('/output'))
+      end
+    end
+
+    context 'with a ~user path for a user that does not exist' do
+      let(:path) { '~no-such-user-for-ruby-git/scratch' }
+
+      it 'raises ArgumentError' do
+        expect { expanded }.to raise_error(ArgumentError, /user no-such-user-for-ruby-git/)
+      end
+    end
+
+    context 'with a ~-prefixed path and a base' do
+      include_context 'with a temporary home directory'
+
+      let(:path) { '~/scratch' }
+      let(:base) { '/output' }
+
+      it 'expands ~ to the home directory instead of joining it onto the base' do
+        expect(expanded).to eq(File.join(home_dir, 'scratch'))
+      end
+    end
+
+    context 'when the path cannot be expanded' do
+      let(:path) { 'scratch' }
+      let(:base) { 'output' }
+
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('scratch', 'output').and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error with the given message and the system error as cause' do
+        expect { expanded }.to raise_error(Git::Error, /Failed to resolve the directory/) do |error|
+          expect(error.cause).to be_a(Errno::ENOENT)
+        end
       end
     end
   end

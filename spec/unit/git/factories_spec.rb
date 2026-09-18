@@ -11,7 +11,7 @@ RSpec.describe Git::Factories do
   describe '.open' do
     subject(:repository) { host.open(working_dir, options) }
 
-    let(:working_dir) { '/repo' }
+    let(:working_dir) { File.expand_path('/repo') }
     let(:options) { {} }
     let(:resolved_paths) do
       { working_directory: '/repo', repository: '/repo/.git', index: '/repo/.git/index' }
@@ -134,6 +134,55 @@ RSpec.describe Git::Factories do
         expect { repository }.to raise_error(ArgumentError, /is not a directory/)
       end
     end
+
+    context 'with a relative working directory' do
+      let(:working_dir) { 'repo' }
+      let(:expanded_dir) { File.expand_path('repo') }
+
+      before do
+        allow(Dir).to receive(:exist?).with(expanded_dir).and_return(true)
+        allow(Git::PathResolver).to(
+          receive(:root_of_worktree).with(expanded_dir, any_args).and_return(expanded_dir)
+        )
+      end
+
+      it 'checks and detects the root from the path expanded against the process working directory' do
+        repository
+        expect(Git::PathResolver).to have_received(:root_of_worktree).with(expanded_dir, any_args)
+      end
+    end
+
+    context 'with a ~-prefixed working directory' do
+      include_context 'with a temporary home directory'
+
+      let(:working_dir) { '~/repo' }
+      let(:expanded_dir) { File.join(home_dir, 'repo') }
+
+      before do
+        allow(Dir).to receive(:exist?).with(expanded_dir).and_return(true)
+        allow(Git::PathResolver).to(
+          receive(:root_of_worktree).with(expanded_dir, any_args).and_return(expanded_dir)
+        )
+      end
+
+      it 'checks and detects the root from the path with ~ expanded to the home directory' do
+        repository
+        expect(Git::PathResolver).to have_received(:root_of_worktree).with(expanded_dir, any_args)
+      end
+    end
+
+    context 'when the working directory cannot be expanded' do
+      let(:working_dir) { 'repo' }
+
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('repo', nil).and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error' do
+        expect { repository }.to raise_error(Git::Error, /Failed to resolve the working directory/)
+      end
+    end
   end
 
   describe '.clone' do
@@ -142,6 +191,9 @@ RSpec.describe Git::Factories do
     let(:repository_url) { 'https://github.com/ruby-git/ruby-git.git' }
     let(:directory) { nil }
     let(:options) { {} }
+    let(:custom_index) { File.expand_path('/custom/index') }
+    let(:custom_repository) { File.expand_path('/custom/.git') }
+    let(:expanded_chdir) { File.expand_path('/output') }
     let(:clone_command) { instance_double(Git::Commands::Clone) }
     let(:global_context) { instance_double(Git::ExecutionContext::Global) }
     let(:clone_stderr) { "Cloning into 'ruby-git'...\n" }
@@ -175,9 +227,42 @@ RSpec.describe Git::Factories do
     context 'when a directory argument is given' do
       let(:directory) { 'my-repo' }
 
-      it 'forwards the directory to Commands::Clone#call' do
+      it 'forwards the directory to Commands::Clone#call expanded against the process working directory' do
         repository
-        expect(clone_command).to have_received(:call).with(repository_url, 'my-repo')
+        expect(clone_command).to have_received(:call).with(repository_url, File.join(Dir.pwd, 'my-repo'))
+      end
+    end
+
+    context 'when a ~-prefixed directory argument is given' do
+      include_context 'with a temporary home directory'
+
+      let(:directory) { '~/my-repo' }
+
+      it 'forwards the directory to Commands::Clone#call with ~ expanded to the home directory' do
+        repository
+        expect(clone_command).to have_received(:call).with(repository_url, File.join(home_dir, 'my-repo'))
+      end
+    end
+
+    context 'when the directory argument cannot be expanded' do
+      let(:directory) { 'my-repo' }
+
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('my-repo', nil).and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error before running git' do
+        expect { repository }.to raise_error(Git::Error, /Failed to resolve the working directory/)
+        expect(clone_command).not_to have_received(:call)
+      end
+
+      context 'when :bare is given' do
+        let(:options) { { bare: true } }
+
+        it 'raises Git::Error naming the repository directory' do
+          expect { repository }.to raise_error(Git::Error, /Failed to resolve the repository directory/)
+        end
       end
     end
 
@@ -193,6 +278,46 @@ RSpec.describe Git::Factories do
 
       it 'raises Git::UnexpectedResultError' do
         expect { repository }.to raise_error(Git::UnexpectedResultError, /Unable to determine clone directory/)
+      end
+    end
+
+    context 'when a directory is given' do
+      let(:directory) { 'dest' }
+
+      context 'when :chdir contains a newline' do
+        let(:options) { { chdir: "/out\nput" } }
+        let(:expanded_dir) { File.expand_path('dest', "/out\nput") }
+        let(:clone_stderr) { "Cloning into '#{expanded_dir}'...\ndone.\n" }
+
+        it 'resolves paths from the expanded directory instead of parsing it from stderr' do
+          repository
+          expect(Git::PathResolver).to(
+            have_received(:resolve_paths).with(working_directory: expanded_dir, repository: nil, index: nil)
+          )
+        end
+
+        context 'when :bare is given' do
+          let(:options) { { bare: true, chdir: "/out\nput" } }
+          let(:clone_stderr) { "Cloning into bare repository '#{expanded_dir}'...\ndone.\n" }
+
+          it 'resolves paths as a bare repository at the expanded directory' do
+            repository
+            expect(Git::PathResolver).to(
+              have_received(:resolve_paths).with(repository: expanded_dir, bare: true, index: nil)
+            )
+          end
+        end
+      end
+
+      context 'when the clone stderr cannot be parsed' do
+        let(:clone_stderr) { "fatal: repository 'bogus' does not exist\n" }
+
+        it 'resolves paths from the expanded directory without raising' do
+          repository
+          expect(Git::PathResolver).to(
+            have_received(:resolve_paths).with(working_directory: File.expand_path('dest'), repository: nil, index: nil)
+          )
+        end
       end
     end
 
@@ -226,13 +351,94 @@ RSpec.describe Git::Factories do
       it 'prefixes the clone directory with chdir' do
         repository
         expect(Git::PathResolver).to(
-          have_received(:resolve_paths).with(working_directory: '/output/ruby-git', repository: nil, index: nil)
+          have_received(:resolve_paths).with(
+            working_directory: File.join(expanded_chdir, 'ruby-git'), repository: nil, index: nil
+          )
         )
       end
 
       it 'forwards :chdir to Commands::Clone' do
         repository
-        expect(clone_command).to have_received(:call).with(repository_url, nil, chdir: '/output')
+        expect(clone_command).to have_received(:call).with(repository_url, nil, chdir: expanded_chdir)
+      end
+
+      context 'with a relative :chdir' do
+        let(:options) { { chdir: 'output' } }
+
+        it 'forwards :chdir to Commands::Clone expanded against the process working directory' do
+          repository
+          expect(clone_command).to have_received(:call).with(repository_url, nil, chdir: File.expand_path('output'))
+        end
+      end
+
+      context 'with a ~-prefixed :chdir' do
+        include_context 'with a temporary home directory'
+
+        let(:options) { { chdir: '~/output' } }
+        let(:directory) { 'my-repo' }
+
+        it 'forwards :chdir to Commands::Clone with ~ expanded' do
+          repository
+          expect(clone_command).to(
+            have_received(:call)
+              .with(repository_url, File.join(home_dir, 'output', 'my-repo'), chdir: File.join(home_dir, 'output'))
+          )
+        end
+
+        it 'resolves paths from the directory expanded against the expanded :chdir' do
+          repository
+          expect(Git::PathResolver).to(
+            have_received(:resolve_paths)
+              .with(working_directory: File.join(home_dir, 'output', 'my-repo'), repository: nil, index: nil)
+          )
+        end
+      end
+
+      context 'when :chdir cannot be expanded' do
+        let(:options) { { chdir: 'output' } }
+
+        before do
+          allow(File).to receive(:expand_path).and_call_original
+          allow(File).to receive(:expand_path).with('output', nil).and_raise(Errno::ENOENT)
+        end
+
+        it 'raises Git::Error before git runs' do
+          expect { repository }.to raise_error(Git::Error, /Failed to resolve the chdir directory/)
+          expect(clone_command).not_to have_received(:call)
+        end
+      end
+
+      context 'with a :chdir that begins with ~user for a user that does not exist' do
+        let(:options) { { chdir: '~no-such-user-for-ruby-git/output' } }
+
+        it 'raises ArgumentError before git runs' do
+          expect { repository }.to raise_error(ArgumentError)
+          expect(clone_command).not_to have_received(:call)
+        end
+      end
+
+      context 'with a relative directory argument' do
+        let(:directory) { 'my-repo' }
+
+        it 'forwards the directory to Commands::Clone#call expanded against :chdir' do
+          repository
+          expect(clone_command).to(
+            have_received(:call).with(repository_url, File.expand_path('my-repo', '/output'), chdir: expanded_chdir)
+          )
+        end
+      end
+
+      context 'with a ~-prefixed directory argument' do
+        include_context 'with a temporary home directory'
+
+        let(:directory) { '~/my-repo' }
+
+        it 'forwards the directory to Commands::Clone#call with ~ expanded instead of joined onto :chdir' do
+          repository
+          expect(clone_command).to(
+            have_received(:call).with(repository_url, File.join(home_dir, 'my-repo'), chdir: expanded_chdir)
+          )
+        end
       end
 
       context 'with a relative :index option' do
@@ -242,7 +448,7 @@ RSpec.describe Git::Factories do
           repository
           expect(Git::PathResolver).to(
             have_received(:resolve_paths).with(
-              working_directory: '/output/ruby-git',
+              working_directory: File.join(expanded_chdir, 'ruby-git'),
               repository: nil,
               index: File.expand_path('scratch.index', '/output')
             )
@@ -257,35 +463,51 @@ RSpec.describe Git::Factories do
           repository
           expect(Git::PathResolver).to(
             have_received(:resolve_paths).with(
-              working_directory: '/output/ruby-git', repository: nil, index: File.expand_path('/abs/scratch.index')
+              working_directory: File.join(expanded_chdir, 'ruby-git'),
+              repository: nil,
+              index: File.expand_path('/abs/scratch.index')
             )
           )
         end
       end
 
       context 'with a ~-prefixed :index option' do
+        include_context 'with a temporary home directory'
+
         let(:options) { { chdir: '/output', index: '~/scratch.index' } }
 
         it 'expands ~ to the home directory instead of joining it onto :chdir' do
           repository
           expect(Git::PathResolver).to(
             have_received(:resolve_paths).with(
-              working_directory: '/output/ruby-git', repository: nil, index: File.join(Dir.home, 'scratch.index')
+              working_directory: File.join(expanded_chdir, 'ruby-git'),
+              repository: nil,
+              index: File.join(home_dir, 'scratch.index')
             )
           )
         end
       end
 
       context 'when the :index option cannot be expanded' do
-        let(:options) { { chdir: 'output', index: 'scratch.index' } }
+        let(:options) { { chdir: '/output', index: 'scratch.index' } }
 
         before do
           allow(File).to receive(:expand_path).and_call_original
-          allow(File).to receive(:expand_path).with('scratch.index', 'output').and_raise(Errno::ENOENT)
+          allow(File).to receive(:expand_path).with('scratch.index', expanded_chdir).and_raise(Errno::ENOENT)
         end
 
-        it 'raises Git::Error' do
+        it 'raises Git::Error before git runs' do
           expect { repository }.to raise_error(Git::Error, /Failed to resolve the index file/)
+          expect(clone_command).not_to have_received(:call)
+        end
+      end
+
+      context 'with an :index option that begins with ~user for a user that does not exist' do
+        let(:options) { { chdir: '/output', index: '~no-such-user-for-ruby-git/scratch.index' } }
+
+        it 'raises ArgumentError before git runs' do
+          expect { repository }.to raise_error(ArgumentError)
+          expect(clone_command).not_to have_received(:call)
         end
       end
 
@@ -357,21 +579,21 @@ RSpec.describe Git::Factories do
     end
 
     context 'with :index option' do
-      let(:options) { { index: '/custom/index' } }
+      let(:options) { { index: custom_index } }
       let(:resolved_with_index) do
-        { working_directory: 'ruby-git', repository: 'ruby-git/.git', index: '/custom/index' }
+        { working_directory: 'ruby-git', repository: 'ruby-git/.git', index: custom_index }
       end
 
       before do
         allow(Git::PathResolver).to receive(:resolve_paths)
-          .with(working_directory: 'ruby-git', repository: nil, index: '/custom/index')
+          .with(working_directory: 'ruby-git', repository: nil, index: custom_index)
           .and_return(resolved_with_index)
       end
 
       it 'forwards :index to path resolution' do
         repository
         expect(Git::PathResolver).to(
-          have_received(:resolve_paths).with(working_directory: 'ruby-git', repository: nil, index: '/custom/index')
+          have_received(:resolve_paths).with(working_directory: 'ruby-git', repository: nil, index: custom_index)
         )
       end
 
@@ -382,11 +604,59 @@ RSpec.describe Git::Factories do
     end
 
     context 'with :repository option' do
-      let(:options) { { repository: '/custom/.git' } }
+      let(:options) { { repository: custom_repository } }
 
       it 'maps :repository to :separate_git_dir for Commands::Clone' do
         repository
-        expect(clone_command).to have_received(:call).with(repository_url, nil, separate_git_dir: '/custom/.git')
+        expect(clone_command).to have_received(:call).with(repository_url, nil, separate_git_dir: custom_repository)
+      end
+    end
+
+    context 'with a relative :repository option' do
+      let(:options) { { repository: 'custom.git' } }
+
+      it 'expands :repository against the process working directory before git runs' do
+        repository
+        expect(clone_command).to(
+          have_received(:call).with(repository_url, nil, separate_git_dir: File.expand_path('custom.git'))
+        )
+      end
+    end
+
+    context 'with a relative :repository option and :chdir' do
+      let(:options) { { repository: 'custom.git', chdir: '/output' } }
+
+      it 'expands :repository against :chdir before git runs' do
+        repository
+        expect(clone_command).to(
+          have_received(:call).with(
+            repository_url, nil, separate_git_dir: File.expand_path('custom.git', '/output'), chdir: expanded_chdir
+          )
+        )
+      end
+    end
+
+    context 'with a ~-prefixed :repository option' do
+      include_context 'with a temporary home directory'
+
+      let(:options) { { repository: '~/custom.git', chdir: '/output' } }
+
+      it 'expands ~ to the home directory instead of joining it onto :chdir' do
+        repository
+        expect(clone_command).to(
+          have_received(:call).with(
+            repository_url, nil, separate_git_dir: File.join(home_dir, 'custom.git'), chdir: expanded_chdir
+          )
+        )
+      end
+    end
+
+    context 'with a :repository option that begins with ~user for a user that does not exist' do
+      let(:options) { { repository: '~no-such-user-for-ruby-git/custom.git' } }
+
+      it 'raises ArgumentError before git runs' do
+        expect { repository }.to raise_error(ArgumentError)
+        expect(clone_command).not_to have_received(:call)
       end
     end
 
@@ -396,6 +666,50 @@ RSpec.describe Git::Factories do
       it 'does not pass :separate_git_dir to Commands::Clone' do
         repository
         expect(clone_command).to have_received(:call).with(repository_url, nil)
+      end
+    end
+
+    context 'with :separate_git_dir option' do
+      let(:options) { { separate_git_dir: 'custom.git', chdir: '/output' } }
+
+      it 'expands :separate_git_dir against :chdir before git runs' do
+        repository
+        expect(clone_command).to(
+          have_received(:call).with(
+            repository_url, nil, separate_git_dir: File.expand_path('custom.git', '/output'), chdir: expanded_chdir
+          )
+        )
+      end
+    end
+
+    context 'with a ~-prefixed :separate_git_dir option' do
+      include_context 'with a temporary home directory'
+
+      let(:options) { { separate_git_dir: '~/custom.git' } }
+
+      it 'expands ~ to the home directory before git runs' do
+        repository
+        expect(clone_command).to(
+          have_received(:call).with(repository_url, nil, separate_git_dir: File.join(home_dir, 'custom.git'))
+        )
+      end
+    end
+
+    context 'with both :repository and :separate_git_dir options' do
+      let(:options) { { repository: custom_repository, separate_git_dir: '~/other.git' } }
+
+      it 'prefers :repository' do
+        repository
+        expect(clone_command).to have_received(:call).with(repository_url, nil, separate_git_dir: custom_repository)
+      end
+    end
+
+    context 'with :repository set to nil and :separate_git_dir given' do
+      let(:options) { { repository: nil, separate_git_dir: custom_repository } }
+
+      it 'uses :separate_git_dir' do
+        repository
+        expect(clone_command).to have_received(:call).with(repository_url, nil, separate_git_dir: custom_repository)
       end
     end
 
@@ -432,8 +746,10 @@ RSpec.describe Git::Factories do
   describe '.init' do
     subject(:repository) { host.init(directory, options) }
 
-    let(:directory) { '/new-repo' }
+    let(:directory) { File.expand_path('/new-repo') }
     let(:options) { {} }
+    let(:custom_index) { File.expand_path('/custom/index') }
+    let(:custom_repository) { File.expand_path('/custom/git') }
     let(:init_command) { instance_double(Git::Commands::Init) }
     let(:global_context) { instance_double(Git::ExecutionContext::Global) }
     let(:init_result) { command_result('') }
@@ -492,12 +808,12 @@ RSpec.describe Git::Factories do
       end
 
       context 'with :index option' do
-        let(:options) { { bare: true, index: '/custom/index' } }
+        let(:options) { { bare: true, index: custom_index } }
 
         it 'forwards :index to path resolution' do
           repository
           expect(Git::PathResolver).to(
-            have_received(:resolve_paths).with(repository: directory, bare: true, index: '/custom/index')
+            have_received(:resolve_paths).with(repository: directory, bare: true, index: custom_index)
           )
         end
       end
@@ -513,66 +829,213 @@ RSpec.describe Git::Factories do
     end
 
     context 'when :repository option is given' do
-      let(:options) { { repository: '/custom/git' } }
+      let(:options) { { repository: custom_repository } }
       let(:resolved_custom_paths) do
-        { working_directory: '/new-repo', repository: '/custom/git', index: '/custom/git/index' }
+        { working_directory: '/new-repo', repository: custom_repository, index: '/custom/git/index' }
       end
 
       before do
         allow(Git::PathResolver).to receive(:resolve_paths)
-          .with(working_directory: directory, repository: '/custom/git', index: nil)
+          .with(working_directory: directory, repository: custom_repository, index: nil)
           .and_return(resolved_custom_paths)
       end
 
       it 'maps :repository to :separate_git_dir for Commands::Init' do
         repository
-        expect(init_command).to have_received(:call).with(directory, separate_git_dir: '/custom/git')
+        expect(init_command).to have_received(:call).with(directory, separate_git_dir: custom_repository)
+      end
+    end
+
+    context 'with a ~-prefixed directory' do
+      include_context 'with a temporary home directory'
+
+      let(:directory) { '~/scratch' }
+      let(:expanded_directory) { File.join(home_dir, 'scratch') }
+
+      before do
+        allow(Dir).to receive(:exist?).with(expanded_directory).and_return(true)
+        allow(Git::PathResolver).to(
+          receive(:root_of_worktree).with(expanded_directory, any_args).and_return(expanded_directory)
+        )
+      end
+
+      it 'passes the directory to Commands::Init with ~ expanded to the home directory' do
+        repository
+        expect(init_command).to have_received(:call).with(expanded_directory)
+      end
+
+      it 'opens the repository at the expanded directory' do
+        repository
+        expect(Git::PathResolver).to(
+          have_received(:resolve_paths).with(working_directory: expanded_directory, repository: nil, index: nil)
+        )
+      end
+    end
+
+    context 'with a relative directory' do
+      let(:directory) { 'scratch' }
+      let(:expanded_directory) { File.join(Dir.pwd, 'scratch') }
+
+      before do
+        allow(Dir).to receive(:exist?).with(expanded_directory).and_return(true)
+        allow(Git::PathResolver).to(
+          receive(:root_of_worktree).with(expanded_directory, any_args).and_return(expanded_directory)
+        )
+      end
+
+      it 'passes the directory to Commands::Init expanded against the process working directory' do
+        repository
+        expect(init_command).to have_received(:call).with(expanded_directory)
+      end
+    end
+
+    context 'with a ~-prefixed :repository option' do
+      include_context 'with a temporary home directory'
+
+      let(:options) { { repository: '~/sep.git' } }
+      let(:expanded_repository) { File.join(home_dir, 'sep.git') }
+
+      it 'passes :separate_git_dir to Commands::Init with ~ expanded to the home directory' do
+        repository
+        expect(init_command).to have_received(:call).with(directory, separate_git_dir: expanded_repository)
+      end
+
+      it 'opens the repository with the expanded :repository' do
+        repository
+        expect(Git::PathResolver).to(
+          have_received(:resolve_paths).with(working_directory: directory, repository: expanded_repository, index: nil)
+        )
+      end
+    end
+
+    context 'when the directory cannot be expanded' do
+      let(:directory) { 'scratch' }
+
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('scratch', nil).and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error before running git' do
+        expect { repository }.to raise_error(Git::Error, /Failed to resolve the working directory/)
+        expect(init_command).not_to have_received(:call)
+      end
+
+      context 'when :bare is given' do
+        let(:options) { { bare: true } }
+
+        it 'raises Git::Error naming the repository directory' do
+          expect { repository }.to raise_error(Git::Error, /Failed to resolve the repository directory/)
+        end
+      end
+    end
+
+    context 'when the :repository option cannot be expanded' do
+      let(:options) { { repository: 'sep.git' } }
+
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('sep.git', nil).and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error before running git' do
+        expect { repository }.to raise_error(Git::Error, /Failed to resolve the repository directory/)
+        expect(init_command).not_to have_received(:call)
+      end
+    end
+
+    context 'with a relative :index option' do
+      let(:options) { { index: 'scratch.index' } }
+
+      it 'opens the repository with :index expanded against the process working directory' do
+        repository
+        expect(Git::PathResolver).to(
+          have_received(:resolve_paths)
+            .with(working_directory: directory, repository: nil, index: File.expand_path('scratch.index'))
+        )
+      end
+    end
+
+    context 'with a ~-prefixed :index option' do
+      include_context 'with a temporary home directory'
+
+      let(:options) { { index: '~/scratch.index' } }
+
+      it 'opens the repository with ~ expanded to the home directory' do
+        repository
+        expect(Git::PathResolver).to(
+          have_received(:resolve_paths)
+            .with(working_directory: directory, repository: nil, index: File.join(home_dir, 'scratch.index'))
+        )
+      end
+    end
+
+    context 'when the :index option cannot be expanded' do
+      let(:options) { { index: 'scratch.index' } }
+
+      before do
+        allow(File).to receive(:expand_path).and_call_original
+        allow(File).to receive(:expand_path).with('scratch.index', nil).and_raise(Errno::ENOENT, 'getcwd')
+      end
+
+      it 'raises Git::Error before running git' do
+        expect { repository }.to raise_error(Git::Error, /Failed to resolve the index file/)
+        expect(init_command).not_to have_received(:call)
+      end
+    end
+
+    context 'with an :index option that begins with ~user for a user that does not exist' do
+      let(:options) { { index: '~no-such-user-for-ruby-git/scratch.index' } }
+
+      it 'raises ArgumentError before running git' do
+        expect { repository }.to raise_error(ArgumentError)
+        expect(init_command).not_to have_received(:call)
       end
     end
 
     context 'when :index option is given' do
-      let(:options) { { index: '/custom/index' } }
+      let(:options) { { index: custom_index } }
       let(:resolved_custom_index_paths) do
-        { working_directory: '/new-repo', repository: '/new-repo/.git', index: '/custom/index' }
+        { working_directory: '/new-repo', repository: '/new-repo/.git', index: custom_index }
       end
 
       before do
         allow(Git::PathResolver).to receive(:resolve_paths)
-          .with(working_directory: directory, repository: nil, index: '/custom/index')
+          .with(working_directory: directory, repository: nil, index: custom_index)
           .and_return(resolved_custom_index_paths)
       end
 
       it 'passes the custom index path through to Git.open' do
         repository
         expect(Git::PathResolver).to(
-          have_received(:resolve_paths).with(working_directory: directory, repository: nil, index: '/custom/index')
+          have_received(:resolve_paths).with(working_directory: directory, repository: nil, index: custom_index)
         )
       end
     end
 
     context 'when :separate_git_dir option is given' do
-      let(:options) { { separate_git_dir: '/custom/git' } }
+      let(:options) { { separate_git_dir: custom_repository } }
       let(:resolved_custom_paths) do
-        { working_directory: '/new-repo', repository: '/custom/git', index: '/custom/git/index' }
+        { working_directory: '/new-repo', repository: custom_repository, index: '/custom/git/index' }
       end
 
       before do
         allow(Git::PathResolver).to receive(:resolve_paths)
-          .with(working_directory: directory, repository: '/custom/git', index: nil)
+          .with(working_directory: directory, repository: custom_repository, index: nil)
           .and_return(resolved_custom_paths)
       end
 
       it 'normalizes :separate_git_dir to :repository before forwarding to Commands::Init' do
         repository
-        expect(init_command).to have_received(:call).with(directory, separate_git_dir: '/custom/git')
+        expect(init_command).to have_received(:call).with(directory, separate_git_dir: custom_repository)
       end
 
       context 'when :repository key is present but nil' do
-        let(:options) { { repository: nil, separate_git_dir: '/custom/git' } }
+        let(:options) { { repository: nil, separate_git_dir: custom_repository } }
 
         it 'still normalizes :separate_git_dir to :repository before forwarding to Commands::Init' do
           repository
-          expect(init_command).to have_received(:call).with(directory, separate_git_dir: '/custom/git')
+          expect(init_command).to have_received(:call).with(directory, separate_git_dir: custom_repository)
         end
       end
     end

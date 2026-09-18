@@ -6,7 +6,6 @@ require 'git/execution_context/global'
 require 'git/execution_context/repository'
 require 'git/path_resolver'
 require 'git/repository'
-require 'git/system_call_guard'
 require 'pathname'
 
 module Git
@@ -36,6 +35,11 @@ module Git
     #
     # @param directory [String, Pathname, nil] the local directory name to clone into;
     #   git derives the name from the URL when `nil`
+    #
+    #   Expanded before git runs, so `~` is the home directory and a relative
+    #   path is relative to `:chdir` when given and to the process working
+    #   directory otherwise. git creates the expanded directory, and the
+    #   returned repository is bound to it.
     #
     # @param options [Hash] options that control cloning
     #
@@ -80,7 +84,14 @@ module Git
     #
     # @option options [Boolean, nil] :dissociate stop borrowing from references
     #
-    # @option options [String, nil] :separate_git_dir alternate git directory path
+    # @option options [String, nil] :repository alternate git directory path
+    #
+    #   Writes a gitfile in the working tree. Alias: `:separate_git_dir`.
+    #   Expanded before git runs, like `directory`: `~` is the home directory
+    #   and a relative path is relative to `:chdir` when given and to the
+    #   process working directory otherwise.
+    #
+    # @option options [String, nil] :separate_git_dir alias for `:repository`
     #
     # @option options [String, Array<String>, nil] :server_option
     #   protocol-v2 server options
@@ -154,16 +165,23 @@ module Git
     #
     # @option options [String, nil] :index a non-standard path to the index file
     #
-    #   A relative path is expanded against `:chdir` when given, like
-    #   `directory`, and against the process working directory otherwise.
+    #   Expanded before git runs, like `directory`: a relative path is expanded
+    #   against `:chdir` when given, and against the process working directory
+    #   otherwise.
     #
     # @option options [String, Pathname, nil] :chdir run `git clone` from within
     #   this directory
     #
+    #   Expanded before git runs, so `~` is the home directory and a relative
+    #   path is relative to the process working directory. `directory`,
+    #   `:repository`, and `:index` are expanded against the expanded value.
+    #
     # @return [Git::Repository] a repository bound to the cloned working copy or
     #   bare repository
     #
-    # @raise [ArgumentError] if unsupported options are provided
+    # @raise [ArgumentError] if unsupported options are provided, or if
+    #   `directory`, `:repository`, `:index`, or `:chdir` begins with `~user`
+    #   for a user that does not exist
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
@@ -185,8 +203,9 @@ module Git
     #
     def clone(repository_url, directory = nil, options = {})
       opts, context_opts = prepare_clone_options(options)
+      directory = expand_directory(directory, bare: context_opts[:bare], base: opts[:chdir]) if directory
       clone_result = run_clone_command(repository_url, directory, opts, context_opts)
-      paths = resolve_paths_from_clone_result(clone_result, opts, context_opts)
+      paths = resolve_paths_from_clone_result(clone_result, directory, opts, context_opts)
 
       from_paths(clone_repository_options(context_opts), paths)
     end
@@ -204,6 +223,10 @@ module Git
     #
     # @param directory [String] the directory to initialize; defaults to `'.'`
     #
+    #   Expanded before git runs, so `~` is the home directory and a relative
+    #   path is relative to the process working directory. git creates the
+    #   expanded directory, and the returned repository is bound to it.
+    #
     # @param options [Hash] options that control initialization
     #
     #   Some options configure the returned {Git::Repository} instance after
@@ -215,9 +238,9 @@ module Git
     #
     # @option options [String, nil] :repository path for the `.git` directory
     #
-    #   Writes a gitfile in the working tree. Alias: `:separate_git_dir`. A
-    #   relative path is expanded against the process working directory, as
-    #   `git init --separate-git-dir` does.
+    #   Writes a gitfile in the working tree. Alias: `:separate_git_dir`.
+    #   Expanded before git runs, like `directory`: `~` is the home directory
+    #   and a relative path is relative to the process working directory.
     #
     # @option options [String, nil] :separate_git_dir alias for `:repository`
     #
@@ -238,9 +261,13 @@ module Git
     # @option options [String, nil] :index custom index path for the returned
     #   repository
     #
-    #   A relative path is expanded against the process working directory.
+    #   Expanded before git runs, like `directory`: `~` is the home directory
+    #   and a relative path is relative to the process working directory.
     #
     # @return [Git::Repository] a repository bound to the newly initialized repository
+    #
+    # @raise [ArgumentError] if `directory`, `:repository`, or `:index` begins
+    #   with `~user` for a user that does not exist
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
@@ -256,10 +283,8 @@ module Git
     # @api public
     #
     def init(directory = '.', options = {})
-      options = options.dup
-      if options.key?(:separate_git_dir) && options[:repository].nil?
-        options[:repository] = options.delete(:separate_git_dir)
-      end
+      options = normalize_init_options(options)
+      directory = expand_directory(directory, bare: options[:bare])
 
       run_init_command(directory, options)
       open_after_init(directory, options)
@@ -273,6 +298,8 @@ module Git
     # @param working_dir [String] the path to the root of the working copy
     #
     #   May be any path inside the working tree when `:repository` is not given.
+    #   Expanded before use: `~` is the home directory and a relative path is
+    #   relative to the process working directory.
     #
     # @param options [Hash] options that control how the repository is located
     #
@@ -304,7 +331,8 @@ module Git
     # @return [Git::Repository] a repository bound to the resolved paths
     #
     # @raise [ArgumentError] if `working_dir` is not a directory or is not inside
-    #   a git working tree
+    #   a git working tree, or if it begins with `~user` for a user that does not
+    #   exist
     #
     # @raise [Git::Error] if the `.git` path is a gitdir pointer file that cannot
     #   be read, if the git binary cannot be found or fails to launch, or if a
@@ -316,9 +344,10 @@ module Git
     # @api public
     #
     def open(working_dir, options = {})
-      raise ArgumentError, "'#{working_dir}' is not a directory" unless Dir.exist?(working_dir)
+      expanded_dir = PathResolver.expand_path(working_dir, PathResolver::WORKING_DIRECTORY_MESSAGE)
+      raise ArgumentError, "'#{working_dir}' is not a directory" unless Dir.exist?(expanded_dir)
 
-      working_dir = resolve_open_working_dir(working_dir, options) unless options[:repository]
+      working_dir = options[:repository] ? expanded_dir : resolve_open_working_dir(expanded_dir, options)
 
       paths = resolve_repository_paths(
         working_dir, bare: false, repository: options[:repository], index: options[:index]
@@ -415,7 +444,14 @@ module Git
 
     # Resolve repository paths from a completed clone result
     #
+    # When the caller gave a directory, it was expanded before git ran and is
+    # used as is. Only when git derived the name from the URL is the directory
+    # read from git's output, where it is a relative name under `:chdir`.
+    #
     # @param clone_result [Git::CommandLine::Result] the completed clone result
+    #
+    # @param directory [String, nil] the expanded directory given to {.clone},
+    #   or `nil` when git derived the name from the URL
     #
     # @param opts [Hash] command-ready clone options
     #
@@ -425,35 +461,61 @@ module Git
     # @option opts [String, Pathname, nil] :chdir run `git clone` from within
     #   this directory
     #
-    # @option opts [Boolean, nil] :bare clone as a bare repository
+    # @option context_opts [Boolean] :bare whether `:bare` or `:mirror` was
+    #   requested
     #
-    # @option opts [Boolean, nil] :mirror set up a mirror of the source
-    #
-    # @option context_opts [String, nil] :index custom index path for the
-    #   returned repository
+    # @option context_opts [String, nil] :index the already expanded custom
+    #   index path for the returned repository
     #
     # @return [Hash{Symbol => (String, nil)}] resolved path hash
     #
-    # @raise [Git::UnexpectedResultError] if the clone directory cannot be parsed
-    #
-    # @raise [Git::Error] if the index path cannot be expanded against `:chdir`
+    # @raise [Git::UnexpectedResultError] if no directory was given and the clone
+    #   directory cannot be parsed from git's output
     #
     # @api private
     #
-    def resolve_paths_from_clone_result(clone_result, opts, context_opts)
-      clone_dir, cloned_bare = parse_clone_stderr(clone_result.stderr)
-      chdir = opts[:chdir]
-      clone_dir = prefix_with_chdir(clone_dir, chdir)
-      index = expand_against_chdir(context_opts[:index], chdir)
+    def resolve_paths_from_clone_result(clone_result, directory, opts, context_opts)
+      clone_dir = directory || prefix_with_chdir(parse_clone_directory(clone_result.stderr), opts[:chdir])
 
-      bare = opts[:bare] || opts[:mirror] || cloned_bare
-      resolve_repository_paths(clone_dir, bare: bare, index: index)
+      bare = context_opts[:bare] || bare_clone?(clone_result.stderr)
+      resolve_repository_paths(clone_dir, bare: bare, index: context_opts[:index])
     end
 
-    # Join the relative clone directory git reported onto the `:chdir` it ran in
+    # Expand the directory given to {.init} or {.clone} before git sees it
     #
-    # The directory is joined, not expanded, because git created it as given:
-    # git does not expand `~` in a path on its command line.
+    # git does not expand `~` in a path on its command line, so the expansion
+    # happens here. The directory git creates is then the one the returned
+    # repository is bound to.
+    #
+    # @param directory [String, Pathname] the directory to initialize or clone
+    #   into
+    #
+    # @param bare [Boolean, nil] whether the directory is the bare repository
+    #   itself rather than a working directory; selects the error message
+    #
+    # @param base [String, Pathname, nil] the directory a relative path is
+    #   expanded against, or `nil` for the process working directory
+    #
+    # @return [String] the absolute path
+    #
+    # @raise [ArgumentError] if the path begins with `~user` for a user that
+    #   does not exist
+    #
+    # @raise [Git::Error] if the path cannot be expanded, which happens when the
+    #   process working directory has been removed
+    #
+    # @api private
+    #
+    def expand_directory(directory, bare:, base: nil)
+      message = bare ? PathResolver::REPOSITORY_MESSAGE : PathResolver::WORKING_DIRECTORY_MESSAGE
+      PathResolver.expand_path(directory, message, base: base)
+    end
+
+    # Join the clone directory git reported onto the `:chdir` it ran in
+    #
+    # Used only when no directory was given to {.clone}: git derives a relative
+    # name from the URL and creates it under `chdir`. An absolute path, should
+    # git ever report one, passes through unchanged.
     #
     # @param path [String] the clone directory reported by `git clone`
     #
@@ -462,33 +524,12 @@ module Git
     # @return [String] `path` prefixed with `chdir` when `chdir` is given and
     #   `path` is relative; otherwise `path` unchanged
     #
+    # @api private
+    #
     def prefix_with_chdir(path, chdir)
       return path if chdir.nil? || Pathname.new(path).absolute?
 
       File.join(chdir, path)
-    end
-
-    # Expand the `:index` option of {.clone} against the `:chdir` git ran in
-    #
-    # Unlike the clone directory, the index is never given to git, so it follows
-    # Ruby's `File.expand_path` rules: an absolute path is unchanged, `~` is the
-    # home directory, and a relative path is joined onto `chdir`.
-    #
-    # @param path [String, nil] the index path, or `nil` when not given
-    #
-    # @param chdir [String, Pathname, nil] the directory git ran in, or `nil` to
-    #   leave the expansion to {Git::PathResolver}
-    #
-    # @return [String, nil] the expanded path, or `path` unchanged when either
-    #   argument is `nil`
-    #
-    # @raise [Git::Error] if the path cannot be expanded, which happens when
-    #   `chdir` is relative and the process working directory has been removed
-    #
-    def expand_against_chdir(path, chdir)
-      return path if path.nil? || chdir.nil?
-
-      Git::SystemCallGuard.call('Failed to resolve the index file') { File.expand_path(path, chdir) }
     end
 
     # Build repository construction options from clone context options
@@ -606,9 +647,42 @@ module Git
     def prepare_clone_options(options)
       opts = options.dup
       context_opts = extract_clone_context_options!(opts)
+      expand_path_option!(opts, :chdir, PathResolver::CHDIR_MESSAGE)
       normalize_clone_repository_option!(opts)
+      expand_path_option!(context_opts, :index, PathResolver::INDEX_MESSAGE, base: opts[:chdir])
 
       [opts, context_opts]
+    end
+
+    # Expand a path option in place when it is present
+    #
+    # git does no tilde expansion and ruby-git starts it without a shell, so
+    # every path option is expanded here before git sees it. A path that cannot
+    # be expanded is rejected before git runs.
+    #
+    # @param hash [Hash] the options hash (mutated in place)
+    #
+    # @param key [Symbol] the option to expand; left alone when `nil` or absent
+    #
+    # @param message [String] the {Git::Error} message when expansion fails
+    #
+    # @param base [String, Pathname, nil] the directory a relative path is
+    #   expanded against, or `nil` for the process working directory
+    #
+    # @return [void] mutates `hash` in place
+    #
+    # @raise [ArgumentError] if the path begins with `~user` for a user that
+    #   does not exist
+    #
+    # @raise [Git::Error] if the path cannot be expanded, which happens when the
+    #   process working directory has been removed
+    #
+    # @api private
+    #
+    def expand_path_option!(hash, key, message, base: nil)
+      return unless hash[key]
+
+      hash[key] = PathResolver.expand_path(hash[key], message, base: base)
     end
 
     # Extract clone context options from command-ready options
@@ -626,7 +700,14 @@ module Git
     # @option opts [String, nil] :index custom index path for the returned
     #   repository
     #
-    # @return [Hash{Symbol => Object}] context options for clone setup
+    # @option opts [Boolean, nil] :bare clone as a bare repository; left in
+    #   `opts` for git
+    #
+    # @option opts [Boolean, nil] :mirror set up a mirror of the source; left in
+    #   `opts` for git
+    #
+    # @return [Hash{Symbol => Object}] context options for clone setup, with
+    #   `:bare` true when either `:bare` or `:mirror` was requested
     #
     # @api private
     #
@@ -635,25 +716,44 @@ module Git
         logger: opts.delete(:log),
         git_ssh: opts.key?(:git_ssh) ? opts.delete(:git_ssh) : :use_global_config,
         binary_path: opts.key?(:binary_path) ? opts.delete(:binary_path) : :use_global_config,
-        index: opts.delete(:index)
+        index: opts.delete(:index),
+        bare: opts[:bare] || opts[:mirror] || false
       }
     end
 
     # Normalize the clone repository option for `git clone`
     #
+    # Resolves the `:separate_git_dir` alias to `:repository`, then renames
+    # `:repository` to `:separate_git_dir` and expands it before git runs,
+    # against `:chdir` when given, like the clone directory. git does no tilde
+    # expansion, so a `~`-prefixed path handed to git would create a directory
+    # literally named `~`.
+    #
     # @param opts [Hash] clone options (mutated in place)
     #
     # @option opts [String, nil] :repository alternate git directory path
     #
+    # @option opts [String, nil] :separate_git_dir alias for `:repository`
+    #
+    # @option opts [String, Pathname, nil] :chdir the directory git runs in
+    #
     # @return [void] mutates `opts` in place
+    #
+    # @raise [ArgumentError] if `:repository` begins with `~user` for a user
+    #   that does not exist
+    #
+    # @raise [Git::Error] if the path cannot be expanded, which happens when the
+    #   process working directory has been removed
     #
     # @api private
     #
     def normalize_clone_repository_option!(opts)
-      return unless opts.key?(:repository)
-
+      resolve_repository_alias!(opts)
       repository_val = opts.delete(:repository)
-      opts[:separate_git_dir] = repository_val if repository_val
+      return unless repository_val
+
+      opts[:separate_git_dir] =
+        PathResolver.expand_path(repository_val, PathResolver::REPOSITORY_MESSAGE, base: opts[:chdir])
     end
 
     # Resolve the repository, working directory, and index paths for a repository
@@ -677,9 +777,66 @@ module Git
       PathResolver.resolve_paths(**args, index: index)
     end
 
+    # Normalize the options given to {.init}
+    #
+    # Resolves the `:separate_git_dir` alias to `:repository` and expands
+    # `:repository` and `:index` before git runs, so the git directory git
+    # creates is the one the returned repository is bound to and a path that
+    # cannot be expanded is rejected before a repository is left on disk.
+    #
+    # @param options [Hash] the caller-supplied options hash
+    #
+    # @option options [String, nil] :repository path for the `.git` directory
+    #
+    # @option options [String, nil] :separate_git_dir alias for `:repository`
+    #
+    # @option options [String, nil] :index custom index path for the returned
+    #   repository
+    #
+    # @return [Hash] a new options hash with `:repository` set and expanded when
+    #   either spelling was given, and `:index` expanded when given
+    #
+    # @raise [ArgumentError] if `:repository` or `:index` begins with `~user`
+    #   for a user that does not exist
+    #
+    # @raise [Git::Error] if a path cannot be expanded, which happens when the
+    #   process working directory has been removed
+    #
+    # @api private
+    #
+    def normalize_init_options(options)
+      options = options.dup
+      resolve_repository_alias!(options)
+      expand_path_option!(options, :repository, PathResolver::REPOSITORY_MESSAGE)
+      expand_path_option!(options, :index, PathResolver::INDEX_MESSAGE)
+      options
+    end
+
+    # Resolve the `:separate_git_dir` alias onto `:repository`
+    #
+    # `:separate_git_dir` is removed. Its value becomes `:repository` unless
+    # `:repository` was given a non-nil value, which wins.
+    #
+    # @param options [Hash] factory options (mutated in place)
+    #
+    # @option options [String, nil] :repository path for the git directory
+    #
+    # @option options [String, nil] :separate_git_dir alias for `:repository`
+    #
+    # @return [void] mutates `options` in place
+    #
+    # @api private
+    #
+    def resolve_repository_alias!(options)
+      return unless options.key?(:separate_git_dir)
+
+      separate_git_dir = options.delete(:separate_git_dir)
+      options[:repository] = separate_git_dir if options[:repository].nil?
+    end
+
     # Run the `git init` command using a global execution context
     #
-    # @param directory [String] the directory to initialize
+    # @param directory [String] the absolute path of the directory to initialize
     #
     # @param options [Hash] the normalized options hash (after alias resolution)
     #
@@ -801,21 +958,39 @@ module Git
       end
     end
 
-    # Parse the clone directory and bare status from `git clone` stderr output
+    # Parse the directory git derived from the URL out of `git clone` stderr
+    #
+    # Only called when no directory was given to {.clone}. The name git derives
+    # is a single path component, so it never spans a line.
     #
     # @param stderr [String] stderr output from `git clone`
     #
-    # @return [Array] a two-element tuple `[clone_dir, bare]`
+    # @return [String] the clone directory git reported
     #
     # @raise [Git::UnexpectedResultError] if the stderr output cannot be parsed
     #
     # @api private
     #
-    def parse_clone_stderr(stderr)
-      match = stderr.match(/Cloning into (?:(bare repository) )?'(.+)'\.\.\./)
+    def parse_clone_directory(stderr)
+      match = stderr.match(/^Cloning into (?:bare repository )?'(.+)'\.\.\.$/)
       raise Git::UnexpectedResultError, "Unable to determine clone directory from: #{stderr}" unless match
 
-      [match[2], !match[1].nil?]
+      match[1]
+    end
+
+    # Whether `git clone` reported that it created a bare repository
+    #
+    # Matches only the fixed prefix of git's progress line, so a destination
+    # that spans several lines does not affect the result.
+    #
+    # @param stderr [String] stderr output from `git clone`
+    #
+    # @return [Boolean] true when git reported a bare repository
+    #
+    # @api private
+    #
+    def bare_clone?(stderr)
+      stderr.match?(/^Cloning into bare repository '/)
     end
   end
 end

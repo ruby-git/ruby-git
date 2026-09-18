@@ -23,6 +23,18 @@ module Git
   # @api private
   #
   module PathResolver
+    # The {Git::Error} message when a working directory path cannot be expanded
+    WORKING_DIRECTORY_MESSAGE = 'Failed to resolve the working directory'
+
+    # The {Git::Error} message when a repository directory path cannot be expanded
+    REPOSITORY_MESSAGE = 'Failed to resolve the repository directory'
+
+    # The {Git::Error} message when an index file path cannot be expanded
+    INDEX_MESSAGE = 'Failed to resolve the index file'
+
+    # The {Git::Error} message when the `:chdir` option of `Git.clone` cannot be expanded
+    CHDIR_MESSAGE = 'Failed to resolve the chdir directory'
+
     module_function
 
     # Resolve and normalize the paths that locate a Git repository
@@ -92,14 +104,16 @@ module Git
     #   if `working_dir` cannot be expanded to an absolute path
     #
     def root_of_worktree(working_dir, binary_path: :use_global_config, git_ssh: :use_global_config)
-      raise ArgumentError, "'#{working_dir}' does not exist or is not a directory" unless Dir.exist?(working_dir)
+      expanded_dir = expand_path(working_dir, 'Failed to expand the working directory path')
+      raise ArgumentError, "'#{working_dir}' does not exist or is not a directory" unless Dir.exist?(expanded_dir)
 
-      execute_rev_parse_toplevel(working_dir, binary_path: binary_path, git_ssh: git_ssh)
+      execute_rev_parse_toplevel(expanded_dir, binary_path: binary_path, git_ssh: git_ssh)
     end
 
     # Run `git rev-parse --show-toplevel` from `working_dir` and return stdout
     #
-    # @param working_dir [String] a path inside the working tree
+    # @param working_dir [String] the absolute path of a directory inside the
+    #   working tree
     #
     # @param binary_path [String, :use_global_config] path to the git binary
     #
@@ -109,16 +123,14 @@ module Git
     #
     # @raise [ArgumentError] if `working_dir` is not inside a git working tree
     #
-    # @raise [Git::Error] if the git binary cannot be found or fails to launch, or
-    #   if `working_dir` cannot be expanded to an absolute path
+    # @raise [Git::Error] if the git binary cannot be found or fails to launch
     #
     # @api private
     #
     def execute_rev_parse_toplevel(working_dir, binary_path: :use_global_config, git_ssh: :use_global_config)
       execution_context = Git::ExecutionContext::Global.new(binary_path: binary_path, git_ssh: git_ssh)
-      expanded_dir = expand_path(working_dir, 'Failed to expand the working directory path')
 
-      Git::Commands::RevParse.new(execution_context).call(show_toplevel: true, chdir: expanded_dir).stdout
+      Git::Commands::RevParse.new(execution_context).call(show_toplevel: true, chdir: working_dir).stdout
     rescue Git::FailedError
       raise ArgumentError, "'#{working_dir}' is not in a git working tree"
     end
@@ -140,7 +152,7 @@ module Git
     def resolve_working_directory(path, bare:)
       return nil if bare
 
-      expand_path(path, 'Failed to resolve the working directory')
+      expand_path(path, WORKING_DIRECTORY_MESSAGE)
     end
     private_class_method :resolve_working_directory
 
@@ -166,7 +178,7 @@ module Git
         if working_dir && path.nil?
           File.join(working_dir, '.git')
         else
-          expand_path(path, 'Failed to resolve the repository directory')
+          expand_path(path, REPOSITORY_MESSAGE)
         end
 
       resolve_gitdir_pointer(initial_path)
@@ -217,28 +229,46 @@ module Git
     def resolve_index(path, repository)
       return File.join(repository, 'index') unless path
 
-      expand_path(path, 'Failed to resolve the index file')
+      expand_path(path, INDEX_MESSAGE)
     end
     private_class_method :resolve_index
 
-    # Expand a path against the process working directory
+    # Expand a path the way a shell prompt would before git runs
     #
-    # @param path [String, nil] the path to expand, or `nil` for the process
-    #   working directory itself
+    # Follows `File.expand_path`: `~` is the home directory, a relative path is
+    # joined onto `base` (or onto the process working directory when `base` is
+    # `nil`), `.` and `..` are normalized, and an absolute path is unchanged.
+    #
+    # @example Expand a relative path against the process working directory
+    #   Git::PathResolver.expand_path('repo', 'Failed to resolve the working directory')
+    #   #=> '/current/dir/repo'
+    #
+    # @example Expand a relative path against another directory
+    #   Git::PathResolver.expand_path('repo', 'Failed to resolve the working directory', base: '/output')
+    #   #=> '/output/repo'
+    #
+    # @param path [String, Pathname, nil] the path to expand, or `nil` for
+    #   `base` itself
     #
     # @param message [String] the message of the {Git::Error} raised when the
     #   expansion fails
     #
+    # @param base [String, Pathname, nil] the directory a relative `path` is
+    #   expanded against, or `nil` for the process working directory
+    #
     # @return [String] the absolute path
+    #
+    # @raise [ArgumentError] if `~` cannot be expanded because no home directory
+    #   can be determined, or if the path begins with `~user` for a user that
+    #   does not exist
     #
     # @raise [Git::Error] if the path cannot be expanded, which happens when the
     #   process working directory has been removed
     #
     # @api private
     #
-    def expand_path(path, message)
-      Git::SystemCallGuard.call(message) { File.expand_path(path || Dir.pwd) }
+    def expand_path(path, message, base: nil)
+      Git::SystemCallGuard.call(message) { File.expand_path(path || '.', base) }
     end
-    private_class_method :expand_path
   end
 end
