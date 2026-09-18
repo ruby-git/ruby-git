@@ -18,6 +18,24 @@ module Git
   # @api private
   #
   module Factories # rubocop:disable Metrics/ModuleLength
+    # Option keys {Git.open} accepts
+    #
+    # @return [Array<Symbol>]
+    #
+    # @api private
+    #
+    OPEN_ALLOWED_OPTS = %i[repository index log git_ssh binary_path].freeze
+    private_constant :OPEN_ALLOWED_OPTS
+
+    # Option keys {Git.bare} accepts
+    #
+    # @return [Array<Symbol>]
+    #
+    # @api private
+    #
+    BARE_ALLOWED_OPTS = %i[index log git_ssh binary_path].freeze
+    private_constant :BARE_ALLOWED_OPTS
+
     # Clone a repository into a new directory
     #
     # @example Clone into the default directory
@@ -330,6 +348,8 @@ module Git
     #
     # @return [Git::Repository] a repository bound to the resolved paths
     #
+    # @raise [ArgumentError] if `options` contains an unknown key
+    #
     # @raise [ArgumentError] if `working_dir` is not a directory or is not inside
     #   a git working tree, or if it begins with `~user` for a user that does not
     #   exist
@@ -344,6 +364,7 @@ module Git
     # @api public
     #
     def open(working_dir, options = {})
+      reject_unknown_option_keys!(options.keys, OPEN_ALLOWED_OPTS)
       expanded_dir = PathResolver.expand_path(working_dir, PathResolver::WORKING_DIRECTORY_MESSAGE)
       raise ArgumentError, "'#{working_dir}' is not a directory" unless Dir.exist?(expanded_dir)
 
@@ -390,11 +411,14 @@ module Git
     #
     # @return [Git::Repository] a repository bound to the bare repository directory
     #
+    # @raise [ArgumentError] if `options` contains an unknown key
+    #
     # @raise [Git::Error] if `git_dir` is a gitdir pointer file that cannot be read
     #
     # @api public
     #
     def bare(git_dir, options = {})
+      reject_unknown_option_keys!(options.keys, BARE_ALLOWED_OPTS)
       paths = resolve_repository_paths(git_dir, bare: true, index: options[:index])
 
       from_paths(options, paths)
@@ -600,6 +624,23 @@ module Git
     #
     def resolve_open_working_dir(working_dir, options)
       PathResolver.root_of_worktree(working_dir, **context_defaults(options))
+    end
+
+    # Raise if `keys` contains a key outside `allowed`
+    #
+    # @param keys [Array<Symbol>] the keys of the caller-supplied options
+    #
+    # @param allowed [Array<Symbol>] the keys the factory accepts
+    #
+    # @return [void]
+    #
+    # @raise [ArgumentError] if `keys` contains an unknown key
+    #
+    # @api private
+    #
+    def reject_unknown_option_keys!(keys, allowed)
+      unknown = keys - allowed
+      raise ArgumentError, "Unknown options: #{unknown.join(', ')}" unless unknown.empty?
     end
 
     # Build a repository from caller options and resolved paths
