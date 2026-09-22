@@ -78,6 +78,8 @@ Adoption and enforcement notes:
 
 ## Related skills
 
+- [Testing Guide](../testing-guide/SKILL.md) — the vocabulary these rules are
+  written in and the reasoning behind them; read it when asking why a rule exists
 - [Command Test Conventions](../command-test-conventions/SKILL.md) — additional conventions
   for `Git::Commands::*` unit and integration specs, built on top of these rules
 - [Development Workflow](../development-workflow/SKILL.md) — TDD process that governs
