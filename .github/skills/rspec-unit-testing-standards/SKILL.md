@@ -52,7 +52,7 @@ Use RFC-style priority words to reduce ambiguity for AI behavior:
     - [Anti-pattern: structural identity and constant-existence tests](#anti-pattern-structural-identity-and-constant-existence-tests)
 - [Test Reliability](#test-reliability)
   - [Rule 25 (MUST): Keep unit tests deterministic](#rule-25-must-keep-unit-tests-deterministic)
-  - [Rule 26 (MUST): Isolate and restore global/process state](#rule-26-must-isolate-and-restore-globalprocess-state)
+  - [Rule 26 (MUST): Do not modify global/process state](#rule-26-must-do-not-modify-globalprocess-state)
   - [Rule 27 (MUST): Tests must be order-independent](#rule-27-must-tests-must-be-order-independent)
   - [Rule 28 (MUST): Avoid `allow_any_instance_of` and `receive_message_chain`](#rule-28-must-avoid-allow_any_instance_of-and-receive_message_chain)
 - [Verification](#verification)
@@ -627,11 +627,18 @@ Do not depend on real time, randomness, sleep-based timing, or external process
 timing. Stub or freeze `Time.now`, `Process.clock_gettime`, `SecureRandom`, and
 `rand` so results are repeatable. Never use `sleep` in unit tests.
 
-### Rule 26 (MUST): Isolate and restore global/process state
+### Rule 26 (MUST): Do not modify global/process state
 
-Unit tests must not leak state across examples. If a test modifies process or global
-state (for example `ENV`, current working directory, locale, or global config),
-restore that state before the example ends.
+Unit tests must not modify process or global state (for example `ENV`, the current
+working directory, locale, or global config) and must not leak state across
+examples. Inject the value so the test never touches the global; a subject that
+reads a global directly usually wants a parameter that defaults to it.
+
+> **Exception:** Allowed only when the code under test exists to read that state and
+> has no seam. If used, change the state inside an `around` hook that restores it
+> even when the example fails, and add an inline comment explaining why. Restoration
+> does not make the mutation safe for other threads in the process, including threads
+> started by an earlier example, so prefer introducing a seam in a follow-up change.
 
 ### Rule 27 (MUST): Tests must be order-independent
 
