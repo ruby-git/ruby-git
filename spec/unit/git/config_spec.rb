@@ -51,11 +51,13 @@ RSpec.describe Git::Config do
     end
 
     context 'when the binary_path attribute is nil but GIT_PATH env is set' do
+      # The reader falls through to ENV with no seam, so set and restore it
       around do |example|
+        saved = ENV.fetch('GIT_PATH', nil)
         ENV['GIT_PATH'] = '/env/git/dir'
         example.run
       ensure
-        ENV.delete('GIT_PATH')
+        saved ? ENV['GIT_PATH'] = saved : ENV.delete('GIT_PATH')
       end
 
       it 'returns File.join(GIT_PATH, "git")' do
@@ -64,6 +66,7 @@ RSpec.describe Git::Config do
     end
 
     context 'when neither the binary_path attribute nor GIT_PATH env is set' do
+      # The reader falls through to ENV with no seam, so clear and restore it
       around do |example|
         saved = ENV.delete('GIT_PATH')
         example.run
@@ -89,11 +92,13 @@ RSpec.describe Git::Config do
     end
 
     context 'when the git_ssh attribute is nil but GIT_SSH env is set' do
+      # The reader falls through to ENV with no seam, so set and restore it
       around do |example|
+        saved = ENV.fetch('GIT_SSH', nil)
         ENV['GIT_SSH'] = '/env/ssh'
         example.run
       ensure
-        ENV.delete('GIT_SSH')
+        saved ? ENV['GIT_SSH'] = saved : ENV.delete('GIT_SSH')
       end
 
       it 'returns the GIT_SSH env value' do
@@ -102,6 +107,7 @@ RSpec.describe Git::Config do
     end
 
     context 'when neither the git_ssh attribute nor GIT_SSH env is set' do
+      # The reader falls through to ENV with no seam, so clear and restore it
       around do |example|
         saved = ENV.delete('GIT_SSH')
         example.run
@@ -127,11 +133,13 @@ RSpec.describe Git::Config do
     end
 
     context 'when the timeout attribute is nil but GIT_TIMEOUT env is set' do
+      # The reader falls through to ENV with no seam, so set and restore it
       around do |example|
+        saved = ENV.fetch('GIT_TIMEOUT', nil)
         ENV['GIT_TIMEOUT'] = '60'
         example.run
       ensure
-        ENV.delete('GIT_TIMEOUT')
+        saved ? ENV['GIT_TIMEOUT'] = saved : ENV.delete('GIT_TIMEOUT')
       end
 
       it 'returns the GIT_TIMEOUT env value as an integer' do
@@ -140,6 +148,7 @@ RSpec.describe Git::Config do
     end
 
     context 'when neither the timeout attribute nor GIT_TIMEOUT env is set' do
+      # The reader falls through to ENV with no seam, so clear and restore it
       around do |example|
         saved = ENV.delete('GIT_TIMEOUT')
         example.run
@@ -155,6 +164,8 @@ RSpec.describe Git::Config do
 
   # End-to-end: runtime changes to Git.configure are honored by ExecutionContext subclasses
   describe 'end-to-end runtime change propagation' do
+    # Git.configure exists to mutate the global Git::Config singleton and the
+    # execution context reads it with no seam, so change and restore it
     around do |example|
       # Capture the raw instance variables (not the resolved reader values) so
       # that nil is preserved as-is. Using the reader would convert a nil ivar

@@ -12,6 +12,12 @@ RSpec.describe 'git.gemspec' do
 
   let(:project_root) { File.expand_path('../..', __dir__) }
 
+  # Pass the path as an argv element rather than interpolating it into a shell
+  # string, so a checkout under a path with spaces still works.
+  def git_ls_files(*args)
+    IO.popen(['git', '-C', project_root, 'ls-files', '-z', *args], &:read).split("\x0")
+  end
+
   it 'ships no symlinks' do
     # Extracting a symlink requires a privilege Windows withholds outside Developer
     # Mode or an elevated shell, so a symlink in the gem breaks `gem install` there.
@@ -20,11 +26,9 @@ RSpec.describe 'git.gemspec' do
     # as plain text files unless core.symlinks is enabled, so a File.symlink? test
     # would pass vacuously on the very platform this protects. Each `git ls-files -s`
     # record is "<mode> <sha> <stage>\t<path>".
-    symlinks = Dir.chdir(project_root) do
-      `git ls-files -s -z`.split("\x0").filter_map do |record|
-        fields, path = record.split("\t", 2)
-        path if fields.split.first == '120000'
-      end
+    symlinks = git_ls_files('-s').filter_map do |record|
+      fields, path = record.split("\t", 2)
+      path if fields.split.first == '120000'
     end
 
     expect(symlinks).not_to be_empty, 'expected the repository to contain a symlink to test against'
@@ -32,7 +36,7 @@ RSpec.describe 'git.gemspec' do
   end
 
   it 'ships every tracked file under lib/' do
-    lib_files = Dir.chdir(project_root) { `git ls-files -z -- lib`.split("\x0") }
+    lib_files = git_ls_files('--', 'lib')
 
     expect(lib_files).not_to be_empty
     expect(gemspec.files).to include(*lib_files)
