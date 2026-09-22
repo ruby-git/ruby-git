@@ -52,6 +52,7 @@ RSpec.describe Git::PathResolver do
     end
 
     context 'with a relative path' do
+      # Relative paths expand against the process cwd with no seam, so pin it
       around { |example| Dir.chdir(Dir.tmpdir) { example.run } }
 
       context 'for the index' do
@@ -113,6 +114,7 @@ RSpec.describe Git::PathResolver do
     end
 
     context 'when the repository is bare and no repository path is given' do
+      # Relative paths expand against the process cwd with no seam, so pin it
       around { |example| Dir.chdir(Dir.tmpdir) { example.run } }
 
       let(:args) { { bare: true } }
