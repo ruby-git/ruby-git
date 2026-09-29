@@ -3,15 +3,12 @@
 # Helper module for setting up diff test repository history.
 #
 # Extracted to keep shared context block size manageable.
-#
-# rubocop:disable-next Metrics/ModuleLength
 module DiffTestRepositorySetup
   # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   def setup_diff_test_history
     setup_initial_commits
     setup_file_operations
     setup_special_cases
-    setup_submodule
     setup_feature_branch
   end
 
@@ -114,44 +111,6 @@ module DiffTestRepositorySetup
     repo.tag_create('after_tab_filename')
   end
 
-  def setup_submodule
-    # Create a separate repository to use as submodule
-    submodule_source = Dir.mktmpdir('submodule-source')
-    sub_repo = Git.init(submodule_source, initial_branch: 'main')
-    sub_repo.config_set('user.email', 'test@example.com')
-    sub_repo.config_set('user.name', 'Test User')
-    File.write(File.join(submodule_source, 'sub.txt'), "Submodule content\n")
-    sub_repo.add('sub.txt')
-    sub_repo.commit('Initial submodule commit')
-
-    # Add submodule to main repo
-    repo.tag_create('before_submodule')
-    submodule_path = File.join(repo_dir, 'vendor/submodule')
-    Dir.chdir(repo_dir) do
-      # Allow file:// protocol for local submodule (needed for newer git versions)
-      system('git', 'config', 'protocol.file.allow', 'always', out: File::NULL, err: File::NULL)
-      # git submodule add stages the changes
-      system('git', 'submodule', 'add', submodule_source, 'vendor/submodule', out: File::NULL, err: File::NULL)
-      system('git', 'commit', '-m', 'Add submodule', out: File::NULL, err: File::NULL)
-    end
-    repo.tag_create('after_submodule')
-
-    # Update submodule to new commit (only if submodule was successfully added)
-    if Dir.exist?(submodule_path)
-      File.write(File.join(submodule_source, 'sub.txt'), "Updated submodule content\n")
-      sub_repo.add('sub.txt')
-      sub_repo.commit('Update submodule')
-      Dir.chdir(submodule_path) do
-        system('git', 'pull', 'origin', 'main', out: File::NULL, err: File::NULL)
-      end
-      Dir.chdir(repo_dir) do
-        system('git', 'add', 'vendor/submodule', out: File::NULL, err: File::NULL)
-        system('git', 'commit', '-m', 'Update submodule pointer', out: File::NULL, err: File::NULL)
-      end
-    end
-    repo.tag_create('after_submodule_update')
-  end
-
   def setup_feature_branch
     # Create feature branch from after_add
     repo.checkout('after_add')
@@ -188,9 +147,6 @@ end
 # - `after_utf8_rename`: UTF-8 named file renamed
 # - `after_tab_filename`: File with tab character in name added
 # - `after_multi`: Multiple files changed in one commit
-# - `before_submodule`: Before submodule added
-# - `after_submodule`: Submodule added
-# - `after_submodule_update`: Submodule pointer updated
 # - `feature_tip`: Tip of the feature branch
 # - `main_tip`: Final commit on main branch
 #
@@ -211,11 +167,6 @@ RSpec.shared_context 'in a diff test repository' do
 
   # Use instance variables for before(:all) since let blocks aren't available
   attr_reader :repo_dir, :repo, :execution_context
-
-  # Check if submodule tests can run (submodule setup may fail in some CI environments)
-  def submodule_available?
-    Dir.exist?(File.join(repo_dir, 'vendor/submodule'))
-  end
 
   before(:all) do
     @repo_dir = Dir.mktmpdir
