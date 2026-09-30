@@ -2,9 +2,9 @@
 
 # Helper module for setting up diff test repository history.
 #
-# Extracted to keep shared context block size manageable.
+# Extracted to keep shared context block size manageable. Each scenario has
+# its own method so that none trips the Metrics cops.
 module DiffTestRepositorySetup
-  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   def setup_diff_test_history
     setup_initial_commits
     setup_file_operations
@@ -14,101 +14,94 @@ module DiffTestRepositorySetup
 
   private
 
-  def setup_initial_commits
-    # Initial commit
-    write_file('README.md', "# Project\n\nThis is a test project.\n")
-    repo.add('README.md')
-    repo.commit('Initial commit')
-    repo.tag_create('initial')
+  # Stage every change in the working tree, commit it, and tag the commit if
+  # a tag is given
+  def commit_all(message, tag: nil)
+    repo.add(all: true)
+    repo.commit(message)
+    repo.tag_create(tag) if tag
+  end
 
-    # Modify file
+  # Absolute path of a file in the repository
+  def repo_path(name)
+    File.join(repo_dir, name)
+  end
+
+  def setup_initial_commits
+    write_file('README.md', "# Project\n\nThis is a test project.\n")
+    commit_all('Initial commit', tag: 'initial')
+
     write_file('README.md', "# Project\n\nThis is a test project.\n\n## Installation\n\nRun `bundle install`.\n")
-    repo.add('README.md')
-    repo.commit('Add installation section')
-    repo.tag_create('after_modify')
+    commit_all('Add installation section', tag: 'after_modify')
   end
 
   def setup_file_operations
     # Rename file (with content change for similarity detection)
-    FileUtils.mv(File.join(repo_dir, 'README.md'), File.join(repo_dir, 'docs.md'))
+    FileUtils.mv(repo_path('README.md'), repo_path('docs.md'))
     write_file('docs.md', "# Documentation\n\nThis is a test project.\n\n## Installation\n\nRun `bundle install`.\n")
-    repo.add(all: true)
-    repo.commit('Rename README to docs')
-    repo.tag_create('after_rename')
+    commit_all('Rename README to docs', tag: 'after_rename')
 
-    # Delete file
-    FileUtils.rm(File.join(repo_dir, 'docs.md'))
-    repo.add(all: true)
-    repo.commit('Remove docs file')
-    repo.tag_create('after_delete')
+    FileUtils.rm(repo_path('docs.md'))
+    commit_all('Remove docs file', tag: 'after_delete')
 
-    # Add new file
     write_file('lib/main.rb', "# frozen_string_literal: true\n\nmodule Main\n  VERSION = '1.0.0'\nend\n")
-    repo.add('lib/main.rb')
-    repo.commit('Add main library')
-    repo.tag_create('after_add')
+    commit_all('Add main library', tag: 'after_add')
   end
 
   def setup_special_cases
-    # Add binary file
-    write_file('image.png', "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01")
-    repo.add('image.png')
-    repo.commit('Add binary image')
-    repo.tag_create('after_binary')
+    setup_binary_file
+    setup_mode_change
+    setup_special_filenames
+    setup_tab_filename
+    setup_multi_file_change
+  end
 
-    # Change file mode (make executable) - skip on Windows where chmod isn't supported
+  def setup_binary_file
+    write_file('image.png', "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01")
+    commit_all('Add binary image', tag: 'after_binary')
+  end
+
+  def setup_mode_change
     write_file('bin/run', "#!/usr/bin/env ruby\nputs 'Hello'\n")
-    repo.add('bin/run')
-    repo.commit('Add run script')
+    commit_all('Add run script')
+
+    # Make the script executable - skip on Windows where chmod isn't supported
     unless Gem.win_platform?
-      FileUtils.chmod(0o755, File.join(repo_dir, 'bin/run'))
-      repo.add('bin/run')
-      repo.commit('Make run script executable')
+      FileUtils.chmod(0o755, repo_path('bin/run'))
+      commit_all('Make run script executable')
     end
     repo.tag_create('after_mode_change')
+  end
 
-    # Add file with spaces in path
+  def setup_special_filenames
     write_file('path with spaces/file name.txt', "Content in spaced path\n")
-    repo.add(all: true)
-    repo.commit('Add file with spaces')
-    repo.tag_create('after_spaces')
+    commit_all('Add file with spaces', tag: 'after_spaces')
 
-    # Add file with UTF-8 characters (skull ☠ = U+2620)
+    # File with UTF-8 characters in its name (skull ☠ = U+2620)
     write_file('file☠skull.rb', "# frozen_string_literal: true\n\nmodule Skull\nend\n")
-    repo.add(all: true)
-    repo.commit('Add file with UTF-8 name')
-    repo.tag_create('after_utf8')
+    commit_all('Add file with UTF-8 name', tag: 'after_utf8')
 
-    # Rename UTF-8 file
-    FileUtils.mv(File.join(repo_dir, 'file☠skull.rb'), File.join(repo_dir, 'renamed☠skull.rb'))
+    FileUtils.mv(repo_path('file☠skull.rb'), repo_path('renamed☠skull.rb'))
     write_file('renamed☠skull.rb', "# frozen_string_literal: true\n\nmodule RenamedSkull\nend\n")
-    repo.add(all: true)
-    repo.commit('Rename UTF-8 file')
-    repo.tag_create('after_utf8_rename')
-
-    # Add file with tab in name (git escapes as \t)
-    setup_tab_filename
-
-    # Multiple file changes
-    write_file('lib/main.rb', "# frozen_string_literal: true\n\nmodule Main\n  VERSION = '1.1.0'\nend\n")
-    write_file('lib/helper.rb', "# frozen_string_literal: true\n\nmodule Helper\nend\n")
-    write_file('CHANGELOG.md', "# Changelog\n\n## 1.1.0\n\n- Added helper\n")
-    repo.add(all: true)
-    repo.commit('Bump version and add helper')
-    repo.tag_create('after_multi')
-    repo.tag_create('main_tip')
+    commit_all('Rename UTF-8 file', tag: 'after_utf8_rename')
   end
 
   def setup_tab_filename
-    # Create file with tab character in name - git will quote and escape this
-    # Skip on Windows where tab characters are not allowed in filenames
+    # File with a tab character in its name - git will quote and escape this.
+    # Skip on Windows where tab characters are not allowed in filenames.
     unless Gem.win_platform?
-      tab_file = File.join(repo_dir, "file\twith\ttab.txt")
-      File.write(tab_file, "Content with tab in filename\n")
-      repo.add(all: true)
-      repo.commit('Add file with tab in name')
+      write_file("file\twith\ttab.txt", "Content with tab in filename\n")
+      commit_all('Add file with tab in name')
     end
     repo.tag_create('after_tab_filename')
+  end
+
+  def setup_multi_file_change
+    write_file('lib/main.rb', "# frozen_string_literal: true\n\nmodule Main\n  VERSION = '1.1.0'\nend\n")
+    write_file('lib/helper.rb', "# frozen_string_literal: true\n\nmodule Helper\nend\n")
+    write_file('CHANGELOG.md', "# Changelog\n\n## 1.1.0\n\n- Added helper\n")
+    commit_all('Bump version and add helper', tag: 'after_multi')
+    repo.tag_create('main_tip')
   end
 
   def setup_feature_branch
@@ -117,14 +110,11 @@ module DiffTestRepositorySetup
     repo.checkout('feature', new_branch: true)
 
     write_file('lib/feature.rb', "# frozen_string_literal: true\n\nmodule Feature\nend\n")
-    repo.add('lib/feature.rb')
-    repo.commit('Add feature module')
-    repo.tag_create('feature_tip')
+    commit_all('Add feature module', tag: 'feature_tip')
 
     # Return to main
     repo.checkout('main')
   end
-  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 end
 
 # Shared context providing a repository with a rich git history for diff testing.
