@@ -6,6 +6,9 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
