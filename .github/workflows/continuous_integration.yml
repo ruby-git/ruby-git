@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 # Cancel an in-progress run when the same PR (or branch) gets a new push. For
 # pull_request events github.ref is refs/pull/<n>/merge, so runs are grouped per PR
 # and pushing a new commit -- or force-pushing during a rebase -- no longer leaves a
@@ -49,6 +52,41 @@ jobs:
       - name: Run RuboCop and YARD
         run: bundle exec rake rubocop yard
         timeout-minutes: 15
+
+  # Lint the workflow files with actionlint. Run the same check locally with:
+  #
+  #     rake lint:actions
+  #
+  # This is its own job rather than a step in Lint and Docs so that it needs no Ruby
+  # setup and reports even when RuboCop or YARD fails. The runner has shellcheck, which
+  # actionlint uses to lint the shell in `run:` steps.
+  workflow-lint:
+    name: Workflow Lint
+
+    # Skip this job if triggered by a release PR
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      # The action downloads the newest actionlint release, which is its default. There
+      # is no config file here that a release could outgrow, so the only cost of
+      # tracking the newest release is that a release which adds a check can fail this
+      # job until the workflow it flagged is fixed. That is cheaper than a pinned
+      # checker that silently ages. To unblock an unrelated PR, pin an exact release
+      # with the `version` input and open an issue to unpin. The action does not verify
+      # the download against the release's checksums. pyflakes is off because no
+      # workflow here has a Python step.
+      - name: Lint GitHub Actions Workflows
+        uses: raven-actions/actionlint@v2
+        with:
+          pyflakes: false
+        timeout-minutes: 5
 
   # Ensure that local links in markdown docs are valid.
   #
@@ -301,8 +339,8 @@ jobs:
       - name: Verify the Locale Took Effect
         run: |
           dir="$(mktemp -d)"
-          localized="$(cd "$dir" && git status 2>&1 || true)"
-          english="$(cd "$dir" && LC_ALL=C git status 2>&1 || true)"
+          localized="$(git -C "$dir" status 2>&1 || true)"
+          english="$(LC_ALL=C git -C "$dir" status 2>&1 || true)"
           echo "LC_ALL=$LC_ALL -> $localized"
           echo "LC_ALL=C -> $english"
           if [ "$localized" = "$english" ]; then
