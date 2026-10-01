@@ -38,6 +38,7 @@ jobs:
 
     steps:
       - name: Checkout Code
+        id: checkout
         uses: actions/checkout@v6
 
       - name: Setup Ruby
@@ -69,26 +70,12 @@ jobs:
         run: bundle exec rake yard:example-test
         timeout-minutes: 15
 
-  # Ensure that local links in markdown docs are valid.
-  #
-  # The checker is configured in .lychee.toml. Run the same check locally with:
-  #
-  #     rake markdown:links
-  #
-  links:
-    name: Markdown Links
-
-    # Skip this job if triggered by a release PR
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v6
-
+      # Check that local links in markdown docs are valid. lychee needs no Ruby, so this
+      # step runs whenever checkout succeeded, even after a Ruby step fails. The checker
+      # is configured in .lychee.toml. Run the same check locally with:
+      #
+      #     rake markdown:links
+      #
       # Track the newest lychee release rather than pinning one. Without this the
       # action installs whatever version its own default names, which moves when the
       # `@v2` tag moves -- pinned, but pinned by someone else and bumped without a
@@ -106,6 +93,7 @@ jobs:
       # lychee docs, and commit that. Pin `lycheeVersion` to the last good tag only to
       # unblock an unrelated PR, and open an issue to unpin.
       - name: Check Markdown Links
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
         uses: lycheeverse/lychee-action@v2
         with:
           lycheeVersion: latest
