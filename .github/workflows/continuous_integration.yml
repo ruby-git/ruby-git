@@ -16,18 +16,19 @@ concurrency:
 jobs:
   # RuboCop and YARD analyze source text, so their results do not depend on the
   # runtime executing them: RuboCop's verdict is fixed by TargetRubyVersion in
-  # .rubocop.yml, not by the host Ruby. Running them once here instead of inside the
-  # matrix removes the single largest cost in the build -- RuboCop alone accounted for
-  # over half the wall time of the JRuby and TruffleRuby jobs -- while checking exactly
-  # the same things.
+  # .rubocop.yml, not by the host Ruby. Running each once, in the two jobs below,
+  # instead of inside the matrix removes the single largest cost in the build --
+  # RuboCop alone accounted for over half the wall time of the JRuby and TruffleRuby
+  # jobs -- while checking exactly the same things.
   #
-  # Ruby 3.4 hosts this job rather than the newest supported Ruby because it gates
+  # They are separate jobs so that a failure in one does not hide the result of the
+  # other: one push reports both verdicts, each as its own status check.
+  #
+  # Ruby 3.4 hosts both jobs rather than the newest supported Ruby because they gate
   # merges: a lint gate should be insulated from churn in a brand-new major, and Ruby
   # 4.0 deprecations still surface through the matrix jobs below, which do run 4.0.
-  # It also has to be MRI, since YARD and yard-lint cannot build on JRuby or
-  # TruffleRuby (see the gemspec).
-  lint:
-    name: Lint and Docs
+  rubocop:
+    name: RuboCop
 
     # Skip this job if triggered by a release PR
     if: >-
@@ -46,8 +47,52 @@ jobs:
           ruby-version: "3.4"
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      - name: Run RuboCop and YARD
-        run: bundle exec rake rubocop yard
+      - name: Run RuboCop
+        run: bundle exec rake rubocop
+        timeout-minutes: 15
+
+  # Builds the YARD docs, lints them with yard-lint, and runs the @example tags as
+  # tests. These are the subtasks of `rake yard`, run as separate steps rather than
+  # through `rake yard` because Rake stops at the first failing prerequisite. Each step
+  # after the first runs even when an earlier one failed, so one push reports every
+  # problem. That is safe because the steps are independent: yard:lint and
+  # yard:example-test parse lib/ themselves and do not read the .yardoc that
+  # yard:build writes. A subtask added to `rake yard` needs a step here too.
+  #
+  # This job has to be MRI, since YARD and yard-lint cannot build on JRuby or
+  # TruffleRuby (see the gemspec).
+  yard:
+    name: YARD
+
+    # Skip this job if triggered by a release PR
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+      - name: Build YARD Docs
+        run: bundle exec rake yard:build
+        timeout-minutes: 15
+
+      - name: Lint YARD Docs
+        if: ${{ !cancelled() }}
+        run: bundle exec rake yard:lint
+        timeout-minutes: 15
+
+      - name: Test YARD Examples
+        if: ${{ !cancelled() }}
+        run: bundle exec rake yard:example-test
         timeout-minutes: 15
 
   # Ensure that local links in markdown docs are valid.
@@ -93,6 +138,53 @@ jobs:
           args: --config .lychee.toml .
           fail: true
 
+  # The branch ruleset requires one status check, Lint and Docs, for the lint and docs
+  # jobs above instead of requiring each of them by name. This job reports under that
+  # name. A new lint or docs job is added to `needs` here and the ruleset stays as it
+  # is. The check step reads every job in `needs` from its JSON, so a job added there
+  # is checked without any other edit.
+  #
+  # The guard, `always()`, and the success-only check follow the reasoning on All Specs
+  # Passed below: a ruleset treats a skipped check as passing, so this job must report
+  # a real verdict on every non-release PR and fail closed when any job it covers did
+  # anything other than succeed.
+  lint-complete:
+    name: Lint and Docs
+
+    needs: [rubocop, yard, links]
+
+    # Report a verdict on every non-release PR regardless of the job results, and skip
+    # on release PRs, where those jobs were never meant to run.
+    if: >-
+      always() &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--')))
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Fails unless every job in `needs` succeeded. All Specs Passed below reuses this
+      # step through the YAML anchor, so the two gates apply the same rule.
+      - &check-needs-results
+        name: Check the results of the needed jobs
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          results="$(jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<<"$NEEDS")"
+          status=0
+          while read -r result; do
+            case "${result#*: }" in
+              success)
+                echo "$result"
+                ;;
+              *)
+                echo "::error::$result"
+                status=1
+                ;;
+            esac
+          done <<<"$results"
+          exit "$status"
+
   build:
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
 
@@ -125,7 +217,7 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      # Specs only. RuboCop and YARD run once in the lint job above instead of being
+      # Specs only. RuboCop and YARD run once in the jobs above instead of being
       # repeated identically on every runtime. `rake build` still runs on every
       # platform, as a prerequisite of the Test Gem step below.
       - name: Run Specs
@@ -173,10 +265,10 @@ jobs:
   # a cancelled run would then skip the gate, and a skipped conclusion is one rulesets treat
   # as passing -- so a build that never finished would stop blocking the merge.
   #
-  # The case below accepts `success` only. `build` and this job now carry the same release-PR
-  # guard, so this job runs exactly when `build` ran; a `skipped` result would mean the two
-  # guards have drifted apart, and failing closed on it turns that into a loud failure rather
-  # than a silent pass.
+  # The check step accepts `success` only. `build` and this job now carry the same
+  # release-PR guard, so this job runs exactly when `build` ran; a `skipped` result would
+  # mean the two guards have drifted apart, and failing closed on it turns that into a loud
+  # failure rather than a silent pass.
   build-complete:
     name: All Specs Passed
 
@@ -192,17 +284,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check the result of the build job
-        run: |
-          case "${{ needs.build.result }}" in
-            success)
-              echo "build: ${{ needs.build.result }}"
-              ;;
-            *)
-              echo "::error::build: ${{ needs.build.result }}"
-              exit 1
-              ;;
-          esac
+      # The step defined in Lint and Docs above
+      - *check-needs-results
 
   # Everything above runs in English, because GitHub-hosted runners generate no locale
   # beyond C/C.UTF-8. That makes git's translated diagnostics invisible to CI even
@@ -271,8 +354,9 @@ jobs:
           sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends language-pack-de
           sudo locale-gen de_DE.UTF-8
 
-      # Ruby 3.4 to share the bundler cache the lint job already warms. Nothing about
-      # this job is Ruby-version specific -- the locale is what is under test.
+      # Ruby 3.4 to share the bundler cache the RuboCop and YARD jobs already warm.
+      # Nothing about this job is Ruby-version specific -- the locale is what is under
+      # test.
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -355,8 +439,9 @@ jobs:
           mkdir -p "$RUNNER_TEMP/empty-locale-dir"
           echo "LOCPATH=$RUNNER_TEMP/empty-locale-dir" >> "$GITHUB_ENV"
 
-      # Ruby 3.4 to share the bundler cache the lint job already warms. Nothing about
-      # this job is Ruby-version specific -- the locale environment is what differs.
+      # Ruby 3.4 to share the bundler cache the RuboCop and YARD jobs already warm.
+      # Nothing about this job is Ruby-version specific -- the locale environment is
+      # what differs.
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
