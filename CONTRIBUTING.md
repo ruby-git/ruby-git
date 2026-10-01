@@ -98,6 +98,8 @@ prerequisite is missing.
 | git | `>= 2.43.0` (matches `git.gemspec` `requirements`) | Older git versions are not supported and the test suite will not pass against them. |
 | Node.js / npm | Optional | Required only to install the local Conventional Commit `commit-msg` hook (Husky + commitlint). If npm is missing, `bin/setup` will warn and continue. CI will still validate commit messages. |
 | [lychee](https://lychee.cli.rs) | `>= 0.24.0` | Runs the markdown link check (`rake markdown:links`), which is part of the default task. The floor comes from [`.lychee.toml`](.lychee.toml): older releases cannot parse the enum form of `include_fragments`. Install with `brew install lychee` (macOS), `snap install lychee` (Ubuntu), `pacman -S lychee` (Arch), `winget install --id lycheeverse.lychee` (Windows), or see the [install docs](https://github.com/lycheeverse/lychee#installation). |
+| [actionlint](https://github.com/rhysd/actionlint) | Any; CI runs the newest release | Lints the GitHub Actions workflows (`rake lint:actions`), which is part of the default task. Install with `brew install actionlint` (macOS, Linux), `winget install --id rhysd.actionlint`, `scoop install actionlint`, or `choco install actionlint` (Windows), `mise use -g actionlint`, `go install github.com/rhysd/actionlint/cmd/actionlint@latest`, or see the [install docs](https://github.com/rhysd/actionlint/blob/main/docs/install.md). An older local copy can pass a workflow that CI rejects. |
+| [shellcheck](https://github.com/koalaman/shellcheck) | Optional | actionlint uses it to lint the shell in `run:` steps. Without it those steps go unchecked locally, and `rake lint:actions` says so; CI has it. See the [install docs](https://github.com/koalaman/shellcheck#installing). |
 
 #### A note for Windows contributors
 
@@ -110,6 +112,14 @@ behavior they cover goes unverified locally.
 The same privilege decides whether Git for Windows materializes the committed
 `.claude/skills` symlink, so enabling Developer Mode fixes both at once. See
 [Agent configuration](#agent-configuration).
+
+For actionlint, `winget install --id rhysd.actionlint`, `scoop install actionlint`,
+and `choco install actionlint` each put `actionlint.exe` on `PATH`. Without a
+package manager, download the Windows zip from its
+[releases page](https://github.com/rhysd/actionlint/releases) and put
+`actionlint.exe` on `PATH` yourself. A terminal started before the install does not
+see the new `PATH`, and neither does a terminal inside an editor started before it,
+such as VS Code; restart the editor, not just the terminal.
 
 ### Bootstrap the project
 
@@ -135,7 +145,9 @@ bin/setup
 Bundler, and exits non-zero when it is missing or too old. lychee is a Rust binary
 rather than a gem, so `bundle install` cannot supply it and `bin/setup` cannot
 install it for you. Every platform this project supports has a packaged build,
-and the error message names the command for yours.
+and the error message names the command for yours. It also checks that
+[actionlint](https://github.com/rhysd/actionlint) is installed, for the same reason,
+but checks no version: CI runs the newest release.
 
 ### Verify the toolchain
 
@@ -145,9 +157,9 @@ Once `bin/setup` succeeds, confirm the full test and lint suite passes locally:
 bundle exec rake
 ```
 
-This runs everything CI checks: specs, RuboCop, the markdown link check, YARD,
-and the gem build. It is the canonical way to validate a change before
-requesting review.
+This runs everything CI checks: specs, RuboCop, the markdown link check, the
+workflow lint, YARD, and the gem build. It is the canonical way to validate a change
+before requesting review.
 
 One caveat on the `links` task: passing locally does not guarantee the CI job
 passes, and the gap is the environment rather than the tool. A link whose

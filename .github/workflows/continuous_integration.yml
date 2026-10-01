@@ -50,6 +50,38 @@ jobs:
         run: bundle exec rake rubocop yard
         timeout-minutes: 15
 
+  # Lint the workflow files with actionlint. Run the same check locally with:
+  #
+  #     rake lint:actions
+  #
+  # This is its own job rather than a step in Lint and Docs so that it needs no Ruby
+  # setup and reports even when RuboCop or YARD fails. The runner has shellcheck, which
+  # actionlint uses to lint the shell in `run:` steps.
+  workflow-lint:
+    name: Workflow Lint
+
+    # Skip this job if triggered by a release PR
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      # The action downloads the newest actionlint release rather than a pinned one, for
+      # the reason the lychee step below gives: an occasional known-cause failure when a
+      # release adds a check is cheaper than a checker that silently ages. When one does,
+      # fix the workflow it flagged. The action does not verify the download against the
+      # release's checksums. pyflakes is off because no workflow here has a Python step.
+      - name: Lint GitHub Actions Workflows
+        uses: raven-actions/actionlint@v2
+        with:
+          pyflakes: false
+        timeout-minutes: 5
+
   # Ensure that local links in markdown docs are valid.
   #
   # The checker is configured in .lychee.toml. Run the same check locally with:
@@ -285,8 +317,8 @@ jobs:
       - name: Verify the Locale Took Effect
         run: |
           dir="$(mktemp -d)"
-          localized="$(cd "$dir" && git status 2>&1 || true)"
-          english="$(cd "$dir" && LC_ALL=C git status 2>&1 || true)"
+          localized="$(git -C "$dir" status 2>&1 || true)"
+          english="$(LC_ALL=C git -C "$dir" status 2>&1 || true)"
           echo "LC_ALL=$LC_ALL -> $localized"
           echo "LC_ALL=C -> $english"
           if [ "$localized" = "$english" ]; then
