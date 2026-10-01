@@ -221,24 +221,43 @@ module Git
     end
     private_class_method :resolve_index
 
-    # Expand a path against the process working directory
+    # Expand a path the way a shell prompt would before git runs
     #
-    # @param path [String, nil] the path to expand, or `nil` for the process
-    #   working directory itself
+    # Follows `File.expand_path`: `~` is the home directory, a relative path is
+    # joined onto `base` (or onto the process working directory when `base` is
+    # `nil`), `.` and `..` are normalized, and an absolute path is unchanged.
+    #
+    # @example Expand a relative path against the process working directory
+    #   Git::PathResolver.expand_path('repo', 'Failed to resolve the working directory')
+    #   #=> '/current/dir/repo'
+    #
+    # @example Expand a relative path against another directory
+    #   Git::PathResolver.expand_path('repo', 'Failed to resolve the working directory', base: '/output')
+    #   #=> '/output/repo'
+    #
+    # @param path [String, Pathname, nil] the path to expand, or `nil` for the
+    #   process working directory itself
     #
     # @param message [String] the message of the {Git::Error} raised when the
     #   expansion fails
     #
+    # @param base [String, Pathname, nil] the directory a relative `path` is
+    #   expanded against, or `nil` for the process working directory
+    #
     # @return [String] the absolute path
+    #
+    # @raise [ArgumentError] if the path begins with `~user` for a user that
+    #   does not exist
     #
     # @raise [Git::Error] if the path cannot be expanded, which happens when the
     #   process working directory has been removed
     #
     # @api private
     #
-    def expand_path(path, message)
-      Git::SystemCallGuard.call(message) { File.expand_path(path || Dir.pwd) }
+    def expand_path(path, message, base: nil)
+      Git::SystemCallGuard.call(message) do
+        path && base ? File.expand_path(path, base) : File.expand_path(path || Dir.pwd)
+      end
     end
-    private_class_method :expand_path
   end
 end

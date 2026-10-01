@@ -280,6 +280,22 @@ RSpec.describe Git, :integration do
         expected_path = File.join(chdir_dir, 'my-clone')
         expect(repository.dir).to eq(Pathname.new(expected_path))
       end
+
+      context 'with a ~-prefixed directory' do
+        include_context 'with a temporary home directory'
+
+        subject(:repository) { Git.clone(source_dir, '~/scratch', chdir: chdir_dir) }
+
+        it 'creates the clone under the home directory and returns it' do
+          expect(repository.dir).to eq(Pathname.new(File.join(home_dir, 'scratch')))
+          expect(repository.repo.directory?).to be(true)
+        end
+
+        it 'does not create a directory named ~ under :chdir' do
+          repository
+          expect(Dir.exist?(File.join(chdir_dir, '~'))).to be(false)
+        end
+      end
     end
 
     context 'with :index option' do
@@ -308,6 +324,16 @@ RSpec.describe Git, :integration do
         gitfile = File.join(File.realpath(clone_dir), '.git')
         expect(File).to be_file(gitfile)
         expect(File.read(gitfile)).to start_with('gitdir:')
+      end
+    end
+
+    context 'with a ~-prefixed :repository option' do
+      include_context 'with a temporary home directory'
+
+      subject(:repository) { Git.clone(source_dir, clone_dir, repository: '~/separate-git') }
+
+      it 'creates the separate git directory under the home directory' do
+        expect(repository.repo).to eq(Pathname.new(File.join(home_dir, 'separate-git')))
       end
     end
   end
@@ -372,6 +398,33 @@ RSpec.describe Git, :integration do
 
       it 'sets #repo to the directory git created relative to the process working directory' do
         expect(repository.repo).to eq(Pathname.new(File.join(File.realpath(init_dir), 'separate.git')))
+        expect(repository.repo.directory?).to be(true)
+      end
+    end
+
+    context 'with a ~-prefixed directory' do
+      include_context 'with a temporary home directory'
+
+      subject(:repository) { Dir.chdir(init_dir) { Git.init('~/scratch') } }
+
+      it 'creates the repository under the home directory and returns it' do
+        expect(repository.dir).to eq(Pathname.new(File.join(home_dir, 'scratch')))
+        expect(repository.repo.directory?).to be(true)
+      end
+
+      it 'does not create a directory named ~ in the process working directory' do
+        repository
+        expect(Dir.exist?(File.join(init_dir, '~'))).to be(false)
+      end
+    end
+
+    context 'with a ~-prefixed :repository option' do
+      include_context 'with a temporary home directory'
+
+      subject(:repository) { Dir.chdir(init_dir) { Git.init('worktree', repository: '~/sep.git') } }
+
+      it 'creates the git directory under the home directory and returns a repository bound to it' do
+        expect(repository.repo).to eq(Pathname.new(File.join(home_dir, 'sep.git')))
         expect(repository.repo.directory?).to be(true)
       end
     end
