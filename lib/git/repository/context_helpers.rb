@@ -37,6 +37,18 @@ module Git
       CONTEXT_HELPERS_POSITIONAL_PARAMETERS = %i[req opt rest].freeze
       private_constant :CONTEXT_HELPERS_POSITIONAL_PARAMETERS
 
+      # Deprecation message for {#set_index}; UPGRADING.md quotes the same text
+      SET_INDEX_DEPRECATION = 'Git::Repository#set_index is deprecated and will be removed in a future major ' \
+                              'release. Open a repository bound to the index instead: ' \
+                              'Git.open(dir, index: path) or Git.bare(git_dir, index: path).'
+      private_constant :SET_INDEX_DEPRECATION
+
+      # Deprecation message for {#set_working}; UPGRADING.md quotes the same text
+      SET_WORKING_DEPRECATION = 'Git::Repository#set_working is deprecated and will be removed in a future major ' \
+                                'release. Open a repository bound to the working tree instead: ' \
+                                'Git.open(work_dir, repository: git_dir).'
+      private_constant :SET_WORKING_DEPRECATION
+
       # Changes the current working directory to the repository working directory
       # for the duration of the block
       #
@@ -248,8 +260,15 @@ module Git
       # false` to skip the existence check (useful when the index will be
       # created by git later).
       #
+      # Every call warns through {Git::Deprecation}. The rebind is visible to
+      # every other holder of the receiver, so open a repository bound to the
+      # index up front instead, or use {#with_index} for the duration of a block.
+      #
       # @example Set the index to a custom path
       #   repo.set_index('/path/to/custom.index')
+      #
+      # @example Open a repository bound to the index instead
+      #   repo = Git.open('/path/to/repo', index: '/path/to/custom.index')
       #
       # @param index_file [String, Pathname] path to the new index file
       #
@@ -261,7 +280,12 @@ module Git
       # @raise [ArgumentError] if `must_exist: true` (the default) and
       #   `index_file` does not exist
       #
+      # @deprecated Use `Git.open(dir, index: path)` or
+      #   `Git.bare(git_dir, index: path)` to open a repository bound to the
+      #   index, or {#with_index} to bind a copy for the duration of a block.
+      #
       def set_index(index_file, must_exist: true)
+        Git::Deprecation.warn(SET_INDEX_DEPRECATION)
         new_path = context_helpers_validate_path(index_file, must_exist)
         @execution_context = @execution_context.dup_with(git_index_file: new_path.to_s)
         nil
@@ -273,8 +297,16 @@ module Git
       # By default raises if `work_dir` does not exist. Pass `must_exist:
       # false` to skip the existence check.
       #
+      # Every call warns through {Git::Deprecation}. The rebind is visible to
+      # every other holder of the receiver, so open a repository bound to the
+      # working tree up front instead, or use {#with_working} for the duration
+      # of a block.
+      #
       # @example Set the working directory to a custom path
       #   repo.set_working('/path/to/working')
+      #
+      # @example Open a repository bound to the working tree instead
+      #   repo = Git.open('/path/to/working', repository: '/path/to/repo/.git')
       #
       # @param work_dir [String, Pathname] path to the new working directory
       #
@@ -286,7 +318,12 @@ module Git
       # @raise [ArgumentError] if `must_exist: true` (the default) and
       #   `work_dir` does not exist
       #
+      # @deprecated Use `Git.open(work_dir, repository: git_dir)` to open a
+      #   repository bound to the working tree, or {#with_working} to bind a
+      #   copy for the duration of a block.
+      #
       def set_working(work_dir, must_exist: true)
+        Git::Deprecation.warn(SET_WORKING_DEPRECATION)
         new_path = context_helpers_validate_path(work_dir, must_exist)
         @execution_context = @execution_context.dup_with(git_work_dir: new_path.to_s)
         nil

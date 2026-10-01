@@ -371,7 +371,9 @@ end
 Calling `set_index` or `set_working` on the outer repository inside the block is no
 longer undone when the block ends. In v5.x the block restored the receiver's
 original index and working tree on exit; in v6.x the receiver stays bound to
-whatever `set_index` or `set_working` gave it.
+whatever `set_index` or `set_working` gave it. Both methods are deprecated in
+v6.0.0 (see [`set_index` and `set_working`
+deprecated](#set_index-and-set_working-deprecated)).
 
 The repository yielded by `with_temp_index` or `with_temp_working` stays bound to
 the temporary path after the block removes it. This is the one case where code that
@@ -417,6 +419,93 @@ passing one raises `ArgumentError` (see [Unsupported options raise
 argument raises `ArgumentError` for the wrong number of arguments. The
 [`Git::Repository` option renames](#gitrepository-option-renames) entry under
 "Upgrading to v5.x" maps each removed form to its replacement.
+
+### `set_index` and `set_working` deprecated
+
+`Git::Repository#set_index` and `#set_working` rebind the receiver to another index
+file or working tree. The rebind is visible to every other holder of the repository
+object: a `Git::Object`, a `Git::Branch`, a second caller, another thread. v6.0.0
+keeps both methods but warns on every call through `Git::Deprecation`, and a later
+major release removes them. The warnings are:
+
+- `Git::Repository#set_index is deprecated and will be removed in a future major
+  release. Open a repository bound to the index instead: Git.open(dir, index: path)
+  or Git.bare(git_dir, index: path).`
+- `Git::Repository#set_working is deprecated and will be removed in a future major
+  release. Open a repository bound to the working tree instead: Git.open(work_dir,
+  repository: git_dir).`
+
+Open a repository bound to the index or working tree up front instead of rebinding
+it afterward. `Git.open` accepts `:index` and `:repository`, and `Git.bare` accepts
+`:index`:
+
+```ruby
+# instead of
+repo = Git.open('/path/to/repo')
+repo.set_index('/path/to/custom.index')
+
+# open the bound repository
+repo = Git.open('/path/to/repo', index: '/path/to/custom.index')
+
+# instead of
+repo = Git.bare('/srv/repo.git')
+repo.set_index('/tmp/scratch.index')
+
+# open the bound bare repository
+repo = Git.bare('/srv/repo.git', index: '/tmp/scratch.index')
+
+# instead of
+repo.set_working('/path/to/worktree')
+
+# open the bound repository
+repo = Git.open('/path/to/worktree', repository: '/path/to/repo/.git')
+```
+
+`Git.open` and `Git.bare` build the repository from scratch, so a replacement built
+from an existing object passes along everything it is not changing. `set_working`
+kept whatever index the receiver had, so a receiver with a custom index passes
+`:index` again. When `:repository` is given without `:index`, the index resolves to
+`<repository>/index`. `repo.repo` and `repo.index` return the current `.git`
+directory and index file as `Pathname`s:
+
+```ruby
+# instead of
+repo.set_working('/path/to/worktree')
+
+# rebind from an existing object, keeping its .git directory and index
+rebound = Git.open('/path/to/worktree', repository: repo.repo.to_s, index: repo.index.to_s)
+```
+
+A repository opened without `:index` has `repo.index` pointing at `<git dir>/index`,
+so passing it is harmless.
+
+The `:git_ssh`, `:binary_path`, and `:log` options are not carried over either.
+`repo.git_ssh` and `repo.binary_path` are readable and can be passed back in. The
+logger has no public reader on `Git::Repository`, so a caller that opened with
+`:log` passes the logger again from wherever it was first built:
+
+```ruby
+rebound = Git.open('/path/to/worktree',
+                   repository: repo.repo.to_s, index: repo.index.to_s,
+                   git_ssh: repo.git_ssh, binary_path: repo.binary_path,
+                   log: logger)
+```
+
+A caller that needs a copy of an existing object for the duration of a block, with
+every setting intact, uses `with_index` or `with_working` and the block parameter.
+The yielded repository keeps the receiver's logger, `git_ssh`, and `binary_path`:
+
+```ruby
+repo.with_working('/path/to/worktree') do |bound|
+  bound.add('.')
+end
+```
+
+`Git.open` raises `ArgumentError` when the working directory does not exist, so
+`set_working(dir, must_exist: false)` for a directory that git creates later has no
+`Git.open` equivalent. If you need that, open an issue describing the use case.
+`set_index(path, must_exist: false)` has no such gap: the `:index` option is not
+checked for existence.
 
 ### `Git::Log` Enumerable interface and `Commit#set_commit` removed
 

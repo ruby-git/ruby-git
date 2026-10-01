@@ -158,58 +158,75 @@ RSpec.describe Git::Repository::ContextHelpers do
       allow(execution_context).to receive(:dup_with).and_return(new_context)
     end
 
-    it 'rebuilds the execution context via dup_with with the new index file' do
-      expect(execution_context).to receive(:dup_with).with(
-        git_index_file: File.expand_path('/repo/.git/new-index')
-      ).and_return(new_context)
-      described_instance.set_index('/repo/.git/new-index', must_exist: false)
+    it 'emits a deprecation warning that names the Git.open replacement' do
+      message = 'Git::Repository#set_index is deprecated and will be removed in a future major release. ' \
+                'Open a repository bound to the index instead: ' \
+                'Git.open(dir, index: path) or Git.bare(git_dir, index: path).'
+      expect { described_instance.set_index('/repo/.git/new-index', must_exist: false) }
+        .to raise_error(ActiveSupport::DeprecationException, /#{Regexp.escape(message)}/)
     end
 
-    it 'raises ArgumentError if must_exist: true and path does not exist' do
-      expect do
-        described_instance.set_index('/nonexistent/index', must_exist: true)
-      end.to raise_error(ArgumentError, /path does not exist/)
+    it 'emits the deprecation warning before validating the path' do
+      expect { described_instance.set_index('/nonexistent/path') }
+        .to raise_error(ActiveSupport::DeprecationException)
     end
 
-    it 'does not raise when must_exist: false and path does not exist' do
-      expect do
-        described_instance.set_index('/nonexistent/index', must_exist: false)
-      end.not_to raise_error
-    end
+    context 'with the deprecation silenced' do
+      around { |example| Git::Deprecation.silence { example.run } }
 
-    it 'raises ArgumentError when path does not exist and must_exist is not given' do
-      expect do
-        described_instance.set_index('/nonexistent/index')
-      end.to raise_error(ArgumentError, /path does not exist/)
-    end
-
-    it 'returns nil (void)' do
-      expect(described_instance.set_index('/repo/.git/new-index', must_exist: false)).to be_nil
-    end
-
-    context 'when must_exist: true and the index file exists' do
-      let(:existing_index_path) { '/repo/.git/existing-index' }
-      let(:expanded_index_path) { File.expand_path(existing_index_path) }
-      let(:existing_pathname) { instance_double(Pathname, exist?: true, to_s: expanded_index_path) }
-
-      before do
-        allow(Pathname).to receive(:new).and_call_original
-        allow(Pathname).to receive(:new).with(expanded_index_path).and_return(existing_pathname)
+      it 'rebuilds the execution context via dup_with with the new index file' do
+        expect(execution_context).to receive(:dup_with).with(
+          git_index_file: File.expand_path('/repo/.git/new-index')
+        ).and_return(new_context)
+        described_instance.set_index('/repo/.git/new-index', must_exist: false)
       end
 
-      it 'rebuilds the execution context with the existing index path without raising' do
-        expect(execution_context).to receive(:dup_with)
-          .with(git_index_file: expanded_index_path)
-          .and_return(new_context)
-        expect { described_instance.set_index(existing_index_path, must_exist: true) }
-          .not_to raise_error
+      it 'raises ArgumentError if must_exist: true and path does not exist' do
+        expect do
+          described_instance.set_index('/nonexistent/index', must_exist: true)
+        end.to raise_error(ArgumentError, /path does not exist/)
       end
-    end
 
-    context 'with the removed positional check argument' do
-      it 'raises ArgumentError' do
-        expect { described_instance.set_index('/nonexistent/index', false) }
-          .to raise_error(ArgumentError, /wrong number of arguments/)
+      it 'does not raise when must_exist: false and path does not exist' do
+        expect do
+          described_instance.set_index('/nonexistent/index', must_exist: false)
+        end.not_to raise_error
+      end
+
+      it 'raises ArgumentError when path does not exist and must_exist is not given' do
+        expect do
+          described_instance.set_index('/nonexistent/index')
+        end.to raise_error(ArgumentError, /path does not exist/)
+      end
+
+      it 'returns nil (void)' do
+        expect(described_instance.set_index('/repo/.git/new-index', must_exist: false)).to be_nil
+      end
+
+      context 'when must_exist: true and the index file exists' do
+        let(:existing_index_path) { '/repo/.git/existing-index' }
+        let(:expanded_index_path) { File.expand_path(existing_index_path) }
+        let(:existing_pathname) { instance_double(Pathname, exist?: true, to_s: expanded_index_path) }
+
+        before do
+          allow(Pathname).to receive(:new).and_call_original
+          allow(Pathname).to receive(:new).with(expanded_index_path).and_return(existing_pathname)
+        end
+
+        it 'rebuilds the execution context with the existing index path without raising' do
+          expect(execution_context).to receive(:dup_with)
+            .with(git_index_file: expanded_index_path)
+            .and_return(new_context)
+          expect { described_instance.set_index(existing_index_path, must_exist: true) }
+            .not_to raise_error
+        end
+      end
+
+      context 'with the removed positional check argument' do
+        it 'raises ArgumentError' do
+          expect { described_instance.set_index('/nonexistent/index', false) }
+            .to raise_error(ArgumentError, /wrong number of arguments/)
+        end
       end
     end
   end
@@ -244,14 +261,6 @@ RSpec.describe Git::Repository::ContextHelpers do
       yielded = nil
       subclass_instance.with_index(new_index) { |repo| yielded = repo }
       expect(yielded).to be_an_instance_of(subclass_instance.class)
-    end
-
-    it 'leaves a set_index made on the receiver inside the block in place after the block' do
-      other_index = '/repo/.git/other.index'
-      described_instance.with_index(new_index) do |_repo|
-        described_instance.set_index(other_index, must_exist: false)
-      end
-      expect(described_instance.index).to eq(Pathname.new(File.expand_path(other_index)))
     end
 
     it 'returns the value returned by the block' do
@@ -392,73 +401,89 @@ RSpec.describe Git::Repository::ContextHelpers do
       allow(execution_context).to receive(:dup_with).and_return(new_context)
     end
 
-    it 'rebuilds the execution context via dup_with with the new working directory' do
-      expect(execution_context).to receive(:dup_with).with(
-        git_work_dir: File.expand_path('/other/dir')
-      ).and_return(new_context)
-      described_instance.set_working('/other/dir', must_exist: false)
+    it 'emits a deprecation warning that names the Git.open replacement' do
+      message = 'Git::Repository#set_working is deprecated and will be removed in a future major release. ' \
+                'Open a repository bound to the working tree instead: Git.open(work_dir, repository: git_dir).'
+      expect { described_instance.set_working('/other/dir', must_exist: false) }
+        .to raise_error(ActiveSupport::DeprecationException, /#{Regexp.escape(message)}/)
     end
 
-    it 'raises ArgumentError if must_exist: true and path does not exist' do
-      expect do
-        described_instance.set_working('/nonexistent/dir', must_exist: true)
-      end.to raise_error(ArgumentError, /path does not exist/)
+    it 'emits the deprecation warning before validating the path' do
+      expect { described_instance.set_working('/nonexistent/path') }
+        .to raise_error(ActiveSupport::DeprecationException)
     end
 
-    it 'does not raise when must_exist: false and path does not exist' do
-      expect do
-        described_instance.set_working('/nonexistent/dir', must_exist: false)
-      end.not_to raise_error
-    end
+    context 'with the deprecation silenced' do
+      around { |example| Git::Deprecation.silence { example.run } }
 
-    it 'raises ArgumentError when path does not exist and must_exist is not given' do
-      expect do
-        described_instance.set_working('/nonexistent/dir')
-      end.to raise_error(ArgumentError, /path does not exist/)
-    end
-
-    it 'returns nil (void)' do
-      expect(described_instance.set_working('/other/dir', must_exist: false)).to be_nil
-    end
-
-    context 'when the path cannot be expanded' do
-      before do
-        # File.expand_path consults Dir.pwd for a relative path, so it fails
-        # when the process working directory has been removed.
-        allow(File).to receive(:expand_path).with('relative/dir').and_raise(Errno::ENOENT, 'getcwd')
+      it 'rebuilds the execution context via dup_with with the new working directory' do
+        expect(execution_context).to receive(:dup_with).with(
+          git_work_dir: File.expand_path('/other/dir')
+        ).and_return(new_context)
+        described_instance.set_working('/other/dir', must_exist: false)
       end
 
-      it 'raises Git::Error with the system error as cause' do
-        expect { described_instance.set_working('relative/dir', must_exist: false) }
-          .to raise_error(Git::Error, /Failed to expand the path/) do |error|
-            expect(error.cause).to be_a(Errno::ENOENT)
-          end
-      end
-    end
-
-    context 'when must_exist: true and the directory exists' do
-      let(:existing_work_dir) { '/repo/existing-workdir' }
-      let(:expanded_work_dir) { File.expand_path(existing_work_dir) }
-      let(:existing_pathname) { instance_double(Pathname, exist?: true, to_s: expanded_work_dir) }
-
-      before do
-        allow(Pathname).to receive(:new).and_call_original
-        allow(Pathname).to receive(:new).with(expanded_work_dir).and_return(existing_pathname)
+      it 'raises ArgumentError if must_exist: true and path does not exist' do
+        expect do
+          described_instance.set_working('/nonexistent/dir', must_exist: true)
+        end.to raise_error(ArgumentError, /path does not exist/)
       end
 
-      it 'rebuilds the execution context with the existing working directory without raising' do
-        expect(execution_context).to receive(:dup_with)
-          .with(git_work_dir: expanded_work_dir)
-          .and_return(new_context)
-        expect { described_instance.set_working(existing_work_dir, must_exist: true) }
-          .not_to raise_error
+      it 'does not raise when must_exist: false and path does not exist' do
+        expect do
+          described_instance.set_working('/nonexistent/dir', must_exist: false)
+        end.not_to raise_error
       end
-    end
 
-    context 'with the removed positional check argument' do
-      it 'raises ArgumentError' do
-        expect { described_instance.set_working('/nonexistent/dir', false) }
-          .to raise_error(ArgumentError, /wrong number of arguments/)
+      it 'raises ArgumentError when path does not exist and must_exist is not given' do
+        expect do
+          described_instance.set_working('/nonexistent/dir')
+        end.to raise_error(ArgumentError, /path does not exist/)
+      end
+
+      it 'returns nil (void)' do
+        expect(described_instance.set_working('/other/dir', must_exist: false)).to be_nil
+      end
+
+      context 'when the path cannot be expanded' do
+        before do
+          # File.expand_path consults Dir.pwd for a relative path, so it fails
+          # when the process working directory has been removed.
+          allow(File).to receive(:expand_path).with('relative/dir').and_raise(Errno::ENOENT, 'getcwd')
+        end
+
+        it 'raises Git::Error with the system error as cause' do
+          expect { described_instance.set_working('relative/dir', must_exist: false) }
+            .to raise_error(Git::Error, /Failed to expand the path/) do |error|
+              expect(error.cause).to be_a(Errno::ENOENT)
+            end
+        end
+      end
+
+      context 'when must_exist: true and the directory exists' do
+        let(:existing_work_dir) { '/repo/existing-workdir' }
+        let(:expanded_work_dir) { File.expand_path(existing_work_dir) }
+        let(:existing_pathname) { instance_double(Pathname, exist?: true, to_s: expanded_work_dir) }
+
+        before do
+          allow(Pathname).to receive(:new).and_call_original
+          allow(Pathname).to receive(:new).with(expanded_work_dir).and_return(existing_pathname)
+        end
+
+        it 'rebuilds the execution context with the existing working directory without raising' do
+          expect(execution_context).to receive(:dup_with)
+            .with(git_work_dir: expanded_work_dir)
+            .and_return(new_context)
+          expect { described_instance.set_working(existing_work_dir, must_exist: true) }
+            .not_to raise_error
+        end
+      end
+
+      context 'with the removed positional check argument' do
+        it 'raises ArgumentError' do
+          expect { described_instance.set_working('/nonexistent/dir', false) }
+            .to raise_error(ArgumentError, /wrong number of arguments/)
+        end
       end
     end
   end
