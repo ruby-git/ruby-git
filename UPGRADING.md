@@ -21,6 +21,7 @@ to update your code when upgrading from the preceding major version.
   - [Relative `:repository` and `:index` paths](#relative-repository-and-index-paths)
   - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
+  - [`Git.open` and `Git.bare` reject unknown options](#gitopen-and-gitbare-reject-unknown-options)
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
   - [v4.x-style configuration API removed](#v4x-style-configuration-api-removed)
   - [`Git::Repository#remotes` and `allow_unknown_type` removed](#gitrepositoryremotes-and-allow_unknown_type-removed)
@@ -417,6 +418,29 @@ passing one raises `ArgumentError` (see [Unsupported options raise
 argument raises `ArgumentError` for the wrong number of arguments. The
 [`Git::Repository` option renames](#gitrepository-option-renames) entry under
 "Upgrading to v5.x" maps each removed form to its replacement.
+
+### `Git.open` and `Git.bare` reject unknown options
+
+`Git.open` and `Git.bare` now raise `ArgumentError` when the options hash contains
+a key they do not accept, the same way `Git.ls_remote` and `Git.clone` already do.
+v5.x ignored unknown keys, so a typo such as `respository:` or an unsupported key
+silently returned a repository bound to paths the caller did not ask for.
+
+The accepted keys are:
+
+- `Git.open`: `:repository`, `:index`, `:log`, `:git_ssh`, and `:binary_path`
+- `Git.bare`: `:index`, `:log`, `:git_ssh`, and `:binary_path`
+
+The check runs before any filesystem or git call, so a bad key fails fast. To fix a
+call that now raises, drop the key.
+
+```ruby
+# v5.x: the typo is ignored and the .git directory is auto-detected
+repo = Git.open('/path/to/worktree', respository: '/srv/repo.git')
+
+# v6.x: raises ArgumentError, "Unknown options: respository"
+repo = Git.open('/path/to/worktree', repository: '/srv/repo.git')
+```
 
 ### `Git::Log` Enumerable interface and `Commit#set_commit` removed
 
