@@ -41,13 +41,32 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Ruby
+        id: setup-ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      - name: Run RuboCop and YARD
-        run: bundle exec rake rubocop yard
+      - name: Run RuboCop
+        run: bundle exec rake rubocop
+        timeout-minutes: 15
+
+      # Each YARD subtask runs even when an earlier step fails, so one push reports
+      # every failure. These steps list the subtasks of `rake yard` in tasks/yard.rake;
+      # a subtask added there needs a step here too.
+      - name: Build YARD Docs
+        if: ${{ !cancelled() && steps.setup-ruby.outcome == 'success' }}
+        run: bundle exec rake yard:build
+        timeout-minutes: 15
+
+      - name: Lint YARD Docs
+        if: ${{ !cancelled() && steps.setup-ruby.outcome == 'success' }}
+        run: bundle exec rake yard:lint
+        timeout-minutes: 15
+
+      - name: Test YARD Examples
+        if: ${{ !cancelled() && steps.setup-ruby.outcome == 'success' }}
+        run: bundle exec rake yard:example-test
         timeout-minutes: 15
 
   # Ensure that local links in markdown docs are valid.

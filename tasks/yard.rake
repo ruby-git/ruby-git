@@ -43,6 +43,9 @@ unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
   end
 
   # yard
+  #
+  # The Lint and Docs job in .github/workflows/continuous_integration.yml runs
+  # each of these subtasks as its own step. Add a step there for any new subtask.
 
   yard_tasks = %i[yard:build]
   yard_tasks << :'yard:lint' if yard_lint_supported
