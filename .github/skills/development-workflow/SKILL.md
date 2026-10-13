@@ -252,7 +252,9 @@ already clean and simple—avoid over-engineering.
 
 For detailed guidance on code smells, refactoring techniques, test cleanup, and
 rubocop integration, see the
-[TDD Refactor Step](../tdd-refactor-step/SKILL.md) skill.
+[TDD Refactor Step](../tdd-refactor-step/SKILL.md) skill. It starts from a commit
+of the RED-GREEN work, so the refactor's changes show apart from the task's; the
+COMMIT step folds the refactor into that commit.
 
 - **Generalize the Implementation:** Ensure the code solves the general case, not
   just the specific test case. Replace hardcoded values used to pass the test with
@@ -297,6 +299,8 @@ task, providing a safe rollback point.
 
 - **Create Commit:** Commit all changes from this task using the appropriate
   conventional commit type (see the **Per-Task Commits** section below for guidance).
+  When the REFACTOR step committed the RED-GREEN work first, amend the remaining
+  changes into that commit with `git commit --amend --no-edit` instead.
 - **Keep Commits Atomic:** Each commit should represent one completed task with all
   tests passing and linters clean.
 
