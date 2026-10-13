@@ -1,236 +1,81 @@
 ---
 name: tdd-refactor-step
-description: 'Guides the REFACTOR step of the TDD cycle — identifying code smells, applying safe refactoring techniques, cleaning test code, and verifying with rubocop. Use during RED-GREEN-REFACTOR when deciding what and how to refactor after making a test pass.'
+description: 'Guides the refactor step of red-green-refactor: deciding whether to refactor, the code smells to look for with thresholds, the technique for each, cleaning the test code, running rubocop, and verifying nothing changed. Use after a test goes green, during the REFACTOR step of the Development Workflow, when asked what to refactor, or when reviewing the refactor step of a TDD cycle.'
 ---
 
-# TDD Refactor Step
+# TDD refactor step
 
-Concrete guidance for the REFACTOR step of the RED-GREEN-REFACTOR cycle. Covers
-code smells to look for, safe refactoring techniques, test code cleanup,
-rubocop integration, and verification.
+The REFACTOR step of the [Development Workflow](../development-workflow/SKILL.md),
+after every test passes. The procedure lives in the `tdd-refactor-step` skill of the
+`jcouball-testing` plugin. This file holds only what is specific to ruby-git, so fixes
+to the procedure land once, in the plugin, instead of drifting between two full
+copies.
 
 ## Contents
 
 - [How to use this skill](#how-to-use-this-skill)
+- [Changes and additions for ruby-git](#changes-and-additions-for-ruby-git)
 - [Related skills](#related-skills)
-- [Decision: refactor or skip](#decision-refactor-or-skip)
-- [Code smells checklist](#code-smells-checklist)
-- [Refactoring techniques](#refactoring-techniques)
-- [Test code refactoring](#test-code-refactoring)
-- [Rubocop integration](#rubocop-integration)
-- [Verification](#verification)
-- [Project-specific patterns](#project-specific-patterns)
-- [Boundaries](#boundaries)
 
 ## How to use this skill
 
-Invoke this skill during the REFACTOR step of the TDD cycle, after GREEN
-(all tests pass). This skill expands the guidance in the
-[Development Workflow](../development-workflow/SKILL.md) REFACTOR step.
+Invoke `/jcouball-testing:tdd-refactor-step` and apply the changes below throughout
+its workflow. If you arrived here because that skill told you to read this file, do
+not invoke it again — its workflow is already in context; apply the changes below and
+continue.
 
-Typical invocation:
+If the plugin is not installed, install it first:
 
-```text
-I just got to green. Walk me through the REFACTOR step using
-the TDD Refactor Step skill.
+```bash
+claude plugin marketplace add jcouball/agent-plugins
+claude plugin install jcouball-testing@jcouball
 ```
+
+In an agent that cannot install or invoke Claude Code plugins, read the workflow
+directly from
+[the plugin source](https://github.com/jcouball/agent-plugins/blob/main/plugins/testing/skills/tdd-refactor-step/SKILL.md)
+and apply the same changes on top. In Copilot Chat, attach this file and the plugin
+source to your context and proceed the same way.
+
+## Changes and additions for ruby-git
+
+- **Green includes the coverage gate.** Before starting, run
+  `bundle exec rake spec:unit`. It fails when unit line or branch coverage drops below
+  100%, even with every example passing, and a failure there means the GREEN step is
+  not done: return to it, and cover the unreached code with an example or remove it if
+  no behavior needs it.
+- **"Commit the red and green steps before starting".** Commit the task's RED-GREEN
+  work as one commit before starting this step. Its type is the task's type as a
+  whole, from the Development Workflow's Per-Task Commits list: `feat` for
+  user-facing functionality, `fix` for a bug fix, `refactor` or `chore` for those
+  tasks; the list's `test` is for a task that only adds tests. At the Development
+  Workflow's COMMIT step, fold the refactor into it with `git commit --amend --no-edit`,
+  so the task still ends as one commit and FINALIZE squashes as usual.
+- **`base`.** `HEAD~1`, the commit before the task's RED-GREEN commit. It stays
+  `HEAD~1` on the second rubocop pass, since the refactor is not committed until the
+  COMMIT step.
+- **"Noted for a later task".** Add it to the task list during the Development
+  Workflow's REPLAN step.
+- **Additions to "Code smells": this codebase's patterns.** The refactor step enforces
+  these on the code the task touched:
+  - A command class holds no parsing logic. Parsing found in one is flagged for
+    extraction as a separate task.
+  - New metadata fields on the Arguments DSL's `Bound` follow its keyword-argument
+    pattern.
+  - A new error class inherits from `Git::Error`, in the hierarchy in
+    `lib/git/errors.rb`.
+  - Every new constant is frozen, not only one the Introduce constant technique adds.
+  - Private methods go below a single `private` keyword, not inline `private def`.
+- **The standards refactored tests follow.** Unit specs follow the
+  [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md). Integration
+  specs also follow the [Command Test Conventions](../command-test-conventions/SKILL.md)
+  or the [Facade Test Conventions](../facade-test-conventions/SKILL.md), whichever fits
+  the class under test.
 
 ## Related skills
 
-- [Development Workflow](../development-workflow/SKILL.md) — parent TDD workflow;
-  this skill supplements its REFACTOR step
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — test
-  conventions that refactored tests must follow
-- [PR Readiness Review](../pr-readiness-review/SKILL.md) — final quality gate
-  that catches remaining quality issues
-
-## Decision: refactor or skip
-
-Not every GREEN step needs refactoring. Skip when **all** of the following are true:
-
-- No hardcoded values from the GREEN step remain
-- No duplication was introduced between new and existing code
-- No method exceeds ~10 lines
-- No parameter list exceeds 3 positional parameters
-- Rubocop reports no new offenses on changed files
-- Test setup is not duplicated across examples
-
-If any condition is false, proceed with the relevant technique below.
-
-## Code smells checklist
-
-Check the code written or modified in this task for these smells, in priority order:
-
-|  #  | Smell | Threshold | Action |
-| --- | ----- | --------- | ------ |
-| 1 | **Hardcoded values** from GREEN step | Any | Generalize to actual logic |
-| 2 | **Duplication** between new code and existing code | ≥ 3 similar lines | Extract shared method or constant |
-| 3 | **Long method** | > 10 lines (body) | Extract private helper |
-| 4 | **Long parameter list** | > 3 positional params | Convert trailing params to keyword arguments |
-| 5 | **Inconsistent naming** | Deviates from file/module conventions | Rename to match existing patterns |
-| 6 | **Deeply nested conditionals** | > 2 levels | Extract guard clause or helper |
-| 7 | **Feature envy** | Method uses another object's data more than its own | Move method or extract delegator |
-| 8 | **Dead code** | Unreachable branches, unused variables | Remove |
-
-Limit yourself to smells **in files you touched this task**. Broader cleanup belongs
-in a separate task (add it during REPLAN).
-
-## Refactoring techniques
-
-Apply the simplest technique that resolves the smell:
-
-### Extract method
-
-Split a long method into a public method and one or more private helpers. Name
-the helper after **what** it does, not **how**:
-
-```ruby
-# Before
-def call(*, **)
-  bound = args_definition.bind(*, **)
-  objects = Array(bound.object).map { |o| "#{o}\n" }.join
-  with_stdin(objects) { |r| run_batch(bound, r) }
-end
-
-# After
-def call(*, **)
-  bound = args_definition.bind(*, **)
-  with_stdin(stdin_content(bound)) { |r| run_batch(bound, r) }
-end
-
-private
-
-def stdin_content(bound)
-  Array(bound.object).map { |o| "#{o}\n" }.join
-end
-```
-
-### Convert positional to keyword arguments
-
-When a method accumulates optional trailing positional parameters:
-
-```ruby
-# Before
-def initialize(args, options, positionals, exec_names = [], flags = [])
-
-# After
-def initialize(args, options, positionals, exec_names: [], flags: [])
-```
-
-Update the single call site at the same time.
-
-### Replace conditional with guard clause
-
-```ruby
-# Before
-def validate(value)
-  if value
-    if value.is_a?(String)
-      process(value)
-    end
-  end
-end
-
-# After
-def validate(value)
-  return unless value
-  return unless value.is_a?(String)
-
-  process(value)
-end
-```
-
-### Introduce constant
-
-When a magic value appears in logic:
-
-```ruby
-# Before
-raise error if version < Git::Version.parse('2.43.0')
-
-# After
-MINIMUM_GIT_VERSION = Git::Version.parse('2.43.0')
-raise error if version < MINIMUM_GIT_VERSION
-```
-
-### Eliminate duplication with shared setup
-
-When two methods share identical preamble or teardown, extract the shared part.
-If the duplication is in tests, see Test Code Refactoring below.
-
-## Test code refactoring
-
-Test code deserves the same refactoring attention as production code:
-
-| Smell | Technique |
-| ----- | --------- |
-| Duplicated `let`/`before` across contexts | Move to nearest shared `describe` or `context` |
-| Long example bodies (> 5 lines of setup) | Extract to `let` declarations or `before` block |
-| Repeated literal values | Extract to `let` or constant at top of file |
-| Identical examples across files | Extract to shared example group (`shared_examples`) |
-| Unclear example descriptions | Rewrite to state expected behavior, not implementation |
-
-Follow the [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md)
-for the resulting test structure.
-
-## Rubocop integration
-
-Run rubocop on changed files after refactoring:
-
-```bash
-bundle exec rubocop $(git diff --name-only HEAD)
-```
-
-Focus on:
-- `Metrics/MethodLength` — methods over the configured limit
-- `Metrics/ParameterLists` — too many parameters
-- `Metrics/AbcSize` — complexity threshold
-- `Style` cops — naming, formatting consistency
-
-Auto-correct safe offenses when appropriate:
-
-```bash
-bundle exec rubocop -a $(git diff --name-only HEAD)
-```
-
-Do not auto-correct `Metrics` cops — those require structural changes (extract
-method, split class), not formatting fixes.
-
-## Verification
-
-After refactoring, confirm:
-
-1. **Tests still pass:** `bundle exec rspec <spec_file>` for the current task's
-   test file(s)
-2. **No new rubocop offenses:** `bundle exec rubocop $(git diff --name-only HEAD)`
-3. **Behavior unchanged:** No new test was added during REFACTOR — if you need
-   a new test, you skipped a RED step
-
-If any test fails after refactoring, the refactoring changed behavior. Revert
-and try a smaller change.
-
-## Project-specific patterns
-
-Patterns specific to this codebase that the REFACTOR step should enforce:
-
-- **Command classes** should not contain parsing logic — if refactoring reveals
-  parsing in a command class, flag it for extraction (separate task)
-- **Arguments DSL** `Bound` metadata uses keyword arguments — if adding new
-  metadata fields, follow the keyword argument pattern
-- **Error classes** inherit from `Git::Error` — ensure new errors follow the
-  hierarchy in `lib/git/errors.rb`
-- **`freeze` constants** — all new constants should be frozen
-  (`CONSTANT = value.freeze`)
-- **Private methods** go below a single `private` keyword, not inline
-  `private def`
-
-## Boundaries
-
-Things the REFACTOR step must **not** do:
-
-- **Add new behavior** — no new features, no new test cases
-- **Change public API** — method signatures visible to users stay the same
-- **Touch unrelated files** — scope to files modified in this task; add broader
-  refactoring to the task list during REPLAN
-- **Optimize prematurely** — clarity over performance unless profiling data exists
-- **Over-abstract** — do not create a helper for something used exactly once
+- [Development Workflow](../development-workflow/SKILL.md) — the TDD workflow whose
+  REFACTOR step this is
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — the rules
+  refactored unit specs follow
+- [PR Readiness Review](../pr-readiness-review/SKILL.md) — the final quality gate
