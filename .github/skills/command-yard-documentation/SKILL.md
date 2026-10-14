@@ -19,6 +19,7 @@ version — version gating is the domain of the DSL and the
 ## Contents
 
 - [Contents](#contents)
+- [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Input](#input)
 - [Reference](#reference)
@@ -37,6 +38,19 @@ version — version gating is the domain of the DSL and the
 - [Output](#output)
   - [When writing new YARD docs](#when-writing-new-yard-docs)
   - [When reviewing existing YARD docs](#when-reviewing-existing-yard-docs)
+
+## How to use this skill
+
+Attach this file to your Copilot Chat context, then invoke with the command class
+whose YARD docs to write or review. Examples:
+
+```text
+Using the Command YARD Documentation skill, write the YARD docs for Git::Commands::Stash::Push.
+```
+
+```text
+Command YARD Documentation review: lib/git/commands/log.rb.
+```
 
 ## Related skills
 

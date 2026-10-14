@@ -11,6 +11,12 @@ written in and explains why their rules exist. The guide lives in the
 and which section answers which question. This file holds only what is specific to
 ruby-git, so the guide has one copy and this project keeps only its differences.
 
+## Contents
+
+- [How to use this skill](#how-to-use-this-skill)
+- [Changes and additions for ruby-git](#changes-and-additions-for-ruby-git)
+- [Related skills](#related-skills)
+
 ## How to use this skill
 
 Invoke `/jcouball-testing:testing-guide` and apply the changes below throughout

@@ -12,6 +12,7 @@ methods and modifiers.
 ## Contents
 
 - [Contents](#contents)
+- [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Input](#input)
   - [Command source code](#command-source-code)
@@ -23,6 +24,19 @@ methods and modifiers.
   - [DSL to CLI Mapping](#dsl-to-cli-mapping)
 - [Workflow](#workflow)
 - [Output](#output)
+
+## How to use this skill
+
+Attach this file to your Copilot Chat context, then invoke with the command class
+whose `arguments do ... end` block to audit. Examples:
+
+```text
+Review Arguments DSL: Git::Commands::Branch::Create.
+```
+
+```text
+Using the Review Arguments DSL skill, audit the arguments block of Git::Commands::Log.
+```
 
 ## Related skills
 

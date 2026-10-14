@@ -15,6 +15,12 @@ The full workflow lives in the `address-pr-feedback` skill of the
 so fixes to the workflow land once, in the plugin, instead of drifting
 between two full copies.
 
+## Contents
+
+- [How to use this skill](#how-to-use-this-skill)
+- [Changes and additions for ruby-git](#changes-and-additions-for-ruby-git)
+- [Related skills](#related-skills)
+
 ## How to use this skill
 
 Invoke `/jcouball-github:address-pr-feedback` and apply the changes below

@@ -17,6 +17,7 @@ parser, or execution context that implements the behavior.
 ## Contents
 
 - [Contents](#contents)
+- [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Input](#input)
 - [Reference](#reference)
@@ -35,6 +36,19 @@ parser, or execution context that implements the behavior.
 - [Output](#output)
   - [When writing new facade YARD docs](#when-writing-new-facade-yard-docs)
   - [When reviewing existing facade YARD docs](#when-reviewing-existing-facade-yard-docs)
+
+## How to use this skill
+
+Attach this file to your Copilot Chat context, then invoke with the facade module
+or method whose YARD docs to write or review. Examples:
+
+```text
+Using the Facade YARD Documentation skill, write the YARD docs for Git::Repository::Staging#add.
+```
+
+```text
+Facade YARD Documentation review: lib/git/repository/committing.rb.
+```
 
 ## Related skills
 

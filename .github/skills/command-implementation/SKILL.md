@@ -11,6 +11,7 @@ integration tests, and YARD docs.
 ## Contents
 
 - [Contents](#contents)
+- [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Input](#input)
   - [Command source code](#command-source-code)
@@ -20,6 +21,19 @@ integration tests, and YARD docs.
 - [Reference](#reference)
 - [Workflow](#workflow)
 - [Output](#output)
+
+## How to use this skill
+
+Attach this file to your Copilot Chat context, then invoke with the command class
+to scaffold, update, or review. Examples:
+
+```text
+Using the Command Implementation skill, scaffold Git::Commands::Stash::Push.
+```
+
+```text
+Command Implementation review: Git::Commands::Branch::Create.
+```
 
 ## Related skills
 
