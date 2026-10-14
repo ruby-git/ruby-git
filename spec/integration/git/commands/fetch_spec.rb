@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Fetch, :integration do
       repo.add('file.txt')
       repo.commit('Initial commit')
 
-      Git.init(bare_dir, bare: true)
+      Git.init(bare_dir, bare: true, initial_branch: 'main')
       repo.remote_add('origin', bare_dir)
       repo.push('origin', 'main')
     end
@@ -35,8 +35,9 @@ RSpec.describe Git::Commands::Fetch, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError when remote does not exist' do
-        # git's error message varies by version - Rule 22 version-variance exception applies
-        expect { command.call('nonexistent-remote', merge: true) }.to raise_error(Git::FailedError)
+        # merge: true sends git's stderr to stdout, so the error text is in stdout
+        expect { command.call('nonexistent-remote', merge: true) }
+          .to raise_error(Git::FailedError) { |error| expect(error.result.stdout).to include('nonexistent-remote') }
       end
     end
   end

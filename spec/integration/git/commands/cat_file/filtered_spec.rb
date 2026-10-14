@@ -28,8 +28,8 @@ RSpec.describe Git::Commands::CatFile::Filtered, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError with a nonexistent path' do
-        # git's error message varies by version — Rule 22 version-variance exception applies
-        expect { command.call('HEAD:nonexistent.txt', textconv: true) }.to raise_error(Git::FailedError)
+        expect { command.call('HEAD:nonexistent.txt', textconv: true) }
+          .to raise_error(Git::FailedError) { |error| expect(error.result.stderr).to include('nonexistent.txt') }
       end
     end
   end

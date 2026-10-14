@@ -46,9 +46,10 @@ Facade Test Conventions review: spec/unit/git/repository/committing_spec.rb.
 
 ## Related skills
 
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline
-  RSpec rules that govern all unit test structure, naming, setup, stubbing, and
-  coverage; this skill adds facade-specific conventions on top
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
+  [RSpec base standards](../rspec-base-standards/SKILL.md) — baseline RSpec rules
+  that govern all unit test structure, naming, setup, stubbing, and coverage; this
+  skill adds facade-specific conventions on top
 - [Facade Implementation](../facade-implementation/SKILL.md) — facade module
   structure and orchestration patterns
 - [Facade YARD Documentation](../facade-yard-documentation/SKILL.md) — YARD docs
@@ -62,9 +63,10 @@ The invocation needs the unit and/or integration spec file(s) to review. Includi
 the corresponding facade module file (`lib/git/repository/<topic>.rb`) provides
 useful context for verifying delegation contracts and option forwarding.
 
-**Prerequisite:** Read the **entire** [RSpec Unit Testing
-Standards](../rspec-unit-testing-standards/SKILL.md) skill (line 1 through EOF)
-before beginning. It defines the baseline Rules 1–28 that this skill extends.
+**Prerequisite:** Apply the [RSpec Unit Testing
+Standards](../rspec-unit-testing-standards/SKILL.md) skill in full before beginning,
+including the [RSpec base standards](../rspec-base-standards/SKILL.md) it loads first.
+Together they define the baseline rules this skill extends.
 
 ## Reference
 
@@ -360,8 +362,8 @@ When reviewing existing facade tests, add these checks:
 ## Workflow
 
 1. Load the [RSpec Unit Testing
-   Standards](../rspec-unit-testing-standards/SKILL.md) skill (line 1 through
-   EOF).
+   Standards](../rspec-unit-testing-standards/SKILL.md) skill, which loads the
+   [RSpec base standards](../rspec-base-standards/SKILL.md).
 2. Read the spec file(s) under review and the corresponding facade module
    (`lib/git/repository/<topic>.rb`) plus the underlying `Git::Commands::*` and
    `Git::Parsers::*` files the facade calls.

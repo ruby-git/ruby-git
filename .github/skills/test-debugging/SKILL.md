@@ -96,5 +96,7 @@ source to your context and proceed the same way.
   only in CI
 - [TDD Refactor Step](../tdd-refactor-step/SKILL.md) — cleaning up a test once it is
   green
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — the rules
-  for specs under `spec/unit/`
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
+  [RSpec base standards](../rspec-base-standards/SKILL.md) — the rules on
+  determinism, global state, and passing alone and in random order; consult when
+  flakiness comes from a test design violation rather than a production bug

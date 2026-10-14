@@ -34,8 +34,8 @@ RSpec.describe Git::Commands::CatFile::Raw, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError when the type does not match the object type' do
-        # git's error message varies by version — Rule 22 version-variance exception applies
-        expect { command.call('tree', 'HEAD:README.md') }.to raise_error(Git::FailedError)
+        expect { command.call('tree', 'HEAD:README.md') }
+          .to raise_error(Git::FailedError) { |error| expect(error.result.stderr).to include('HEAD:README.md') }
       end
     end
   end
