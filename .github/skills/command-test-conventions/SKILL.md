@@ -8,6 +8,10 @@ description: "Conventions for writing and reviewing unit and integration tests f
 Conventions for writing and reviewing unit and integration tests for
 `Git::Commands::*` classes.
 
+## Contents
+
+- [Contents](#contents)
+- [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Input](#input)
   - [Version-aware test scope](#version-aware-test-scope)
@@ -24,6 +28,19 @@ Conventions for writing and reviewing unit and integration tests for
   - [Shared conventions](#shared-conventions)
 - [Workflow](#workflow)
 - [Output](#output)
+
+## How to use this skill
+
+Attach this file to your Copilot Chat context, then invoke with the spec file(s)
+to write or review. Include the corresponding command class for context. Examples:
+
+```text
+Using the Command Test Conventions skill, scaffold tests for Git::Commands::Branch::Create.
+```
+
+```text
+Command Test Conventions review: spec/unit/git/commands/branch/create_spec.rb.
+```
 
 ## Related skills
 
