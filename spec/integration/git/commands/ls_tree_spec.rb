@@ -28,8 +28,8 @@ RSpec.describe Git::Commands::LsTree, :integration do
 
     context 'when the command fails' do
       it 'raises Git::FailedError for a nonexistent tree-ish' do
-        # git's error message varies by version — Rule 22 version-variance exception applies
-        expect { command.call('nonexistent-sha-1234567') }.to raise_error(Git::FailedError)
+        expect { command.call('nonexistent-sha-1234567') }
+          .to raise_error(Git::FailedError) { |error| expect(error.result.stderr).to include('nonexistent-sha-1234567') }
       end
     end
   end

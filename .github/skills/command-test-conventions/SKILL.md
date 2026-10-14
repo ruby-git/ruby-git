@@ -44,9 +44,10 @@ Command Test Conventions review: spec/unit/git/commands/branch/create_spec.rb.
 
 ## Related skills
 
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline
-  RSpec rules that govern all unit test structure, naming, setup, stubbing, and
-  coverage; this skill adds command-specific conventions on top
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
+  [RSpec base standards](../rspec-base-standards/SKILL.md) — baseline RSpec rules
+  that govern all unit test structure, naming, setup, stubbing, and coverage; this
+  skill adds command-specific conventions on top
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries
   match git CLI
 - [Command Implementation](../command-implementation/SKILL.md) — class
@@ -60,10 +61,11 @@ The invocation needs the unit and/or integration spec file(s) to review. Includi
 the corresponding command source file provides useful context for verifying argument
 coverage.
 
-**Prerequisite:** Read the **entire** [RSpec Unit Testing
-Standards](../rspec-unit-testing-standards/SKILL.md) skill (line 1 through EOF)
-before beginning. It defines the baseline Rules 1–28 that this skill extends. Without
-it, MUST-level structural, naming, stubbing, and coverage checks will not be applied.
+**Prerequisite:** Apply the [RSpec Unit Testing
+Standards](../rspec-unit-testing-standards/SKILL.md) skill in full before beginning,
+including the [RSpec base standards](../rspec-base-standards/SKILL.md) it loads first.
+Together they define the baseline rules this skill extends. Without them, MUST-level
+structural, naming, stubbing, and coverage checks will not be applied.
 
 ### Version-aware test scope
 
@@ -138,8 +140,8 @@ expect_command_capturing('clone', '--', url, dir, timeout: 30).and_return(comman
 
 These helpers expand to `expect(execution_context).to receive(:command_capturing)...`
 — `expect` rather than `allow` because the call itself (the correct arguments
-reaching git) is the behavior under test. See **Rule 19** in the [RSpec Unit Testing
-Standards](../rspec-unit-testing-standards/SKILL.md).
+reaching git) is the behavior under test. See the rule on `allow` and `expect` in the
+[RSpec base standards](../rspec-base-standards/SKILL.md).
 
 ##### Expectations for stdin-feeding commands
 
@@ -288,34 +290,25 @@ See "Command-layer neutrality" in CONTRIBUTING.md.
 
 #### `#initialize` — omit from command specs
 
-**Do not write a `describe '#initialize'` block in command specs.** This is a
-deliberate exception to Rule 2's SHOULD guidance for concrete subclasses. The full
-reasoning chain:
+**Do not write a `describe '#initialize'` block in command specs.** This follows from
+the unit standards' rule on the examples a constructor earns, which gives a
+constructor a group only when a public reader can see what it stored.
+`Base#initialize` stores `@execution_context` with no `attr_reader`, so there is
+nothing to pass to `have_attributes`, and the fallback, `not_to raise_error`, fails
+the base standards' rule on asserting observable behavior. What a group would give
+is covered anyway:
 
-1. **Rule 2's `have_attributes` form requires public attributes.** `Base#initialize`
-   stores `@execution_context` as a private instance variable with no `attr_reader`,
-   so there is nothing to pass to `have_attributes`. The form that Rule 2 uses cannot
-   be applied.
-
-2. **The only fallback is `not_to raise_error`, which is a Rule 24 violation.**
-   Asserting that `described_class.new(execution_context)` does not raise merely
-   confirms the code runs — it is not an observable behavioral assertion.
-
-3. **Both Rule 2 purposes are already satisfied by other means:**
-   - *Documentation:* the `let(:command) { described_class.new(execution_context) }`
-     declaration at the top of every spec documents the constructor signature
-     as clearly as a dedicated block would.
-   - *Accidental-override guard:* `let(:command)` is evaluated before every example.
-     If a subclass accidentally introduced a `def initialize` with a different
-     signature, every test in the file would immediately raise `ArgumentError` —
-     providing the same protection a dedicated block would.
-
-4. **`Base#initialize` is covered by `base_spec.rb`.** Command subclasses that do
-   not override `#initialize` gain nothing from repeating it.
+- *Documentation:* the `let(:command) { described_class.new(execution_context) }`
+  declaration at the top of every spec documents the constructor signature as
+  clearly as a dedicated block would.
+- *Accidental-override guard:* `let(:command)` is evaluated before every example. If
+  a subclass accidentally introduced a `def initialize` with a different signature,
+  every test in the file would immediately raise `ArgumentError`.
+- `Base#initialize` itself is covered by `base_spec.rb`.
 
 **Required fix if found:** Remove any `describe '#initialize'` block that contains
-only `expect { described_class.new(execution_context) }.not_to raise_error` — it is
-a Rule 24 violation and provides no coverage value.
+only `expect { described_class.new(execution_context) }.not_to raise_error` — it
+fails the rule on asserting observable behavior and provides no coverage value.
 
 #### Unit test grouping
 
@@ -355,11 +348,11 @@ DSL canonicalises aliases to the long form (e.g. `:q` → `--quiet`, `:f` → `-
 Writing `'adds -q flag'` in an `it` description is misleading because the actual token
 asserted in the expectation is `'--quiet'`. Use `'adds --quiet flag'` instead.
 
-> **Exception to RSpec Unit Testing Standards Rules 11–12 (subject and let
-> ordering):** Command unit tests intentionally omit `subject` within `describe
-> '#call'`. Because each test exercises a different argument combination, there is no
-> single fixed call expressible as a shared `subject`. Use `let(:command)` at the
-> `RSpec.describe` level and call `command.call(...)` directly inside each `it`
+> **Exception to the RSpec base standards' rules on `subject`, `let` ordering, and
+> `described_instance`:** Command unit tests intentionally omit `subject` within
+> `describe '#call'`. Because each test exercises a different argument combination,
+> there is no single fixed call expressible as a shared `subject`. Use `let(:command)`
+> at the `RSpec.describe` level and call `command.call(...)` directly inside each `it`
 > block, overriding `let` inputs per `context` block as needed.
 
 **Example with all three sections:**
@@ -622,11 +615,11 @@ class. Use `execution_context.command_capturing`, `repo`, or standard library me
 for setup instead of instantiating other Commands classes. This maintains test
 isolation and prevents bugs in one command from breaking another command's tests.
 
-**Require only the command under test.** See [Rule
-5](../rspec-unit-testing-standards/SKILL.md#rule-5-must-require-spec_helper-and-only-the-files-under-test)
-in RSpec Unit Testing Standards (MUST). For command specs specifically: do not
-require other command classes even if they are not instantiated — unused requires
-create false coupling between specs.
+**Require only the command under test.** See the rule on requiring the spec helper
+and the file under test in the [RSpec Unit Testing
+Standards](../rspec-unit-testing-standards/SKILL.md) (MUST). For command specs
+specifically: do not require other command classes even if they are not instantiated
+— unused requires create false coupling between specs.
 
 **Version-dependent tests.** When a test's behavior varies by git version, use `skip`
 inside the `it` block — not the `skip:` metadata on `it`. The metadata form evaluates
@@ -641,11 +634,11 @@ it 'succeeds when no merge is in progress' do
 end
 ```
 
-**Test descriptions must match assertions.** See [Rule
-9](../rspec-unit-testing-standards/SKILL.md#rule-9-must-it-blocks-assert-one-concept-and-the-description-must-match-the-assertion)
-in RSpec Unit Testing Standards (MUST). This applies equally to command specs: a test
-described as "includes the --force flag" must assert that the flag appears in the
-arguments, not merely that `#call` returns a result.
+**Test descriptions must match assertions.** See the rule that each `it` asserts one
+concept and its description matches the assertion, in the [RSpec base
+standards](../rspec-base-standards/SKILL.md) (MUST). This applies equally to command
+specs: a test described as "includes the --force flag" must assert that the flag
+appears in the arguments, not merely that `#call` returns a result.
 
 **Regex patterns** in test assertions should not use Ruby's `/m` modifier unless
 intentionally matching across newlines. Git output is line-based, so patterns should
@@ -654,7 +647,7 @@ match within single lines.
 ## Workflow
 
 1. Load the [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md)
-   skill (line 1 through EOF)
+   skill, which loads the [RSpec base standards](../rspec-base-standards/SKILL.md)
 2. Read the spec file(s) under review and the corresponding command source file
 3. Determine the minimum supported Git version
    (see [Version-aware test scope](#version-aware-test-scope))
@@ -666,8 +659,9 @@ match within single lines.
 
 Report only anomalies — skip items that comply. For each issue found, provide:
 
-- **Rule or guideline violated** — cite by name and source skill (e.g., "Rule 22,
-  RSpec Unit Testing Standards" or "What not to test, Command Test Conventions")
+- **Rule or guideline violated** — cite by name and source skill (e.g., "Error
+  assertions name the class and a message pattern, RSpec base standards" or "What not
+  to test, Command Test Conventions")
 - **Location** — spec file and block path (e.g., `describe '#call' > context 'with
   :force option' > it '...'`)
 - **Issue** — one sentence describing what is wrong

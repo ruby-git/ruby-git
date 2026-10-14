@@ -304,6 +304,7 @@ guidance that mirrors maintainer expectations:
 - [`review-arguments-dsl`](.github/skills/review-arguments-dsl/SKILL.md): audits
   `arguments do ... end` blocks against the git CLI
 - [`rspec-unit-testing-standards`](.github/skills/rspec-unit-testing-standards/SKILL.md),
+  [`rspec-base-standards`](.github/skills/rspec-base-standards/SKILL.md),
   [`command-test-conventions`](.github/skills/command-test-conventions/SKILL.md), and
   [`facade-test-conventions`](.github/skills/facade-test-conventions/SKILL.md): testing
   conventions for new and updated code
@@ -984,8 +985,10 @@ process.stdin.on('end', () =>
 
 This project uses RSpec (`spec/`) as its sole test framework. Structure,
 naming, setup, stubbing, and coverage rules for unit specs are defined in the
-[`rspec-unit-testing-standards`](.github/skills/rspec-unit-testing-standards/SKILL.md)
-skill. Follow it when writing or reviewing specs under `spec/unit/`. The terms
+`jcouball-testing` plugin's unit and base standards, with this project's changes in
+the [`rspec-unit-testing-standards`](.github/skills/rspec-unit-testing-standards/SKILL.md)
+and [`rspec-base-standards`](.github/skills/rspec-base-standards/SKILL.md) skills.
+Follow them when writing or reviewing specs under `spec/unit/`. The terms
 those rules use, and the reasoning behind them, are in the
 [testing guide](https://github.com/jcouball/agent-plugins/blob/main/plugins/testing/docs/testing-guide.md);
 the [`testing-guide`](.github/skills/testing-guide/SKILL.md) skill says how this
@@ -1085,10 +1088,11 @@ When a branch is hard to cover, apply these in order:
    criteria, so the required justification lives in the directive itself.
 
 **Coverage is a floor on evidence, not a proof of correctness.** A test written only
-to execute a line, without asserting a meaningful outcome, violates Rule 24 of the
-[`rspec-unit-testing-standards`](.github/skills/rspec-unit-testing-standards/SKILL.md)
-skill and will be rejected in review even though it turns the report green. The
-threshold exists to surface untested behavior, not to be satisfied.
+to execute a line, without asserting a meaningful outcome, violates the rule on
+asserting observable behavior in the
+[`rspec-base-standards`](.github/skills/rspec-base-standards/SKILL.md) skill and will
+be rejected in review even though it turns the report green. The threshold exists to
+surface untested behavior, not to be satisfied.
 
 To see exactly what is uncovered:
 
