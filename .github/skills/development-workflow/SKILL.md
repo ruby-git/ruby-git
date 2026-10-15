@@ -51,8 +51,10 @@ needed.
 
 ## Related skills
 
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — RSpec rules for test structure, naming,
-  setup patterns, stubbing, and coverage; apply when writing tests during TDD cycles
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
+  [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md)
+  — RSpec rules for test structure, naming, setup patterns, stubbing, and, for unit
+  specs, coverage; apply when writing tests during TDD cycles
 - [TDD Refactor Step](../tdd-refactor-step/SKILL.md) — detailed guidance for the
   REFACTOR step: code smells, techniques, test cleanup, and rubocop integration
 - [Test Debugging](../test-debugging/SKILL.md) — focused diagnosis for failing or

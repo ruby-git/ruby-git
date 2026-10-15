@@ -27,8 +27,9 @@ confirms.
 
 ## Related skills
 
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — RSpec rules to apply when evaluating
-   test quality in a PR
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
+   [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md)
+   — RSpec rules to apply when evaluating test quality in a PR
 - [PR Readiness Review](../pr-readiness-review/SKILL.md) — internal pre-PR checks
    before formal review
 - [CI/CD Troubleshooting](../ci-cd-troubleshooting/SKILL.md) — investigate failed

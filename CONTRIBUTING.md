@@ -304,6 +304,7 @@ guidance that mirrors maintainer expectations:
 - [`review-arguments-dsl`](.github/skills/review-arguments-dsl/SKILL.md): audits
   `arguments do ... end` blocks against the git CLI
 - [`rspec-unit-testing-standards`](.github/skills/rspec-unit-testing-standards/SKILL.md),
+  [`rspec-integration-testing-standards`](.github/skills/rspec-integration-testing-standards/SKILL.md),
   [`rspec-base-standards`](.github/skills/rspec-base-standards/SKILL.md),
   [`command-test-conventions`](.github/skills/command-test-conventions/SKILL.md), and
   [`facade-test-conventions`](.github/skills/facade-test-conventions/SKILL.md): testing
@@ -983,13 +984,15 @@ process.stdin.on('end', () =>
   `SPEC=spec/unit/...` on `rake spec` runs the unit specs and skips
   `spec:integration`. A glob matching nothing anywhere fails the task outright.
 
-This project uses RSpec (`spec/`) as its sole test framework. Structure,
-naming, setup, stubbing, and coverage rules for unit specs are defined in the
-`jcouball-testing` plugin's unit and base standards, with this project's changes in
-the [`rspec-unit-testing-standards`](.github/skills/rspec-unit-testing-standards/SKILL.md)
+This project uses RSpec (`spec/`) as its sole test framework. Structure, naming,
+setup, stubbing, and coverage rules for specs are defined in the `jcouball-testing`
+plugin's unit, integration, and base standards, with this project's changes in the
+[`rspec-unit-testing-standards`](.github/skills/rspec-unit-testing-standards/SKILL.md),
+[`rspec-integration-testing-standards`](.github/skills/rspec-integration-testing-standards/SKILL.md),
 and [`rspec-base-standards`](.github/skills/rspec-base-standards/SKILL.md) skills.
-Follow them when writing or reviewing specs under `spec/unit/`. The terms
-those rules use, and the reasoning behind them, are in the
+Follow the unit standards for specs under `spec/unit/` and the integration standards
+for specs under `spec/integration/`. The terms those rules use, and the reasoning
+behind them, are in the
 [testing guide](https://github.com/jcouball/agent-plugins/blob/main/plugins/testing/docs/testing-guide.md);
 the [`testing-guide`](.github/skills/testing-guide/SKILL.md) skill says how this
 project applies it.
@@ -1121,25 +1124,14 @@ This project uses two types of RSpec tests, organized by directory:
   git behavior. Integration tests create temporary repositories using `Dir.mktmpdir`
   and run real git commands through the gem's public API.
 
-Integration tests validate that the gem correctly interacts with git, not that git
-itself works correctly. They should verify:
-
-- That the gem's mocked command expectations match real git output format
-- That the gem correctly handles real git behavior (e.g., unicode in branch names)
-- That command options produce expected git behavior
-- Edge cases that are difficult to mock reliably
-
-**Integration test guidelines**:
-
-- Keep tests minimal and purposeful; only create what's needed for the test
-- Focus on key behaviors that unit tests can't verify
-- Don't test git's functionality; test the gem's interaction with git
-- Use the shared context `'in an empty repository'` for temporary repo setup
-- Use `Git::IntegrationTestHelpers` methods for file operations
-- Each test should verify one specific git interaction pattern
-
-**Example**: An integration test for branch listing should verify that the gem
-correctly parses git's branch list format, not that git can create branches.
+Integration tests check what the unit tests stub out: that the arguments the gem
+builds work with real git, and that git writes the output its parsers expect. They
+test the gem's interaction with git, not git itself. The rules for writing them,
+including how to build and pin temporary repositories, how to start git, and how to
+assert on results and errors, are in the
+[RSpec integration testing standards](.github/skills/rspec-integration-testing-standards/SKILL.md)
+skill, which applies ruby-git's changes on top of the `jcouball-testing` plugin's
+rules.
 
 While working on specific features, you can run tests using:
 

@@ -55,6 +55,9 @@ Facade Implementation review: Git::Repository::Committing#commit.
   rules
 - [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline
   RSpec rules
+- [RSpec Integration Testing
+  Standards](../rspec-integration-testing-standards/SKILL.md) — baseline RSpec rules
+  for integration specs
 - [Project Context](../project-context/SKILL.md) — three-layer architecture overview
 
 ## Input
@@ -183,12 +186,13 @@ This skill supports three modes. Determine which mode applies before starting:
 
    c. **Scaffold integration tests (subagent)** *(scaffold/update modes only)* —
       delegate to a subagent: load **[Facade Test
-      Conventions](../facade-test-conventions/SKILL.md)**, then create or extend
-      `spec/integration/git/repository/<topic>_spec.rb` following the integration
-      conventions (real git in a temp repository; assert end-to-end Ruby return
-      value, not intermediate command results). Skip integration tests for true
-      one-line delegators that add no orchestration on top of the underlying
-      command — the command's own integration tests already cover that path.
+      Conventions](../facade-test-conventions/SKILL.md)** (which loads [RSpec
+      Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md)),
+      then create or extend `spec/integration/git/repository/<topic>_spec.rb` following
+      the integration conventions (real git in a temp repository; assert end-to-end Ruby
+      return value, not intermediate command results). Skip integration tests for true
+      one-line delegators that add no orchestration on top of the underlying command —
+      the command's own integration tests already cover that path.
 
    Steps 3d and 3e may run **in parallel** (they review independent file sets).
 

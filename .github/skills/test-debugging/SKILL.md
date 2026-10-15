@@ -83,10 +83,13 @@ source to your context and proceed the same way.
   `test`. Code no behavior needs, such as a branch that cannot be taken, is removed
   instead of tested; the commit type is `refactor`.
 - **The standards a changed spec follows.** Unit specs follow the
-  [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md). Integration
-  specs also follow the [Command Test Conventions](../command-test-conventions/SKILL.md)
-  or the [Facade Test Conventions](../facade-test-conventions/SKILL.md), whichever fits
-  the class under test.
+  [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md), and
+  integration specs the
+  [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md).
+  Command and facade specs also follow the
+  [Command Test Conventions](../command-test-conventions/SKILL.md) or the
+  [Facade Test Conventions](../facade-test-conventions/SKILL.md), whichever fits the
+  class under test.
 
 ## Related skills
 
@@ -96,7 +99,8 @@ source to your context and proceed the same way.
   only in CI
 - [TDD Refactor Step](../tdd-refactor-step/SKILL.md) — cleaning up a test once it is
   green
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
-  [RSpec base standards](../rspec-base-standards/SKILL.md) — the rules on
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md),
+  [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md),
+  and [RSpec Base Standards](../rspec-base-standards/SKILL.md) — the rules on
   determinism, global state, and passing alone and in random order; consult when
   flakiness comes from a test design violation rather than a production bug

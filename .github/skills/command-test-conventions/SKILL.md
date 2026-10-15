@@ -44,10 +44,10 @@ Command Test Conventions review: spec/unit/git/commands/branch/create_spec.rb.
 
 ## Related skills
 
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
-  [RSpec base standards](../rspec-base-standards/SKILL.md) — baseline RSpec rules
-  that govern all unit test structure, naming, setup, stubbing, and coverage; this
-  skill adds command-specific conventions on top
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md),
+  [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md),
+  and [RSpec Base Standards](../rspec-base-standards/SKILL.md) — baseline RSpec rules
+  for unit and integration specs; this skill adds command-specific conventions on top
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries
   match git CLI
 - [Command Implementation](../command-implementation/SKILL.md) — class
@@ -62,8 +62,10 @@ the corresponding command source file provides useful context for verifying argu
 coverage.
 
 **Prerequisite:** Apply the [RSpec Unit Testing
-Standards](../rspec-unit-testing-standards/SKILL.md) skill in full before beginning,
-including the [RSpec base standards](../rspec-base-standards/SKILL.md) it loads first.
+Standards](../rspec-unit-testing-standards/SKILL.md) skill in full before beginning
+on a unit spec, and the [RSpec Integration Testing
+Standards](../rspec-integration-testing-standards/SKILL.md) skill on an integration
+spec. Each loads the [RSpec base standards](../rspec-base-standards/SKILL.md) first.
 Together they define the baseline rules this skill extends. Without them, MUST-level
 structural, naming, stubbing, and coverage checks will not be applied.
 
@@ -433,9 +435,10 @@ end
 ### Integration tests
 
 Integration tests are minimal smoke tests that confirm the command executes
-successfully against a real git repository. They should NOT test git's output format,
-parsing behavior, or specific content of stdout — those concerns belong in parser
-specs and facade/end-to-end specs.
+successfully against a real git repository. They should NOT test git's output format
+or parsing behavior — those concerns belong in parser specs and facade/end-to-end
+specs. Where an example checks output, it looks for a value the test controls, such as
+the name of a file it wrote.
 
 Each integration spec file tests exactly **one command class**. Do not create
 multi-command workflow specs that chain commands together — that is the concern of
@@ -445,11 +448,11 @@ Integration tests should only cover:
 
 - A smoke test: calling with valid arguments returns a `Git::CommandLine::Result` with
   expected output (e.g., non-empty for commands that produce output)
-- Exit codes from real git: one test per success exit code, exercised through real
-  git invocations that naturally produce each code. For example, for `git diff`:
-  identical refs produce exit code 0 with empty output; differing refs produce exit
-  code ≤1 with non-empty output. This confirms that real git returns the exit codes
-  the command's `allow_exit_status` range expects.
+- Exit codes from real git: one test per success exit code, exercised through real git
+  invocations that naturally produce each code. For example, for `git diff`: identical
+  refs produce exit code 0 with empty output; with `--exit-code`, differing refs produce
+  exit code 1 with output that names the changed file. This confirms that real git
+  returns the exit codes the command's `allow_exit_status` range expects.
 - Error handling: invalid input (e.g., a nonexistent ref) raises `FailedError`.
   **Every command must have at least one error handling test.** Even commands with
   non-default `allow_exit_status` ranges can be forced to fail (e.g., by removing
@@ -470,8 +473,8 @@ unit test.
 
 Integration tests must be organized into two `context` blocks under `#call`:
 
-- `context 'when the command succeeds'` — smoke tests, option variations, and exit
-  code variants
+- `context 'when the command succeeds'` — the smoke test and one example per success
+  exit code. Option-by-option cases belong in the unit spec.
 - `context 'when the command fails'` — error handling tests (`FailedError`)
 
 This grouping provides a consistent structure across all command specs and makes it
@@ -494,9 +497,10 @@ RSpec.describe Git::Commands::Add, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError with a nonexistent path' do
-        # git's error message phrasing varies by version — anchor on the stable input value
+        # The message starts with the command line, which always contains the input;
+        # check the input against what git wrote
         expect { command.call('nonexistent.txt') }
-          .to raise_error(Git::FailedError, /nonexistent\.txt/)
+          .to raise_error(Git::FailedError) { |error| expect(error.result.stderr).to include('nonexistent.txt') }
       end
     end
   end
@@ -506,36 +510,51 @@ end
 **Custom exit code example** (command declares `allow_exit_status`):
 
 ```ruby
-RSpec.describe Git::Commands::Diff::Numstat, :integration do
-  include_context 'in a diff test repository'
+RSpec.describe Git::Commands::Diff, :integration do
+  include_context 'in an empty repository'
 
   subject(:command) { described_class.new(execution_context) }
 
+  before do
+    write_file('README.md', "first\n")
+    repo.add('README.md')
+    repo.commit('Initial commit')
+    repo.tag_create('initial')
+    write_file('README.md', "second\n")
+    repo.add('README.md')
+    repo.commit('Change README')
+    repo.tag_create('changed')
+  end
+
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns exit code 0 with no differences' do
-        result = command.call('initial', 'initial')
+      it 'returns exit code 0 with no output when the refs match' do
+        result = command.call('initial', 'initial', exit_code: true)
         expect(result.status.exitstatus).to eq(0)
-        expect(result.stdout).to be_empty
+        expect(result.stdout).to eq('')
       end
 
-      it 'succeeds with differences found' do
-        result = command.call('initial', 'after_modify')
+      it 'returns exit code 1 naming the changed file when the refs differ' do
+        result = command.call('initial', 'changed', exit_code: true)
         expect(result.status.exitstatus).to eq(1)
-        expect(result.stdout).not_to be_empty
+        expect(result.stdout).to include('README.md')
       end
     end
 
     context 'when the command fails' do
       it 'raises FailedError for invalid revision' do
-        # git's error message phrasing varies by version — anchor on the stable input value
         expect { command.call('nonexistent-ref') }
-          .to raise_error(Git::FailedError, /nonexistent-ref/)
+          .to raise_error(Git::FailedError) { |error| expect(error.result.stderr).to include('nonexistent-ref') }
       end
     end
   end
 end
 ```
+
+Both success examples pass `exit_code: true`. Without `--exit-code`, `git diff` exits 0
+whether or not the refs differ, and the examples would not confirm the exit code. A
+command whose `allow_exit_status` admits another success code gets an example for that
+code too, as `diff_spec.rb` does for the exit code 2 that `--check` returns.
 
 #### Guard tests for options introduced after the minimum supported Git version
 
@@ -554,18 +573,13 @@ newer version. Apply it to a `context` or `describe` block when **all** tests in
 group require the same minimum version.
 
 ```ruby
-# ✅ Different options introduced in different git versions — guard each `it` individually
-it 'returns a Git::CommandLine::Result with the :retry option',
-   skip: unless_git('2.46.0', 'git am --retry') do
-  # ...
-end
-
-it 'returns a Git::CommandLine::Result with the :batch_updates option',
+# ✅ Only some examples need a newer git — guard each such `it`
+it 'moves every ref in the batch when called with :batch_updates',
    skip: unless_git('2.47.0', 'git update-ref --batch-updates') do
-  # ...
+  # ... assert each ref the example created now points at the commit it named
 end
 
-# ✅ All tests in the group require the same version — guard the context/describe block
+# ✅ Every example needs the same version — guard the describe block
 RSpec.describe Git::Commands::Am::Retry, :integration,
                skip: unless_git('2.46.0', 'git am --retry') do
   # ...
@@ -593,12 +607,12 @@ Git.init(bare_dir, bare: true)
 Git.init(bare_dir, bare: true, initial_branch: 'main')
 ```
 
-**No shell-outs in tests.** Never use backticks, `system()`, or `%x[]` in tests. For
-git commands (including setup steps), use `execution_context.command_capturing` — it
-is portable across platforms, handles paths with spaces, and uses the same mechanism
-the command classes themselves use. For example:
-`execution_context.command_capturing('rev-parse', 'HEAD').stdout.strip`. For non-git
-operations (file creation, directory manipulation, etc.), use Ruby's standard library
+**Starting git in setup.** Follow the rule on starting git in the [RSpec Integration
+Testing Standards](../rspec-integration-testing-standards/SKILL.md): use the facade on
+`repo` when it has a method for the setup, and
+`execution_context.command_capturing` otherwise, never another command class. Start
+no other process except under the exceptions that rule lists. For non-git operations
+(file creation, directory manipulation, etc.), use Ruby's standard library
 (`FileUtils`, `File`, `Dir`) instead of shelling out.
 
 **Write cross-platform tests.** Avoid Unix-specific paths like `/dev/null`,
@@ -615,24 +629,21 @@ class. Use `execution_context.command_capturing`, `repo`, or standard library me
 for setup instead of instantiating other Commands classes. This maintains test
 isolation and prevents bugs in one command from breaking another command's tests.
 
-**Require only the command under test.** See the rule on requiring the spec helper
-and the file under test in the [RSpec Unit Testing
-Standards](../rspec-unit-testing-standards/SKILL.md) (MUST). For command specs
-specifically: do not require other command classes even if they are not instantiated
-— unused requires create false coupling between specs.
+**Require only the command under test.** A unit spec follows the rule on requiring the
+spec helper and the file under test in the [RSpec Unit Testing
+Standards](../rspec-unit-testing-standards/SKILL.md) (MUST). An integration spec
+follows the "Requires and metadata" change in the [RSpec Integration Testing
+Standards](../rspec-integration-testing-standards/SKILL.md), which also allows the
+standard library its body uses. In both, do not require other command classes even if
+they are not instantiated — unused requires create false coupling between specs.
 
-**Version-dependent tests.** When a test's behavior varies by git version, use `skip`
-inside the `it` block — not the `skip:` metadata on `it`. The metadata form evaluates
-at the describe level where helpers like `repo` are not available, causing a load
-error. For example:
-
-```ruby
-it 'succeeds when no merge is in progress' do
-  skip 'requires git 2.46.0 or later' unless Git.git_version >= Git::Version.new(2, 46, 0)
-
-  expect { command.call }.not_to raise_error
-end
-```
+**Version-dependent tests.** Guard an example that needs a newer git with
+`skip: unless_git(...)` metadata, as in
+[Guard tests for options introduced after the minimum supported Git
+version](#guard-tests-for-options-introduced-after-the-minimum-supported-git-version).
+A guard that reads a `let`, such as `repo`, cannot be metadata, because metadata is
+evaluated in the group body, where no `let` exists yet; call `skip` inside the `it`
+instead.
 
 **Test descriptions must match assertions.** See the rule that each `it` asserts one
 concept and its description matches the assertion, in the [RSpec base
@@ -647,7 +658,9 @@ match within single lines.
 ## Workflow
 
 1. Load the [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md)
-   skill, which loads the [RSpec base standards](../rspec-base-standards/SKILL.md)
+   skill for unit specs and the [RSpec Integration Testing
+   Standards](../rspec-integration-testing-standards/SKILL.md) skill for integration
+   specs; each loads the [RSpec base standards](../rspec-base-standards/SKILL.md)
 2. Read the spec file(s) under review and the corresponding command source file
 3. Determine the minimum supported Git version
    (see [Version-aware test scope](#version-aware-test-scope))
@@ -659,8 +672,8 @@ match within single lines.
 
 Report only anomalies — skip items that comply. For each issue found, provide:
 
-- **Rule or guideline violated** — cite by name and source skill (e.g., "Error
-  assertions name the class and a message pattern, RSpec base standards" or "What not
+- **Rule or guideline violated** — cite by name and source skill (e.g., "Edge cases
+  sit beside the normal case for their condition, RSpec base standards" or "What not
   to test, Command Test Conventions")
 - **Location** — spec file and block path (e.g., `describe '#call' > context 'with
   :force option' > it '...'`)
