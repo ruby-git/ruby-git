@@ -19,6 +19,7 @@ to update your code when upgrading from the preceding major version.
   - [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)
   - [Gzip failures in `archive` raised as `Git::Error`](#gzip-failures-in-archive-raised-as-giterror)
   - [Relative `:repository` and `:index` paths](#relative-repository-and-index-paths)
+  - [Tilde expansion in `Git.init` and `Git.clone` paths](#tilde-expansion-in-gitinit-and-gitclone-paths)
   - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
@@ -297,9 +298,9 @@ For `Git.clone` with the `:chdir` option, a relative `:index` is expanded agains
 `:chdir` instead, like the clone directory itself.
 
 Omitted options resolve as before: `:repository` defaults to `<working_dir>/.git` and
-`:index` to `<git_dir>/index`. Absolute paths are unaffected. The `:repository`
-option of `Git.clone` is unchanged: git resolves it, so it stays relative to the
-directory git runs in.
+`:index` to `<git_dir>/index`. Absolute paths are unaffected. A relative `:repository`
+option of `Git.clone` keeps its meaning: it is relative to `:chdir` when given and to
+the process working directory otherwise, which is where git already resolved it.
 
 ```ruby
 # v5.x: the index is bound to /path/to/repo/.git/scratch.index
@@ -308,6 +309,31 @@ repo = Git.open('/path/to/repo', index: 'scratch.index')
 # v6.x: the index is bound to scratch.index in the process working directory.
 # Join the path yourself to keep the v5.x location.
 repo = Git.open('/path/to/repo', index: '/path/to/repo/.git/scratch.index')
+```
+
+### Tilde expansion in `Git.init` and `Git.clone` paths
+
+`Git.init` and `Git.clone` now expand the directory argument and the `:repository`
+option before handing the path to git, so `~` is the home directory, as it already is
+for `Git.open`, `set_index`, and `set_working`. git does no tilde expansion on its
+arguments, so a `~`-prefixed path used to make git create a directory literally named
+`~` under the process working directory, or under `:chdir` for `Git.clone`. For
+`Git.init` the returned repository then pointed at the home directory, which git had
+not created, and the first command run on it failed. For a `~`-prefixed `:repository`
+option of `Git.clone`, git failed with an invalid path error.
+
+The change is visible only to a caller who passed a `~`-prefixed path and wanted the
+directory named `~`. Anchor the path to keep it. The rule these methods now share is
+recorded in
+[ADR-0010](docs/adr/0010-a-repository-locating-path-means-what-it-would-mean-at-a-shell-prompt.md).
+
+```ruby
+# v5.x: git creates ./~/scratch; the returned repository points at $HOME/scratch
+repo = Git.init('~/scratch')
+
+# v6.x: git creates $HOME/scratch and the returned repository is bound to it.
+# Anchor the path to keep a directory literally named ~.
+repo = Git.init('./~/scratch')
 ```
 
 ### Context helpers yield a separate repository
