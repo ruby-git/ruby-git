@@ -43,6 +43,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'activesupport', '>= 5.0'
   spec.add_dependency 'addressable', '~> 2.9'
+  spec.add_dependency 'logger', '~> 1.6'
   spec.add_dependency 'process_executer', '~> 4.1'
   spec.add_dependency 'rchardet', '~> 1.9'
 
