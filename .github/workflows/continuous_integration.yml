@@ -126,8 +126,8 @@ jobs:
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
       # Specs only. RuboCop and YARD run once in the lint job above instead of being
-      # repeated identically on every runtime. `rake build` still runs on every
-      # platform, as a prerequisite of the Test Gem step below.
+      # repeated identically on every runtime. The gem is still built on every
+      # platform, by the Test Gem step below.
       - name: Run Specs
         run: bundle exec rake spec
         timeout-minutes: 15
@@ -146,6 +146,7 @@ jobs:
 
       - name: Test Gem
         run: bundle exec rake test:gem
+        timeout-minutes: 10
 
   # The branch ruleset cannot require the matrix jobs above directly. A required status
   # check is matched by name, and `build`'s name is a template -- GitHub only expands it
