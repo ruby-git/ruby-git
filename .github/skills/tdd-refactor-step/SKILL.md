@@ -67,15 +67,19 @@ source to your context and proceed the same way.
   - Every new constant is frozen, not only one the Introduce constant technique adds.
   - Private methods go below a single `private` keyword, not inline `private def`.
 - **The standards refactored tests follow.** Unit specs follow the
-  [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md). Integration
-  specs also follow the [Command Test Conventions](../command-test-conventions/SKILL.md)
-  or the [Facade Test Conventions](../facade-test-conventions/SKILL.md), whichever fits
-  the class under test.
+  [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md), and
+  integration specs the
+  [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md).
+  Command and facade specs also follow the
+  [Command Test Conventions](../command-test-conventions/SKILL.md) or the
+  [Facade Test Conventions](../facade-test-conventions/SKILL.md), whichever fits the
+  class under test.
 
 ## Related skills
 
 - [Development Workflow](../development-workflow/SKILL.md) — the TDD workflow whose
   REFACTOR step this is
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — the rules
-  refactored unit specs follow
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
+  [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md)
+  — the rules refactored unit and integration specs follow
 - [PR Readiness Review](../pr-readiness-review/SKILL.md) — the final quality gate

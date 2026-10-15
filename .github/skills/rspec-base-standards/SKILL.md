@@ -18,14 +18,16 @@ conventions land once, in the plugin, instead of drifting between two full copie
 
 ## How to use this skill
 
-Invoke `/jcouball-testing:rspec-base-standards` and apply the changes below throughout
-its workflow. If you arrived here because that skill told you to read this file, do
-not invoke it again — its rules are already in context; apply the changes below and
-continue. For a unit spec, invoke the
-[RSpec unit testing standards](../rspec-unit-testing-standards/SKILL.md) instead, and
-for an integration spec the
-[RSpec integration testing standards](../rspec-integration-testing-standards/SKILL.md);
-each loads these.
+If you arrived here because a plugin skill told you to read this file, do not invoke
+anything: that skill's rules are already in context. Apply the changes below and
+continue.
+
+If you invoked this skill yourself for a unit or integration spec, invoke the
+[RSpec unit testing standards](../rspec-unit-testing-standards/SKILL.md) or the
+[RSpec integration testing standards](../rspec-integration-testing-standards/SKILL.md)
+instead; each loads these rules. Otherwise, invoke
+`/jcouball-testing:rspec-base-standards` and apply the changes below throughout its
+workflow.
 
 If the plugin is not installed, install it first:
 
@@ -36,9 +38,13 @@ claude plugin install jcouball-testing@jcouball
 
 In an agent that cannot install or invoke Claude Code plugins, read the rules
 directly from
-[the plugin source](https://github.com/jcouball/agent-plugins/blob/main/plugins/testing/skills/rspec-base-standards/SKILL.md)
+[the plugin source](https://github.com/jcouball/agent-plugins/blob/testing-v0.2.1/plugins/testing/skills/rspec-base-standards/SKILL.md)
 and apply the same changes on top. In Copilot Chat, attach this file and the plugin
 source to your context and proceed the same way.
+
+These changes were written against version 0.2.1 of the `jcouball-testing` plugin,
+which the link above points to. When the plugin is upgraded, check each change below
+against the new rules, then move the link to the new version.
 
 ## Changes and additions for ruby-git
 
@@ -58,17 +64,6 @@ source to your context and proceed the same way.
   - [Facade test conventions](../facade-test-conventions/SKILL.md):
     `'option whitelisting'`, `'deprecation handling'`, `'input validation'`, and
     `'signature compatibility'`
-- **Error messages from git.** The rule that error assertions name the class and a
-  message pattern still holds when git writes the message, and git's wording varies
-  by version. Use the loosest pattern that still tells this error from an unrelated
-  one, anchored on something stable: the invalid input value, the subcommand name, or
-  a word every supported git version prints. Never drop the pattern.
-
-  ```ruby
-  expect { command.call('nonexistent.txt') }
-    .to raise_error(Git::FailedError, /nonexistent\.txt/)
-  ```
-
 - **Backward-compatible alias constants.** When a class is also reachable through an
   alias constant kept for backward compatibility, a spec for the alias names the alias
   constant in `RSpec.describe` and asserts only that it is the target, with `be`. This

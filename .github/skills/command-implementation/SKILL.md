@@ -45,6 +45,8 @@ Additional related skills:
   documentation completeness and formatting
 - [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline
   RSpec rules all generated unit specs must comply with
+- [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md)
+  — baseline RSpec rules all generated integration specs must comply with
 - [Command Test Conventions](../command-test-conventions/SKILL.md) — conventions for
   writing and reviewing unit and integration tests for command classes
 - [Review Cross-Command Consistency](../review-cross-command-consistency/SKILL.md) —
@@ -182,11 +184,13 @@ This skill supports three modes. Determine which mode applies before starting:
       `spec/unit/git/commands/{command}_spec.rb` following the unit test
       conventions. Fix all findings, then repeat the review until clean.
 
-   c. **Scaffold integration tests (subagent)** *(scaffold mode only)* — delegate
-      to a subagent: load **[Command Test
-      Conventions](../command-test-conventions/SKILL.md)**, then generate
-      `spec/integration/git/commands/{command}_spec.rb` following the integration
-      test conventions. Fix all findings, then repeat the review until clean.
+   c. **Scaffold integration tests (subagent)** *(scaffold mode only)* — delegate to a
+      subagent: load **[Command Test
+      Conventions](../command-test-conventions/SKILL.md)** (which loads [RSpec
+      Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md)),
+      then generate `spec/integration/git/commands/{command}_spec.rb` following the
+      integration test conventions. Fix all findings, then repeat the review until
+      clean.
 
    d. **Review Arguments DSL (subagent)** — delegate to a subagent: load and
       apply **[Review Arguments DSL](../review-arguments-dsl/SKILL.md)** (and its

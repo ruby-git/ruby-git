@@ -46,10 +46,10 @@ Facade Test Conventions review: spec/unit/git/repository/committing_spec.rb.
 
 ## Related skills
 
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
-  [RSpec base standards](../rspec-base-standards/SKILL.md) — baseline RSpec rules
-  that govern all unit test structure, naming, setup, stubbing, and coverage; this
-  skill adds facade-specific conventions on top
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md),
+  [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md),
+  and [RSpec Base Standards](../rspec-base-standards/SKILL.md) — baseline RSpec rules
+  for unit and integration specs; this skill adds facade-specific conventions on top
 - [Facade Implementation](../facade-implementation/SKILL.md) — facade module
   structure and orchestration patterns
 - [Facade YARD Documentation](../facade-yard-documentation/SKILL.md) — YARD docs
@@ -64,8 +64,10 @@ the corresponding facade module file (`lib/git/repository/<topic>.rb`) provides
 useful context for verifying delegation contracts and option forwarding.
 
 **Prerequisite:** Apply the [RSpec Unit Testing
-Standards](../rspec-unit-testing-standards/SKILL.md) skill in full before beginning,
-including the [RSpec base standards](../rspec-base-standards/SKILL.md) it loads first.
+Standards](../rspec-unit-testing-standards/SKILL.md) skill in full before beginning
+on a unit spec, and the [RSpec Integration Testing
+Standards](../rspec-integration-testing-standards/SKILL.md) skill on an integration
+spec. Each loads the [RSpec base standards](../rspec-base-standards/SKILL.md) first.
 Together they define the baseline rules this skill extends.
 
 ## Reference
@@ -321,8 +323,7 @@ RSpec.describe Git::Repository::Stashing, :integration do
   describe '#stash_save_and_list' do
     it 'returns the new stash entry after saving' do
       result = described_instance.stash_save_and_list(message: 'wip')
-      expect(result).to all(be_a(Git::StashInfo))
-      expect(result.first.message).to include('wip')
+      expect(result).to contain_exactly(have_attributes(message: include('wip')))
     end
   end
 end
@@ -336,8 +337,11 @@ covered by command integration tests.
 
 #### What integration tests assert
 
-- The Ruby return value's **structure and key fields** (e.g., classes,
-  required attributes, presence of expected entries).
+- The Ruby return value's **exact values** wherever the test knows them: the entries
+  it created, the paths it wrote, the messages it committed. A class check or a
+  non-empty check alone shows only that git returned something; see the rule on exact
+  values in the [RSpec Integration Testing
+  Standards](../rspec-integration-testing-standards/SKILL.md).
 - Multi-command orchestration produces the documented end-to-end value, not
   intermediate command results.
 - For signature-compatibility behavior that is user-visible at runtime,
@@ -362,8 +366,10 @@ When reviewing existing facade tests, add these checks:
 ## Workflow
 
 1. Load the [RSpec Unit Testing
-   Standards](../rspec-unit-testing-standards/SKILL.md) skill, which loads the
-   [RSpec base standards](../rspec-base-standards/SKILL.md).
+   Standards](../rspec-unit-testing-standards/SKILL.md) skill for unit specs and the
+   [RSpec Integration Testing
+   Standards](../rspec-integration-testing-standards/SKILL.md) skill for integration
+   specs; each loads the [RSpec base standards](../rspec-base-standards/SKILL.md).
 2. Read the spec file(s) under review and the corresponding facade module
    (`lib/git/repository/<topic>.rb`) plus the underlying `Git::Commands::*` and
    `Git::Parsers::*` files the facade calls.

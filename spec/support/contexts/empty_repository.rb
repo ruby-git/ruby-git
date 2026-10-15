@@ -57,11 +57,6 @@ module Git
     # @example Create an empty file
     #   touch('empty.txt')
     #
-    # @example Update file modification time
-    #   write_file('old.txt', 'content')
-    #   sleep 1
-    #   touch('old.txt')  # updates mtime
-    #
     def touch(name)
       path = File.join(repo_dir, name)
       FileUtils.mkdir_p(File.dirname(path))

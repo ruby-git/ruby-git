@@ -41,10 +41,11 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
 
 ## Related skills
 
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) and
-  [RSpec base standards](../rspec-base-standards/SKILL.md) — baseline rules that all
-  unit tests must comply with, including testing only via public interfaces; these
-  standards take precedence over any older guidance
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md),
+  [RSpec Integration Testing Standards](../rspec-integration-testing-standards/SKILL.md),
+  and [RSpec Base Standards](../rspec-base-standards/SKILL.md) — baseline rules that
+  all unit and integration tests must comply with, including testing only via public
+  interfaces; these standards take precedence over any older guidance
 - [Development Workflow](../development-workflow/SKILL.md) — primary
   implementation process prior to readiness checks
 - [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration
@@ -76,14 +77,18 @@ Execute and report results for:
 - [ ] Comprehensive coverage: success paths, failures, edge cases, error handling
 - [ ] Test only through public interfaces (the rule on testing only through the public
   interface in the [RSpec base standards](../rspec-base-standards/SKILL.md))
+- [ ] Apply the [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md)
+  in full to every new or modified unit spec; the checks above are the ones most often
+  missed, not the whole list
 
 **Integration Tests (Essential Only):**
 
-- [ ] **Minimal and purposeful** - only test what unit tests cannot verify
-- [ ] Each test validates one specific git interaction pattern
-- [ ] Tests verify mocked assumptions match real git behavior
-- [ ] No redundancy - don't duplicate what unit tests already cover
-- [ ] Follow CONTRIBUTING.md guidelines: test gem's interaction with git, not git itself
+- [ ] Apply the [RSpec Integration Testing
+  Standards](../rspec-integration-testing-standards/SKILL.md) in full to every new or
+  modified integration spec. Its changes most often missed are the bullets named
+  Exact values, Error patterns, Pinning git, Starting git, and No `sleep`, and the
+  plugin rule most often missed is the one against covering a conditional path a unit
+  spec covers. Check those first, from the skill itself rather than from memory.
 
 **Command Tests (if any `Git::Commands::*` specs are included):**
 
