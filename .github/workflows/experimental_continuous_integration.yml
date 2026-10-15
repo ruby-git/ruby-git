@@ -57,3 +57,4 @@ jobs:
 
       - name: Test Gem
         run: bundle exec rake test:gem
+        timeout-minutes: 10
