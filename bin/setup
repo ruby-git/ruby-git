@@ -8,6 +8,7 @@
 #   * installs the optional Node.js tooling used for the Conventional Commit
 #     commit-msg hook (Husky + commitlint)
 #   * verifies that the lychee link checker is installed and new enough
+#   * verifies that the actionlint workflow linter is installed
 #   * verifies the toolchain by listing the available rake tasks
 #
 # Run this from the project root after cloning the repository.
@@ -165,6 +166,30 @@ check_lychee() {
   green "✓ lychee ${lychee_version} (>= ${required})"
 }
 
+# actionlint is a Go binary rather than a gem, so bundler cannot supply it and this
+# script cannot install it. It is required for the same reason as lychee: `rake
+# lint:actions` is part of the default task. No minimum version is checked, because
+# nothing in this repository depends on one; CI runs the newest release.
+check_actionlint() {
+  if ! command -v actionlint >/dev/null 2>&1; then
+    red "ERROR: actionlint is not installed or not on PATH."
+    red "       ruby-git requires actionlint for 'rake lint:actions',"
+    red "       which runs as part of the default task."
+    red "       Install with one of:"
+    red "         macOS, Linux  brew install actionlint"
+    red "         Windows       winget install --id rhysd.actionlint (or scoop / choco install actionlint)"
+    red "         mise          mise use -g actionlint"
+    red "         Go            go install github.com/rhysd/actionlint/cmd/actionlint@latest"
+    red "       Others: https://github.com/rhysd/actionlint/blob/main/docs/install.md"
+    exit 1
+  fi
+
+  local actionlint_version
+  # `actionlint --version` prints the version on its first line, e.g. "1.7.12".
+  actionlint_version=$(actionlint --version | head -n1)
+  green "✓ actionlint ${actionlint_version}"
+}
+
 verify_toolchain() {
   info ""
   info "Verifying the toolchain (bundle exec rake --tasks)..."
@@ -189,6 +214,7 @@ check_ruby "${REQUIRED_RUBY_VERSION}"
 check_git "${REQUIRED_GIT_VERSION}"
 check_bundler
 check_lychee "${REQUIRED_LYCHEE_VERSION}"
+check_actionlint
 
 install_gems
 install_npm_tooling
