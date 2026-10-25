@@ -22,7 +22,7 @@ to update your code when upgrading from the preceding major version.
   - [Tilde expansion in `Git.init` and `Git.clone` paths](#tilde-expansion-in-gitinit-and-gitclone-paths)
   - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
-  - [`Git.open` and `Git.bare` reject unknown options](#gitopen-and-gitbare-reject-unknown-options)
+  - [`Git.init`, `Git.open`, and `Git.bare` reject unknown options](#gitinit-gitopen-and-gitbare-reject-unknown-options)
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
   - [v4.x-style configuration API removed](#v4x-style-configuration-api-removed)
   - [`Git::Repository#remotes` and `allow_unknown_type` removed](#gitrepositoryremotes-and-allow_unknown_type-removed)
@@ -460,18 +460,22 @@ argument raises `ArgumentError` for the wrong number of arguments. The
 [`Git::Repository` option renames](#gitrepository-option-renames) entry under
 "Upgrading to v5.x" maps each removed form to its replacement.
 
-### `Git.open` and `Git.bare` reject unknown options
+### `Git.init`, `Git.open`, and `Git.bare` reject unknown options
 
-`Git.open` and `Git.bare` now raise `ArgumentError` when the options hash contains
-a key they do not accept, the same way `Git.ls_remote` already does. v5.x ignored
-unknown keys, so a typo such as `respository:` or an unsupported key silently
-returned a repository bound to paths the caller did not ask for.
+`Git.init`, `Git.open`, and `Git.bare` now raise `ArgumentError` when the options
+hash contains a key they do not accept, the same way `Git.ls_remote` already does.
+v5.x ignored unknown keys, so a typo such as `respository:` or an unsupported key
+silently returned a repository bound to paths the caller did not ask for, and
+`Git.init` created the repository in the default location instead of the one
+the mistyped key was meant to name.
 
 For how v5.x handles unknown options in APIs that already validated them, see
 [`Unsupported options raise ArgumentError`](#unsupported-options-raise-argumenterror).
 
 The accepted keys are:
 
+- `Git.init`: `:bare`, `:initial_branch`, `:repository`, `:separate_git_dir`,
+  `:index`, `:log`, `:git_ssh`, and `:binary_path`
 - `Git.open`: `:repository`, `:index`, `:log`, `:git_ssh`, and `:binary_path`
 - `Git.bare`: `:index`, `:log`, `:git_ssh`, and `:binary_path`
 
@@ -485,6 +489,13 @@ repo = Git.open('/path/to/worktree', respository: '/srv/repo.git')
 
 # v6.x: the corrected call opens the repository
 repo = Git.open('/path/to/worktree', repository: '/srv/repo.git')
+
+# v5.x: the typo is ignored and the repository is created at /path/to/worktree/.git
+# v6.x: raises ArgumentError, "Unknown options: separate_gitdir"
+repo = Git.init('/path/to/worktree', separate_gitdir: '/srv/repo.git')
+
+# v6.x: the corrected call creates the repository at /srv/repo.git
+repo = Git.init('/path/to/worktree', separate_git_dir: '/srv/repo.git')
 ```
 
 ### `Git::Log` Enumerable interface and `Commit#set_commit` removed
@@ -858,11 +869,10 @@ construct a repository object.
 
 In v5.x, unknown options are rejected by specific APIs: clone options passed to
 `Git.clone`, options passed to `Git.ls_remote`, command options passed to
-`Git::Commands`, and execution options passed to `Git::CommandLine#run`. This
-validation is not uniform across factory methods: `Git.init` filters the options
-it passes to `git init`, while `Git.open` and `Git.bare` silently ignored
-unknown keys in v5.x. The latter two began rejecting them in v6.0.0 (see
-[`Git.open` and `Git.bare` reject unknown options](#gitopen-and-gitbare-reject-unknown-options)).
+`Git::Commands`, and execution options passed to `Git::CommandLine#run`. The
+factory methods `Git.init`, `Git.open`, and `Git.bare` do not validate option
+names in v5.x. All three reject unknown keys in v6.0.0 (see
+[`Git.init`, `Git.open`, and `Git.bare` reject unknown options](#gitinit-gitopen-and-gitbare-reject-unknown-options)).
 
 For APIs that validate options, names that v4.x silently ignored may raise
 `ArgumentError` in v5.x. Check option names against the documented API when
