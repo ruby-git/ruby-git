@@ -1134,6 +1134,22 @@ RSpec.describe Git::Factories do
         end
       end
     end
+
+    context 'when an unknown option key is given' do
+      let(:options) { { bogus: 1, respository: '/x', index: custom_index } }
+
+      it 'raises ArgumentError naming the unknown keys' do
+        expect { repository }.to raise_error(ArgumentError, 'Unknown options: bogus, respository')
+      end
+
+      it 'raises before resolving any path or running git' do
+        allow(Git::PathResolver).to receive(:expand_path)
+        expect { repository }.to raise_error(ArgumentError, /Unknown options/)
+        expect(Git::PathResolver).not_to have_received(:expand_path)
+        expect(Git::ExecutionContext::Global).not_to have_received(:new)
+        expect(Git::Commands::Init).not_to have_received(:new)
+      end
+    end
   end
 
   describe '.bare' do

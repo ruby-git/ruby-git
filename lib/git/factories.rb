@@ -36,6 +36,15 @@ module Git
     BARE_ALLOWED_OPTS = %i[index log git_ssh binary_path].freeze
     private_constant :BARE_ALLOWED_OPTS
 
+    # Option keys {Git.init} accepts
+    #
+    # @return [Array<Symbol>]
+    #
+    # @api private
+    #
+    INIT_ALLOWED_OPTS = %i[bare initial_branch repository separate_git_dir index log git_ssh binary_path].freeze
+    private_constant :INIT_ALLOWED_OPTS
+
     # Clone a repository into a new directory
     #
     # @example Clone into the default directory
@@ -284,6 +293,8 @@ module Git
     #
     # @return [Git::Repository] a repository bound to the newly initialized repository
     #
+    # @raise [ArgumentError] if `options` contains an unknown key
+    #
     # @raise [ArgumentError] if `directory`, `:repository`, or `:index` begins
     #   with `~user` for a user that does not exist
     #
@@ -301,6 +312,7 @@ module Git
     # @api public
     #
     def init(directory = '.', options = {})
+      reject_unknown_option_keys!(options.keys, INIT_ALLOWED_OPTS)
       options = normalize_init_options(options)
       directory = expand_directory(directory, bare: options[:bare])
 
