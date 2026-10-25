@@ -467,6 +467,9 @@ a key they do not accept, the same way `Git.ls_remote` already does. v5.x ignore
 unknown keys, so a typo such as `respository:` or an unsupported key silently
 returned a repository bound to paths the caller did not ask for.
 
+For how v5.x handles unknown options in APIs that already validated them, see
+[`Unsupported options raise ArgumentError`](#unsupported-options-raise-argumenterror).
+
 The accepted keys are:
 
 - `Git.open`: `:repository`, `:index`, `:log`, `:git_ssh`, and `:binary_path`
@@ -853,11 +856,18 @@ construct a repository object.
 
 #### Unsupported options raise `ArgumentError`
 
-v5.x validates options more strictly for factory methods and command APIs.
-Unknown options that were silently ignored in v4.x may now raise
-`ArgumentError`. Check option names against the documented API when upgrading,
-especially for calls that pass keyword options through helper methods or shared
-option hashes.
+In v5.x, unknown options are rejected by specific APIs: clone options passed to
+`Git.clone`, options passed to `Git.ls_remote`, command options passed to
+`Git::Commands`, and execution options passed to `Git::CommandLine#run`. This
+validation is not uniform across factory methods: `Git.init` filters the options
+it passes to `git init`, while `Git.open` and `Git.bare` silently ignored
+unknown keys in v5.x. The latter two began rejecting them in v6.0.0 (see
+[`Git.open` and `Git.bare` reject unknown options](#gitopen-and-gitbare-reject-unknown-options)).
+
+For APIs that validate options, names that v4.x silently ignored may raise
+`ArgumentError` in v5.x. Check option names against the documented API when
+upgrading, especially for calls that pass keyword options through helper
+methods or shared option hashes.
 
 For example, `Git.clone` supports `log:`, not `logger:`. A misspelled or
 unsupported option that v4.x ignored must be corrected:
