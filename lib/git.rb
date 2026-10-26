@@ -9,8 +9,13 @@ require 'active_support/deprecation'
 module Git
   # The deprecation instance used to emit deprecation warnings for the Git gem
   #
+  # ActiveSupport defaults the deprecation horizon to a Rails version, and this
+  # gem never interpolates it into a warning: every warning is written by hand
+  # per ADR-0007. The horizon is informational only, so it carries the ADR's
+  # wording instead of a version that would go stale.
+  #
   # @api public
-  Deprecation = ActiveSupport::Deprecation.new('6.0.0', 'Git')
+  Deprecation = ActiveSupport::Deprecation.new('in a future major release', 'Git')
 
   # Configure a deprecation instance from a GIT_DEPRECATION_BEHAVIOR value
   #
