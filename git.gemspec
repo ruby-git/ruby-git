@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 3.3.0'
   spec.requirements = ['git 2.43.0 or greater']
 
-  spec.add_dependency 'activesupport', '>= 5.0'
+  spec.add_dependency 'activesupport', '>= 7.0.9'
   spec.add_dependency 'addressable', '~> 2.9'
   spec.add_dependency 'logger', '~> 1.6'
   spec.add_dependency 'process_executer', '~> 4.1'

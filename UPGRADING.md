@@ -8,6 +8,7 @@ to update your code when upgrading from the preceding major version.
   - [Minimum Ruby version](#minimum-ruby-version)
   - [Minimum git version](#minimum-git-version)
   - [Minimum addressable version](#minimum-addressable-version)
+  - [Minimum activesupport version](#minimum-activesupport-version)
   - [Renamed facade methods removed](#renamed-facade-methods-removed)
   - [Renamed `Git::Repository` methods removed](#renamed-gitrepository-methods-removed)
   - [`Git::Object::Tag` removed](#gitobjecttag-removed)
@@ -24,6 +25,7 @@ to update your code when upgrading from the preceding major version.
   - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
   - [`Git.init`, `Git.open`, and `Git.bare` reject unknown options](#gitinit-gitopen-and-gitbare-reject-unknown-options)
   - [`set_index` and `set_working` deprecated](#set_index-and-set_working-deprecated)
+  - [`Git::GitExecuteError` deprecated](#gitgitexecuteerror-deprecated)
   - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
   - [v4.x-style configuration API removed](#v4x-style-configuration-api-removed)
   - [`Git::Repository#remotes` and `allow_unknown_type` removed](#gitrepositoryremotes-and-allow_unknown_type-removed)
@@ -81,19 +83,21 @@ To prepare:
    [Minimum git version](#minimum-git-version)).
 3. Run `bundle update addressable` and confirm the lockfile resolves addressable
    2.9.0 or later (see [Minimum addressable version](#minimum-addressable-version)).
-4. Upgrade to the latest v5.x release.
-5. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
+4. Run `bundle update activesupport` and confirm the lockfile resolves activesupport
+   7.0.9 or later (see [Minimum activesupport version](#minimum-activesupport-version)).
+5. Upgrade to the latest v5.x release.
+6. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
    your test suite and, if possible, staging.
-6. Fix each deprecation using the entries under
+7. Fix each deprecation using the entries under
    [Deprecated methods](#deprecated-methods) until the suite is clean.
-7. Replace any `rescue Errno::*` around gem calls with `rescue Git::Error` (see
+8. Replace any `rescue Errno::*` around gem calls with `rescue Git::Error` (see
    [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)).
-8. Give every `with_index`, `with_temp_index`, `with_working`, and
+9. Give every `with_index`, `with_temp_index`, `with_working`, and
    `with_temp_working` block a parameter and call methods on it rather than on the
    outer repository; v5.6.0 and later warn for a block with no positional parameter
    (see [Context helpers yield a separate
    repository](#context-helpers-yield-a-separate-repository)).
-9. Upgrade to v6.0.0.
+10. Upgrade to v6.0.0.
 
 ### Minimum Ruby version
 
@@ -141,6 +145,24 @@ The `~> 2.8` constraint already permits 2.9.0, so most applications resolve it a
 `bundle update addressable`. The upgrade fails only when another gem in the bundle
 caps addressable below 2.9.0. In that case, update or replace that gem, or stay on
 the latest v5.x release.
+
+### Minimum activesupport version
+
+v6.0.0 depends on `activesupport >= 7.0.9`. v5.x accepts `>= 5.0`.
+
+Two things set the floor. The `Git::GitExecuteError` deprecation warning passes its
+text to ActiveSupport's `DeprecatedConstantProxy` through the `message:` keyword, which
+no release before 6.0.3 accepts on Ruby 3. Separately, activesupport requires
+`base64`, `bigdecimal`, `drb`, and `mutex_m` from the standard library, and Ruby 3.4
+removed those from the default gems, so on Ruby 3.4 or later `require 'git'` fails
+under Bundler unless a gem in the bundle declares them. Activesupport 7.0.9 is the
+first 7.0.x release that declares them as dependencies; every 7.1.0 and later release
+does too. The floor applies on every Ruby version so that Bundler reports the conflict
+when it resolves the bundle, instead of `require 'git'` failing on Ruby 3.4.
+
+Most applications already resolve a newer activesupport. The upgrade fails only when
+another gem in the bundle caps activesupport below 7.0.9. In that case, update or
+replace that gem, or stay on the latest v5.x release.
 
 ### Renamed facade methods removed
 
@@ -594,6 +616,27 @@ command with an invalid path error. Create the directory, then call `Git.open`. 
 your code needs the deferred bind, open an issue describing the use case; under
 ADR-0007 that becomes a feature request. `set_index(path, must_exist: false)` has no
 gap: the `:index` option is not checked for existence.
+
+### `Git::GitExecuteError` deprecated
+
+`Git::GitExecuteError` has been a deprecated alias for `Git::Error` since v2.0.0 and
+has warned whenever it is rescued or instantiated since then. The warning now follows
+the project's deprecation policy: it names the replacement and says the alias is
+removed in a future major release, and this entry records it. The warning is:
+
+- `Git::GitExecuteError is deprecated and will be removed in a future major release.
+  Use Git::Error instead.`
+
+Replace every reference with `Git::Error`. The two constants name the same class, so a
+`rescue Git::Error` clause catches everything a `rescue Git::GitExecuteError` clause did.
+
+```ruby
+# instead of
+rescue Git::GitExecuteError => e
+
+# rescue the class directly
+rescue Git::Error => e
+```
 
 ### `Git::Log` Enumerable interface and `Commit#set_commit` removed
 
@@ -1145,6 +1188,11 @@ object returned by git commands is unaffected.
 
 The following methods are available in v5.x with deprecation warnings and are
 removed in v6.0.0. Migrate to the replacement shown to silence the warnings.
+
+`Git::GitExecuteError` is not listed here because v6.0.0 keeps it. It has warned since
+v2.0.0 and still warns in v6.0.0; see [`Git::GitExecuteError`
+deprecated](#gitgitexecuteerror-deprecated) under "Upgrading to v6.x" for the
+replacement.
 
 #### Facade method renames
 

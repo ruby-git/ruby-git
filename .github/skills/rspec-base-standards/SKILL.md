@@ -69,7 +69,13 @@ against the new rules, then move the link to the new version.
   constant in `RSpec.describe` and asserts only that it is the target, with `be`. This
   is an exception to the rule on asserting observable behavior, which counts a test
   that a constant exists as no assertion: the alias is public API that a rename could
-  drop. The spec for the target class covers everything else.
+  drop. The spec for the target class covers everything else. When the alias is an
+  `ActiveSupport::Deprecation::DeprecatedConstantProxy`, name it as a string in
+  `RSpec.describe`, since naming the constant warns at load time and renames the
+  group to the target, wrap the assertion in `Git::Deprecation.silence`, and add an
+  example for each use a caller makes of the alias, at least instantiation and a
+  `rescue` match, that asserts the warning text through the `:raise` behavior the
+  spec helper configures, with `raise_error(ActiveSupport::DeprecationException, /.../)`.
 - **An addition: shared contexts.** The plugin has no rule on where shared contexts
   live. A spec that uses one, which in practice means an integration spec, finds it in
   `spec/support/contexts/`, in a file named for the context string, such as

@@ -85,12 +85,20 @@ module Git
 
   # An alias for Git::Error
   #
-  # Git::GitExecuteError error class is an alias for Git::Error for backwards
-  # compatibility. It is recommended to use Git::Error directly.
+  # Git::GitExecuteError is an alias for Git::Error kept for backwards
+  # compatibility. It is an ActiveSupport::Deprecation::DeprecatedConstantProxy,
+  # so any use of it, including instantiating it and matching it in a `rescue`
+  # clause, emits a deprecation warning through Git::Deprecation. The
+  # reflective methods that debuggers and IRB call, such as `inspect` and
+  # `name`, do not warn. It will be removed in a future major release.
   #
   # @deprecated Use Git::Error instead
   #
-  GitExecuteError = ActiveSupport::Deprecation::DeprecatedConstantProxy.new('Git::GitExecuteError', 'Git::Error', Git::Deprecation)
+  GitExecuteError = ActiveSupport::Deprecation::DeprecatedConstantProxy.new(
+    'Git::GitExecuteError', 'Git::Error', Git::Deprecation,
+    message: 'Git::GitExecuteError is deprecated and will be removed in a future major release. ' \
+             'Use Git::Error instead.'
+  )
 
   # Raised when a git command fails or exits because of an uncaught signal
   #
