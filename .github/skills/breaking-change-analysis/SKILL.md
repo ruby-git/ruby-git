@@ -131,8 +131,11 @@ recorded on the API's issue.
 **What a deprecation ships.** All of the following land in the same minor release:
 
 - A runtime warning via `Git::Deprecation.warn` that names the replacement. A YARD tag
-  alone does not count. Do not use ActiveSupport's `deprecate_methods`; it bakes the
-  horizon into the message.
+  alone does not count. Do not use ActiveSupport's `deprecate_methods`: its message
+  comes from the gem-wide horizon, so it cannot name the major decided for one API,
+  and it renders the replacement as a parenthetical, such as "(use X instead)", rather
+  than the "Use X instead." sentence the wording below requires and the `UPGRADING.md`
+  entry must agree with.
 - The replacement API.
 - An `UPGRADING.md` entry that agrees with the warning.
 - A `@deprecated` YARD tag with migration guidance.

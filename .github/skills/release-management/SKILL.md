@@ -192,8 +192,7 @@ and is checked when each removal PR merges, not here.
       ([ADR-0004](../../../docs/adr/0004-the-option-surface-is-the-union-of-the-supported-git-range.md)).
 - [ ] Carried deprecations, if any, have their warning text, `@deprecated` YARD tag,
       and `UPGRADING.md` entry updated to name the major the roadmap decided for them,
-      or "a future major release" while that is undecided, and the horizon passed to
-      `ActiveSupport::Deprecation.new` in `lib/git.rb` is bumped to the next major.
+      or "a future major release" while that is undecided.
 - [ ] The "Upgrading to vN.0.0" section of `UPGRADING.md` is complete.
 - [ ] README examples use no removed APIs.
 - [ ] The changelog preview in the release PR reads correctly and every removal commit

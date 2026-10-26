@@ -33,6 +33,7 @@ to update your code when upgrading from the preceding major version.
   - [Legacy worktree API removed](#legacy-worktree-api-removed)
   - [`Git::Branch` and `Git::Branches` removed](#gitbranch-and-gitbranches-removed)
   - [`Git::Remote` removed](#gitremote-removed)
+  - [`Git::Deprecation` horizon is prose](#gitdeprecation-horizon-is-prose)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -835,6 +836,17 @@ Two differences carry over from the v5.x entry and still apply when moving to
 
 The [`Git::Remote` deprecated](#gitremote-deprecated) entry under "Upgrading to
 v5.x" maps every removed call and reader to its replacement.
+
+### `Git::Deprecation` horizon is prose
+
+v6.0.0 constructs `Git::Deprecation` with the horizon `"in a future major release"`.
+v5.x used `"6.0.0"`. The gem never puts the horizon into a warning, so the warnings
+themselves do not change. The horizon reaches your code through the
+`Git::Deprecation.deprecation_horizon` reader, the `deprecation_horizon` key of the
+payload the `:notify` behavior publishes, and the third argument of a custom
+`behavior` or `disallowed_behavior` proc declared with four parameters. Code that
+parses that value as a version, for example with `Gem::Version.new`, now raises; read
+the removal version from the warning text instead, which names it once it is decided.
 
 ---
 
