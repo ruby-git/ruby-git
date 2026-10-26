@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# active_support/deprecation alone does not load everything its built-in
+# behaviors use: :log reaches ActiveSupport::IsolatedExecutionState through the
+# logger and :report reaches ActiveSupport.error_reporter. Outside Rails nothing
+# else loads them, so require the ActiveSupport entry point first.
+require 'active_support'
 require 'active_support/deprecation'
 
 # Define Git::Deprecation before requiring the rest of the library to ensure that
@@ -7,6 +12,24 @@ require 'active_support/deprecation'
 # configured according to the GIT_DEPRECATION_BEHAVIOR environment variable.
 #
 module Git
+  # The gem name handed to ActiveSupport::Deprecation
+  #
+  # ActiveSupport's :notify behavior builds its notification name by calling
+  # `underscore` on the gem name. That is a String core extension this gem does
+  # not load, because requiring it adds twenty-one methods to String in every
+  # process that loads the gem. This subclass answers `underscore` itself, so
+  # :notify works and String stays untouched. Everywhere else ActiveSupport
+  # interpolates the name or passes it through, where it behaves as "Git".
+  #
+  # @api private
+  class DeprecationGemName < String
+    # The segment of the notification name after "deprecation."
+    #
+    # @return [String] "git"
+    def underscore = 'git'
+  end
+  private_constant :DeprecationGemName
+
   # The deprecation instance used to emit deprecation warnings for the Git gem
   #
   # ActiveSupport defaults the deprecation horizon to a Rails version, and this
@@ -15,7 +38,7 @@ module Git
   # wording instead of a version that would go stale.
   #
   # @api public
-  Deprecation = ActiveSupport::Deprecation.new('in a future major release', 'Git')
+  Deprecation = ActiveSupport::Deprecation.new('in a future major release', DeprecationGemName.new('Git'))
 
   # Configure a deprecation instance from a GIT_DEPRECATION_BEHAVIOR value
   #
