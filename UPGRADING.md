@@ -469,8 +469,8 @@ silently returned a repository bound to paths the caller did not ask for, and
 `Git.init` created the repository in the default location instead of the one
 the mistyped key was meant to name.
 
-For how v5.x handles unknown options in APIs that already validated them, see
-[`Unsupported options raise ArgumentError`](#unsupported-options-raise-argumenterror).
+For the APIs that did validate option names in v5.x, see
+[Unsupported options raise `ArgumentError`](#unsupported-options-raise-argumenterror).
 
 The accepted keys are:
 
@@ -867,9 +867,9 @@ construct a repository object.
 
 #### Unsupported options raise `ArgumentError`
 
-In v5.x, unknown options are rejected by specific APIs: clone options passed to
-`Git.clone`, options passed to `Git.ls_remote`, command options passed to
-`Git::Commands`, and execution options passed to `Git::CommandLine#run`. The
+In v5.x, only some APIs reject unknown options: `Git.clone`, `Git.ls_remote`,
+and most `Git::Repository` methods that accept an options hash (for example,
+`#add`) raise `ArgumentError` for option names they do not recognize. The
 factory methods `Git.init`, `Git.open`, and `Git.bare` do not validate option
 names in v5.x. All three reject unknown keys in v6.0.0 (see
 [`Git.init`, `Git.open`, and `Git.bare` reject unknown options](#gitinit-gitopen-and-gitbare-reject-unknown-options)).
