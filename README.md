@@ -310,6 +310,17 @@ GIT_DEPRECATION_BEHAVIOR=silence
 Accepted environment variable values are the behavior names supported by your
 installed ActiveSupport version.
 
+A deprecated method warns on every call, so a call site inside a loop produces one
+warning per iteration. The gem does not deduplicate warnings. To quiet one call site
+without hiding other deprecations, wrap it in `Git::Deprecation.silence`:
+
+```ruby
+Git::Deprecation.silence { repo.set_index(index_file) }
+```
+
+Prefer this over setting the behavior to `silence` globally, which also hides the
+warnings for deprecations added in later releases.
+
 If `GIT_DEPRECATION_BEHAVIOR` is set to an unsupported value, loading the gem
 raises `ArgumentError` with the accepted behavior names.
 
