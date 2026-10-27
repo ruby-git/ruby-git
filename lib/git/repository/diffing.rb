@@ -373,7 +373,7 @@ module Git
       #
       # @return [Git::DiffPathStatus] the name-status report for the comparison
       #
-      # @deprecated Use {#diff_path_status} instead
+      # @deprecated Use {#diff_path_status} instead. Will be removed in a future major release.
       #
       # @see #diff_path_status
       alias diff_name_status diff_path_status

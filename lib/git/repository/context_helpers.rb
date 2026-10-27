@@ -288,6 +288,7 @@ module Git
       # @deprecated Use `Git.open(dir, index: path)` or
       #   `Git.bare(git_dir, index: path)` to open a repository bound to the
       #   index, or {#with_index} to bind a copy for the duration of a block.
+      #   Will be removed in a future major release.
       #
       def set_index(index_file, must_exist: true)
         Git::Deprecation.warn(SET_INDEX_DEPRECATION)
@@ -331,7 +332,7 @@ module Git
       # @deprecated Use `Git.open(work_dir, repository: git_dir)` to open a
       #   repository bound to the working tree, adding `index:` when the
       #   receiver's index was custom, or {#with_working} to bind a copy for
-      #   the duration of a block.
+      #   the duration of a block. Will be removed in a future major release.
       #
       def set_working(work_dir, must_exist: true)
         Git::Deprecation.warn(SET_WORKING_DEPRECATION)

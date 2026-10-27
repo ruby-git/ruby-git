@@ -92,7 +92,7 @@ module Git
   # reflective methods that debuggers and IRB call, such as `inspect` and
   # `name`, do not warn. It will be removed in a future major release.
   #
-  # @deprecated Use Git::Error instead
+  # @deprecated Use Git::Error instead. Will be removed in a future major release.
   #
   GitExecuteError = ActiveSupport::Deprecation::DeprecatedConstantProxy.new(
     'Git::GitExecuteError', 'Git::Error', Git::Deprecation,

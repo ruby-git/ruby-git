@@ -102,7 +102,7 @@ module Git
 
       # Alias for {#cat_file_contents}
       #
-      # @deprecated Use {#cat_file_contents} instead
+      # @deprecated Use {#cat_file_contents} instead. Will be removed in a future major release.
       #
       # @see #cat_file_contents
       alias object_contents cat_file_contents
@@ -133,7 +133,7 @@ module Git
 
       # Alias for {#cat_file_size}
       #
-      # @deprecated Use {#cat_file_size} instead
+      # @deprecated Use {#cat_file_size} instead. Will be removed in a future major release.
       #
       # @see #cat_file_size
       alias object_size cat_file_size
@@ -165,7 +165,7 @@ module Git
 
       # Alias for {#cat_file_type}
       #
-      # @deprecated Use {#cat_file_type} instead
+      # @deprecated Use {#cat_file_type} instead. Will be removed in a future major release.
       #
       # @see #cat_file_type
       alias object_type cat_file_type
@@ -208,7 +208,7 @@ module Git
 
       # Alias for {#cat_file_commit}
       #
-      # @deprecated Use {#cat_file_commit} instead
+      # @deprecated Use {#cat_file_commit} instead. Will be removed in a future major release.
       #
       # @see #cat_file_commit
       alias commit_data cat_file_commit
@@ -264,7 +264,7 @@ module Git
 
       # Alias for {#cat_file_tag}
       #
-      # @deprecated Use {#cat_file_tag} instead
+      # @deprecated Use {#cat_file_tag} instead. Will be removed in a future major release.
       #
       # @see #cat_file_tag
       alias tag_data cat_file_tag
@@ -405,7 +405,7 @@ module Git
 
       # Alias for {#name_rev}
       #
-      # @deprecated Use {#name_rev} instead
+      # @deprecated Use {#name_rev} instead. Will be removed in a future major release.
       #
       # @see #name_rev
       alias namerev name_rev
