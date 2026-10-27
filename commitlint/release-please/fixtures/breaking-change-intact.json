@@ -1,0 +1,330 @@
+{
+  "about": [
+    "Fixtures for the release-please/breaking-change-intact rule and for the release-please",
+    "behavior its advice describes. Each entry holds a message as a list of lines (joined",
+    "with newlines, with a trailing newline), the verdict the rule must give, the ADVICE",
+    "key the failure message must contain, and, when present, the BREAKING CHANGE entries",
+    "release-please publishes for the message. An entry with a `todo` names a known",
+    "defect: its test runs but does not fail the suite until the defect is fixed."
+  ],
+  "fixtures": [
+    {
+      "name": "a plain paragraph passes",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo bar", "baz."],
+      "verdict": "pass",
+      "published": ["foo bar baz."]
+    },
+    {
+      "name": "a paragraph followed by a Closes footer passes",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo bar", "baz.", "", "Closes #1"],
+      "verdict": "pass",
+      "published": ["foo bar baz."]
+    },
+    {
+      "name": "the hyphenated BREAKING-CHANGE token passes",
+      "message": ["feat!: x", "", "BREAKING-CHANGE: foo bar", "baz."],
+      "verdict": "pass",
+      "published": ["foo bar baz."]
+    },
+    {
+      "name": "a message without a BREAKING CHANGE paragraph passes without parsing",
+      "message": ["docs: y", "", "Git.clone(url, File.join(dir, name)) now expands the path."],
+      "verdict": "pass"
+    },
+    {
+      "name": "extra spaces after the colon pass",
+      "message": ["feat!: x", "", "BREAKING CHANGE:  foo bar", "baz."],
+      "verdict": "pass",
+      "published": ["foo bar baz."]
+    },
+    {
+      "name": "a tab after the colon is still checked",
+      "message": ["feat!: x", "", "BREAKING CHANGE:\tfoo bar", "Git::AuthorInfo is gone.", "Closes #1"],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["foo bar"]
+    },
+    {
+      "name": "trailing whitespace on the marker line is ignored",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo ", "bar baz"],
+      "verdict": "pass"
+    },
+    {
+      "name": "git's editor comment block is ignored",
+      "message": [
+        "feat!: x",
+        "",
+        "BREAKING CHANGE: foo bar",
+        "baz qux.",
+        "",
+        "# Please enter the commit message for your changes. Lines starting",
+        "# with '#' will be ignored, and an empty message aborts the commit.",
+        "#",
+        "# On branch main"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "name": "the scissors line and the diff below it are ignored",
+      "message": [
+        "feat!: x",
+        "",
+        "BREAKING CHANGE: foo bar",
+        "baz qux.",
+        "# ------------------------ >8 ------------------------",
+        "# Do not modify or remove the line above.",
+        "diff --git a/x b/x",
+        "+Git::Foo: bar"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "name": "a word-colon line followed by prose passes",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo bar", "Git::AuthorInfo is gone.", "more prose"],
+      "verdict": "pass",
+      "published": ["foo bar Git::AuthorInfo is gone. more prose"]
+    },
+    {
+      "name": "a word-colon line as the last line truncates",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo bar", "Git::AuthorInfo is gone."],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["foo bar"]
+    },
+    {
+      "name": "a lowercase word-colon line as the last line truncates",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo bar", "global: true is gone."],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["foo bar"]
+    },
+    {
+      "name": "a blank line ends the entry and the prose after it passes",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo bar", "", "Some more prose here."],
+      "verdict": "pass",
+      "published": ["foo bar"]
+    },
+    {
+      "name": "bullet lines are extended context and prose after a blank line passes",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo", "- a", "- b", "", "prose after"],
+      "verdict": "pass",
+      "published": ["foo\n    - a\n    - b"]
+    },
+    {
+      "name": "a heading line is a comment line git strips from an edited message",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo", "#### Deleted", "- a"],
+      "verdict": "pass",
+      "published": ["foo\n    #### Deleted\n    - a"]
+    },
+    {
+      "name": "two BREAKING CHANGE footers keep only the last",
+      "message": ["feat!: x", "", "BREAKING CHANGE: first one", "", "BREAKING CHANGE: second one"],
+      "verdict": "fail",
+      "advice": "MULTIPLE",
+      "published": ["second one"]
+    },
+    {
+      "name": "a message describing two changes publishes both BREAKING CHANGE footers",
+      "message": ["feat: a", "", "BREAKING CHANGE: first change", "", "fix: b", "", "BREAKING CHANGE: second change"],
+      "verdict": "pass",
+      "published": ["first change", "second change"]
+    },
+    {
+      "name": "a truncated footer on the first of two changes is reported as truncated",
+      "message": ["feat: a", "", "BREAKING CHANGE: first change", "Git::A is gone.", "", "fix: b", "", "BREAKING CHANGE: second change"],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["first change", "second change"]
+    },
+    {
+      "name": "a truncated footer on the last of two changes is reported as truncated",
+      "message": ["feat: a", "", "BREAKING CHANGE: first change", "", "fix: b", "", "BREAKING CHANGE: second change", "Git::B is gone."],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["first change", "second change"]
+    },
+    {
+      "name": "two footers on the first of two changes keep the last of that change",
+      "message": ["feat: a", "", "BREAKING CHANGE: first one", "", "BREAKING CHANGE: second one", "", "fix: b", "", "BREAKING CHANGE: third one"],
+      "verdict": "fail",
+      "advice": "MULTIPLE",
+      "published": ["second one", "third one"]
+    },
+    {
+      "name": "a truncated footer is not excused by an intact copy of its description on a later change",
+      "message": ["feat: a", "", "BREAKING CHANGE: foo", "Git::A is gone.", "", "fix: b", "", "BREAKING CHANGE: foo Git::A is gone."],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["foo", "foo Git::A is gone."]
+    },
+    {
+      "name": "a truncated footer is not excused by an intact copy of its description on an earlier change",
+      "message": ["feat: a", "", "BREAKING CHANGE: foo Git::A is gone.", "", "fix: b", "", "BREAKING CHANGE: foo", "Git::A is gone."],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["foo Git::A is gone.", "foo"]
+    },
+    {
+      "name": "the same description truncated on both of two changes is reported as truncated",
+      "message": ["feat: a", "", "BREAKING CHANGE: foo", "Git::A is gone.", "", "fix: b", "", "BREAKING CHANGE: foo", "Git::A is gone."],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["foo", "foo"]
+    },
+    {
+      "name": "a note from a ! header on an earlier change does not stand in for a later intact footer",
+      "message": ["feat!: drop foo", "", "fix: b", "", "BREAKING CHANGE: drop foo and use bar."],
+      "verdict": "pass",
+      "published": ["drop foo", "drop foo and use bar."]
+    },
+    {
+      "name": "a nested commit block is checked as a change of its own",
+      "message": ["feat: a", "", "BREAKING CHANGE: alpha", "", "BEGIN_NESTED_COMMIT", "fix: n", "", "BREAKING CHANGE: x y", "END_NESTED_COMMIT", "", "fix: b", "", "BREAKING CHANGE: x"],
+      "verdict": "pass",
+      "published": ["alpha", "x", "x y"]
+    },
+    {
+      "name": "a truncated footer inside a nested commit block is reported as truncated",
+      "message": ["feat: a", "", "BEGIN_NESTED_COMMIT", "fix: n", "", "BREAKING CHANGE: foo", "Git::A is gone.", "END_NESTED_COMMIT"],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["foo"]
+    },
+    {
+      "name": "a header right after a nested commit block starts a change of its own",
+      "message": ["feat: a", "", "BREAKING CHANGE: alpha", "BEGIN_NESTED_COMMIT", "fix: n", "", "BREAKING CHANGE: x", "END_NESTED_COMMIT", "fix: b"],
+      "verdict": "pass",
+      "published": ["alpha", "x"]
+    },
+    {
+      "name": "a dropped footer whose successor is a prefix of it is reported as multiple",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo bar", "", "BREAKING CHANGE: foo"],
+      "verdict": "fail",
+      "advice": "MULTIPLE",
+      "published": ["foo"]
+    },
+    {
+      "name": "a dropped footer followed by a truncated winner is reported as multiple",
+      "message": ["feat!: x", "", "BREAKING CHANGE: first one", "", "BREAKING CHANGE: foo bar", "Git::A gone."],
+      "verdict": "fail",
+      "advice": "MULTIPLE",
+      "published": ["foo bar"]
+    },
+    {
+      "name": "a dropped footer does not claim an entry that is a character prefix of it",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foobar baz", "", "BREAKING CHANGE: foo", "Git::X gone."],
+      "verdict": "fail",
+      "advice": "MULTIPLE",
+      "published": ["foo"]
+    },
+    {
+      "name": "a nested commit marker inside a longer line is rejected",
+      "message": ["feat: a", "", "BREAKING CHANGE: alpha BEGIN_NESTED_COMMIT", "fix: n", "", "BREAKING CHANGE: x", "END_NESTED_COMMIT"],
+      "verdict": "fail",
+      "advice": "MARKER"
+    },
+    {
+      "name": "an indented continuation line drops the lines before it",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo", "  bar"],
+      "verdict": "fail",
+      "advice": "INDENTED",
+      "published": ["bar"]
+    },
+    {
+      "name": "a Tested-by trailer ends the paragraph",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo bar", "Tested-by: Name <a@b>"],
+      "verdict": "pass",
+      "published": ["foo bar"]
+    },
+    {
+      "name": "a Reviewed-by trailer ends the paragraph",
+      "message": ["feat!: x", "", "BREAKING CHANGE: foo bar", "Reviewed-by: Name <a@b>"],
+      "verdict": "pass",
+      "published": ["foo bar"]
+    },
+    {
+      "name": "a body line with an unclosed parenthesis cannot be parsed",
+      "message": [
+        "feat!: x",
+        "",
+        "Git.clone(url, File.join(dir, name)) now expands the path.",
+        "",
+        "BREAKING CHANGE: foo bar."
+      ],
+      "verdict": "fail",
+      "advice": "UNPARSEABLE",
+      "published": []
+    },
+    {
+      "name": "indenting the unclosed-parenthesis line makes the message parse",
+      "message": [
+        "feat!: x",
+        "",
+        " Git.clone(url, File.join(dir, name)) now expands the path.",
+        "",
+        "BREAKING CHANGE: foo bar."
+      ],
+      "verdict": "pass",
+      "published": ["foo bar."]
+    },
+    {
+      "name": "the feat(author)! commit from the v6.0.0 changelog truncates",
+      "message": [
+        "feat(author)!: remove Git::Author",
+        "",
+        "BREAKING CHANGE: Git::Author is removed; referencing it raises NameError. Use",
+        "Git::AuthorInfo.parse to build an identity from a raw git identity string and",
+        "Git::AuthorInfo#with in place of the name=, email=, and date= writers.",
+        "",
+        "Closes #1728"
+      ],
+      "verdict": "fail",
+      "advice": "TRUNCATED",
+      "published": ["Git::Author is removed; referencing it raises NameError. Use"]
+    },
+    {
+      "name": "a hash line in an editor message is stripped by git and must not restore the paragraph",
+      "message": [
+        "feat!: x",
+        "",
+        "BREAKING CHANGE: Git::Foo was removed.",
+        "Git::Bar replaces it.",
+        "#1234 tracks the follow-up.",
+        "",
+        "# Please enter the commit message for your changes. Lines starting",
+        "# with '#' will be ignored, and an empty message aborts the commit."
+      ],
+      "verdict": "fail",
+      "advice": "TRUNCATED"
+    },
+    {
+      "name": "a hyphenated capitalized word in prose is not a trailer",
+      "todo": "N2: the trailer pattern matches 'Built-in: ' and ends the paragraph early",
+      "message": ["feat!: x", "", "BREAKING CHANGE: note line", "Built-in: helpers are gone", "more prose"],
+      "verdict": "pass",
+      "published": ["note line Built-in: helpers are gone more prose"]
+    },
+    {
+      "name": "an empty marker line gets its own advice",
+      "todo": "N7: the empty first line is reported as a truncation with a blank entry",
+      "message": ["feat!: x", "", "BREAKING CHANGE:", "real text"],
+      "verdict": "fail",
+      "advice": "EMPTY",
+      "published": [""]
+    },
+    {
+      "name": "a parse error in a split sub-message is reported as unparseable",
+      "message": [
+        "feat!: x",
+        "",
+        "fix: second part",
+        "",
+        "Git.clone(url, File.join(dir, name)) now expands the path.",
+        "",
+        "BREAKING CHANGE: foo bar."
+      ],
+      "verdict": "fail",
+      "advice": "UNPARSEABLE"
+    }
+  ]
+}

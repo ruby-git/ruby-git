@@ -1,1 +1,6 @@
+if [ ! -e node_modules/commitlint-plugin-release-please ]; then
+  echo "commit-msg hook: the release-please commitlint plugin is not installed." >&2
+  echo "Run npm install in the project root (bin/setup does this) and commit again." >&2
+  exit 1
+fi
 npx --no-install commitlint --edit "$1"

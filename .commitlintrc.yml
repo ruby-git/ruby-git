@@ -1,6 +1,11 @@
 ---
 extends: '@commitlint/config-conventional'
 
+# commitlint resolves a plugin by package name, prefixed with commitlint-plugin-. This
+# one is the package in commitlint/release-please, linked into node_modules through
+# the file: dependency in package.json.
+plugins: [release-please]
+
 rules:
   # See: https://commitlint.js.org/reference/rules.html
   #
@@ -35,4 +40,7 @@ rules:
 
   footer-leading-blank:   [2, always]             # Footer must have a blank line before it
   footer-max-line-length: [2, always, 100]        # Footer lines can not exceed 100 chars
-  
+
+  # Every BREAKING CHANGE footer must come out of release-please as written. The rule
+  # supports only `always`.
+  release-please/breaking-change-intact: [2, always]
