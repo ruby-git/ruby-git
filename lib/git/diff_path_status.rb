@@ -77,7 +77,7 @@ module Git
     # @return [Hash{String => String}] a mapping of file paths to status codes
     #
     def fetch_path_status
-      @fetch_path_status ||= @base.diff_name_status(@from, @to, path_limiter: @path_limiter).to_h
+      @fetch_path_status ||= @base.diff_path_status(@from, @to, path_limiter: @path_limiter).to_h
     end
 
     # Sets up legacy (base, from, to, path_limiter) instance state

@@ -373,14 +373,42 @@ module Git
         Git::DiffPathStatus.new(Private.extract_name_status_from_raw(result.stdout))
       end
 
-      # Alias for {#diff_path_status}; provided for backward compatibility
+      # Reports each changed path with its status (deprecated name for {#diff_path_status})
+      #
+      # @example Report path statuses between HEAD and the working tree
+      #   repo.diff_name_status.to_h #=> { "lib/foo.rb" => "M" }
+      #
+      # @param from [String, nil] the first commit or object to compare
+      #
+      # @param to [String, nil] the second commit or object to compare
+      #
+      # @param opts [Hash] the options accepted by {#diff_path_status}
+      #
+      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+      #   limit the status report to the given path(s)
+      #
+      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path (nil)
+      #   **deprecated** — use `:path_limiter` instead
       #
       # @return [Git::DiffPathStatus] the name-status report for the comparison
       #
-      # @deprecated Use {#diff_path_status} instead
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [ArgumentError] if `from` is `nil` but `to` is not OR if `from` or `to` starts with `"-"`
+      #
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
+      #
+      # @deprecated Use {#diff_path_status} instead. Will be removed in v6.0.0.
       #
       # @see #diff_path_status
-      alias diff_name_status diff_path_status
+      #
+      def diff_name_status(from = 'HEAD', to = nil, opts = {})
+        Git::Deprecation.warn(
+          'Git::Repository#diff_name_status is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#diff_path_status instead.'
+        )
+        diff_path_status(from, to, opts)
+      end
 
       # Compares the index and the working directory
       #

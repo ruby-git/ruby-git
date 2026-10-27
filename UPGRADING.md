@@ -17,6 +17,7 @@ to update your code when upgrading from the preceding major version.
   - [Deprecated methods](#deprecated-methods)
     - [Facade method renames](#facade-method-renames)
     - [`Git::Repository` method renames](#gitrepository-method-renames)
+    - [`Git::Repository` alias renames](#gitrepository-alias-renames)
     - [`Git::Repository` option renames](#gitrepository-option-renames)
     - [v4.x-style configuration methods](#v4x-style-configuration-methods)
     - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
@@ -394,6 +395,28 @@ replacement returns, except `branches_all`.
 | `g.is_remote_branch?(name)` | `g.remote_branch?(name)` |
 | `g.is_branch?(name)` | `g.branch?(name)` |
 | `g.branches_all` | `g.branch_list` — returns `Array<Git::BranchInfo>`; see the return shape change above |
+
+#### `Git::Repository` alias renames
+
+Eight `Git::Repository` methods have a second, older name carried over from v4.x.
+Earlier v5.x releases kept the older names as aliases with no warning. Later
+v5.x releases emit a deprecation warning for each one. Each old name takes the
+same arguments and returns exactly what its replacement returns.
+
+> **`diff_name_status`:** a `:path` option emits its own deprecation warning
+> after the method-name warning. Pass `:path_limiter` instead, as described
+> under "`Git::Repository` option renames" below.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.object_contents(object)` | `g.cat_file_contents(object)` |
+| `g.object_size(object)` | `g.cat_file_size(object)` |
+| `g.object_type(object)` | `g.cat_file_type(object)` |
+| `g.commit_data(object)` | `g.cat_file_commit(object)` |
+| `g.tag_data(object)` | `g.cat_file_tag(object)` |
+| `g.revparse(objectish)` | `g.rev_parse(objectish)` |
+| `g.namerev(commit_ish)` | `g.name_rev(commit_ish)` |
+| `g.diff_name_status(from, to, opts)` | `g.diff_path_status(from, to, opts)` |
 
 #### `Git::Repository` option renames
 

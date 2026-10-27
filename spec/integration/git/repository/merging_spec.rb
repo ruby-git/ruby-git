@@ -79,7 +79,7 @@ RSpec.describe Git::Repository::Merging, :integration do
     it 'merges the source branch into the target branch' do
       described_instance.merge_into('main', 'feature')
 
-      expect(repo.revparse('main')).to eq(repo.revparse('feature'))
+      expect(repo.rev_parse('main')).to eq(repo.rev_parse('feature'))
     end
 
     it 'leaves the original branch checked out' do
@@ -107,7 +107,7 @@ RSpec.describe Git::Repository::Merging, :integration do
     end
 
     context 'when HEAD is detached' do
-      let!(:original_sha) { repo.revparse('HEAD') }
+      let!(:original_sha) { repo.rev_parse('HEAD') }
 
       before do
         repo.checkout(original_sha)
@@ -116,18 +116,18 @@ RSpec.describe Git::Repository::Merging, :integration do
       it 'merges into the target and restores the detached HEAD to the original commit' do
         described_instance.merge_into('main', 'feature')
 
-        expect(repo.revparse('main')).to eq(repo.revparse('feature'))
+        expect(repo.rev_parse('main')).to eq(repo.rev_parse('feature'))
         expect(described_instance.current_branch).to eq('HEAD')
-        expect(repo.revparse('HEAD')).to eq(original_sha)
+        expect(repo.rev_parse('HEAD')).to eq(original_sha)
       end
     end
 
     context 'when target_branch is a commit SHA rather than a local branch' do
       it 'raises ArgumentError, leaves the target unchanged, and stays on the original branch' do
-        main_sha = repo.revparse('main')
+        main_sha = repo.rev_parse('main')
         expect { described_instance.merge_into(main_sha, 'feature') }
           .to raise_error(ArgumentError, /is not an existing local branch/)
-        expect(repo.revparse('main')).to eq(main_sha)
+        expect(repo.rev_parse('main')).to eq(main_sha)
         expect(described_instance.current_branch).to eq('work')
       end
     end
