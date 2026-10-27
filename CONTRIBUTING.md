@@ -912,6 +912,15 @@ The `BREAKING CHANGE:` footer flags a backward incompatible change even if the
 type is not marked with an exclamation mark. Other footers are allowed
 but not acted upon.
 
+A `BREAKING CHANGE:` footer must come out of release-please's stricter parser as you
+wrote it. The `release-please/breaking-change-intact` rule checks this, and its error
+names the line, says why release-please cuts it short, and says how to rewrap. The
+rule comes from the commitlint plugin in
+[commitlint/release-please](commitlint/release-please), installed as a `file:`
+dependency; `npm test` runs its tests. The plugin arrives through `npm install`, and
+the commit-msg hook refuses every commit until a clone that predates it reruns
+`npm install`.
+
 See [the Conventional Commits
 specification](https://www.conventionalcommits.org/en/v1.0.0/) for more details.
 

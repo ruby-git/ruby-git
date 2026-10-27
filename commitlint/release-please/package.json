@@ -1,0 +1,22 @@
+{
+  "name": "commitlint-plugin-release-please",
+  "version": "0.1.0",
+  "description": "commitlint rules that keep commit messages as release-please will publish them",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "exports": "./index.mjs",
+  "files": [
+    "index.mjs",
+    "breaking-change-intact.mjs"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "release-please": "17.11.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
