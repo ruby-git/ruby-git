@@ -107,9 +107,55 @@ RSpec.describe Git::Repository::ObjectOperations do
   end
 
   describe '#object_contents' do
-    it 'is an alias for #cat_file_contents' do
-      expect(described_class.instance_method(:object_contents))
-        .to eq(described_class.instance_method(:cat_file_contents))
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
+
+    before do
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    context 'without a block' do
+      subject(:result) { described_instance.object_contents('HEAD:README.md') }
+
+      before do
+        allow(raw_command).to receive(:call).with('HEAD:README.md', p: true).and_return(command_result("# Hello\n"))
+      end
+
+      it 'emits a deprecation warning naming cat_file_contents as the replacement' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Repository#object_contents is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#cat_file_contents instead.'
+        )
+        result
+      end
+
+      it 'returns the object contents as cat_file_contents does' do
+        expect(result).to eq("# Hello\n")
+      end
+    end
+
+    context 'with a block' do
+      subject(:result) { described_instance.object_contents('HEAD:README.md', &:read) }
+
+      before do
+        allow(raw_command).to receive(:call)
+          .with('HEAD:README.md', p: true, out: an_instance_of(File)) do |_object, **opts|
+          opts[:out].write('streamed')
+          command_result('')
+        end
+      end
+
+      it 'emits a deprecation warning naming cat_file_contents as the replacement' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'Git::Repository#object_contents is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#cat_file_contents instead.'
+        )
+        result
+      end
+
+      it 'streams the contents to the block as cat_file_contents does' do
+        expect(result).to eq('streamed')
+      end
     end
   end
 
@@ -178,8 +224,26 @@ RSpec.describe Git::Repository::ObjectOperations do
   end
 
   describe '#object_size' do
-    it 'is an alias for #cat_file_size' do
-      expect(described_class.instance_method(:object_size)).to eq(described_class.instance_method(:cat_file_size))
+    subject(:result) { described_instance.object_size('HEAD') }
+
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
+
+    before do
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
+      allow(raw_command).to receive(:call).with('HEAD', s: true).and_return(command_result("265\n"))
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning naming cat_file_size as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#object_size is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#cat_file_size instead.'
+      )
+      result
+    end
+
+    it 'returns the object size as cat_file_size does' do
+      expect(result).to eq(265)
     end
   end
 
@@ -248,8 +312,26 @@ RSpec.describe Git::Repository::ObjectOperations do
   end
 
   describe '#object_type' do
-    it 'is an alias for #cat_file_type' do
-      expect(described_class.instance_method(:object_type)).to eq(described_class.instance_method(:cat_file_type))
+    subject(:result) { described_instance.object_type('HEAD') }
+
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
+
+    before do
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
+      allow(raw_command).to receive(:call).with('HEAD', t: true).and_return(command_result("commit\n"))
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning naming cat_file_type as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#object_type is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#cat_file_type instead.'
+      )
+      result
+    end
+
+    it 'returns the object type as cat_file_type does' do
+      expect(result).to eq('commit')
     end
   end
 
@@ -302,8 +384,30 @@ RSpec.describe Git::Repository::ObjectOperations do
   end
 
   describe '#commit_data' do
-    it 'is an alias for #cat_file_commit' do
-      expect(described_class.instance_method(:commit_data)).to eq(described_class.instance_method(:cat_file_commit))
+    subject(:result) { described_instance.commit_data('HEAD') }
+
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
+    let(:commit_body) { "tree abc123\n\nInitial commit\n" }
+    let(:parsed_commit) { { 'sha' => 'HEAD', 'tree' => 'abc123' } }
+
+    before do
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
+      allow(raw_command).to receive(:call).with('commit', 'HEAD').and_return(command_result(commit_body))
+      allow(Git::Parsers::CatFile).to receive(:parse_commit)
+        .with(commit_body.split("\n"), 'HEAD').and_return(parsed_commit)
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning naming cat_file_commit as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#commit_data is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#cat_file_commit instead.'
+      )
+      result
+    end
+
+    it 'returns the parsed commit data as cat_file_commit does' do
+      expect(result).to eq(parsed_commit)
     end
   end
 
@@ -371,8 +475,30 @@ RSpec.describe Git::Repository::ObjectOperations do
   end
 
   describe '#tag_data' do
-    it 'is an alias for #cat_file_tag' do
-      expect(described_class.instance_method(:tag_data)).to eq(described_class.instance_method(:cat_file_tag))
+    subject(:result) { described_instance.tag_data('v1.0.0') }
+
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
+    let(:tag_body) { "object deadbeef\ntype commit\ntag v1.0.0\n\nRelease v1.0.0" }
+    let(:parsed_tag) { { 'name' => 'v1.0.0', 'object' => 'deadbeef', 'type' => 'commit' } }
+
+    before do
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
+      allow(raw_command).to receive(:call).with('tag', 'v1.0.0').and_return(command_result(tag_body))
+      allow(Git::Parsers::CatFile).to receive(:parse_tag)
+        .with(tag_body.split("\n"), 'v1.0.0').and_return(parsed_tag)
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning naming cat_file_tag as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#tag_data is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#cat_file_tag instead.'
+      )
+      result
+    end
+
+    it 'returns the parsed tag data as cat_file_tag does' do
+      expect(result).to eq(parsed_tag)
     end
   end
 
@@ -427,8 +553,27 @@ RSpec.describe Git::Repository::ObjectOperations do
   end
 
   describe '#revparse' do
-    it 'is an alias for #rev_parse' do
-      expect(described_instance.method(:revparse)).to eq(described_instance.method(:rev_parse))
+    subject(:result) { described_instance.revparse('HEAD') }
+
+    let(:rev_parse_command) { instance_double(Git::Commands::RevParse) }
+    let(:sha) { '9b9b31e704c0b85ffdd8d2af2ded85170a5af87d' }
+
+    before do
+      allow(Git::Commands::RevParse).to receive(:new).with(execution_context).and_return(rev_parse_command)
+      allow(rev_parse_command).to receive(:call).with('HEAD', '--', revs_only: true).and_return(command_result(sha))
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning naming rev_parse as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#revparse is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#rev_parse instead.'
+      )
+      result
+    end
+
+    it 'returns the full object ID as rev_parse does' do
+      expect(result).to eq(sha)
     end
   end
 
@@ -702,8 +847,26 @@ RSpec.describe Git::Repository::ObjectOperations do
   end
 
   describe '#namerev' do
-    it 'is an alias for #name_rev' do
-      expect(described_class.instance_method(:namerev)).to eq(described_class.instance_method(:name_rev))
+    subject(:result) { described_instance.namerev('abc1234') }
+
+    let(:name_rev_command) { instance_double(Git::Commands::NameRev) }
+
+    before do
+      allow(Git::Commands::NameRev).to receive(:new).with(execution_context).and_return(name_rev_command)
+      allow(name_rev_command).to receive(:call).with('abc1234').and_return(command_result("abc1234 main~5\n"))
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning naming name_rev as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#namerev is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#name_rev instead.'
+      )
+      result
+    end
+
+    it 'returns the symbolic name as name_rev does' do
+      expect(result).to eq('main~5')
     end
   end
 

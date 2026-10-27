@@ -685,24 +685,43 @@ RSpec.describe Git::Repository::Diffing do
   end
 
   describe '#diff_name_status' do
-    subject(:result) { described_instance.diff_name_status }
+    subject(:result) { described_instance.diff_name_status('HEAD~1', 'HEAD', path_limiter: 'lib/') }
 
-    let(:raw_output) { ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" }
-    let(:diff_result) { command_result(raw_output) }
-
-    it 'delegates to the diff command with the default ref and raw format options' do
-      expect(diff_command).to receive(:call).with(
-        'HEAD',
+    before do
+      allow(diff_command).to receive(:call).with(
+        'HEAD~1', 'HEAD',
         raw: true, numstat: true, shortstat: true,
         src_prefix: 'a/', dst_prefix: 'b/',
-        path: nil
-      ).and_return(diff_result)
-      subject
+        path: ['lib/']
+      ).and_return(command_result(":100644 100644 abc1234 def5678 M\tlib/foo.rb\n"))
+      allow(Git::Deprecation).to receive(:warn)
     end
 
-    it 'returns a Git::DiffPathStatus' do
-      allow(diff_command).to receive(:call).and_return(diff_result)
+    it 'emits a deprecation warning naming diff_path_status as the replacement' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#diff_name_status is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Repository#diff_path_status instead.'
+      )
+      result
+    end
+
+    it 'returns the path status report as diff_path_status does' do
       expect(result).to be_a(Git::DiffPathStatus)
+      expect(result.to_h).to eq('lib/foo.rb' => 'M')
+    end
+
+    context 'when called with no arguments' do
+      subject(:result) { described_instance.diff_name_status }
+
+      it 'uses the same HEAD default as diff_path_status' do
+        expect(diff_command).to receive(:call).with(
+          'HEAD',
+          raw: true, numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(command_result(''))
+        result
+      end
     end
   end
 

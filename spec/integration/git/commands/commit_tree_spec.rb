@@ -13,10 +13,10 @@ RSpec.describe Git::Commands::CommitTree, :integration do
     write_file('file.txt', "content\n")
     repo.add('file.txt')
     repo.commit('Initial commit')
-    repo.revparse('HEAD')
+    repo.rev_parse('HEAD')
   end
 
-  let(:tree_sha) { repo.revparse('HEAD^{tree}') }
+  let(:tree_sha) { repo.rev_parse('HEAD^{tree}') }
 
   before { initial_commit_sha }
 

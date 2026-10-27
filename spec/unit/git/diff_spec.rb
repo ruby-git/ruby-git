@@ -157,7 +157,7 @@ RSpec.describe Git::Diff do
     let(:name_status_hash) { { 'lib/foo.rb' => 'M', 'README.md' => 'A' } }
 
     it 'returns the path-to-status hash from DiffPathStatus' do
-      allow(repository_base).to receive(:diff_name_status)
+      allow(repository_base).to receive(:diff_path_status)
         .with('HEAD~1', 'HEAD', path_limiter: nil)
         .and_return(name_status_hash)
       expect(result).to eq(name_status_hash)

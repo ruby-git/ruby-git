@@ -89,17 +89,57 @@ module Git
         end
       end
 
-      # Alias for {#cat_file_contents}; retained for backward compatibility
+      # Alias for {#cat_file_contents}; kept as a legacy name and not scheduled
+      # for removal
       #
       # @see #cat_file_contents
       alias cat_file cat_file_contents
 
-      # Alias for {#cat_file_contents}
+      # Returns the raw contents of a git object (deprecated name for {#cat_file_contents})
       #
-      # @deprecated Use {#cat_file_contents} instead
+      # @overload object_contents(object)
+      #   Returns the object's raw content as a string
+      #
+      #   @example Read a blob's contents
+      #     repo.object_contents('HEAD:README.md') #=> "# My Project\n"
+      #
+      #   @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
+      #
+      #   @return [String] the raw content of the object
+      #
+      # @overload object_contents(object, &block)
+      #   Streams the object's raw content to a temporary file and yields it
+      #
+      #   @example Read a large blob without buffering it in memory
+      #     repo.object_contents('HEAD:large_file.bin') { |f| process(f) }
+      #
+      #   @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
+      #
+      #   @yield [file] the temporary file containing the streamed content,
+      #     positioned at the start
+      #
+      #   @yieldparam file [File] readable `IO` object positioned at the beginning
+      #     of the content
+      #
+      #   @yieldreturn [Object] the value to return from this method
+      #
+      #   @return [Object] the value returned by the block
+      #
+      # @raise [ArgumentError] if `object` starts with a hyphen
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#cat_file_contents} instead. Will be removed in v6.0.0.
       #
       # @see #cat_file_contents
-      alias object_contents cat_file_contents
+      #
+      def object_contents(object, &)
+        Git::Deprecation.warn(
+          'Git::Repository#object_contents is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#cat_file_contents instead.'
+        )
+        cat_file_contents(object, &)
+      end
 
       # Returns the size of a git object in bytes
       #
@@ -125,12 +165,30 @@ module Git
         Git::Commands::CatFile::Raw.new(@execution_context).call(object, s: true).stdout.chomp.to_i
       end
 
-      # Alias for {#cat_file_size}
+      # Returns the size of a git object in bytes (deprecated name for {#cat_file_size})
       #
-      # @deprecated Use {#cat_file_size} instead
+      # @example Get the size of a commit object
+      #   repo.object_size('HEAD') #=> 265
+      #
+      # @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
+      #
+      # @return [Integer] the size of the object in bytes
+      #
+      # @raise [ArgumentError] if `object` starts with a hyphen
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#cat_file_size} instead. Will be removed in v6.0.0.
       #
       # @see #cat_file_size
-      alias object_size cat_file_size
+      #
+      def object_size(object)
+        Git::Deprecation.warn(
+          'Git::Repository#object_size is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#cat_file_size instead.'
+        )
+        cat_file_size(object)
+      end
 
       # Returns the type of a git object
       #
@@ -157,12 +215,30 @@ module Git
         Git::Commands::CatFile::Raw.new(@execution_context).call(object, t: true).stdout.chomp
       end
 
-      # Alias for {#cat_file_type}
+      # Returns the type of a git object (deprecated name for {#cat_file_type})
       #
-      # @deprecated Use {#cat_file_type} instead
+      # @example Get the type of HEAD
+      #   repo.object_type('HEAD') #=> "commit"
+      #
+      # @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
+      #
+      # @return [String] the object type: `"blob"`, `"tree"`, `"commit"`, or `"tag"`
+      #
+      # @raise [ArgumentError] if `object` starts with a hyphen
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#cat_file_type} instead. Will be removed in v6.0.0.
       #
       # @see #cat_file_type
-      alias object_type cat_file_type
+      #
+      def object_type(object)
+        Git::Deprecation.warn(
+          'Git::Repository#object_type is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#cat_file_type instead.'
+        )
+        cat_file_type(object)
+      end
 
       # Returns parsed commit data for the given git object
       #
@@ -200,12 +276,28 @@ module Git
         Git::Parsers::CatFile.parse_commit(result.stdout.split("\n"), object)
       end
 
-      # Alias for {#cat_file_commit}
+      # Returns parsed commit data for a git object (deprecated name for {#cat_file_commit})
       #
-      # @deprecated Use {#cat_file_commit} instead
+      # @example Get commit data for HEAD
+      #   repo.commit_data('HEAD')
+      #
+      # @param object [String] the commit name (SHA, ref, `HEAD`, etc.)
+      #
+      # @return [Hash] the parsed commit data; see {#cat_file_commit} for the keys
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#cat_file_commit} instead. Will be removed in v6.0.0.
       #
       # @see #cat_file_commit
-      alias commit_data cat_file_commit
+      #
+      def commit_data(object)
+        Git::Deprecation.warn(
+          'Git::Repository#commit_data is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#cat_file_commit instead.'
+        )
+        cat_file_commit(object)
+      end
 
       # Returns parsed tag data for the given annotated tag object
       #
@@ -256,12 +348,30 @@ module Git
         Git::Parsers::CatFile.parse_tag(tdata, object)
       end
 
-      # Alias for {#cat_file_tag}
+      # Returns parsed tag data for an annotated tag (deprecated name for {#cat_file_tag})
       #
-      # @deprecated Use {#cat_file_tag} instead
+      # @example Get tag data for an annotated tag
+      #   repo.tag_data('v1.0.0')
+      #
+      # @param object [String] the tag name or SHA of the annotated tag object
+      #
+      # @return [Hash] the parsed tag data; see {#cat_file_tag} for the keys
+      #
+      # @raise [ArgumentError] if `object` starts with a hyphen
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#cat_file_tag} instead. Will be removed in v6.0.0.
       #
       # @see #cat_file_tag
-      alias tag_data cat_file_tag
+      #
+      def tag_data(object)
+        Git::Deprecation.warn(
+          'Git::Repository#tag_data is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#cat_file_tag instead.'
+        )
+        cat_file_tag(object)
+      end
 
       # Resolve a revision specifier to its full object ID
       #
@@ -292,7 +402,29 @@ module Git
         Git::Commands::RevParse.new(@execution_context).call(objectish, '--', revs_only: true).stdout
       end
 
-      alias revparse rev_parse
+      # Resolves a revision specifier to its full object ID (deprecated name for {#rev_parse})
+      #
+      # @example Resolve HEAD to its SHA
+      #   repo.revparse('HEAD') #=> "9b9b31e704c0b85ffdd8d2af2ded85170a5af87d"
+      #
+      # @param objectish [String] the revision specifier to resolve (branch name,
+      #   tag, abbreviated SHA, refspec, etc.)
+      #
+      # @return [String] the full object ID of the resolved object
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#rev_parse} instead. Will be removed in v6.0.0.
+      #
+      # @see #rev_parse
+      #
+      def revparse(objectish)
+        Git::Deprecation.warn(
+          'Git::Repository#revparse is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#rev_parse instead.'
+        )
+        rev_parse(objectish)
+      end
 
       # Returns the SHA of a named tag
       #
@@ -395,12 +527,30 @@ module Git
         Git::Commands::NameRev.new(@execution_context).call(commit_ish).stdout.split[1]
       end
 
-      # Alias for {#name_rev}
+      # Finds a symbolic name for a commit (deprecated name for {#name_rev})
       #
-      # @deprecated Use {#name_rev} instead
+      # @example Name the current commit
+      #   repo.namerev('HEAD') #=> "main"
+      #
+      # @param commit_ish [String] the commit to name (SHA, ref, `HEAD`, etc.)
+      #
+      # @return [String, nil] the symbolic name, or `nil` if git finds none
+      #
+      # @raise [ArgumentError] if commit_ish starts with a hyphen
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#name_rev} instead. Will be removed in v6.0.0.
       #
       # @see #name_rev
-      alias namerev name_rev
+      #
+      def namerev(commit_ish)
+        Git::Deprecation.warn(
+          'Git::Repository#namerev is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#name_rev instead.'
+        )
+        name_rev(commit_ish)
+      end
 
       # Option keys accepted by {#ls_tree}
       LS_TREE_ALLOWED_OPTS = %i[recursive path].freeze
