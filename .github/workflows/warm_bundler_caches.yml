@@ -6,21 +6,22 @@ name: Warm Bundler Caches
 # are visible to that one PR and nothing else. The result is that nearly every PR paid
 # a cold `bundle install` on nearly every job. See issue #1674 for the measurements.
 #
-# This workflow exists solely to write those caches from refs/heads/main so that a
-# PR's *first* run can read them. It does no checkout-and-test work beyond what
-# `bundler-cache: true` needs: no specs, no RuboCop, no YARD.
+# This workflow exists solely to write those caches from the branch in the push filter
+# below so that a PR's *first* run can read them. It does no checkout-and-test work
+# beyond what `bundler-cache: true` needs: no specs, no RuboCop, no YARD.
 #
 # The matrix below must stay in sync with continuous_integration.yml: setup-ruby's
 # cache key embeds the runner OS, the resolved Ruby version, and the Gemfile.lock hash,
 # so a pair that is not warmed here still starts cold in CI. That includes the lint
-# job's Ruby 3.4 and the Windows 3.3 job, neither of which appears in CI's main matrix
-# list. The head rubies from experimental_continuous_integration.yml are deliberately
-# absent: that workflow already runs on `push: [main]` and warms its own caches.
+# job's Ruby 3.4 and the Windows 3.3 job, neither of which appears in CI's build-job
+# matrix list. The head rubies from experimental_continuous_integration.yml are
+# deliberately absent: that workflow already runs on push to this branch and warms its
+# own caches.
 #
-# Only `main` is listed below. A run's readable caches are its own ref, its base ref,
-# and the default branch, so warming a maintenance branch needs this file on that
-# branch with its own matrix -- the copy on main is never what runs for a push to a
-# maintenance branch.
+# Only the branch this file lives on is listed below. A run's readable caches are its
+# own ref, its base ref, and the default branch, so each branch is warmed by its own
+# copy of this file with its own matrix; a copy on another branch is never what runs
+# for a push here.
 on:
   push:
     branches: [main]
