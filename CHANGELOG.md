@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [5.7.1](https://github.com/ruby-git/ruby-git/compare/v5.7.0...v5.7.1) (2026-10-28)
+
+
+### Other Changes
+
+* Name the release that starts warning for the renamed aliases ([e5d6537](https://github.com/ruby-git/ruby-git/commit/e5d6537ad65395a6075ee6cb00718c94cd915036)), closes [#1923](https://github.com/ruby-git/ruby-git/issues/1923)
+
 ## [5.7.0](https://github.com/ruby-git/ruby-git/compare/v5.6.1...v5.7.0) (2026-10-28)
 
 
