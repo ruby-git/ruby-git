@@ -250,7 +250,7 @@ RSpec.describe Git::Repository::Branching, :integration do
   # omits the positional arg), which real git exercises end-to-end.
 
   describe '#branch_contains' do
-    let(:sha) { repo.revparse('HEAD') }
+    let(:sha) { repo.rev_parse('HEAD') }
 
     context 'when branch_name is nil (treated as no pattern)' do
       it 'returns a non-empty String (same branches as omitting branch_name)' do
@@ -458,7 +458,7 @@ RSpec.describe Git::Repository::Branching, :integration do
         end
 
         expect(repo.gcommit('feature').message).to eq('Add feature file')
-        expect(repo.revparse('feature')).not_to eq(repo.revparse('main'))
+        expect(repo.rev_parse('feature')).not_to eq(repo.rev_parse('main'))
       end
 
       it 'leaves HEAD on the original branch' do
@@ -488,7 +488,7 @@ RSpec.describe Git::Repository::Branching, :integration do
           false
         end
 
-        expect(repo.revparse('feature')).to eq(repo.revparse('main'))
+        expect(repo.rev_parse('feature')).to eq(repo.rev_parse('main'))
       end
 
       it 'leaves HEAD on the original branch' do
@@ -502,7 +502,7 @@ RSpec.describe Git::Repository::Branching, :integration do
     end
 
     context 'when HEAD is detached' do
-      let!(:original_sha) { repo.revparse('HEAD') }
+      let!(:original_sha) { repo.rev_parse('HEAD') }
 
       before do
         repo.checkout(original_sha)
@@ -516,13 +516,13 @@ RSpec.describe Git::Repository::Branching, :integration do
         end
 
         expect(described_instance.current_branch).to eq('HEAD')
-        expect(repo.revparse('HEAD')).to eq(original_sha)
+        expect(repo.rev_parse('HEAD')).to eq(original_sha)
       end
     end
 
     context 'when branch is a commit SHA rather than a local branch' do
       it 'raises ArgumentError and leaves HEAD on the original branch' do
-        expect { described_instance.in_branch(repo.revparse('feature')) { true } }
+        expect { described_instance.in_branch(repo.rev_parse('feature')) { true } }
           .to raise_error(ArgumentError, /is not an existing local branch/)
         expect(described_instance.current_branch).to eq('main')
       end

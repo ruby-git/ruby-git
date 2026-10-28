@@ -12,9 +12,9 @@ require 'git/repository/diffing'
 #   - #diff_numstat: parse_numstat_output parses combined numstat/shortstat
 #     output into a structured hash
 #
-# #diff_path_status / #diff_name_status and #diff_stats are covered at the unit
-# layer (spec/unit/git/repository/diffing_spec.rb) with stubbed collaborators,
-# since neither has facade-owned post-processing beyond what is unit-tested there.
+# #diff_path_status and #diff_stats are covered at the unit layer
+# (spec/unit/git/repository/diffing_spec.rb) with stubbed collaborators, since
+# neither has facade-owned post-processing beyond what is unit-tested there.
 
 RSpec.describe Git::Repository::Diffing, :integration do
   include_context 'in an empty repository'

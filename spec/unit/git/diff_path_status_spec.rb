@@ -8,10 +8,10 @@ RSpec.describe Git::DiffPathStatus do
   let(:name_status_hash) { { 'lib/foo.rb' => 'M', 'lib/bar.rb' => 'A' } }
 
   let(:repository_base)      { instance_double(Git::Repository) }
-  let(:diff_name_status_obj) { instance_double(described_class, to_h: name_status_hash) }
+  let(:diff_path_status_obj) { instance_double(described_class, to_h: name_status_hash) }
 
   before do
-    allow(repository_base).to receive(:diff_name_status).and_return(diff_name_status_obj)
+    allow(repository_base).to receive(:diff_path_status).and_return(diff_path_status_obj)
   end
 
   describe '#initialize' do
@@ -37,10 +37,10 @@ RSpec.describe Git::DiffPathStatus do
   describe '#to_h' do
     subject(:result) { described_class.new(repository_base, 'HEAD~1', 'HEAD').to_h }
 
-    it 'calls diff_name_status with from, to, and path_limiter: nil' do
-      expect(repository_base).to receive(:diff_name_status)
+    it 'calls diff_path_status with from, to, and path_limiter: nil' do
+      expect(repository_base).to receive(:diff_path_status)
         .with('HEAD~1', 'HEAD', path_limiter: nil)
-        .and_return(diff_name_status_obj)
+        .and_return(diff_path_status_obj)
       result
     end
 
@@ -49,25 +49,25 @@ RSpec.describe Git::DiffPathStatus do
     end
 
     context 'when path_limiter is given' do
-      it 'forwards path_limiter to diff_name_status' do
-        expect(repository_base).to receive(:diff_name_status)
+      it 'forwards path_limiter to diff_path_status' do
+        expect(repository_base).to receive(:diff_path_status)
           .with('HEAD~1', 'HEAD', path_limiter: 'lib/')
-          .and_return(diff_name_status_obj)
+          .and_return(diff_path_status_obj)
         described_class.new(repository_base, 'HEAD~1', 'HEAD', 'lib/').to_h
       end
     end
 
     context 'when obj2 is nil' do
-      it 'passes nil as the second positional argument to diff_name_status' do
-        expect(repository_base).to receive(:diff_name_status)
+      it 'passes nil as the second positional argument to diff_path_status' do
+        expect(repository_base).to receive(:diff_path_status)
           .with('HEAD', nil, path_limiter: nil)
-          .and_return(diff_name_status_obj)
+          .and_return(diff_path_status_obj)
         described_class.new(repository_base, 'HEAD', nil).to_h
       end
     end
 
     it 'memoizes the result across multiple to_h calls' do
-      expect(repository_base).to receive(:diff_name_status).once.and_return(diff_name_status_obj)
+      expect(repository_base).to receive(:diff_path_status).once.and_return(diff_path_status_obj)
       status = described_class.new(repository_base, 'HEAD', nil)
       status.to_h
       status.to_h

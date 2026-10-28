@@ -95,17 +95,11 @@ module Git
         end
       end
 
-      # Alias for {#cat_file_contents}; retained for backward compatibility
+      # Alias for {#cat_file_contents}; kept as a legacy name and not scheduled
+      # for removal
       #
       # @see #cat_file_contents
       alias cat_file cat_file_contents
-
-      # Alias for {#cat_file_contents}
-      #
-      # @deprecated Use {#cat_file_contents} instead. Will be removed in a future major release.
-      #
-      # @see #cat_file_contents
-      alias object_contents cat_file_contents
 
       # Returns the size of a git object in bytes
       #
@@ -131,13 +125,6 @@ module Git
         Git::Commands::CatFile::Raw.new(@execution_context).call(object, s: true).stdout.chomp.to_i
       end
 
-      # Alias for {#cat_file_size}
-      #
-      # @deprecated Use {#cat_file_size} instead. Will be removed in a future major release.
-      #
-      # @see #cat_file_size
-      alias object_size cat_file_size
-
       # Returns the type of a git object
       #
       # @example Get the type of a commit reference
@@ -162,13 +149,6 @@ module Git
 
         Git::Commands::CatFile::Raw.new(@execution_context).call(object, t: true).stdout.chomp
       end
-
-      # Alias for {#cat_file_type}
-      #
-      # @deprecated Use {#cat_file_type} instead. Will be removed in a future major release.
-      #
-      # @see #cat_file_type
-      alias object_type cat_file_type
 
       # Returns parsed commit data for the given git object
       #
@@ -205,13 +185,6 @@ module Git
         result = Git::Commands::CatFile::Raw.new(@execution_context).call('commit', object)
         Git::Parsers::CatFile.parse_commit(result.stdout.split("\n"), object)
       end
-
-      # Alias for {#cat_file_commit}
-      #
-      # @deprecated Use {#cat_file_commit} instead. Will be removed in a future major release.
-      #
-      # @see #cat_file_commit
-      alias commit_data cat_file_commit
 
       # Returns parsed tag data for the given annotated tag object
       #
@@ -262,13 +235,6 @@ module Git
         Git::Parsers::CatFile.parse_tag(tdata, object)
       end
 
-      # Alias for {#cat_file_tag}
-      #
-      # @deprecated Use {#cat_file_tag} instead. Will be removed in a future major release.
-      #
-      # @see #cat_file_tag
-      alias tag_data cat_file_tag
-
       # Resolve a revision specifier to its full object ID
       #
       # Passes the given revision specifier to `git rev-parse` and returns the
@@ -297,8 +263,6 @@ module Git
       def rev_parse(objectish)
         Git::Commands::RevParse.new(@execution_context).call(objectish, '--', revs_only: true).stdout
       end
-
-      alias revparse rev_parse
 
       # Returns the SHA of a named tag
       #
@@ -402,13 +366,6 @@ module Git
 
         Git::Commands::NameRev.new(@execution_context).call(commit_ish).stdout.split[1]
       end
-
-      # Alias for {#name_rev}
-      #
-      # @deprecated Use {#name_rev} instead. Will be removed in a future major release.
-      #
-      # @see #name_rev
-      alias namerev name_rev
 
       # Option keys accepted by {#ls_tree}
       LS_TREE_ALLOWED_OPTS = %i[recursive path].freeze

@@ -369,15 +369,6 @@ module Git
         Git::DiffPathStatus.new(Private.extract_name_status_from_raw(result.stdout))
       end
 
-      # Alias for {#diff_path_status}; provided for backward compatibility
-      #
-      # @return [Git::DiffPathStatus] the name-status report for the comparison
-      #
-      # @deprecated Use {#diff_path_status} instead. Will be removed in a future major release.
-      #
-      # @see #diff_path_status
-      alias diff_name_status diff_path_status
-
       # Compares the index and the working directory
       #
       # Runs `git diff-files` to list files that differ between the index
