@@ -152,15 +152,15 @@ On the new branch:
       The copy requires the same status checks as `main`. Until the next item lands,
       the only PR that can satisfy them is that item's own, whose head carries the
       triggers.
-- [ ] On the new branch's copies of `release.yml`, `continuous_integration.yml`,
-      `enforce_conventional_commits.yml`, and `warm_bundler_caches.yml` under
-      `.github/workflows/`, make every branch filter name only the new branch. If that
-      copy of `release.yml` has a "Require a release branch" step guarding
-      `workflow_dispatch`, make it accept only the new branch too. The workflow that
-      runs is the one on the branch pushed to or targeted, so a branch named in another
+- [ ] On the new branch's copies of every workflow under `.github/workflows/`, make
+      every branch filter name only the new branch, and make the "Require a release
+      branch" step in `release.yml` accept only the new branch. The workflow that runs
+      is the one on the branch pushed to or targeted, so a branch named in another
       branch's copy is never consulted, and a Bundler cache is readable only from the
-      ref that wrote it, its base ref, and the default branch. The copies on `main` list
-      only `main` and need no change.
+      ref that wrote it, its base ref, and the default branch. The copies on `main`
+      list only `main` and need no change. On the new branch,
+      `grep -rnE '^\s*(branches:|refs/heads/)' .github/workflows` lists every filter
+      and the release branch guard, and nothing else.
 - [ ] Expect release-please to open a release PR from the new branch as soon as this
       PR merges. No commit type is hidden in `.release-please-config.json`, so the
       workflow and docs commits alone propose the next patch. Leave that release PR
