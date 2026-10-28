@@ -399,13 +399,13 @@ replacement returns, except `branches_all`.
 #### `Git::Repository` alias renames
 
 Eight `Git::Repository` methods have a second, older name carried over from v4.x.
-Earlier v5.x releases kept the older names as aliases with no warning. Later
-v5.x releases emit a deprecation warning for each one. Each old name takes the
+Releases before v5.7.0 kept the older names as aliases with no warning. From
+v5.7.0 on, each old name emits a deprecation warning. Each old name takes the
 same arguments and returns exactly what its replacement returns.
 
 > **`diff_name_status`:** a `:path` option emits its own deprecation warning
 > after the method-name warning. Pass `:path_limiter` instead, as described
-> under "`Git::Repository` option renames" below.
+> under [`Git::Repository` option renames](#gitrepository-option-renames) below.
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
