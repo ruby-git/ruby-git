@@ -5,38 +5,27 @@ This document covers breaking changes and migration steps when upgrading the
 to update your code when upgrading from the preceding major version.
 
 - [Upgrading to v6.x](#upgrading-to-v6x)
-  - [Minimum Ruby version](#minimum-ruby-version)
-  - [Minimum git version](#minimum-git-version)
-  - [Minimum addressable version](#minimum-addressable-version)
-  - [Minimum activesupport version](#minimum-activesupport-version)
-  - [Renamed facade methods removed](#renamed-facade-methods-removed)
-  - [Renamed `Git::Repository` methods removed](#renamed-gitrepository-methods-removed)
-  - [Renamed `Git::Repository` aliases removed](#renamed-gitrepository-aliases-removed)
-  - [`Git::Object::Tag` removed](#gitobjecttag-removed)
-  - [`Git::CommandLineResult` removed](#gitcommandlineresult-removed)
-  - [`Git::Repository#lib` removed](#gitrepositorylib-removed)
-  - [`Git::Base` compatibility shim removed](#gitbase-compatibility-shim-removed)
-  - [`Git.binary_version` and `Git.ls_remote(nil)` removed](#gitbinary_version-and-gitls_remotenil-removed)
-  - [`Git.clone` legacy options removed](#gitclone-legacy-options-removed)
-  - [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)
-  - [Gzip failures in `archive` raised as `Git::Error`](#gzip-failures-in-archive-raised-as-giterror)
-  - [Relative `:repository` and `:index` paths](#relative-repository-and-index-paths)
-  - [Tilde expansion in `Git.init` and `Git.clone` paths](#tilde-expansion-in-gitinit-and-gitclone-paths)
-  - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
-  - [`Git::Repository` option shims removed](#gitrepository-option-shims-removed)
-  - [`Git.init`, `Git.open`, and `Git.bare` reject unknown options](#gitinit-gitopen-and-gitbare-reject-unknown-options)
-  - [`set_index` and `set_working` deprecated](#set_index-and-set_working-deprecated)
-  - [`Git::GitExecuteError` deprecated](#gitgitexecuteerror-deprecated)
-  - [`Git::Log` Enumerable interface and `Commit#set_commit` removed](#gitlog-enumerable-interface-and-commitset_commit-removed)
-  - [v4.x-style configuration API removed](#v4x-style-configuration-api-removed)
-  - [`Git::Repository#remotes` and `allow_unknown_type` removed](#gitrepositoryremotes-and-allow_unknown_type-removed)
-  - [`Git::Author` removed](#gitauthor-removed)
-  - [`Git::Status` removed](#gitstatus-removed)
-  - [Legacy stash API removed](#legacy-stash-api-removed)
-  - [Legacy worktree API removed](#legacy-worktree-api-removed)
-  - [`Git::Branch` and `Git::Branches` removed](#gitbranch-and-gitbranches-removed)
-  - [`Git::Remote` removed](#gitremote-removed)
-  - [`Git::Deprecation` horizon is prose](#gitdeprecation-horizon-is-prose)
+  - [Before you upgrade](#before-you-upgrade)
+    - [Minimum Ruby version](#minimum-ruby-version)
+    - [Minimum git version](#minimum-git-version)
+    - [Minimum addressable version](#minimum-addressable-version)
+    - [Minimum activesupport version](#minimum-activesupport-version)
+  - [Changes the deprecation run does not catch or does not explain](#changes-the-deprecation-run-does-not-catch-or-does-not-explain)
+    - [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)
+    - [Gzip failures in `archive` raised as `Git::Error`](#gzip-failures-in-archive-raised-as-giterror)
+    - [Relative `:repository` and `:index` paths](#relative-repository-and-index-paths)
+    - [Tilde expansion in `Git.init` and `Git.clone` paths](#tilde-expansion-in-gitinit-and-gitclone-paths)
+    - [Context helpers yield a separate repository](#context-helpers-yield-a-separate-repository)
+    - [`Git.init`, `Git.open`, and `Git.bare` reject unknown options](#gitinit-gitopen-and-gitbare-reject-unknown-options)
+    - [`tag_create` raises when the created tag is missing](#tag_create-raises-when-the-created-tag-is-missing)
+    - [`stash_list` returns an Array of `Git::StashInfo`](#stash_list-returns-an-array-of-gitstashinfo)
+    - [`stash_store` raises when the stored entry is missing](#stash_store-raises-when-the-stored-entry-is-missing)
+    - [`worktree_add` returns `Git::WorktreeInfo` and raises when the worktree is missing](#worktree_add-returns-gitworktreeinfo-and-raises-when-the-worktree-is-missing)
+    - [`Git::Deprecation` horizon is prose](#gitdeprecation-horizon-is-prose)
+  - [Removed APIs](#removed-apis)
+  - [Deprecated in v6.0.0](#deprecated-in-v600)
+    - [`set_index` and `set_working` deprecated](#set_index-and-set_working-deprecated)
+    - [`Git::GitExecuteError` deprecated](#gitgitexecuteerror-deprecated)
 - [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
   - [Breaking changes](#breaking-changes)
@@ -71,13 +60,33 @@ to update your code when upgrading from the preceding major version.
 
 ## Upgrading to v6.x
 
-v6.0.0 is not yet released. This section will be completed when it ships.
-
 v6.0.0 removes the APIs deprecated during v5.x under the project's
-[deprecation policy](README.md#deprecation-policy).
-[Issue 1717](https://github.com/ruby-git/ruby-git/issues/1717) tracks its scope.
+[deprecation policy](README.md#deprecation-policy), raises the Ruby, git, and
+dependency floors, and changes a small number of behaviors that had no deprecation
+path. [Issue 1717](https://github.com/ruby-git/ruby-git/issues/1717) tracks its scope.
 
-To prepare:
+This section is organized by what you have to do rather than by what changed:
+
+- [Before you upgrade](#before-you-upgrade) gives the version floors and the upgrade
+  procedure. Read it first.
+- [Changes the deprecation run does not catch or does not
+  explain](#changes-the-deprecation-run-does-not-catch-or-does-not-explain) covers
+  every change that a clean run under `GIT_DEPRECATION_BEHAVIOR=raise` does not find,
+  and the two warnings whose fix is not a removed API's replacement. Read each entry.
+- [Removed APIs](#removed-apis) is one table of every API removed in v6.0.0 and its
+  replacement. Every one of them warned in v5.x when called, constructed, or used, so
+  the raise behavior finds each call, and the table links to the entry under
+  "Upgrading to v5.x" that maps each call shape to its replacement. A bare reference
+  to a removed constant did not warn, so step 8 has you search for those.
+- [Deprecated in v6.0.0](#deprecated-in-v600) covers the APIs that warn in v6.0.0 and
+  are removed in a later major release.
+
+If you are upgrading from v4.x directly, the v5.x warnings never ran against your
+code, so also read [Upgrading to v5.x](#upgrading-to-v5x). Its entries map each v4.x
+call to its replacement, and the [Removed APIs](#removed-apis) table tells you which of
+those replacements are now the only option.
+
+### Before you upgrade
 
 1. Upgrade to Ruby 3.3 or later if you are still on Ruby 3.2 (see
    [Minimum Ruby version](#minimum-ruby-version)).
@@ -90,21 +99,35 @@ To prepare:
 5. Upgrade to the latest v5.x release.
 6. Set `GIT_DEPRECATION_BEHAVIOR=raise` (or `Git::Deprecation.behavior = :raise`) in
    your test suite and, if possible, staging.
-7. Fix each deprecation using the entries under
-   [Deprecated methods](#deprecated-methods) until the suite is clean.
-8. Replace any `rescue Errno::*` around gem calls with `rescue Git::Error` (see
-   [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)).
-9. Give every `with_index`, `with_temp_index`, `with_working`, and
-   `with_temp_working` block a parameter and call methods on it rather than on the
-   outer repository; v5.6.0 and later warn for a block with no positional parameter
-   (see [Context helpers yield a separate
-   repository](#context-helpers-yield-a-separate-repository)).
+7. Fix each deprecation until the suite is clean. The [Removed APIs](#removed-apis)
+   table links each removed API's replacement. Three warnings are not removals:
+   - `stash_list` keeps its name and changes its return type (see [`stash_list`
+     returns an Array of `Git::StashInfo`](#stash_list-returns-an-array-of-gitstashinfo)).
+   - A context-helper block with no positional parameter, which v5.6.0 and later
+     warn about (see [Context helpers yield a separate
+     repository](#context-helpers-yield-a-separate-repository)).
+   - `Git::GitExecuteError`, which still warns in v6.0.0 (see
+     [`Git::GitExecuteError` deprecated](#gitgitexecuteerror-deprecated)).
+8. Search your code for each constant in the [Removed APIs](#removed-apis) table. A
+   bare reference such as `is_a?(Git::Base)`, `rescue Git::Status`, or
+   `case ... when Git::Author` never warned in v5.x, so the raise behavior does not
+   find it, and it raises `NameError` in v6.0.0.
+9. Work through each entry under [Changes the deprecation run does not catch or does
+   not explain](#changes-the-deprecation-run-does-not-catch-or-does-not-explain). The two
+   that affect the most code:
+   - Replace any `rescue Errno::*` around gem calls with `rescue Git::Error` (see
+     [Filesystem errors raised as `Git::Error`](#filesystem-errors-raised-as-giterror)).
+   - Give every `with_index`, `with_temp_index`, `with_working`, and
+     `with_temp_working` block a parameter and call methods on it rather than on the
+     outer repository; v5.6.0 and later warn for a block with no positional parameter
+     (see [Context helpers yield a separate
+     repository](#context-helpers-yield-a-separate-repository)).
 10. Upgrade to v6.0.0.
 
-### Minimum Ruby version
+#### Minimum Ruby version
 
 v6.0.0 requires Ruby 3.3.0 or later. v5.x supports Ruby 3.2, which reached end of
-life on 2026-04-01. The
+life on 2026-03-31. The
 [Ruby version support policy](README.md#ruby-version-support-policy) commits the
 gem to the MRI versions that are still maintained, so the floor moves when a Ruby
 version leaves maintenance rather than with the gem's major version. Ruby 3.3 is
@@ -116,22 +139,23 @@ JRuby and TruffleRuby support is unchanged.
 If your application still runs on Ruby 3.2, upgrade Ruby before upgrading the gem,
 or stay on the latest v5.x release.
 
-### Minimum git version
+#### Minimum git version
 
 v6.0.0 requires git 2.43.0 or later. v5.x required 2.28.0.
 
 Git 2.43.0 was released on November 20, 2023, and is the version shipped by
 Ubuntu 24.04, RHEL 8.10 and 9.4, SLES 15 SP6, openSUSE Leap 15.6, and Alpine 3.19.
-Ubuntu 22.04 is the supported platform whose stock git (2.34) falls below the new
-floor. On Ubuntu 22.04, install a newer git (for example from the
-[git-core PPA](https://launchpad.net/~git-core/+archive/ubuntu/ppa)) or stay on
-v5.x. Apple's git 2.39 from Xcode 16 also falls below the floor; Xcode 26 ships
-git 2.50.
+Ubuntu 22.04 (git 2.34) and Debian 12 (git 2.39) are the supported platforms whose
+stock git falls below the new floor. On Ubuntu 22.04, install a newer git (for
+example from the [git-core PPA](https://launchpad.net/~git-core/+archive/ubuntu/ppa));
+on Debian 12, install it from
+[bookworm-backports](https://backports.debian.org/Instructions/); or stay on v5.x.
+Apple's git 2.39 from Xcode 16 also falls below the floor; Xcode 26 ships git 2.50.
 
 Features that need a git newer than 2.43.0 stay gated per command and raise
 `Git::VersionError` on older installations, as `git am --retry` (2.46.0) does today.
 
-### Minimum addressable version
+#### Minimum addressable version
 
 v6.0.0 depends on `addressable ~> 2.9`. v5.x accepts `~> 2.8`.
 
@@ -148,7 +172,7 @@ The `~> 2.8` constraint already permits 2.9.0, so most applications resolve it a
 caps addressable below 2.9.0. In that case, update or replace that gem, or stay on
 the latest v5.x release.
 
-### Minimum activesupport version
+#### Minimum activesupport version
 
 v6.0.0 depends on `activesupport >= 7.0.9`. v5.x accepts `>= 5.0`.
 
@@ -166,127 +190,17 @@ Most applications already resolve a newer activesupport. The upgrade fails only 
 another gem in the bundle caps activesupport below 7.0.9. In that case, update or
 replace that gem, or stay on the latest v5.x release.
 
-### Renamed facade methods removed
+### Changes the deprecation run does not catch or does not explain
 
-v6.0.0 removes the five `Git::Repository` methods that v5.0.0 renamed to the
-`noun_verb` convention: `add_remote`, `remove_remote`, `set_remote_url`, `add_tag`,
-and `delete_tag`. Each one warned throughout v5.x and named its replacement. The
-[Facade method renames](#facade-method-renames) table under "Upgrading to v5.x" is
-the migration reference. For `add_tag`, go straight to `tag_create`: the `tag_add`
-that the v5.x warning names is removed too (see
-[`Git::Object::Tag` removed](#gitobjecttag-removed)).
+Most changes below never emitted a warning in v5.x, because the method keeps its name
+and changes what it returns or does, or keeps working after the upgrade with a
+different result. Two of them warned, `stash_list` and the context-helper block form,
+but neither is a removed API, so the [Removed APIs](#removed-apis) table has no row
+for them and their entries live here. A clean run under
+`GIT_DEPRECATION_BEHAVIOR=raise` is therefore not proof that your code is unaffected.
+Search your code for each one before upgrading.
 
-### Renamed `Git::Repository` methods removed
-
-v6.0.0 removes the seven `Git::Repository` methods that v5.x renamed: `empty?`,
-`reset_hard`, `conflicts`, `is_local_branch?`, `is_remote_branch?`, `is_branch?`,
-and `branches_all`. Each one warned throughout v5.x and named its replacement:
-`no_commits?`, `reset(commitish, hard: true)`, `each_conflict`, `local_branch?`,
-`remote_branch?`, `branch?`, and `branch_list`. The [`Git::Repository` method
-renames](#gitrepository-method-renames) table under "Upgrading to v5.x" is the
-migration reference, including the expression that reproduces the `branches_all`
-tuples from `branch_list`.
-
-### Renamed `Git::Repository` aliases removed
-
-v6.0.0 removes the eight `Git::Repository` aliases that v5.x deprecated:
-`object_contents`, `object_size`, `object_type`, `commit_data`, `tag_data`,
-`revparse`, `namerev`, and `diff_name_status`. Each one warned from v5.7.0 and
-named its replacement: `cat_file_contents`, `cat_file_size`, `cat_file_type`,
-`cat_file_commit`, `cat_file_tag`, `rev_parse`, `name_rev`, and
-`diff_path_status`. The [`Git::Repository` alias renames](#gitrepository-alias-renames)
-table under "Upgrading to v5.x" is the migration reference. `diff_name_status`
-callers that passed `:path` must also switch to `:path_limiter`; see the
-`diff_path_status` bullet under [`Git::Repository` option shims
-removed](#gitrepository-option-shims-removed). `cat_file` is not affected: it
-stays as a legacy name for `cat_file_contents`.
-
-### `Git::Object::Tag` removed
-
-v6.0.0 removes `Git::Object::Tag`, the three `Git::Repository` methods that
-returned it (`tag`, `tags`, and `tag_add`), and the `is_tag` argument to
-`Git::Object.new`. Each warned from v5.4.0 on and named its replacement. Read tag
-data through `Git::Repository#tag_list` and create tags with
-`Git::Repository#tag_create`; both return `Git::TagInfo` value objects. The
-[`Git::Object::Tag` deprecated](#gitobjecttag-deprecated) entry under "Upgrading
-to v5.x" maps every removed call, including the readers and operations on a
-`Git::Object::Tag`, to its replacement, and describes where the replacement's
-return shape or error behavior differs.
-
-> **`tag_create` return value change.** In v5.x, `g.tag_create` returned `nil`
-> when the tag it had just created was missing from the tag list (for example,
-> another process deleted it before the lookup) and never emitted a deprecation
-> warning, since the method keeps its name. In v6.0.0 it raises
-> `Git::UnexpectedResultError` instead, so its return value is always a
-> `Git::TagInfo`. Search for `tag_create` before upgrading and remove any check
-> for a `nil` result.
-
-### `Git::CommandLineResult` removed
-
-v6.0.0 removes `Git::CommandLineResult`. In v5.x a `Git.const_missing` hook
-resolved the constant to `Git::CommandLine::Result` and emitted a deprecation
-warning. That hook is gone, so referencing `Git::CommandLineResult` raises
-`NameError`. `Git::CommandLine::Result` is the only name for the result object.
-The [`Git::CommandLineResult` deprecated](#gitcommandlineresult-deprecated) entry
-under "Upgrading to v5.x" is the migration reference.
-
-### `Git::Repository#lib` removed
-
-v6.0.0 removes `Git::Repository#lib`. In v5.x it emitted a deprecation warning and
-returned `self`, so a v4.x call like `g.lib.some_method(args)` was forwarded to
-`g.some_method(args)`. That shim is gone, so calling `g.lib` raises
-`NoMethodError`. Call the facade method directly on the repository object. The
-[`Git::Lib` removed](#gitlib-removed) entry under "Upgrading to v5.x" maps every
-v4.x `g.lib.*` call shape to its replacement.
-
-### `Git::Base` compatibility shim removed
-
-v6.0.0 removes the `Git::Base` compatibility shim. In v5.x `Git::Base` was a module
-included in `Git::Repository`: `is_a?(Git::Base)` stayed true, `Git::Base.new` raised
-`NoMethodError`, and defining a method on `Git::Base` emitted a deprecation warning
-while still adding the method to `Git::Repository`. That module is gone, so referencing
-`Git::Base` raises `NameError` and `is_a?(Git::Base)` no longer works. Move any
-monkeypatch to an application-owned module and include it into `Git::Repository`. The
-[`Git::Base` removed](#gitbase-removed) entry under "Upgrading to v5.x" shows the
-migration.
-
-### `Git.binary_version` and `Git.ls_remote(nil)` removed
-
-v6.0.0 removes two module-level shims on `Git`:
-
-- `Git.binary_version` is gone, so calling it raises `NoMethodError`. `Git.git_version`
-  is the only way to read the git version. It returns a `Git::Version`;
-  `Git.git_version.to_a` reproduces the `[major, minor, patch]` Array, and the
-  optional binary path argument is preserved as `Git.git_version(binary_path)`.
-- `Git.ls_remote` no longer accepts `nil` as the repository argument. In v5.x `nil`
-  was normalized to `'.'` with a deprecation warning. Passing `nil` now raises
-  `ArgumentError`. Omitting the argument still defaults to `'.'`, so `Git.ls_remote`
-  and `Git.ls_remote('.', opts)` are unchanged.
-
-The [Module-level `Git` function
-deprecations](#module-level-git-function-deprecations) entry under "Upgrading to
-v5.x" maps each call shape to its replacement.
-
-### `Git.clone` legacy options removed
-
-v6.0.0 removes the three v4.x option names that `Git.clone` accepted with a
-deprecation warning throughout v5.x: `:path`, `:recursive`, and `:remote`. Each
-now falls through to the normal option validation, so passing one raises
-`ArgumentError` (see [Unsupported options raise
-`ArgumentError`](#unsupported-options-raise-argumenterror)). Use `:chdir`,
-`:recurse_submodules`, and `:origin` instead; those options are unchanged. The
-[`Git.clone` option renames](#gitclone-option-renames) entry under "Upgrading to
-v5.x" maps each removed option to its replacement.
-
-`Git.export` no longer drops a `:remote` option before calling `Git.clone`, so
-`Git.export(url, dir, remote: name)` also raises `ArgumentError`. The option was
-deprecated in v5.x (see [`Git.export` `:remote` option
-deprecated](#gitexport-remote-option-deprecated) under "Upgrading to v5.x"). There
-is no replacement: `:remote` renamed the clone's remote, and `Git.export` deletes
-the `.git` directory before returning, so the name was never observable. Delete the
-option from the call.
-
-### Filesystem errors raised as `Git::Error`
+#### Filesystem errors raised as `Git::Error`
 
 The gem's own filesystem calls used to let a bare `SystemCallError` escape, which
 contradicted the documented contract that the gem raises only `ArgumentError` or a
@@ -296,7 +210,10 @@ available through `cause`.
 The affected methods are `Git.open` (reading a gitdir pointer file), `Git.export`,
 `Git::Repository#chdir`, `#with_index`, `#with_working`, `#with_temp_index`,
 `#with_temp_working`, `#set_index`, `#set_working`, `#cat_file_contents`,
-`#each_conflict`, `#archive`, and `#repo_size`.
+`#each_conflict`, `#archive`, and `#repo_size`. `Git.init`, `Git.clone`, `Git.bare`,
+and `Git.open` also raise `Git::Error` when the directory argument or a
+`:repository`, `:index`, or `:chdir` option cannot be expanded to an absolute path,
+which happens when the process working directory has been removed.
 
 ```ruby
 # v5.x
@@ -321,14 +238,14 @@ your own block inside `chdir`, `with_working`, `with_temp_index`, `with_temp_wor
 or the block form of `cat_file_contents` still propagates unchanged, so the gem never
 relabels an error raised by your code.
 
-### Gzip failures in `archive` raised as `Git::Error`
+#### Gzip failures in `archive` raised as `Git::Error`
 
 `Git::Repository#archive` with `format: 'tgz'` or `add_gzip: true` used to let a
 `Zlib::Error` subclass escape when compression failed. It now raises `Git::Error`, with
 the `Zlib::Error` available through `cause`. Code that already rescues `Git::Error`
 needs no change.
 
-### Relative `:repository` and `:index` paths
+#### Relative `:repository` and `:index` paths
 
 A relative `:repository` option of `Git.open` or `Git.init`, and a relative `:index`
 option of `Git.open`, `Git.init`, or `Git.clone`, is now expanded against the process
@@ -352,7 +269,7 @@ repo = Git.open('/path/to/repo', index: 'scratch.index')
 repo = Git.open('/path/to/repo', index: '/path/to/repo/.git/scratch.index')
 ```
 
-### Tilde expansion in `Git.init` and `Git.clone` paths
+#### Tilde expansion in `Git.init` and `Git.clone` paths
 
 `Git.init` and `Git.clone` now expand the directory argument and the `:repository` and
 `:index` options before handing the path to git, so `~` is the home directory, as it
@@ -372,7 +289,9 @@ the path to keep it. Expanding before git runs is also visible in three other wa
 - git receives absolute paths, so a `:log` that recorded `Cloning into 'my-repo'...` now
   records the absolute path.
 - A `:repository`, `:index`, or `:chdir` that cannot be expanded raises before git runs,
-  with nothing on disk, instead of after the clone or init completed.
+  with nothing on disk, instead of after the clone or init completed: `Git::Error` when
+  the process working directory has been removed, and `ArgumentError` for a `~user`
+  prefix that names no user.
 - `..` is normalized lexically before git sees the path. `Git.init('a/../b')` creates
   only `b`, where `git init a/../b` at a shell prompt also created `a`, and a path
   through a symlinked directory resolves to where the link appears rather than where it
@@ -392,7 +311,7 @@ repo = Git.init('~/scratch')
 repo = Git.init('./~/scratch')
 ```
 
-### Context helpers yield a separate repository
+#### Context helpers yield a separate repository
 
 `Git::Repository#with_index`, `#with_temp_index`, `#with_working`, and
 `#with_temp_working` used to rebind the receiver to the other index or working tree
@@ -480,32 +399,7 @@ exception.
 with `Dir.chdir` for the duration of the block, so they remain unsafe to call from
 more than one thread at a time.
 
-### `Git::Repository` option shims removed
-
-v6.0.0 removes the four v4.x option and argument shapes that `Git::Repository`
-methods accepted with a deprecation warning throughout v5.x:
-
-- `clean` no longer accepts `:ff` or `:force_force`. Pass `force: 2` to run
-  `git clean -ff`.
-- `diff_path_status` no longer accepts `:path`. Use `:path_limiter`, which takes
-  the same values.
-- `commit` no longer accepts `:add_all`. Use `:all`.
-- `set_working` and `set_index` no longer take a positional `check` argument.
-  Pass `must_exist:` instead; it defaults to `true`. An explicit `must_exist:
-  nil` no longer means "not given": v5.x treated it as `true`, and v6.0.0 treats
-  it as `false` like any other falsy value. Omit the keyword to get the default.
-  Both methods are also deprecated in v6.0.0 (see [`set_index` and `set_working`
-  deprecated](#set_index-and-set_working-deprecated)), so consider replacing the
-  call instead of updating its arguments.
-
-The removed option keys now fall through to the normal option validation, so
-passing one raises `ArgumentError` (see [Unsupported options raise
-`ArgumentError`](#unsupported-options-raise-argumenterror)). A positional `check`
-argument raises `ArgumentError` for the wrong number of arguments. The
-[`Git::Repository` option renames](#gitrepository-option-renames) entry under
-"Upgrading to v5.x" maps each removed form to its replacement.
-
-### `Git.init`, `Git.open`, and `Git.bare` reject unknown options
+#### `Git.init`, `Git.open`, and `Git.bare` reject unknown options
 
 `Git.init`, `Git.open`, and `Git.bare` now raise `ArgumentError` when the options
 hash contains a key they do not accept, the same way `Git.ls_remote` already does.
@@ -543,10 +437,142 @@ repo = Git.init('/path/to/worktree', separate_gitdir: '/srv/repo.git')
 repo = Git.init('/path/to/worktree', separate_git_dir: '/srv/repo.git')
 ```
 
-### `set_index` and `set_working` deprecated
+#### `tag_create` raises when the created tag is missing
+
+In v5.x, `g.tag_create` returned `nil` when the tag it had just created was missing from
+the tag list (for example, another process deleted it before the lookup). It never
+emitted a deprecation warning, since the method keeps its name. In v6.0.0 it raises
+`Git::UnexpectedResultError` instead, so its return value is always a `Git::TagInfo`.
+Search for `tag_create` before upgrading and remove any check for a `nil` result.
+
+#### `stash_list` returns an Array of `Git::StashInfo`
+
+In v5.x, `g.stash_list` returned the `git stash list` text as a `String` and emitted a
+`Git::Deprecation` warning on every call. A project that silences or ignores deprecation
+warnings never acts on that notice, and in v6.0.0 the call keeps working with a
+different return type: `Array<Git::StashInfo>`, newest first, the same value as
+`Git::Repository#stash_infos`, which stays as a permanent alias. Search for `stash_list`
+before upgrading. Code that needs the text builds it from the entries:
+`g.stash_list.map { |s| "#{s.name}: #{s.message}" }.join("\n")`.
+
+#### `stash_store` raises when the stored entry is missing
+
+In v5.x, `g.stash_store` returned the top entry of the stash list after the store, so it
+returned `nil` when the list was empty and another process's entry when one had been
+pushed in between. It never emitted a deprecation warning, since the method keeps its
+name. In v6.0.0 it returns the entry for the commit it stored and raises
+`Git::UnexpectedResultError` when that entry is missing, so its return value is always a
+`Git::StashInfo`. A commit that does not resolve raises `Git::FailedError` before
+anything is stored. A `nil` commit or one that begins with `-` raises `ArgumentError` as
+in v5.x, with a different message; one that begins with `^` raises `ArgumentError` where
+v5.x raised `Git::FailedError`. An annotated tag name now stores the tagged commit; v5.x
+stored the tag object, which hid every entry from `git stash list`. Search for
+`stash_store` before upgrading and remove any check for a `nil` result.
+
+#### `worktree_add` returns `Git::WorktreeInfo` and raises when the worktree is missing
+
+In v4.x and v5.x, `g.worktree_add` returned the `git worktree add` output
+(`"HEAD is now at …"`) as a `String` and never emitted a deprecation warning, since the
+method keeps its name. In v6.0.0 it returns the new worktree's `Git::WorktreeInfo`, the
+same entry `g.worktree_list` reports for it, and raises `Git::UnexpectedResultError`
+when that entry is missing after the add, as `tag_create` and `stash_store` do. A
+`rescue Git::FailedError` around the call no longer covers every error it can raise.
+Search for `worktree_add` before upgrading.
+Code that used the return value as a `String` reads `info.path`, `info.head`, and
+`info.branch` instead; `Git::WorktreeInfo#to_s` is the path, so string interpolation of
+the result yields the worktree path.
+
+#### `Git::Deprecation` horizon is prose
+
+v6.0.0 constructs `Git::Deprecation` with the horizon `"in a future major release"`.
+v5.x used `"6.0.0"`. The gem never puts the horizon into a warning, so the warnings
+themselves do not change. The horizon reaches your code through the
+`Git::Deprecation.deprecation_horizon` reader, the `deprecation_horizon` key of the
+payload the `:notify` behavior publishes, and the third argument of a custom
+`behavior` or `disallowed_behavior` proc declared with four parameters. Code that
+parses that value as a version, for example with `Gem::Version.new`, now raises; read
+the removal version from the warning text instead, which names it once it is decided.
+
+### Removed APIs
+
+Every API in this table emitted a deprecation warning in v5.x that named its
+replacement when it was called, constructed, or used, and each row links to the entry
+under "Upgrading to v5.x" that maps every call shape, reader, and option to its
+replacement, including return shape differences. A bare reference to a removed
+constant (`is_a?`, `rescue`, `case ... when`, `defined?`) did not warn, except for
+`Git::CommandLineResult`, so search for each constant in the table as well as
+clearing the warnings. In v6.0.0 a removed constant raises `NameError` when
+referenced, a removed method raises `NoMethodError` when called, and a removed option
+raises `ArgumentError` like any other unsupported option (see [Unsupported options
+raise `ArgumentError`](#unsupported-options-raise-argumenterror)).
+
+| Removed in v6.0.0 | Use instead | Migration entry |
+| --- | --- | --- |
+| `Git::Repository#add_remote`, `#remove_remote`, `#set_remote_url`, `#add_tag`, `#delete_tag` | `remote_add`, `remote_remove`, `remote_set_url`, `tag_create`, `tag_delete` | [Facade method renames](#facade-method-renames) |
+| `Git::Repository#empty?`, `#reset_hard`, `#conflicts`, `#is_local_branch?`, `#is_remote_branch?`, `#is_branch?`, `#branches_all` | `no_commits?`, `reset(commitish, hard: true)`, `each_conflict`, `local_branch?`, `remote_branch?`, `branch?`, `branch_list` | [`Git::Repository` method renames](#gitrepository-method-renames) |
+| `Git::Repository#object_contents`, `#object_size`, `#object_type`, `#commit_data`, `#tag_data`, `#revparse`, `#namerev`, `#diff_name_status` | `cat_file_contents`, `cat_file_size`, `cat_file_type`, `cat_file_commit`, `cat_file_tag`, `rev_parse`, `name_rev`, `diff_path_status` | [`Git::Repository` alias renames](#gitrepository-alias-renames) |
+| `clean(ff: true)` and `clean(force_force: true)`; `diff_path_status(path: ...)`; `commit(add_all: true)`; the positional `check` argument of `set_working` and `set_index` | `force: 2`; `:path_limiter`; `:all`; `must_exist:` | [`Git::Repository` option renames](#gitrepository-option-renames) |
+| `Git::Repository#config` and `#global_config`; `Git.global_config`; `config` and `global_config` as instance methods of the `Git` module | `config_get`, `config_set`, and `config_list` on `Git::Repository` or `Git`, with `global: true` for the global scope | [v4.x-style configuration methods](#v4x-style-configuration-methods), [`Git` module mixin deprecations](#git-module-mixin-deprecations) |
+| `Git.binary_version`; `Git.ls_remote(nil)` | `Git.git_version` (`.to_a` for the Array); `Git.ls_remote` with no argument or `'.'` | [Module-level `Git` function deprecations](#module-level-git-function-deprecations) |
+| `Git.clone` options `:path`, `:recursive`, and `:remote` | `:chdir`, `:recurse_submodules`, and `:origin` | [`Git.clone` option renames](#gitclone-option-renames) |
+| `Git.export` option `:remote` | Delete the option; it has no replacement | [`Git.export` `:remote` option deprecated](#gitexport-remote-option-deprecated) |
+| `Git::Base` | Include an application-owned module into `Git::Repository` | [`Git::Base` removed](#gitbase-removed) |
+| `Git::Repository#lib` | Call the facade method directly on the repository | [`Git::Lib` removed](#gitlib-removed) |
+| `Git::CommandLineResult` | `Git::CommandLine::Result` | [`Git::CommandLineResult` deprecated](#gitcommandlineresult-deprecated) |
+| `Git::Log#each`, `#size`, `#to_s`, `#first`, `#last`, `#[]`, and every other `Enumerable` method on `Git::Log` | `Git::Log#execute`, which returns a `Git::Log::Result` with the same methods | [`Git::Log` Enumerable interface deprecated](#gitlog-enumerable-interface-deprecated) |
+| `Git::Object::Commit#set_commit` | `from_data` | [`Git::Object::Commit#set_commit` deprecated](#gitobjectcommitset_commit-deprecated) |
+| `Git::Author` | `Git::AuthorInfo` (`parse` to build one, `with` in place of the writers) | [`Git::Author` deprecated](#gitauthor-deprecated) |
+| `Git::Branch#stashes` | `Git::Repository#stash_infos` | [`Git::Branch#stashes` deprecated](#gitbranchstashes-deprecated) |
+| `Git::Stash`, `Git::Stashes`, `Git::Repository#stashes_all`, `#stash_save` | `stash_list` (or its alias `stash_infos`), `stash_push`, and the name-based stash operations | [Legacy stash API deprecated](#legacy-stash-api-deprecated) |
+| `Git::Repository#remotes` | `remote_list`, or `remote_names` for the names alone | [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated) |
+| `Git::Remote`, `Git::Repository#remote`, `#config_remote` | `remote_list`, which returns `Git::RemoteInfo` objects; filter `config_list` on the `remote.<name>.` prefix for keys it does not model | [`Git::Remote` deprecated](#gitremote-deprecated) |
+| The `allow_unknown_type:` option of `Git::Commands::CatFile::Raw` | No replacement | [`Git::Commands::CatFile::Raw` `allow_unknown_type` option deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated) |
+| `Git::Branch`, `Git::Branches`, `Git::Repository#branch`, `#branches` | `branch_list`, which returns `Git::BranchInfo` objects, and the name-based branch operations | [`Git::Branch` and `Git::Branches` deprecated](#gitbranch-and-gitbranches-deprecated) |
+| `Git::Object::Tag`, `Git::Repository#tag`, `#tags`, `#tag_add`, and the `is_tag` argument of `Git::Object.new` | `tag_list` and `tag_create`, which return `Git::TagInfo` objects | [`Git::Object::Tag` deprecated](#gitobjecttag-deprecated) |
+| `Git::Status`, `Git::Status::StatusFile`, `Git::Repository#status` | `status_info`, which returns a `Git::StatusInfo` | [`Git::Status` deprecated](#gitstatus-deprecated) |
+| `Git::Worktree`, `Git::Worktrees`, `Git::Repository#worktree`, `#worktrees`, `#worktrees_all` | `worktree_list`, which returns `Git::WorktreeInfo` objects, and the path-based worktree operations | [`Git::Worktree` and `Git::Worktrees` deprecated](#gitworktree-and-gitworktrees-deprecated) |
+
+Notes on specific rows:
+
+- `add_tag`: go straight to `tag_create`. The `tag_add` that the v5.x warning names is
+  removed too.
+- `diff_name_status` callers that passed `:path` must also switch to `:path_limiter`.
+- `cat_file` is unaffected and stays as a legacy name for `cat_file_contents`, and
+  `stash_infos` stays as an alias of `stash_list`.
+- `set_working` and `set_index`: a positional `check` argument raises `ArgumentError`
+  for the wrong number of arguments. Pass `must_exist:` instead; it defaults to
+  `true`. An explicit `must_exist: nil` no longer means "not given". v5.x treated it
+  as `true`, and v6.0.0 treats it as `false` like any other falsy value. Omit the
+  keyword to get the default. Both methods are deprecated in v6.0.0 (see [`set_index`
+  and `set_working` deprecated](#set_index-and-set_working-deprecated)), so consider
+  replacing the call instead of updating its arguments.
+- `Git.ls_remote(nil)`: an explicit `nil` repository argument raises `ArgumentError`
+  with the message `repository must not be nil`. Omitting the argument still defaults
+  to `'.'`, so `Git.ls_remote` and `Git.ls_remote('.', opts)` are unchanged.
+- `Git.config` (the gem-configuration accessor used as `Git.config.binary_path`) and
+  `Git.configure` are not part of the configuration API removal and are unchanged.
+- `Git.export` `:remote` renamed the clone's remote, and `Git.export` deletes the `.git`
+  directory before returning, so the name was never observable.
+- `allow_unknown_type`: git 2.50 removed the unknown-type feature and accepts the flag
+  as a no-op, and on git 2.43 through 2.49 the ability to query the type and size of an
+  object of unknown type goes with the option.
+- `status` to `status_info`: the `changed`, `added`, `deleted`, and `untracked` readers
+  keep their names, but the categories are derived from both porcelain status
+  characters and clean tracked paths are no longer listed. Read the v5.x entry before
+  changing the call.
+- `g.branch(name)`: the string constructor could mis-split a remote-tracking name when
+  the remote name itself contains a slash (`remotes/team/upstream/main`). `branch_list`
+  resolves configured remote names and has no such limitation.
+
+### Deprecated in v6.0.0
+
+Both APIs below keep working in v6.0.0 and warn through `Git::Deprecation` every time
+they are used. A later major release removes them.
+
+#### `set_index` and `set_working` deprecated
 
 `Git::Repository#set_index` and `#set_working` rebind the receiver to another index
-file or working tree. They are the last mutable state on `Git::Repository`: once
+file or working tree. They are the last mutable state on `Git::Repository`. Once
 they are gone, a repository object is bound at construction and never changes.
 Until then, the rebind retargets every object that holds the receiver, such as a
 `Git::Object`, a `Git::Log`, or a second caller that was handed the same
@@ -633,7 +659,7 @@ your code needs the deferred bind, open an issue describing the use case; under
 ADR-0007 that becomes a feature request. `set_index(path, must_exist: false)` has no
 gap: the `:index` option is not checked for existence.
 
-### `Git::GitExecuteError` deprecated
+#### `Git::GitExecuteError` deprecated
 
 `Git::GitExecuteError` has been a deprecated alias for `Git::Error` since v2.0.0 and
 has warned whenever it is rescued or instantiated since then. The warning now follows
@@ -654,259 +680,6 @@ rescue Git::GitExecuteError => e
 rescue Git::Error => e
 ```
 
-### `Git::Log` Enumerable interface and `Commit#set_commit` removed
-
-v6.0.0 removes the Enumerable interface from the `Git::Log` query builder.
-`Git::Log` no longer includes `Enumerable` and no longer defines `each`, `size`,
-`to_s`, `first`, `last`, or `[]`. Calling any of them, or any other `Enumerable`
-method such as `map` or `count`, raises `NoMethodError`. Call `Git::Log#execute`
-to run the query; it returns a `Git::Log::Result`, which includes `Enumerable`
-and provides the same methods. The chainable query methods on `Git::Log`
-(`since`, `author`, `between`, `path`, `max_count`, and so on) are unchanged.
-
-`Git::Object::Commit#set_commit` is removed as well. Call `from_data` instead; it
-takes the same parsed commit data hash.
-
-The [`Git::Log` Enumerable interface
-deprecated](#gitlog-enumerable-interface-deprecated) and
-[`Git::Object::Commit#set_commit`
-deprecated](#gitobjectcommitset_commit-deprecated) entries under "Upgrading to
-v5.x" map each removed call to its replacement.
-
-### v4.x-style configuration API removed
-
-v6.0.0 removes the v4.x-style configuration methods that dispatched on their
-argument count to read, write, or list git configuration:
-
-- `Git::Repository#config` and `Git::Repository#global_config` are gone, so
-  calling either raises `NoMethodError`. Use `config_get`, `config_set`, and
-  `config_list`; pass `global: true` for the global scope.
-- `Git.global_config` is gone, so calling it raises `NoMethodError`. Use
-  `Git.config_get`, `Git.config_set`, and `Git.config_list` with `global: true`.
-- The `Git` module no longer defines instance methods, so `include Git` and
-  `extend Git` add nothing to the host, and calling `config` or `global_config`
-  as bare methods after mixing in `Git` raises `NoMethodError`. Call
-  `Git.config_get`, `Git.config_set`, and `Git.config_list` instead.
-
-`Git.config` (the gem-configuration accessor used as `Git.config.binary_path`)
-and `Git.configure` are not part of this removal and are unchanged.
-
-The [v4.x-style configuration methods](#v4x-style-configuration-methods) and
-[`Git` module mixin deprecations](#git-module-mixin-deprecations) entries under
-"Upgrading to v5.x" map each removed call to its replacement and describe the
-return type differences.
-
-### `Git::Repository#remotes` and `allow_unknown_type` removed
-
-v6.0.0 removes two small APIs that v5.x deprecated:
-
-- `Git::Repository#remotes` is gone, so calling it raises `NoMethodError`. Use
-  `Git::Repository#remote_list`, which returns `Array<Git::RemoteInfo>`, or
-  `Git::Repository#remote_names` when only the names are needed.
-- The `allow_unknown_type:` option of `Git::Commands::CatFile::Raw` is gone, so
-  passing it raises `ArgumentError` like any other unsupported option. There is
-  no replacement: git 2.50 removed the unknown-type feature and accepts the flag
-  as a no-op, and on git 2.43 through 2.49 the ability to query the type and size
-  of an object of unknown type goes with the option.
-
-The [`Git::Repository#remotes` deprecated](#gitrepositoryremotes-deprecated) and
-[`Git::Commands::CatFile::Raw` `allow_unknown_type` option
-deprecated](#gitcommandscatfileraw-allow_unknown_type-option-deprecated) entries
-under "Upgrading to v5.x" map each removed call to its replacement and describe
-the return type and order differences.
-
-### `Git::Author` removed
-
-v6.0.0 removes `Git::Author`, the mutable identity class that v5.3.0 deprecated.
-Referencing the constant raises `NameError`. No method has returned it since
-v5.3.0: `Git::Object::Commit#author`, `Git::Object::Commit#committer`, and
-`Git::TagInfo#tagger` return `Git::AuthorInfo`, which exposes the same `name`,
-`email`, and `date` readers. Build an identity from a raw git identity string
-with `Git::AuthorInfo.parse`, and replace the `name=`, `email=`, and `date=`
-writers with `Git::AuthorInfo#with`, which returns a modified copy. The
-[`Git::Author` deprecated](#gitauthor-deprecated) entry under "Upgrading to
-v5.x" maps each removed usage to its replacement.
-
-### `Git::Status` removed
-
-v6.0.0 removes `Git::Status` and `Git::Status::StatusFile`, the status classes
-that v5.4.0 deprecated, and `Git::Repository#status`, the only method that
-returned them. Referencing either constant raises `NameError` and calling
-`g.status` raises `NoMethodError`. Read the index and working tree state
-through `Git::Repository#status_info`, which returns an immutable
-`Git::StatusInfo` holding one `Git::StatusFileInfo` per path that `git status`
-reports. The `changed`, `added`, `deleted`, and `untracked` readers and their
-predicates keep their names, but the categories are derived from both porcelain
-status characters and clean tracked paths are no longer listed, so read the
-[`Git::Status` deprecated](#gitstatus-deprecated) entry under "Upgrading to
-v5.x" before changing `status` to `status_info`: it describes those
-differences and maps every removed reader, predicate, and `StatusFile` field to
-its replacement.
-
-### Legacy stash API removed
-
-v6.0.0 removes the stash API that v5.4.0 deprecated: `Git::Stash`,
-`Git::Stashes`, `Git::Repository#stashes_all`, and `Git::Repository#stash_save`.
-Referencing either constant raises `NameError` and calling either method raises
-`NoMethodError`. In the same release `Git::Repository#stash_list` changes its
-return type: it returns `Array<Git::StashInfo>`, newest first, the same value as
-`Git::Repository#stash_infos`, which stays as a permanent alias, and
-`Git::Repository#stash_store` stops returning `nil`.
-
-> **`stash_list` return type change.** In v5.x, `g.stash_list` returned the
-> `git stash list` text as a `String` and emitted a `Git::Deprecation` warning
-> on every call. A project that silences or ignores deprecation warnings never
-> acts on that notice, and in v6.0.0 the call keeps working with a different
-> return type. Search for `stash_list` before upgrading. Code that needs the
-> text builds it from the entries:
-> `g.stash_list.map { |s| "#{s.name}: #{s.message}" }.join("\n")`.
-
-> **`stash_store` return value change.** In v5.x, `g.stash_store` returned the
-> top entry of the stash list after the store, so it returned `nil` when the
-> list was empty and another process's entry when one had been pushed in
-> between. It never emitted a deprecation warning, since the method keeps its
-> name. In v6.0.0 it returns the entry for the commit it stored and raises
-> `Git::UnexpectedResultError` when that entry is missing, so its return value
-> is always a `Git::StashInfo`. A commit that does not resolve raises
-> `Git::FailedError` before anything is stored. A `nil` commit or one that
-> begins with `-` raises `ArgumentError` as in v5.x, with a different message;
-> one that begins with `^` raises `ArgumentError` where v5.x raised
-> `Git::FailedError`. An annotated tag name now stores the tagged commit; v5.x
-> stored the tag object, which hid every entry from `git stash list`. Search
-> for `stash_store` before upgrading and remove any check for a `nil` result.
-
-Two differences from `stashes_all` and `Git::Stash` carry over from the v5.x
-entry and still apply when moving to `stash_list`:
-
-- **Ordering.** `g.stashes_all` returned entries oldest first with its own
-  sequential index. `g.stash_list` returns them newest first, the order
-  `git stash list` uses, and `Git::StashInfo#index` is git's own `stash@{N}`
-  number (`0` is the newest). `g.stashes_all.first` is `g.stash_list.last`.
-- **Message content.** `g.stashes_all` and `Git::Stash#message` stripped the
-  `WIP on <branch>:` or `On <branch>:` prefix. `Git::StashInfo#message` keeps
-  the full message git stores, and `Git::StashInfo#branch` holds the branch
-  name (or `"(no branch)"` for a stash created from a detached HEAD).
-
-The [Legacy stash API deprecated](#legacy-stash-api-deprecated) entry under
-"Upgrading to v5.x" maps every removed call, reader, and collection method to its
-replacement. The `stash_infos` calls it shows keep working in v6.0.0, since
-`stash_infos` is an alias of `stash_list`.
-
-### Legacy worktree API removed
-
-v6.0.0 removes the worktree API that v5.4.0 deprecated: `Git::Worktree`,
-`Git::Worktrees`, `Git::Repository#worktree`, `Git::Repository#worktrees`, and
-`Git::Repository#worktrees_all`. Referencing either constant raises `NameError`
-and calling any of the three methods raises `NoMethodError`. Read worktree data
-through `Git::Repository#worktree_list`, which returns one `Git::WorktreeInfo`
-per worktree, and call the repository-level operations (`worktree_add`,
-`worktree_remove`, `worktree_move`, `worktree_lock`, `worktree_unlock`,
-`worktree_repair`, and `worktree_prune`) with the worktree path or its
-`Git::WorktreeInfo`.
-
-> **`worktree_add` return type change.** In v4.x and v5.x, `g.worktree_add`
-> returned the `git worktree add` output (`"HEAD is now at …"`) as a `String`
-> and never emitted a deprecation warning, since the method keeps its name. In
-> v6.0.0 it returns the new worktree's `Git::WorktreeInfo`, the same entry
-> `g.worktree_list` reports for it. Search for `worktree_add` before upgrading.
-> Code that used the return value as a `String` reads `info.path`, `info.head`,
-> and `info.branch` instead; `Git::WorktreeInfo#to_s` is the path, so string
-> interpolation of the result yields the worktree path.
-
-Two notes carry over from the v5.x entry and still apply to callers jumping
-from v4.x:
-
-- **`gcommit` return type.** `Git::Worktree#gcommit` returned a
-  `Git::Object::Commit` for a worktree from `g.worktree(dir)` and a raw SHA
-  `String` for one from `g.worktrees`. `Git::WorktreeInfo#head` is always a
-  `String` (or `nil` for a bare main worktree); call `g.gcommit(info.head)` for
-  the commit object.
-- **`full` and `to_s`.** `Git::Worktree#full` and `#to_s` appended the commitish
-  to the path, so entries from `g.worktrees` read `"/path/to/wt <sha>"`.
-  `Git::WorktreeInfo#to_s` is the path alone.
-
-The [`Git::Worktree` and `Git::Worktrees`
-deprecated](#gitworktree-and-gitworktrees-deprecated) entry under "Upgrading to
-v5.x" maps every removed call, reader, and collection method to its replacement.
-
-### `Git::Branch` and `Git::Branches` removed
-
-v6.0.0 removes the branch API that v5.3.0 deprecated: `Git::Branch`,
-`Git::Branches`, `Git::Repository#branch`, and `Git::Repository#branches`.
-Referencing either constant raises `NameError` and calling either method raises
-`NoMethodError`. Read branch data through `Git::Repository#branch_list`, which
-returns one `Git::BranchInfo` per local and remote-tracking branch, and call the
-repository-level operations (`checkout`, `branch_new`, `branch_delete`, `merge`,
-`merge_into`, `in_branch`, `update_ref`, `archive`, and so on) with the branch
-name. For a remote-tracking branch the argument differs by operation; the v5.x
-table linked below shows the form each one takes.
-
-Three differences carry over from the v5.x entry and still apply when moving to
-`branch_list`:
-
-- **Return shape.** `Git::BranchInfo#refname` is the full ref
-  (`refs/remotes/origin/main`), not the `remotes/origin/main` form
-  `Git::Branch#full` and `#to_s` returned, and `remote_name` is a `String`
-  rather than a `Git::Remote`. `branch_list` takes `git branch --list`
-  patterns: `'main'` matches the local branch, `'origin/main'` matches the
-  remote-tracking branch, and the `remotes/...` and `refs/...` forms match
-  nothing.
-- **`checkout` no longer creates the branch.** `g.branch('x').checkout`
-  created `x` when it was missing and ignored any error from the attempt.
-  `g.checkout('x')` fails for a missing local branch unless git's own remote
-  guess applies; call `g.branch_new('x') unless g.local_branch?('x')` first.
-- **`in_branch` and `merge_into`.** `g.in_branch` and `g.merge_into` take an
-  existing local branch and raise `ArgumentError` for anything else, restore a
-  detached HEAD to its original commit, and do no hard reset after a merge.
-
-The string constructor that `g.branch(name)` used could mis-split a
-remote-tracking name when the remote name itself contains a slash
-(`remotes/team/upstream/main`). `branch_list` resolves configured remote names
-and has no such limitation.
-
-The [`Git::Branch` and `Git::Branches`
-deprecated](#gitbranch-and-gitbranches-deprecated) entry under "Upgrading to
-v5.x" maps every removed call, reader, and collection method to its replacement
-and describes the `in_branch` and `merge_into` differences in full.
-`Git::Branch#stashes` has its own entry, [`Git::Branch#stashes`
-deprecated](#gitbranchstashes-deprecated).
-
-### `Git::Remote` removed
-
-v6.0.0 removes the remote API that v5.3.0 deprecated: `Git::Remote`,
-`Git::Repository#remote`, and `Git::Repository#config_remote`. Referencing the
-constant raises `NameError` and calling either method raises `NoMethodError`.
-Read a remote's configuration through `Git::Repository#remote_list`, which
-returns one `Git::RemoteInfo` per configured remote.
-
-Two differences carry over from the v5.x entry and still apply when moving to
-`remote_list`:
-
-- **Multi-value fields.** `Git::RemoteInfo#url` and `#fetch` are frozen
-  `Array<String>`, because a remote may carry more than one URL or fetch
-  refspec. `Git::Remote#url` and `#fetch_opts` returned only the last
-  configured value, so `r.url.last` and `r.fetch.last` reproduce them;
-  `r.url.first` is the URL git fetches from.
-- **Custom keys.** `Git::RemoteInfo` models only the remote variables git
-  defines. `config_remote` returned every `remote.<name>.*` entry as a flat
-  `Hash{String => String}`; code that reads custom keys filters
-  `g.config_list` on the `remote.<name>.` prefix instead, which yields the same
-  hash (the v5.x entry shows the expression).
-
-The [`Git::Remote` deprecated](#gitremote-deprecated) entry under "Upgrading to
-v5.x" maps every removed call and reader to its replacement.
-
-### `Git::Deprecation` horizon is prose
-
-v6.0.0 constructs `Git::Deprecation` with the horizon `"in a future major release"`.
-v5.x used `"6.0.0"`. The gem never puts the horizon into a warning, so the warnings
-themselves do not change. The horizon reaches your code through the
-`Git::Deprecation.deprecation_horizon` reader, the `deprecation_horizon` key of the
-payload the `:notify` behavior publishes, and the third argument of a custom
-`behavior` or `disallowed_behavior` proc declared with four parameters. Code that
-parses that value as a version, for example with `Gem::Version.new`, now raises; read
-the removal version from the warning text instead, which names it once it is decided.
-
 ---
 
 ## Upgrading to v5.x
@@ -914,7 +687,7 @@ the removal version from the warning text instead, which names it once it is dec
 ### Overview
 
 v5.0.0 replaces the internal architecture while keeping the v4.x API working
-for most users. Most v4.x code requires **no changes** to run on v5.x.
+for most users. Most v4.x code runs on v5.x without changes.
 
 The new architecture introduces a layered design (`Git::Commands`,
 `Git::Repository`, and associated parsers). Compatibility shims, deprecated
@@ -927,8 +700,8 @@ The [Breaking changes](#breaking-changes) section describes them, followed by
 [Deprecated methods](#deprecated-methods) that still work in v5.x but are
 removed in v6.0.0.
 
-For information on how to suppress or configure deprecation warnings, see the
-[Deprecations](README.md#deprecations) section of the README.
+To suppress or configure deprecation warnings, see the [Deprecations](README.md#deprecations)
+section of the README.
 
 Changes at a glance:
 
@@ -977,7 +750,7 @@ require 'git/base'
 require 'git'
 ```
 
-**Public API is preserved.** `Git::Repository` provides every method that
+**The public API is unchanged.** `Git::Repository` provides every method that
 `Git::Base` did. Code that calls methods on the object returned by `Git.open`
 (e.g., `repo.commit`, `repo.status`, `repo.add`) requires no changes.
 
@@ -990,7 +763,7 @@ Move custom repository helpers to an application-owned extension module and
 include or prepend that module into `Git::Repository` during application setup:
 
 ```ruby
-# Deprecated in v5.x and will be removed in v6.0.0
+# Deprecated in v5.x and removed in v6.0.0
 module Git::Base
   def worktree_clean?
     status.changed.empty?
@@ -1066,17 +839,15 @@ exposed a `#lib` method that gave access to `Git::Lib`, the gem's internal
 implementation class. `Git::Lib` is removed in v5.0.0.
 
 In v5.x, calling `#lib` on a repo object returns `self` with a deprecation
-warning. This means `g.lib.some_method(args)` is forwarded to
-`g.some_method(args)`, but only if `some_method` exists on `Git::Repository`.
-Methods that were unique to `Git::Lib` and have no counterpart on
-`Git::Repository` raise `NoMethodError` immediately. The `#lib` method itself
-is removed in v6.0.0.
+warning, so `g.lib.some_method(args)` calls `g.some_method(args)`, but only if
+`some_method` exists on `Git::Repository`. Methods that were unique to `Git::Lib`
+and have no counterpart on `Git::Repository` raise `NoMethodError` immediately.
+The `#lib` method itself is removed in v6.0.0.
 
-Most public behavior previously accessible via `g.lib.*` is available directly
-on the repository object (`g.*`). See the tables below for every affected
-method.
+Most of what `g.lib.*` exposed is available directly on the repository object
+(`g.*`). See the tables below for every affected method.
 
-##### Methods that work via the `#lib` shim (with deprecation warning)
+##### Methods that work through the `#lib` shim (with deprecation warning)
 
 The following v4.x `g.lib.*` call shapes are forwarded to their `Git::Repository`
 counterpart by the `#lib` shim, which returns `self`. They emit a deprecation
@@ -1203,7 +974,8 @@ object returned by git commands is unaffected.
 ### Deprecated methods
 
 The following methods are available in v5.x with deprecation warnings and are
-removed in v6.0.0. Migrate to the replacement shown to silence the warnings.
+removed in v6.0.0. Migrate to the replacement shown to silence the warnings. The
+[Removed APIs](#removed-apis) table under "Upgrading to v6.x" indexes these entries.
 
 `Git::GitExecuteError` is not listed here because v6.0.0 keeps it. It has warned since
 v2.0.0 and still warns in v6.0.0; see [`Git::GitExecuteError`
@@ -1212,7 +984,7 @@ replacement.
 
 #### Facade method renames
 
-Five methods were renamed to follow the project's `noun_verb` naming convention.
+v5.x renamed five methods to follow the project's `noun_verb` naming convention.
 The old names continue to work but emit deprecation warnings:
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
@@ -1225,8 +997,8 @@ The old names continue to work but emit deprecation warnings:
 
 #### `Git::Repository` method renames
 
-Seven more `Git::Repository` methods were renamed in v5.x. The old names continue
-to work but emit deprecation warnings. Each old name returns exactly what its
+v5.x renamed seven more `Git::Repository` methods. The old names continue to work
+but emit deprecation warnings. Each old name returns exactly what its
 replacement returns, except `branches_all`.
 
 > **Return shape change.** `g.branches_all` returns an `Array` of 4-element
@@ -1313,9 +1085,9 @@ translated to the v5.x form shown below.
 #### v4.x-style configuration methods
 
 The v4.x `config` and `global_config` methods accepted varying argument shapes
-to read, write, or list configuration. These are replaced by separate,
+to read, write, or list configuration. v5.x replaces them with separate,
 purpose-named methods. The same applies to the module-level
-`Git.global_config`, which is replaced by `Git.config_get`, `Git.config_set`,
+`Git.global_config`, whose replacements are `Git.config_get`, `Git.config_set`,
 and `Git.config_list` called with `global: true`.
 
 > **Return type change.** The v4.x `g.config(name)` and `Git.global_config(name)`
@@ -1395,7 +1167,7 @@ return an immutable `Git::AuthorInfo` value object instead of the mutable
 
 `Git::AuthorInfo` exposes the same `name`, `email`, and `date` readers, so code
 that only reads these attributes needs no changes. Code that mutated a
-`Git::Author` (via `name=`, `email=`, or `date=`) must be updated:
+`Git::Author` through `name=`, `email=`, or `date=` has to change.
 `Git::AuthorInfo` is frozen, and `#with` returns a modified copy rather than
 updating in place (e.g. `info = info.with(name: 'New Name')`).
 
@@ -1455,9 +1227,9 @@ The legacy methods and classes are deprecated and removed in v6.0.0:
 `Git::Repository#stash_list`, `Git::Stash`, and `Git::Stashes`. Constructing a
 `Git::Stash` or `Git::Stashes` emits one warning per object.
 
-> **Ordering flip.** `g.stashes_all` returns entries **oldest first** with a
+> **Ordering flip.** `g.stashes_all` returns entries oldest first with a
 > sequential index of its own (`0` is the oldest). `g.stash_infos` returns entries
-> **newest first**, the order `git stash list` uses, and `Git::StashInfo#index` is
+> newest first, the order `git stash list` uses, and `Git::StashInfo#index` is
 > git's own `stash@{N}` number (`0` is the newest). `g.stashes_all.first` is
 > `g.stash_infos.last`. Code that reads an entry by position must reverse the
 > array or the index.
@@ -1475,17 +1247,16 @@ new `Git::StashInfo`, or `nil` when there were no local changes, so a truthiness
 check such as `if g.stash_push(message: 'WIP')` still works.
 
 `g.stash_list` returned the `git stash list` text as a String. Build that text from
-`g.stash_infos` if you need it. In v6.0.0, `stash_list` returns
-`Array<Git::StashInfo>`, the same value as `stash_infos`, and `stash_infos` stays as
-a permanent alias. Move String callers of `stash_list` to `stash_infos` before
-upgrading so the return type change cannot go unnoticed.
+`g.stash_infos` if you need it. In v6.0.0 `stash_list` returns what `stash_infos`
+returns (see [`stash_list` returns an Array of
+`Git::StashInfo`](#stash_list-returns-an-array-of-gitstashinfo)), so move String
+callers of `stash_list` to `stash_infos` before upgrading so the return type change
+cannot go unnoticed.
 
-> **`stash_store` return value in v6.0.0:** on v5.x, `g.stash_store` returns
-> the top entry of the stash list after the store, which is `nil` when the list
-> is empty. In v6.0.0 it returns the entry for the commit it stored and raises
-> `Git::UnexpectedResultError` when that entry is missing, so its return value
-> is always a `Git::StashInfo`. An annotated tag name then stores the tagged
-> commit rather than the tag object.
+> **`stash_store` in v6.0.0.** On v5.x, `g.stash_store` returns the top entry of
+> the stash list after the store, which is `nil` when the list is empty. v6.0.0
+> changes that; see [`stash_store` raises when the stored entry is
+> missing](#stash_store-raises-when-the-stored-entry-is-missing).
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
 |-----------------------------------------------------|-------------|
@@ -1758,11 +1529,10 @@ warn.
 > **Missing tags.** `g.tag(name)` raises `Git::UnexpectedResultError` when no tag
 > has that name. `g.tag_list(name).first` returns `nil`.
 >
-> **`tag_create` when the new tag is missing in v6.0.0:** on v5.x, `g.tag_create`
-> returns `nil` when the tag it has just created is missing from the tag list
-> (for example, another process deleted it before the lookup). In v6.0.0 it
-> raises `Git::UnexpectedResultError` instead, so its return value is always a
-> `Git::TagInfo`.
+> **`tag_create` in v6.0.0.** On v5.x, `g.tag_create` returns `nil` when the tag it
+> has just created is missing from the tag list. v6.0.0 raises instead; see
+> [`tag_create` raises when the created tag is
+> missing](#tag_create-raises-when-the-created-tag-is-missing).
 >
 > **Deleting through `tag_add`.** `g.tag_add(name, d: true)`, which was already
 > deprecated, deletes the tag and emits a second warning pointing at
@@ -1820,7 +1590,7 @@ In the table, `name` is the tag name, `t` is a `Git::Object::Tag`, `info` is the
 #### `Git::Status` deprecated
 
 Starting in v5.4.0, `Git::Status`, `Git::Status::StatusFile`, and
-`Git::Repository#status` are deprecated and will be removed in v6.0.0. Read the
+`Git::Repository#status` are deprecated and are removed in v6.0.0. Read the
 index and working tree state through `Git::Repository#status_info`, which
 returns an immutable `Git::StatusInfo` holding one `Git::StatusFileInfo` per
 path that `git status --porcelain=v2` reports. Calling `g.status` emits one
@@ -1937,9 +1707,12 @@ it constructs, and `g.worktree(dir).add` emits one for `g.worktree` and one for
 > given at construction to the path, so entries from `g.worktrees` read
 > `"/path/to/wt <sha>"`. `Git::WorktreeInfo#to_s` is the path alone.
 >
-> **`worktree_add` return type in v6.0.0:** on v5.x, `worktree_add` returns the
+> **`worktree_add` in v6.0.0.** On v5.x, `worktree_add` returns the
 > `git worktree add` output (`"HEAD is now at …"`). In v6.0.0 it returns the new
-> `Git::WorktreeInfo` instead. To get the entry today, look it up after the add:
+> `Git::WorktreeInfo` instead (see [`worktree_add` returns `Git::WorktreeInfo` and
+> raises when the worktree is
+> missing](#worktree_add-returns-gitworktreeinfo-and-raises-when-the-worktree-is-missing)).
+> To get the entry today, look it up after the add:
 > `g.worktree_list.find { |w| File.identical?(w.path, dir) }`. Compare with
 > `File.identical?`, not string equality: git stores worktree paths with
 > symlinks resolved, so `/tmp/...` on macOS is listed as `/private/tmp/...`,
