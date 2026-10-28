@@ -210,7 +210,7 @@ jobs:
   # though they are the default experience for any contributor whose shell locale is not
   # English -- so a spec that matches an English git message passes here and fails for
   # them, on code they did not touch. This job is what stops such a spec from reaching
-  # main. See issue #1670.
+  # this branch. See issue #1670.
   #
   # German because git's `de` translation is close enough to complete that a
   # message-matching assumption cannot hide behind a string that was never translated.
