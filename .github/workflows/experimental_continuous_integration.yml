@@ -2,7 +2,7 @@ name: CI Experimental
 
 on:
   push:
-    branches: [main]
+    branches: [5.x]
 
   workflow_dispatch:
 
