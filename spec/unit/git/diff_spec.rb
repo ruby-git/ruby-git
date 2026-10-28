@@ -155,11 +155,12 @@ RSpec.describe Git::Diff do
     subject(:result) { described_instance.name_status }
 
     let(:name_status_hash) { { 'lib/foo.rb' => 'M', 'README.md' => 'A' } }
+    let(:path_status) { instance_double(Git::DiffPathStatus, to_h: name_status_hash) }
 
     it 'returns the path-to-status hash from DiffPathStatus' do
-      allow(repository_base).to receive(:diff_name_status)
+      allow(repository_base).to receive(:diff_path_status)
         .with('HEAD~1', 'HEAD', path_limiter: nil)
-        .and_return(name_status_hash)
+        .and_return(path_status)
       expect(result).to eq(name_status_hash)
     end
   end

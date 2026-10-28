@@ -11,6 +11,7 @@ to update your code when upgrading from the preceding major version.
   - [Minimum activesupport version](#minimum-activesupport-version)
   - [Renamed facade methods removed](#renamed-facade-methods-removed)
   - [Renamed `Git::Repository` methods removed](#renamed-gitrepository-methods-removed)
+  - [Renamed `Git::Repository` aliases removed](#renamed-gitrepository-aliases-removed)
   - [`Git::Object::Tag` removed](#gitobjecttag-removed)
   - [`Git::CommandLineResult` removed](#gitcommandlineresult-removed)
   - [`Git::Repository#lib` removed](#gitrepositorylib-removed)
@@ -48,6 +49,7 @@ to update your code when upgrading from the preceding major version.
   - [Deprecated methods](#deprecated-methods)
     - [Facade method renames](#facade-method-renames)
     - [`Git::Repository` method renames](#gitrepository-method-renames)
+    - [`Git::Repository` alias renames](#gitrepository-alias-renames)
     - [`Git::Repository` option renames](#gitrepository-option-renames)
     - [v4.x-style configuration methods](#v4x-style-configuration-methods)
     - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
@@ -184,6 +186,20 @@ and `branches_all`. Each one warned throughout v5.x and named its replacement:
 renames](#gitrepository-method-renames) table under "Upgrading to v5.x" is the
 migration reference, including the expression that reproduces the `branches_all`
 tuples from `branch_list`.
+
+### Renamed `Git::Repository` aliases removed
+
+v6.0.0 removes the eight `Git::Repository` aliases that v5.x deprecated:
+`object_contents`, `object_size`, `object_type`, `commit_data`, `tag_data`,
+`revparse`, `namerev`, and `diff_name_status`. Each one warned from v5.7.0 and
+named its replacement: `cat_file_contents`, `cat_file_size`, `cat_file_type`,
+`cat_file_commit`, `cat_file_tag`, `rev_parse`, `name_rev`, and
+`diff_path_status`. The [`Git::Repository` alias renames](#gitrepository-alias-renames)
+table under "Upgrading to v5.x" is the migration reference. `diff_name_status`
+callers that passed `:path` must also switch to `:path_limiter`; see the
+`diff_path_status` bullet under [`Git::Repository` option shims
+removed](#gitrepository-option-shims-removed). `cat_file` is not affected: it
+stays as a legacy name for `cat_file_contents`.
 
 ### `Git::Object::Tag` removed
 
@@ -1239,6 +1255,28 @@ replacement returns, except `branches_all`.
 | `g.is_remote_branch?(name)` | `g.remote_branch?(name)` |
 | `g.is_branch?(name)` | `g.branch?(name)` |
 | `g.branches_all` | `g.branch_list`. Returns `Array<Git::BranchInfo>`; see the return shape change above |
+
+#### `Git::Repository` alias renames
+
+Eight `Git::Repository` methods have a second, older name carried over from v4.x.
+Releases before v5.7.0 kept the older names as aliases with no warning. From
+v5.7.0 on, each old name emits a deprecation warning. Each old name takes the
+same arguments and returns exactly what its replacement returns.
+
+> **`diff_name_status`:** a `:path` option emits its own deprecation warning
+> after the method-name warning. Pass `:path_limiter` instead, as described
+> under [`Git::Repository` option renames](#gitrepository-option-renames) below.
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.object_contents(object)` | `g.cat_file_contents(object)` |
+| `g.object_size(object)` | `g.cat_file_size(object)` |
+| `g.object_type(object)` | `g.cat_file_type(object)` |
+| `g.commit_data(object)` | `g.cat_file_commit(object)` |
+| `g.tag_data(object)` | `g.cat_file_tag(object)` |
+| `g.revparse(objectish)` | `g.rev_parse(objectish)` |
+| `g.namerev(commit_ish)` | `g.name_rev(commit_ish)` |
+| `g.diff_name_status(from, to, opts)` | `g.diff_path_status(from, to, opts)` |
 
 #### `Git::Repository` option renames
 

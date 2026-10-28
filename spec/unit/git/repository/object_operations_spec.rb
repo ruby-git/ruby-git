@@ -134,10 +134,18 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
-  describe '#object_contents' do
-    it 'is an alias for #cat_file_contents' do
-      expect(described_class.instance_method(:object_contents))
-        .to eq(described_class.instance_method(:cat_file_contents))
+  describe '#cat_file' do
+    subject(:result) { described_instance.cat_file('HEAD:README.md') }
+
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
+
+    before do
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
+      allow(raw_command).to receive(:call).with('HEAD:README.md', p: true).and_return(command_result("# Hello\n"))
+    end
+
+    it 'returns the object contents like #cat_file_contents' do
+      expect(result).to eq("# Hello\n")
     end
   end
 
@@ -205,12 +213,6 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
-  describe '#object_size' do
-    it 'is an alias for #cat_file_size' do
-      expect(described_class.instance_method(:object_size)).to eq(described_class.instance_method(:cat_file_size))
-    end
-  end
-
   describe '#cat_file_type' do
     let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
 
@@ -275,12 +277,6 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
-  describe '#object_type' do
-    it 'is an alias for #cat_file_type' do
-      expect(described_class.instance_method(:object_type)).to eq(described_class.instance_method(:cat_file_type))
-    end
-  end
-
   describe '#cat_file_commit' do
     let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
 
@@ -326,12 +322,6 @@ RSpec.describe Git::Repository::ObjectOperations do
         allow(Git::Parsers::CatFile).to receive(:parse_commit).and_return(parsed_commit)
         expect(result).to eq(parsed_commit)
       end
-    end
-  end
-
-  describe '#commit_data' do
-    it 'is an alias for #cat_file_commit' do
-      expect(described_class.instance_method(:commit_data)).to eq(described_class.instance_method(:cat_file_commit))
     end
   end
 
@@ -398,12 +388,6 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
-  describe '#tag_data' do
-    it 'is an alias for #cat_file_tag' do
-      expect(described_class.instance_method(:tag_data)).to eq(described_class.instance_method(:cat_file_tag))
-    end
-  end
-
   describe '#rev_parse' do
     let(:rev_parse_command) { instance_double(Git::Commands::RevParse) }
 
@@ -451,12 +435,6 @@ RSpec.describe Git::Repository::ObjectOperations do
         allow(rev_parse_command).to receive(:call).with('9b9b31e', '--', revs_only: true).and_return(rev_parse_result)
         expect(result).to eq(sha)
       end
-    end
-  end
-
-  describe '#revparse' do
-    it 'is an alias for #rev_parse' do
-      expect(described_instance.method(:revparse)).to eq(described_instance.method(:rev_parse))
     end
   end
 
@@ -743,12 +721,6 @@ RSpec.describe Git::Repository::ObjectOperations do
         allow(name_rev_command).to receive(:call).with(nil).and_return(command_result("undefined\n"))
         expect { described_instance.name_rev(nil) }.not_to raise_error
       end
-    end
-  end
-
-  describe '#namerev' do
-    it 'is an alias for #name_rev' do
-      expect(described_class.instance_method(:namerev)).to eq(described_class.instance_method(:name_rev))
     end
   end
 

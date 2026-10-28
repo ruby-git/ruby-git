@@ -645,28 +645,6 @@ RSpec.describe Git::Repository::Diffing do
     end
   end
 
-  describe '#diff_name_status' do
-    subject(:result) { described_instance.diff_name_status }
-
-    let(:raw_output) { ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" }
-    let(:diff_result) { command_result(raw_output) }
-
-    it 'delegates to the diff command with the default ref and raw format options' do
-      expect(diff_command).to receive(:call).with(
-        'HEAD',
-        raw: true, numstat: true, shortstat: true,
-        src_prefix: 'a/', dst_prefix: 'b/',
-        path: nil
-      ).and_return(diff_result)
-      subject
-    end
-
-    it 'returns a Git::DiffPathStatus' do
-      allow(diff_command).to receive(:call).and_return(diff_result)
-      expect(result).to be_a(Git::DiffPathStatus)
-    end
-  end
-
   describe '#diff_stats' do
     subject(:result) { described_instance.diff_stats(obj1, obj2, **opts) }
 
