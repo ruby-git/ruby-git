@@ -41,8 +41,8 @@ Releases are **fully automated** via
 `.github/workflows/release.yml` workflow:
 
 1. Developers merge PRs with **conventional commit** messages into a release
-   branch: `main` for the next major, or a maintenance branch such as `5.x` or
-   `4.x` for a patch or minor release of an earlier series
+   branch: `main` for the next major, or a maintenance branch such as `5.x` for a
+   patch or minor release of an earlier series
 2. release-please automatically opens (and keeps updated) a **release PR** that
    bumps `lib/git/version.rb` and regenerates `CHANGELOG.md`
 3. When a maintainer merges the release PR, release-please creates a **GitHub
@@ -79,7 +79,7 @@ manually edit `lib/git/version.rb` or `CHANGELOG.md`.
 
 Before a maintainer merges a release PR:
 
-1. **Ensure CI passes on the release branch** (`main`, `5.x`, or `4.x`):
+1. **Ensure CI passes on the release branch** (`main` or `5.x`):
 
    ```bash
    bundle exec rake default
@@ -152,13 +152,15 @@ On the new branch:
       The copy requires the same status checks as `main`. Until the next item lands,
       the only PR that can satisfy them is that item's own, whose head carries the
       triggers.
-- [ ] Add the branch to the `push` trigger and the release job guard in `release.yml`,
-      to the `pull_request` triggers in `continuous_integration.yml` and
-      `enforce_conventional_commits.yml`, and to the `push` trigger in
-      `warm_bundler_caches.yml`, all under `.github/workflows/`. The workflow that
-      runs is the one on the branch pushed to or targeted, and a Bundler cache is
-      readable only from the ref that wrote it, its base ref, and the default branch,
-      so the copies on `main` need no change.
+- [ ] On the new branch's copies of `release.yml`, `continuous_integration.yml`,
+      `enforce_conventional_commits.yml`, and `warm_bundler_caches.yml` under
+      `.github/workflows/`, make every branch filter name only the new branch. If that
+      copy of `release.yml` has a "Require a release branch" step guarding
+      `workflow_dispatch`, make it accept only the new branch too. The workflow that
+      runs is the one on the branch pushed to or targeted, so a branch named in another
+      branch's copy is never consulted, and a Bundler cache is readable only from the
+      ref that wrote it, its base ref, and the default branch. The copies on `main` list
+      only `main` and need no change.
 - [ ] Expect release-please to open a release PR from the new branch as soon as this
       PR merges. No commit type is hidden in `.release-please-config.json`, so the
       workflow and docs commits alone propose the next patch. Leave that release PR
@@ -208,15 +210,15 @@ and is checked when each removal PR merges, not here.
 
 - [ ] Add a README announcement entry dated the release day.
 - [ ] Support for the oldest maintenance branch ends with this release (see the release
-      support policy in `README.md`). Retire it everywhere it is named. In the workflow
-      triggers and release job guard under `.github/workflows/`, replace it with the
-      newer maintenance branch, which the cutting step left out of the copies on
-      `main`. Everywhere else the newer branch is already listed, so remove the retired
-      one: the branch tables in `.github/copilot-instructions.md` and
-      `CONTRIBUTING.md`, the release support policy in `README.md`, the protected
-      branch list in `.husky/pre-commit`, and the skills that list the protected
-      branches. `grep -rn '<M>\.x' .github .husky CONTRIBUTING.md README.md`, with the
-      retired branch's major in place of `<M>`, finds them all.
+      support policy in `README.md`). Retire it everywhere it is named. The newer
+      branch is already listed in each place, so remove the retired one: the branch
+      tables in `.github/copilot-instructions.md` and `CONTRIBUTING.md`, the release
+      support policy in `README.md`, the protected branch list in `.husky/pre-commit`,
+      and the skills that list the protected branches. The workflow copies on `main`
+      list only `main`; if one still names the retired branch, remove it rather than
+      swapping in the newer branch.
+      `grep -rn '<M>\.x' .github .husky CONTRIBUTING.md README.md`, with the retired
+      branch's major in place of `<M>`, finds them all.
 - [ ] Close the milestone and update the roadmap issue.
 
 ## What NOT to Do

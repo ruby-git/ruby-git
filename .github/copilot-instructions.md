@@ -30,9 +30,8 @@ fine to use `#` in footer values such as `Closes: #999` or `Refs: #999`.
 
 | Target | When |
 | --- | --- |
-| `main` | New features, breaking changes, all active development. Its next release is v6.0.0; every further v5.x release is cut from `5.x` |
+| `main` | New features, breaking changes, all active development. It releases the v6.x series; every v5.x release is cut from `5.x` |
 | `5.x` | Security fixes, backward-compatible bug fixes, and backward-compatible features at the maintainers' discretion for the v5.x series |
-| `4.x` | Security fixes, backward-compatible bug fixes, and backward-compatible features at the maintainers' discretion for the v4.x series |
 
 A fix that changes the class of a raised exception is a backward-compatible bug fix
 only when every `rescue` clause that caught the old class still catches the new one:

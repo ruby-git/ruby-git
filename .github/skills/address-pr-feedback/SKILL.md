@@ -43,9 +43,9 @@ plugin source to your context and proceed the same way.
 
 ## Changes and additions for ruby-git
 
-- **Protected branches** — never rewrite history on `main`, `5.x`, or `4.x`.
+- **Protected branches** — never rewrite history on `main` or `5.x`.
   Wherever the workflow says "the default branch or a release/maintenance branch",
-  it means exactly those three here.
+  it means exactly those branches here.
 - **Local CI** — before folding changes into commits, the project's local CI
   equivalent is:
 

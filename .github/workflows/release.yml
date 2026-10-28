@@ -10,7 +10,7 @@ name: Release Gem
 
 on:
   push:
-    branches: ["main", "4.x"]
+    branches: ["main"]
 
   workflow_dispatch:
 
