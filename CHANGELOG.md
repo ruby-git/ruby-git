@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [5.7.0](https://github.com/ruby-git/ruby-git/compare/v5.6.1...v5.7.0) (2026-10-28)
+
+
+### Features
+
+* **repository:** Deprecate the eight renamed facade aliases with warnings that name v6.0.0 ([8339117](https://github.com/ruby-git/ruby-git/commit/8339117e9fff5a1acadea73b4ccd385a5b0f1497)), closes [#1923](https://github.com/ruby-git/ruby-git/issues/1923) [#1924](https://github.com/ruby-git/ruby-git/issues/1924)
+
 ## [5.6.1](https://github.com/ruby-git/ruby-git/compare/v5.6.0...v5.6.1) (2026-09-16)
 
 
