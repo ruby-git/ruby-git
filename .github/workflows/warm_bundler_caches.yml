@@ -18,9 +18,9 @@ name: Warm Bundler Caches
 # absent: that workflow already runs on `push: [main]` and warms its own caches.
 #
 # Only `main` is listed below. A run's readable caches are its own ref, its base ref,
-# and the default branch, so warming 4.x would need this file backported to the 4.x
-# branch with that branch's own matrix -- the copy on main is never what runs for a
-# push to 4.x.
+# and the default branch, so warming a maintenance branch needs this file on that
+# branch with its own matrix -- the copy on main is never what runs for a push to a
+# maintenance branch.
 on:
   push:
     branches: [main]

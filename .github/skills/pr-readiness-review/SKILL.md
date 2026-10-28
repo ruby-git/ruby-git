@@ -145,16 +145,16 @@ Execute and report results for:
 
 Before creating the PR, confirm the branch situation:
 
-- [ ] Changes are on a feature branch (not `main`, `5.x`, or `4.x`), named
+- [ ] Changes are on a feature branch (not `main` or `5.x`), named
   `<type>/<short-description>`
 - [ ] Branch targets the correct base: `main` for features/breaking changes;
-  `5.x` or `4.x` for backports of fixes already on `main` that pass the
+  `5.x` for backports of fixes already on `main` that pass the
   rescue-compatibility test in
   [Branch & PR Strategy](../../copilot-instructions.md#branch--pr-strategy), and for
   security fixes and backward-compatible changes that apply only to that series
 
 **If changes are on the wrong branch:** Create a new branch from the appropriate
-base (`origin/main`, `origin/5.x`, or `origin/4.x`) and relocate the existing work using the
+base (`origin/main` or `origin/5.x`) and relocate the existing work using the
 most appropriate Git approach — cherry-pick (specific commits), rebase (linear
 history), or recommit (uncommitted changes) — based on the situation.
 

@@ -128,7 +128,7 @@ bin/setup
 3. Run `npm install` (when npm is available) to install the Conventional Commit
    `commit-msg` hook used by this project (Husky + commitlint). A separate
    `pre-commit` hook is also installed that blocks direct commits to the
-   protected branches (`main`, `5.x`, `4.x`).
+   protected branches (`main`, `5.x`).
 4. Verify the toolchain by running `bundle exec rake --tasks`.
 
 `bin/setup` checks for [lychee](https://lychee.cli.rs) alongside Ruby, git, and
@@ -197,7 +197,7 @@ Once your pull request is ready for review, request a review from at least one
 
 During the review process, you may need to make additional commits; squash them.
 You will also need to rebase your branch onto the latest version of the target
-branch (e.g., `main`, `5.x`, or `4.x`) before merging.
+branch (e.g., `main` or `5.x`) before merging.
 
 At least one approval from a project maintainer is required before your pull request
 can be merged. The maintainer is responsible for ensuring that the pull request meets
@@ -223,12 +223,12 @@ This project maintains `main` plus one maintenance branch for each supported pre
 major series:
 
 - **`main`**: All development. It releases the next version of the gem, including
-  the next major version. Its next release is v6.0.0; every further v5.x release is
-  cut from `5.x`.
-- **`5.x`** and **`4.x`**: The maintenance branches for the v5.x and v4.x series. Each
-  receives bug fixes and security fixes, and backward-compatible features at the
-  maintainers' discretion. A fix that changes the class of a raised exception is
-  backported only when it passes the rescue-compatibility test in
+  the next major version. It releases the v6.x series; every v5.x release is cut from
+  `5.x`.
+- **`5.x`**: The maintenance branch for the v5.x series. It receives bug fixes and
+  security fixes, and backward-compatible features at the maintainers' discretion. A
+  fix that changes the class of a raised exception is backported only when it passes
+  the rescue-compatibility test in
   [Branch & PR Strategy](.github/copilot-instructions.md#branch--pr-strategy).
 
 The README's [Release support policy](README.md#release-support-policy) says how long
@@ -1116,8 +1116,7 @@ $ LIST_UNCOVERED_DETAIL=true bundle exec rake spec:unit
 $ open coverage/index.html
 ```
 
-This policy applies to `main` and `5.x`. The `4.x` maintenance branch predates it and
-is not held to these thresholds.
+This policy applies to `main` and `5.x`.
 
 #### Unit tests vs integration tests
 

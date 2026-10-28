@@ -159,9 +159,9 @@ clean baseline, and create a clear implementation plan before writing any code.
 1. **Check Uncommitted Changes:** If there are any uncommitted changes in the
    project, ask the user what to do with them before continuing: include them in the
    current implementation plan, ignore them, or stash them before continuing.
-2. **Create Feature Branch:** Decide the target branch first: `main`, `5.x`, or
-   `4.x` per the [branch strategy](../../../CONTRIBUTING.md#branch-strategy). Then
-   create a new branch from `origin/<target-branch>` using the naming convention
+2. **Create Feature Branch:** Decide the target branch first: `main` or `5.x` per
+   the [branch strategy](../../../CONTRIBUTING.md#branch-strategy). Then create a
+   new branch from `origin/<target-branch>` using the naming convention
    `<type>/<short-description>` (e.g., `fix/issue-999`).
 3. **Verify Project Setup:** Run `bin/setup` to ensure that the project is ready
    for development.
