@@ -40,6 +40,7 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
   - [Deprecation policy](#deprecation-policy)
   - [Release support policy](#release-support-policy)
 - [Project announcements](#project-announcements)
+  - [2026-10-28: v6.0.0 released](#2026-10-28-v600-released)
   - [2026-09-04: v5.x releases move to the 5.x branch](#2026-09-04-v5x-releases-move-to-the-5x-branch)
   - [2026-09-04: Retired branches deleted](#2026-09-04-retired-branches-deleted)
   - [2026-08-23: v5.x deprecations and the v6.0.0 roadmap](#2026-08-23-v5x-deprecations-and-the-v600-roadmap)
@@ -489,19 +490,35 @@ for how to configure the warnings.
 ### Release support policy
 
 All development happens on `main`, which releases the next version of the gem,
-including the next major version. The next release from `main` is v6.0.0. Every
-further v5.x release is cut from `5.x`.
+including the next major version. `main` releases the v6.x series; every v5.x release
+is cut from `5.x`.
 
 Each supported previous major series is maintained on a branch named for that
-series, currently `5.x` and `4.x`. These branches receive bug fixes and security
-fixes, and backward-compatible features at the maintainers' discretion. Fixes land on
-`main` first and are backported, except a fix for a problem that exists only in a
+series, currently `5.x`. A maintenance branch receives bug fixes and security fixes,
+and backward-compatible features at the maintainers' discretion. Fixes land on `main`
+first and are backported, except a fix for a problem that exists only in a
 maintenance branch, which targets that branch directly.
 
-Support for a major series ends when the second major after it is released. v4.x is
-supported until v6.0.0 ships, and v5.x until v7.0.0.
+Support for a major series ends when the second major after it is released. v4.x
+support ended when v6.0.0 shipped, and v5.x is supported until v7.0.0 ships.
 
 ## Project announcements
+
+### 2026-10-28: v6.0.0 released
+
+On October 28, 2026, we released v6.0.0. It removes the APIs that v5.x deprecated,
+except `Git::GitExecuteError`, which still warns. It raises the minimum Ruby version
+to 3.3 and the minimum git version to 2.43.0, requires addressable 2.9.x and
+activesupport 7.0.9 or later, and changes a few behaviors that had no deprecation
+path. [Upgrading to v6.x](UPGRADING.md#upgrading-to-v6x) is the migration guide.
+Start with its "Before you upgrade" steps, and read [Changes the deprecation run does
+not catch or does not explain](UPGRADING.md#changes-the-deprecation-run-does-not-catch-or-does-not-explain)
+even if your test suite is already free of deprecation warnings.
+
+Support for v4.x ended with this release, per the
+[Release support policy](#release-support-policy). v5.x continues to receive bug fixes
+and security fixes from the `5.x` branch until v7.0.0 ships, and the next major release
+from `main` is v7.0.0.
 
 ### 2026-09-04: v5.x releases move to the `5.x` branch
 
