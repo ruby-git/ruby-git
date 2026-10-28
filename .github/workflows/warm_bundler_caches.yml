@@ -14,17 +14,16 @@ name: Warm Bundler Caches
 # The matrix below must stay in sync with continuous_integration.yml: setup-ruby's
 # cache key embeds the runner OS, the resolved Ruby version, and the Gemfile.lock hash,
 # so a pair that is not warmed here still starts cold in CI. That includes the lint
-# job's Ruby 3.4 and the Windows 3.2 job, neither of which appears in CI's main matrix
-# list. The head rubies from experimental_continuous_integration.yml are deliberately
-# absent: that workflow already runs on `push: [main]` and warms its own caches.
+# job's Ruby 3.4 and the Windows 3.2 job, neither of which appears in CI's build-job
+# matrix list. The head rubies from experimental_continuous_integration.yml are
+# deliberately absent: that workflow already runs on `push: [5.x]` and warms its own
+# caches.
 #
-# The same scoping means a maintenance branch is warmed only by the copy of this file
-# on that branch, with that branch's own matrix -- the copy on main is never what runs
-# for a push to a maintenance branch. This copy lists `5.x` because it lives on the
-# 5.x branch; 4.x carries no copy and is not warmed.
+# The same scoping means a branch is warmed only by the copy of this file on that
+# branch, with that branch's own matrix, so this copy lists only `5.x`.
 on:
   push:
-    branches: [main, 5.x]
+    branches: [5.x]
 
   workflow_dispatch:
 

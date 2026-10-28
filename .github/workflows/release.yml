@@ -10,7 +10,7 @@ name: Release Gem
 
 on:
   push:
-    branches: ["main", "4.x", "5.x"]
+    branches: ["5.x"]
 
   workflow_dispatch:
 
@@ -35,7 +35,7 @@ jobs:
       - name: Require a release branch
         run: |
           case "$GITHUB_REF" in
-            refs/heads/main | refs/heads/4.x | refs/heads/5.x) ;;
+            refs/heads/5.x) ;;
             *) echo "::error::$GITHUB_REF is not a release branch"; exit 1 ;;
           esac
 
