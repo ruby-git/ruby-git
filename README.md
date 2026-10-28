@@ -15,10 +15,12 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 [![AI Policy](https://img.shields.io/badge/AI%20Policy-Doc-blue)](AI_POLICY.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **This branch is unreleased v6.0.0 development.** The current release series
-> is v5.x, released from the `5.x` branch. v6.0.0 removes the APIs deprecated
-> during v5.x. See [Upgrading to v6.x](UPGRADING.md#upgrading-to-v6x) for what
-> changes.
+> **v6.0.0 is released.** It is a major release that removes the APIs deprecated
+> during v5.x, raises the minimum Ruby version to 3.3 and the minimum git version
+> to 2.43.0, and changes a few behaviors that had no deprecation path. See
+> [Upgrading to v6.x](UPGRADING.md#upgrading-to-v6x) for the migration guide and
+> [CHANGELOG.md](CHANGELOG.md) for full release notes. v5.x continues to receive
+> fixes from the `5.x` branch.
 
 - [Summary](#summary)
 - [Install](#install)
@@ -473,12 +475,16 @@ The recommended way to upgrade across a major version:
    your test suite and, if possible, staging.
 3. Fix each deprecation using the entries in [UPGRADING.md](UPGRADING.md) until the
    suite is clean.
-4. Upgrade to the next major release.
+4. Work through the changes that a clean run does not catch, listed in that major's
+   section of [UPGRADING.md](UPGRADING.md).
+5. Upgrade to the next major release.
 
 Because every deprecation warning is present in the last release of a major series,
-this procedure finds every change the next major requires. The version-specific steps
-are in [UPGRADING.md](UPGRADING.md#upgrading-to-v6x). See
-[Deprecations](#deprecations) for how to configure the warnings.
+steps 2 and 3 find every call to a deprecated API. A major release may also change a
+behavior that had no deprecation path, such as the return type of a method that
+keeps its name; step 4 covers those. The version-specific steps are in
+[UPGRADING.md](UPGRADING.md#upgrading-to-v6x). See [Deprecations](#deprecations)
+for how to configure the warnings.
 
 ### Release support policy
 
