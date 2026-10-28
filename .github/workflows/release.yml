@@ -28,6 +28,20 @@ jobs:
       id-token: write
 
     steps:
+      # workflow_dispatch can be run from any branch or tag, so stop unless the
+      # ref is the branch in the push filter above. Push events are already
+      # limited by that filter, so the step runs only for workflow_dispatch.
+      # The check is a shell step rather than a step-level `if` on the ref:
+      # workflow expressions compare strings case-insensitively, while branch
+      # names are case-sensitive.
+      - name: Require a release branch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          case "$GITHUB_REF" in
+            refs/heads/main) ;;
+            *) echo "::error::$GITHUB_REF is not a release branch"; exit 1 ;;
+          esac
+
       - name: Checkout project
         uses: actions/checkout@v6
 
