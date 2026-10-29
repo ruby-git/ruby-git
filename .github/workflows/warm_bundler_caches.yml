@@ -14,10 +14,10 @@ name: Warm Bundler Caches
 # The matrix below must stay in sync with continuous_integration.yml: setup-ruby's
 # cache key embeds the runner OS, the resolved Ruby version, and the Gemfile.lock hash,
 # so a pair that is not warmed here still starts cold in CI. That includes the lint
-# job's Ruby 3.4 and the Windows 3.2 job, neither of which appears in CI's build-job
-# matrix list. The head rubies from experimental_continuous_integration.yml are
-# deliberately absent: that workflow already runs on `push: [5.x]` and warms its own
-# caches.
+# job's Ruby 3.4, the Windows 3.2 job, and the two pinned engine entries, none of which
+# appears in CI's build-job matrix list. The head rubies from
+# experimental_continuous_integration.yml are deliberately absent: that workflow already
+# runs on `push: [5.x]` and warms its own caches.
 #
 # The same scoping means a branch is warmed only by the copy of this file on that
 # branch, with that branch's own matrix, so this copy lists only `5.x`.
@@ -59,11 +59,13 @@ jobs:
           - ruby: "4.0"
             operating-system: ubuntu-latest
 
+          # Same pinned image as these two entries in continuous_integration.yml, which
+          # explains why they do not run on ubuntu-latest.
           - ruby: "truffleruby-24.2.1"
-            operating-system: ubuntu-latest
+            operating-system: ubuntu-24.04
 
           - ruby: "jruby-10.0.0.1"
-            operating-system: ubuntu-latest
+            operating-system: ubuntu-24.04
 
           - ruby: "3.2"
             operating-system: windows-latest
