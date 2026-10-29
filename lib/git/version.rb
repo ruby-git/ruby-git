@@ -4,7 +4,7 @@ module Git
   # The current gem version
   #
   # @return [String] the current gem version
-  VERSION = '6.0.0'
+  VERSION = '6.0.1'
 
   # Represents a git version with major, minor, and patch components
   #
