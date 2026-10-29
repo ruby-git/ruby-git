@@ -5,6 +5,14 @@
 
 # Change Log
 
+## [5.7.2](https://github.com/ruby-git/ruby-git/compare/v5.7.1...v5.7.2) (2026-10-29)
+
+
+### Other Changes
+
+* Name only 5.x in this branch's workflow triggers ([43919ac](https://github.com/ruby-git/ruby-git/commit/43919ac49d9181ba0144266de935f85770cd33b6))
+* Run the JRuby and TruffleRuby jobs on ubuntu-24.04 ([22261df](https://github.com/ruby-git/ruby-git/commit/22261dfb5f0ca4755dbdebe1a580d6ee5e0b7d83))
+
 ## [5.7.1](https://github.com/ruby-git/ruby-git/compare/v5.7.0...v5.7.1) (2026-10-28)
 
 
