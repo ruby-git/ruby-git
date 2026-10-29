@@ -97,6 +97,7 @@ prerequisite is missing.
 | Bundler | Any 2.x or 4.x | Install with `gem install bundler`. |
 | git | `>= 2.43.0` (matches `git.gemspec` `requirements`) | Older git versions are not supported and the test suite will not pass against them. |
 | Node.js / npm | Optional | Required only to install the local Conventional Commit `commit-msg` hook (Husky + commitlint). If npm is missing, `bin/setup` will warn and continue. CI will still validate commit messages. |
+| [actionlint](https://github.com/rhysd/actionlint) | Optional | Required only to run the GitHub Actions workflow lint locally (`rake lint:actions`), which is not part of the default task. `bin/setup` does not check for it. CI runs the same lint on every pull request. Install with `brew install actionlint` (macOS), `pacman -S actionlint` (Arch), `winget install actionlint` (Windows), `go install github.com/rhysd/actionlint/cmd/actionlint@latest` (any platform with Go), or see the [install docs](https://github.com/rhysd/actionlint/blob/main/docs/install.md). See [Verify the toolchain](#verify-the-toolchain) for the differences between a local run and CI. |
 | [lychee](https://lychee.cli.rs) | `>= 0.24.0` | Runs the markdown link check (`rake markdown:links`), which is part of the default task. The floor comes from [`.lychee.toml`](.lychee.toml): older releases cannot parse the enum form of `include_fragments`. Install with `brew install lychee` (macOS), `snap install lychee` (Ubuntu), `pacman -S lychee` (Arch), `winget install --id lycheeverse.lychee` (Windows), or see the [install docs](https://github.com/lycheeverse/lychee#installation). |
 
 #### A note for Windows contributors
@@ -145,9 +146,11 @@ Once `bin/setup` succeeds, confirm the full test and lint suite passes locally:
 bundle exec rake
 ```
 
-This runs everything CI checks: specs, RuboCop, the markdown link check, YARD,
-and the gem build. It is the canonical way to validate a change before
-requesting review.
+This runs the checks CI applies to Ruby code and markdown: specs, RuboCop, the
+markdown link check, YARD, and the gem build. It does not run the workflow lint
+described below or the Conventional Commits check, which the `commit-msg` hook
+covers locally when npm is installed. It is the canonical way to validate a change
+before requesting review.
 
 One caveat on the `links` task: passing locally does not guarantee the CI job
 passes, and the gap is the environment rather than the tool. A link whose
@@ -155,6 +158,16 @@ capitalization is wrong resolves on a case-insensitive filesystem such as macOS 
 404s on the Linux runner, so `](docs/README.MD)` against a file named `README.md`
 looks fine locally and fails in CI. [`tasks/markdown.rake`](tasks/markdown.rake) lists
 this and the other differences. CI remains the authoritative link check.
+
+The GitHub Actions workflows are linted with
+[actionlint](https://github.com/rhysd/actionlint) by the Workflow Lint CI job. The
+check is not part of the default task and `bin/setup` does not look for it. To run it
+locally before pushing a workflow change, install actionlint (`brew install actionlint`,
+or see its [install docs](https://github.com/rhysd/actionlint/blob/main/docs/install.md))
+and run `bundle exec rake lint:actions`. CI runs the newest actionlint release with
+the runner's shellcheck, so a local run can disagree with the job when the versions
+differ, and a local run without shellcheck on PATH skips the checks CI applies to the
+shell in `run:` steps.
 
 ### Contributor validation policy
 

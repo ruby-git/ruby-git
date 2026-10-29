@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'support/external_tool'
+
 # Markdown link checking with lychee.
 #
 # lychee is a Rust binary rather than a gem, so `bundle install` cannot supply it. It is
@@ -26,25 +28,15 @@
 namespace :markdown do
   desc 'Check markdown links and heading anchors with lychee'
   task :links do
-    # With `exception: true`, `system` raises Errno::ENOENT when it cannot find lychee
-    # and RuntimeError when lychee runs and fails, so no separate probe for the tool is
-    # needed. ENOENT also covers a lychee on PATH whose interpreter is missing (a broken
-    # shim), so the message reports the error rather than asserting lychee is absent.
-    # Any other failure to start lychee propagates with its own error.
-    system('lychee', '--config', '.lychee.toml', '.', exception: true)
-  rescue Errno::ENOENT => e
-    abort <<~MESSAGE
-      Could not start lychee (#{e.message}), and `rake markdown:links` requires it.
-      Either lychee is not installed or not on PATH, or the lychee found on PATH cannot
-      run. Install with one of:
+    install_hint = <<~HINT
+      Install with one of:
         macOS    brew install lychee
         Ubuntu   snap install lychee
         Arch     pacman -S lychee
         Windows  winget install --id lycheeverse.lychee
       Others: https://github.com/lycheeverse/lychee#installation
       Then re-run `bin/setup` to confirm the version, or `rake markdown:links` directly.
-    MESSAGE
-  rescue RuntimeError
-    abort 'rake markdown:links failed'
+    HINT
+    ExternalTool.run(['lychee', '--config', '.lychee.toml', '.'], task: 'markdown:links', install_hint: install_hint)
   end
 end
