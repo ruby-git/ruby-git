@@ -5,6 +5,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Every job only reads the repository. The token GitHub mints for a run has write
+# access by default, which no job here uses, and a read-only token limits what a
+# compromised third-party action could do with it.
+permissions:
+  contents: read
+
 # Cancel an in-progress run when the same PR (or branch) gets a new push. For
 # pull_request events github.ref is refs/pull/<n>/merge, so runs are grouped per PR
 # and pushing a new commit -- or force-pushing during a rebase -- no longer leaves a
