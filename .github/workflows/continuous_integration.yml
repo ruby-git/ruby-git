@@ -107,13 +107,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Only the minimum required versions of JRuby and TruffleRuby are tested.
-        #
-        ruby: ["3.3", "4.0", "truffleruby-24.2.1", "jruby-10.0.0.1"]
+        ruby: ["3.3", "4.0"]
         operating-system: [ubuntu-latest]
         include:
           - ruby: "3.3"
             operating-system: windows-latest
+
+          # Only the minimum required versions of JRuby and TruffleRuby are tested (see the
+          # Ruby version support policy in README.md). setup-ruby builds only the latest
+          # patch of each series for a new runner image, so these pins run on a fixed image
+          # that has them instead of on ubuntu-latest. warm_bundler_caches.yml must use the
+          # same image, so the two files change together.
+          #
+          # ubuntu-24.04 is a dated label that GitHub will retire in time, not a permanent
+          # choice. Before moving the image or dropping the pin, check that ruby/ruby-builder
+          # publishes each pinned release for the new image. Raising the MRI floor does not
+          # remove the pin by itself: an earliest-release floor is rarely the latest patch of
+          # its series, and only the latest patch is built for a newer image.
+          - ruby: "truffleruby-24.2.1"
+            operating-system: ubuntu-24.04
+
+          - ruby: "jruby-10.0.0.1"
+            operating-system: ubuntu-24.04
 
     steps:
       - name: Checkout Code
