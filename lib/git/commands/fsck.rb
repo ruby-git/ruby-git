@@ -52,8 +52,11 @@ module Git
         operand :object, repeatable: true
       end
 
-      # git fsck uses exit codes 0-7 as bit flags for findings
-      allow_exit_status 0..7
+      # git fsck reports findings as bit flags in its exit code: 1 object,
+      # 2 reachable, 4 pack, 8 refs, 16 commit-graph, 32 multi-pack-index and
+      # 64 pack-rev-index. Exit code 128 is excluded because die() uses it too,
+      # so it cannot be told apart from older git's ERROR_BITMAP (128).
+      allow_exit_status 0..127
 
       # @overload call(*object, **options)
       #
@@ -126,7 +129,7 @@ module Git
       #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits outside the allowed range
-      #       (exit code > 7)
+      #       (exit code > 127)
       #
       #     @api public
       #

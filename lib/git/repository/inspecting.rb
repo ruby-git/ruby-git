@@ -240,7 +240,7 @@ module Git
       #   @raise [ArgumentError] when unsupported options are provided
       #
       #   @raise [Git::FailedError] when git exits outside the allowed range (exit
-      #     code > 7)
+      #     code > 127)
       #
       def fsck(*objects, **)
         SharedPrivate.assert_valid_opts!(FSCK_ALLOWED_OPTS, **)

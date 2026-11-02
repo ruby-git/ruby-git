@@ -273,7 +273,19 @@ RSpec.describe Git::Commands::Fsck do
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
-      it 'raises for exit code > 7 (fatal errors)' do
+      it 'handles exit code 8 (refs)' do
+        mock_command('fsck', stderr: "error: refs/heads/points-at-tag: not a commit\n", exitstatus: 8)
+        result = command.call
+        expect(result).to be_a(Git::CommandLine::Result)
+      end
+
+      it 'handles exit code 16 (commit-graph)' do
+        mock_command('fsck', stderr: "error: commit-graph has incorrect fanout value\n", exitstatus: 16)
+        result = command.call
+        expect(result).to be_a(Git::CommandLine::Result)
+      end
+
+      it 'raises for exit code 128 (fatal errors)' do
         mock_command('fsck', stderr: 'fatal: not a git repository', exitstatus: 128)
         expect { command.call }.to raise_error(Git::FailedError)
       end
