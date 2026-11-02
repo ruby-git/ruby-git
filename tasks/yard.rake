@@ -44,6 +44,9 @@ unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
 
   # yard
 
+  # CI runs each of these as its own step in the Lint and Docs job of
+  # .github/workflows/continuous_integration.yml. Add a new one there too.
+  #
   yard_tasks = %i[yard:build]
   yard_tasks << :'yard:lint' if yard_lint_supported
   yard_tasks << :'yard:example-test'

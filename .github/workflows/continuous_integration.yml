@@ -49,8 +49,26 @@ jobs:
           ruby-version: "3.4"
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      - name: Run RuboCop and YARD
-        run: bundle exec rake rubocop yard
+      # Separate steps, not `rake rubocop yard`, because Rake stops at the first failure.
+      # Each step after the first has `if: !cancelled()`, so it runs even when an earlier
+      # step failed. The YARD tasks don't read each other's output.
+      - name: Run RuboCop
+        run: bundle exec rake rubocop
+        timeout-minutes: 15
+
+      - name: Build YARD Docs
+        if: ${{ !cancelled() }}
+        run: bundle exec rake yard:build
+        timeout-minutes: 15
+
+      - name: Lint YARD Docs
+        if: ${{ !cancelled() }}
+        run: bundle exec rake yard:lint
+        timeout-minutes: 15
+
+      - name: Test YARD Examples
+        if: ${{ !cancelled() }}
+        run: bundle exec rake yard:example-test
         timeout-minutes: 15
 
   # Lint the workflow files with actionlint. Run the same check locally with:
