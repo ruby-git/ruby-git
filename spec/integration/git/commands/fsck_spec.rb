@@ -31,6 +31,17 @@ RSpec.describe Git::Commands::Fsck, :integration do
         expect(result.status.exitstatus).to eq(2)
         expect(result.stderr).to include('refs/heads/broken')
       end
+
+      it 'returns exit code 8 when a branch points at a tag object' do
+        tag = repo.tag_create('t', annotate: true, message: 't')
+        # update-ref refuses this; write the files-backend ref directly
+        write_file('.git/refs/heads/points-at-tag', "#{tag.oid}\n")
+
+        result = command.call
+
+        expect(result.status.exitstatus).to eq(8)
+        expect(result.stderr).to include('points-at-tag')
+      end
     end
 
     context 'when the command fails' do
