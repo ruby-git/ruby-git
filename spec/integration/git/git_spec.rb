@@ -565,7 +565,7 @@ RSpec.describe Git, :integration do
 
     # A SHA is reachable through :revision (`git clone --revision`, git 2.49+),
     # which export forwards to clone the same way it forwards :branch.
-    context 'with :revision set to a commit SHA' do
+    context 'with :revision set to a commit SHA', skip: unless_git('2.49.0', 'git clone --revision') do
       let(:options) { { revision: source.rev_parse('topic') } }
 
       it 'exports the tree of that commit' do
