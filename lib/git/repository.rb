@@ -141,12 +141,22 @@ module Git
     # @api private
     def git_version(timeout: nil) = execution_context.git_version(timeout: timeout)
 
+    # Returns the SSH wrapper path, with a leading `~` expanded to the home directory
+    #
     # @return [String, nil] the SSH wrapper path
+    #
+    # @raise [ArgumentError] if the path begins with `~user` for a user that does
+    #   not exist, or with `~` when no home directory can be determined
     #
     # @api private
     def git_ssh = execution_context.git_ssh
 
-    # @return [String, :use_global_config] the path to the git binary
+    # Returns the path to the git binary, with a leading `~` expanded to the home directory
+    #
+    # @return [String] the path to the git binary
+    #
+    # @raise [ArgumentError] if the path begins with `~user` for a user that does
+    #   not exist, or with `~` when no home directory can be determined
     #
     # @api private
     def binary_path = execution_context.binary_path
