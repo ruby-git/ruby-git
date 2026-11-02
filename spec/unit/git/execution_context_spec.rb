@@ -47,6 +47,23 @@ RSpec.describe Git::ExecutionContext do
         expect(Git::ExecutionContext::Global.new(git_ssh: '/usr/bin/ssh').git_ssh).to eq('/usr/bin/ssh')
       end
     end
+
+    context 'when a ~-prefixed path is provided' do
+      include_context 'with a temporary home directory'
+
+      it 'returns the path with ~ expanded to the home directory' do
+        expect(Git::ExecutionContext::Global.new(git_ssh: '~/bin/ssh').git_ssh).to eq(File.join(home_dir, 'bin/ssh'))
+      end
+    end
+
+    context 'when the global config holds a ~-prefixed path' do
+      include_context 'with a temporary home directory'
+
+      it 'returns the path with ~ expanded to the home directory' do
+        allow(Git::Config.instance).to receive(:git_ssh).and_return('~/bin/ssh')
+        expect(Git::ExecutionContext::Global.new.git_ssh).to eq(File.join(home_dir, 'bin/ssh'))
+      end
+    end
   end
 
   describe '#env_overrides' do
@@ -238,6 +255,25 @@ RSpec.describe Git::ExecutionContext do
     context 'when nil is passed explicitly' do
       it 'raises ArgumentError' do
         expect { Git::ExecutionContext::Global.new(binary_path: nil) }.to raise_error(ArgumentError, /binary_path/)
+      end
+    end
+
+    context 'when a ~-prefixed path is provided' do
+      include_context 'with a temporary home directory'
+
+      it 'returns the path with ~ expanded to the home directory' do
+        expect(Git::ExecutionContext::Global.new(binary_path: '~/bin/git').binary_path).to(
+          eq(File.join(home_dir, 'bin/git'))
+        )
+      end
+    end
+
+    context 'when the global config holds a ~-prefixed path' do
+      include_context 'with a temporary home directory'
+
+      it 'returns the path with ~ expanded to the home directory' do
+        allow(Git::Config.instance).to receive(:binary_path).and_return('~/bin/git')
+        expect(Git::ExecutionContext::Global.new.binary_path).to eq(File.join(home_dir, 'bin/git'))
       end
     end
   end

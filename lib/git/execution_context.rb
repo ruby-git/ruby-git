@@ -163,6 +163,10 @@ module Git
     # `Git.configure { |c| c.binary_path = ... }`
     # are reflected per command invocation.
     #
+    # A leading `~` is expanded to the home directory, as a shell would, each time
+    # this is called. Any other value, such as a bare `git` that the `PATH` lookup
+    # resolves or a relative path, is returned as given.
+    #
     # @example With the default sentinel (resolves from Git::Config.instance at call-time)
     #   context = Git::ExecutionContext::Global.new
     #   context.binary_path  #=> "git"
@@ -171,12 +175,18 @@ module Git
     #   context = Git::ExecutionContext::Global.new(binary_path: '/usr/local/bin/git2')
     #   context.binary_path  #=> "/usr/local/bin/git2"
     #
+    # @example With a path under the home directory
+    #   context = Git::ExecutionContext::Global.new(binary_path: '~/bin/git')
+    #   context.binary_path  #=> "/home/user/bin/git"
+    #
     # @return [String] the resolved git binary path
     #
+    # @raise [ArgumentError] if the path begins with `~user` for a user that does
+    #   not exist, or with `~` when no home directory can be determined
+    #
     def binary_path
-      return Git::Config.instance.binary_path if @binary_path == :use_global_config
-
-      @binary_path
+      path = @binary_path == :use_global_config ? Git::Config.instance.binary_path : @binary_path
+      Git::PathResolver.expand_home(path)
     end
 
     # Returns the resolved `GIT_SSH` wrapper path for this context
@@ -186,6 +196,9 @@ module Git
     # `Git.configure { |c| c.git_ssh = ... }`
     # are reflected per command invocation. `nil` means the variable will be
     # explicitly unset.
+    #
+    # A leading `~` is expanded to the home directory, as a shell would, each time
+    # this is called. Any other value is returned as given.
     #
     # @example With the default sentinel (resolves from Git::Config.instance at call-time)
     #   context = Git::ExecutionContext::Global.new
@@ -197,10 +210,12 @@ module Git
     #
     # @return [String, nil] the resolved `GIT_SSH` wrapper path, or `nil` to unset
     #
+    # @raise [ArgumentError] if the path begins with `~user` for a user that does
+    #   not exist, or with `~` when no home directory can be determined
+    #
     def git_ssh
-      return Git::Config.instance.git_ssh if @git_ssh == :use_global_config
-
-      @git_ssh
+      path = @git_ssh == :use_global_config ? Git::Config.instance.git_ssh : @git_ssh
+      Git::PathResolver.expand_home(path)
     end
 
     # Returns the logger used by this context

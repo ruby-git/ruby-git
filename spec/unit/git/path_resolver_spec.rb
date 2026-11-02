@@ -438,4 +438,68 @@ RSpec.describe Git::PathResolver do
       end
     end
   end
+
+  describe '.expand_home' do
+    subject(:expanded) { described_class.expand_home(path) }
+
+    context 'with a ~/-prefixed path' do
+      include_context 'with a temporary home directory'
+
+      let(:path) { '~/scratch' }
+
+      it 'expands ~ to the home directory' do
+        expect(expanded).to eq(File.join(home_dir, 'scratch'))
+      end
+    end
+
+    context 'with ~ alone' do
+      include_context 'with a temporary home directory'
+
+      let(:path) { '~' }
+
+      it 'returns the home directory' do
+        expect(expanded).to eq(home_dir)
+      end
+    end
+
+    context 'with a relative path' do
+      let(:path) { 'bin/git' }
+
+      it 'returns the path unchanged' do
+        expect(expanded).to eq('bin/git')
+      end
+    end
+
+    context 'with an absolute path' do
+      let(:path) { '/usr/local/bin/git' }
+
+      it 'returns the path unchanged' do
+        expect(expanded).to eq('/usr/local/bin/git')
+      end
+    end
+
+    context 'with a bare name' do
+      let(:path) { 'git' }
+
+      it 'returns the name unchanged' do
+        expect(expanded).to eq('git')
+      end
+    end
+
+    context 'with nil' do
+      let(:path) { nil }
+
+      it 'returns nil' do
+        expect(expanded).to be_nil
+      end
+    end
+
+    context 'with a ~user path for a user that does not exist' do
+      let(:path) { '~no-such-user-for-ruby-git/scratch' }
+
+      it 'raises ArgumentError' do
+        expect { expanded }.to raise_error(ArgumentError, /user no-such-user-for-ruby-git/)
+      end
+    end
+  end
 end

@@ -344,6 +344,9 @@ Converting errors from outside the gem:
 ### Path Handling
 
 - Working-directory paths: relative to repo working directory
+- `binary_path`, `git_ssh`, and path arguments that are neither pathspecs nor factory
+  method paths: only a leading `~` is expanded
+  ([ADR-0011](../../../docs/adr/0011-outside-the-factory-methods-only-a-leading-tilde-in-a-path-is-expanded.md))
 - Paths stored as `Pathname` objects on `Git::Repository`
 - `Git::EscapedPath` for paths with special characters
 - Handle Windows path separators; test with Unicode filenames
