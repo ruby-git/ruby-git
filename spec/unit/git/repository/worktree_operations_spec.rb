@@ -81,6 +81,9 @@ RSpec.describe Git::Repository::WorktreeOperations do
     let(:commitish) { nil }
     let(:add_command) { instance_double(Git::Commands::Worktree::Add) }
     let(:add_result) { command_result("HEAD is now at b8c6320 Add feature\n") }
+    let(:list_command) { instance_double(Git::Commands::Worktree::List) }
+    let(:list_result) { command_result('porcelain output') }
+    let(:listed_worktrees) { [main_info, added_info] }
 
     # git records the resolved path, which differs from dir when dir goes
     # through a symlink (/tmp on macOS) or differs in case, so the lookup must
@@ -94,9 +97,11 @@ RSpec.describe Git::Repository::WorktreeOperations do
     before do
       allow(Git::Commands::Worktree::Add).to receive(:new).with(execution_context).and_return(add_command)
       allow(add_command).to receive(:call).and_return(add_result)
+      allow(Git::Commands::Worktree::List).to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command).to receive(:call).with(porcelain: true).and_return(list_result)
+      allow(Git::Parsers::Worktree).to receive(:parse_list).with('porcelain output').and_return(listed_worktrees)
       allow(File).to receive(:identical?).and_return(false)
       allow(File).to receive(:identical?).with('/private/tmp/feature', dir).and_return(true)
-      allow(described_instance).to receive(:worktree_list).and_return([main_info, added_info])
     end
 
     it 'constructs Git::Commands::Worktree::Add with the execution context' do
@@ -106,7 +111,7 @@ RSpec.describe Git::Repository::WorktreeOperations do
 
     it 'runs the add before listing the worktrees' do
       expect(add_command).to receive(:call).with(dir).and_return(add_result).ordered
-      expect(described_instance).to receive(:worktree_list).and_return([main_info, added_info]).ordered
+      expect(list_command).to receive(:call).with(porcelain: true).and_return(list_result).ordered
 
       described_instance.worktree_add(dir)
     end
@@ -132,9 +137,7 @@ RSpec.describe Git::Repository::WorktreeOperations do
     end
 
     context 'when the listing has no entry for the directory' do
-      before do
-        allow(described_instance).to receive(:worktree_list).and_return([main_info])
-      end
+      let(:listed_worktrees) { [main_info] }
 
       it 'raises Git::UnexpectedResultError naming the directory' do
         expect { result }.to raise_error(Git::UnexpectedResultError, %r{/tmp/feature})
@@ -149,8 +152,8 @@ RSpec.describe Git::Repository::WorktreeOperations do
       end
 
       it 'raises Git::FailedError without listing the worktrees' do
-        expect(described_instance).not_to receive(:worktree_list)
-        expect { result }.to raise_error(Git::FailedError)
+        expect(list_command).not_to receive(:call)
+        expect { result }.to raise_error(Git::FailedError, /already exists/)
       end
     end
   end
