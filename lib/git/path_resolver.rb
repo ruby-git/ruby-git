@@ -20,9 +20,6 @@ module Git
   # derived from the layout: an omitted repository is `<working_directory>/.git`
   # and an omitted index is `<repository>/index`.
   #
-  # Outside the factory methods, {.expand_home} expands only a leading `~` in a
-  # path argument and leaves every other value for git to interpret.
-  #
   # @api private
   #
   module PathResolver
@@ -272,36 +269,6 @@ module Git
     #
     def expand_path(path, message, base: nil)
       Git::SystemCallGuard.call(message) { File.expand_path(path || '.', base) }
-    end
-
-    # Expand a leading `~` the way a shell would, and leave every other value alone
-    #
-    # A shell expands `~` before git runs, and git takes it literally, so a value
-    # that starts with `~` is expanded with `File.expand_path`. Any other value,
-    # including a relative path, a bare command name such as `git`, or `nil`, is
-    # returned unchanged. See ADR-0011.
-    #
-    # @example Expand a path under the home directory
-    #   Git::PathResolver.expand_home('~/bin/git') #=> '/home/user/bin/git'
-    #
-    # @example Leave a bare command name alone
-    #   Git::PathResolver.expand_home('git') #=> 'git'
-    #
-    # @param path [String, nil] the value to expand
-    #
-    # @return [String, nil] the expanded path when `path` starts with `~`,
-    #   otherwise `path` itself
-    #
-    # @raise [ArgumentError] if `~` cannot be expanded because no home directory
-    #   can be determined, or if the path begins with `~user` for a user that
-    #   does not exist
-    #
-    # @api private
-    #
-    def expand_home(path)
-      return path unless path.is_a?(String) && path.start_with?('~')
-
-      File.expand_path(path)
     end
   end
 end

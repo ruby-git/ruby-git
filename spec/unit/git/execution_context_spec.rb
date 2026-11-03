@@ -49,19 +49,15 @@ RSpec.describe Git::ExecutionContext do
     end
 
     context 'when a ~-prefixed path is provided' do
-      include_context 'with a temporary home directory'
-
-      it 'returns the path with ~ expanded to the home directory' do
-        expect(Git::ExecutionContext::Global.new(git_ssh: '~/bin/ssh').git_ssh).to eq(File.join(home_dir, 'bin/ssh'))
+      it 'returns the path unchanged' do
+        expect(Git::ExecutionContext::Global.new(git_ssh: '~/bin/ssh').git_ssh).to eq('~/bin/ssh')
       end
     end
 
     context 'when the global config holds a ~-prefixed path' do
-      include_context 'with a temporary home directory'
-
-      it 'returns the path with ~ expanded to the home directory' do
+      it 'returns the path unchanged' do
         allow(Git::Config.instance).to receive(:git_ssh).and_return('~/bin/ssh')
-        expect(Git::ExecutionContext::Global.new.git_ssh).to eq(File.join(home_dir, 'bin/ssh'))
+        expect(Git::ExecutionContext::Global.new.git_ssh).to eq('~/bin/ssh')
       end
     end
   end
@@ -259,21 +255,15 @@ RSpec.describe Git::ExecutionContext do
     end
 
     context 'when a ~-prefixed path is provided' do
-      include_context 'with a temporary home directory'
-
-      it 'returns the path with ~ expanded to the home directory' do
-        expect(Git::ExecutionContext::Global.new(binary_path: '~/bin/git').binary_path).to(
-          eq(File.join(home_dir, 'bin/git'))
-        )
+      it 'returns the path unchanged' do
+        expect(Git::ExecutionContext::Global.new(binary_path: '~/bin/git').binary_path).to eq('~/bin/git')
       end
     end
 
     context 'when the global config holds a ~-prefixed path' do
-      include_context 'with a temporary home directory'
-
-      it 'returns the path with ~ expanded to the home directory' do
+      it 'returns the path unchanged' do
         allow(Git::Config.instance).to receive(:binary_path).and_return('~/bin/git')
-        expect(Git::ExecutionContext::Global.new.binary_path).to eq(File.join(home_dir, 'bin/git'))
+        expect(Git::ExecutionContext::Global.new.binary_path).to eq('~/bin/git')
       end
     end
   end

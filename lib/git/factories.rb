@@ -180,15 +180,13 @@ module Git
     #   SSH executable
     #
     #   Pass `:use_global_config` (the default) to use
-    #   `Git.config.git_ssh`. A leading `~` is expanded to the home directory
-    #   when a command runs.
+    #   `Git.config.git_ssh`. A leading `~` is not expanded.
     #
     # @option options [String, :use_global_config] :binary_path path to the git
     #   binary
     #
     #   Pass `:use_global_config` (the default) to use
-    #   `Git.config.binary_path`. A leading `~` is expanded to the home directory
-    #   when a command runs.
+    #   `Git.config.binary_path`. A leading `~` is not expanded.
     #
     # @option options [Logger, nil] :log logger used for git operations
     #
@@ -277,15 +275,13 @@ module Git
     #   SSH executable
     #
     #   Pass `:use_global_config` (the default) to use
-    #   `Git.config.git_ssh`. A leading `~` is expanded to the home directory
-    #   when a command runs.
+    #   `Git.config.git_ssh`. A leading `~` is not expanded.
     #
     # @option options [String, :use_global_config] :binary_path path to the git
     #   binary
     #
     #   Pass `:use_global_config` (the default) to use
-    #   `Git.config.binary_path`. A leading `~` is expanded to the home directory
-    #   when a command runs.
+    #   `Git.config.binary_path`. A leading `~` is not expanded.
     #
     # @option options [Logger, nil] :log logger used for git operations
     #
@@ -354,15 +350,13 @@ module Git
     #   path to a custom SSH executable
     #
     #   Pass `:use_global_config` (the default) to use
-    #   `Git.config.git_ssh`. A leading `~` is expanded to the home directory
-    #   when a command runs.
+    #   `Git.config.git_ssh`. A leading `~` is not expanded.
     #
     # @option options [String, :use_global_config] :binary_path
     #   path to the git binary
     #
     #   Pass `:use_global_config` (the default) to use
-    #   `Git.config.binary_path`. A leading `~` is expanded to the home directory
-    #   when a command runs.
+    #   `Git.config.binary_path`. A leading `~` is not expanded.
     #
     # @return [Git::Repository] a repository bound to the resolved paths
     #
@@ -419,15 +413,13 @@ module Git
     #   path to a custom SSH executable
     #
     #   Pass `:use_global_config` (the default) to use
-    #   `Git.config.git_ssh`. A leading `~` is expanded to the home directory
-    #   when a command runs.
+    #   `Git.config.git_ssh`. A leading `~` is not expanded.
     #
     # @option options [String, :use_global_config] :binary_path
     #   path to the git binary
     #
     #   Pass `:use_global_config` (the default) to use
-    #   `Git.config.binary_path`. A leading `~` is expanded to the home directory
-    #   when a command runs.
+    #   `Git.config.binary_path`. A leading `~` is not expanded.
     #
     # @return [Git::Repository] a repository bound to the bare repository directory
     #
