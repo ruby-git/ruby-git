@@ -63,6 +63,10 @@ module Git
       # @param dir [String] filesystem path for the new worktree, absolute or
       #   relative to the current directory
       #
+      #   git takes the path as given and does not expand a leading `~`, so
+      #   `'~/feature'` creates a directory literally named `~`. Expand it with
+      #   `File.expand_path` first if the home directory is meant.
+      #
       # @param commitish [String, nil] branch, tag, or commit to check out
       #
       #   When `nil`, git checks out the branch named after the final path
@@ -108,6 +112,8 @@ module Git
       # @param worktree [String, Git::WorktreeInfo] the path of the worktree to
       #   remove, or its entry from {#worktree_list}
       #
+      #   git takes the path as given and does not expand a leading `~`.
+      #
       # @return [String] the output from the git worktree remove command
       #   (typically empty)
       #
@@ -130,7 +136,11 @@ module Git
       # @param worktree [String, Git::WorktreeInfo] the path of the worktree to
       #   move, or its entry from {#worktree_list}
       #
+      #   git takes the path as given and does not expand a leading `~`.
+      #
       # @param new_path [String] the destination path
+      #
+      #   git takes the path as given and does not expand a leading `~`.
       #
       # @param opts [Hash] options for the move
       #
@@ -165,6 +175,8 @@ module Git
       # @param worktree [String, Git::WorktreeInfo] the path of the worktree to
       #   lock, or its entry from {#worktree_list}
       #
+      #   git takes the path as given and does not expand a leading `~`.
+      #
       # @param opts [Hash] options for the lock
       #
       # @option opts [String, nil] :reason (nil) an explanation stored with the
@@ -190,6 +202,8 @@ module Git
       #
       # @param worktree [String, Git::WorktreeInfo] the path of the worktree to
       #   unlock, or its entry from {#worktree_list}
+      #
+      #   git takes the path as given and does not expand a leading `~`.
       #
       # @return [String] the output from the git worktree unlock command
       #   (typically empty)
@@ -217,6 +231,8 @@ module Git
       #
       # @param paths [Array<String, Git::WorktreeInfo>] the current paths of the
       #   worktrees to repair, or their entries from {#worktree_list}
+      #
+      #   git takes each path as given and does not expand a leading `~`.
       #
       # @return [String] the output from the git worktree repair command, which
       #   reports each repair made

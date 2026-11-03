@@ -103,6 +103,10 @@ module Git
       #
       # @param file [String] path to the patch file to apply
       #
+      #   A leading `~` is not expanded, so `'~/fix.patch'` normally names no
+      #   existing file and the method returns `nil` without applying anything.
+      #   Expand it with `File.expand_path` first if the home directory is meant.
+      #
       # @return [String] git's stdout (usually empty on success)
       #
       # @return [nil] when `file` does not exist
@@ -125,6 +129,10 @@ module Git
       #   repo.apply_mail('patches.mbox')
       #
       # @param file [String] path to the mbox patch file to apply
+      #
+      #   A leading `~` is not expanded, so `'~/patches.mbox'` normally names no
+      #   existing file and the method returns `nil` without applying anything.
+      #   Expand it with `File.expand_path` first if the home directory is meant.
       #
       # @return [String] git's stdout (usually empty on success)
       #

@@ -560,6 +560,10 @@ module Git
       # @param file [String, nil] (nil) destination file path; when `nil`, a
       #   unique temporary file is created and its path is returned
       #
+      #   Used as given, as `git archive --output` would use it: a relative path
+      #   is relative to the process working directory, and a leading `~` is not
+      #   expanded.
+      #
       # @param opts [Hash] archive options
       #
       # @option opts [String] :format ('zip') archive format — `'tar'`, `'zip'`,
@@ -583,6 +587,9 @@ module Git
       # @raise [ArgumentError] if unsupported options are provided
       #
       # @raise [ArgumentError] if `file` is an existing directory
+      #
+      # @raise [ArgumentError] if `file` begins with `~name` and `name` is not a
+      #   user, because the staging directory is chosen with `File.expand_path`
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
@@ -1057,6 +1064,10 @@ module Git
         # directory as the destination keeps both paths on the same filesystem
         # so that {#atomic_replace} can use an atomic rename that
         # requires no extra disk space.
+        #
+        # `File.expand_path` reads a leading `~` that the rename does not. Using
+        # `File.absolute_path` would stop that, but it changes which exception
+        # `~name` raises, so it waits for the next major (ADR-0011).
         #
         # @param file [String, nil] the explicit destination path, or nil
         #

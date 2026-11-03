@@ -1089,6 +1089,13 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
 
+    context 'with a destination that begins with ~name when name is not a user' do
+      it 'raises ArgumentError naming the user' do
+        expect { described_instance.archive('HEAD', '~no-such-user-for-ruby-git/out.zip') }
+          .to raise_error(ArgumentError, /user no-such-user-for-ruby-git/)
+      end
+    end
+
     context 'when creating the staging temp file raises before assignment' do
       before do
         allow(Tempfile).to receive(:create).with('archive', anything)
