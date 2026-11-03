@@ -201,6 +201,8 @@ module Git
       #
       # @param file [String, nil] destination file path; a temp file is created if `nil`
       #
+      #   A leading `~` is not expanded.
+      #
       # @param opts [Hash] archive options (see {Git::Repository#archive})
       #
       # @option opts [String] :format ('zip') archive format: `'tar'`, `'zip'`,
@@ -222,6 +224,8 @@ module Git
       # @raise [ArgumentError] when archive options or destination path are invalid
       #
       # @raise [Git::FailedError] if `git archive` fails
+      #
+      # @raise [Git::Error] if the archive file cannot be written
       #
       # @note A failure leaves nothing behind and does not replace an existing
       #   `file`; see {Git::Repository::ObjectOperations#archive}.

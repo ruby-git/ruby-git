@@ -225,6 +225,8 @@ module Git
   #
   # @param repository_url [String, URI, Pathname] the repository to export from
   #
+  #   A leading `~` in a local path is not expanded.
+  #
   # @param directory [String, Pathname, nil] the directory to export into; defaults to the
   #   repository basename
   #

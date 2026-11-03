@@ -60,6 +60,8 @@ module Git
     #
     # @param repository_url [String, URI, Pathname] the URL or path of the repository to clone
     #
+    #   A leading `~` in a local path is not expanded.
+    #
     # @param directory [String, Pathname, nil] the local directory name to clone into;
     #   git derives the name from the URL when `nil`
     #
@@ -74,6 +76,8 @@ module Git
     #   the clone completes. Supported `git clone` options are forwarded.
     #
     # @option options [String, nil] :template template directory to use
+    #
+    #   A leading `~` is not expanded.
     #
     # @option options [Boolean, nil] :local use the local clone optimization
     #
@@ -106,8 +110,12 @@ module Git
     #
     # @option options [String, Array<String>, nil] :reference reference repository
     #
+    #   A leading `~` is not expanded.
+    #
     # @option options [String, Array<String>, nil] :reference_if_able
     #   optional reference repository
+    #
+    #   A leading `~` is not expanded.
     #
     # @option options [Boolean, nil] :dissociate stop borrowing from references
     #
@@ -710,8 +718,9 @@ module Git
     # Expand a path option in place when it is present
     #
     # git does no tilde expansion and ruby-git starts it without a shell, so
-    # every path option is expanded here before git sees it. A path that cannot
-    # be expanded is rejected before git runs.
+    # `:chdir` and the paths a repository is bound to are expanded here before
+    # git sees them (ADR-0011). A path that cannot be expanded is rejected before
+    # git runs.
     #
     # @param hash [Hash] the options hash (mutated in place)
     #
