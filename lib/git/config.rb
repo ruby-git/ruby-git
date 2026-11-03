@@ -50,8 +50,7 @@ module Git
     # Returns the git executable path
     #
     # Uses an explicitly configured path first, then `GIT_PATH`, then `git`.
-    # The value is returned as set; a leading `~` is expanded to the home
-    # directory when a command runs.
+    # The value is used as given: a leading `~` is not expanded.
     #
     # @example Read the default executable
     #   Git::Config.instance.binary_path #=> "git"
@@ -65,8 +64,7 @@ module Git
     # Returns the SSH wrapper path used by git operations
     #
     # Uses an explicitly configured wrapper path first, then `GIT_SSH`. The
-    # value is returned as set; a leading `~` is expanded to the home directory
-    # when a command runs.
+    # value is used as given: a leading `~` is not expanded.
     #
     # @example Read the configured SSH wrapper path
     #   Git::Config.instance.git_ssh #=> "/usr/bin/ssh-wrapper"
