@@ -58,14 +58,59 @@ RSpec.describe Git::Parsers::Fsck do
     end
 
     it 'parses warning lines' do
-      stdout = "warning in commit #{sha1}: badTimezone: invalid author/committer line\n"
+      stderr = "warning in commit #{sha1}: badTimezone: invalid author/committer line\n"
 
-      result = described_class.parse(stdout, exit_status: 0, stderr: '')
+      result = described_class.parse('', exit_status: 0, stderr: stderr)
 
       expect(result.warnings.size).to eq(1)
       expect(result.warnings[0].type).to eq(:commit)
       expect(result.warnings[0].oid).to eq(sha1)
       expect(result.warnings[0].message).to eq('badTimezone: invalid author/committer line')
+    end
+
+    it 'parses error lines' do
+      stderr = "error in tree #{sha1}: zeroPaddedFilemode: contains zero-padded file modes\n"
+
+      result = described_class.parse('', exit_status: 1, stderr: stderr)
+
+      expect(result.warnings).to be_empty
+      expect(result.errors.size).to eq(1)
+      expect(result.errors[0].type).to eq(:tree)
+      expect(result.errors[0].oid).to eq(sha1)
+      expect(result.errors[0].message).to eq('zeroPaddedFilemode: contains zero-padded file modes')
+    end
+
+    it 'parses the name git gives the object in a finding' do
+      stderr = "error in blob #{sha1} (:a): b (c).txt): non-tree in cache-tree\n"
+
+      result = described_class.parse('', exit_status: 1, stderr: stderr)
+
+      expect(result.errors).to contain_exactly(
+        have_attributes(type: :blob, oid: sha1, name: ':a): b (c).txt', message: 'non-tree in cache-tree')
+      )
+    end
+
+    it 'reports a finding git repeats for a second copy of an object once' do
+      warning = "warning in tree #{sha1}: zeroPaddedFilemode: contains zero-padded file modes\n"
+      error = "error in tag #{sha2}: missingEmail: invalid author/committer line - missing email\n"
+
+      result = described_class.parse('', exit_status: 1, stderr: warning + warning + error + error)
+
+      expect(result.warnings.size).to eq(1)
+      expect(result.errors.size).to eq(1)
+    end
+
+    it 'keeps each finding for an object flagged for different reasons' do
+      stderr = <<~OUTPUT
+        warning in tree #{sha1}: hasDotgit: contains '.git'
+        warning in tree #{sha1}: zeroPaddedFilemode: contains zero-padded file modes
+      OUTPUT
+
+      result = described_class.parse('', exit_status: 0, stderr: stderr)
+
+      expect(result.warnings.map(&:message)).to eq(
+        ["hasDotgit: contains '.git'", 'zeroPaddedFilemode: contains zero-padded file modes']
+      )
     end
 
     it 'parses root lines' do
@@ -93,12 +138,12 @@ RSpec.describe Git::Parsers::Fsck do
       stdout = <<~OUTPUT
         dangling commit #{sha1}
         missing blob #{sha2}
-        warning in tree #{sha3}: gitmodulesName: contains a '/'
         root #{sha4}
         tagged blob #{sha5} (release-notes) in #{sha6}
       OUTPUT
+      stderr = "warning in tree #{sha3}: gitmodulesName: contains a '/'\n"
 
-      result = described_class.parse(stdout, exit_status: 0, stderr: '')
+      result = described_class.parse(stdout, exit_status: 0, stderr: stderr)
 
       expect(result.dangling.size).to eq(1)
       expect(result.missing.size).to eq(1)
@@ -114,6 +159,7 @@ RSpec.describe Git::Parsers::Fsck do
       expect(result.missing).to be_empty
       expect(result.unreachable).to be_empty
       expect(result.warnings).to be_empty
+      expect(result.errors).to be_empty
       expect(result.root).to be_empty
       expect(result.tagged).to be_empty
     end
@@ -124,6 +170,19 @@ RSpec.describe Git::Parsers::Fsck do
       result = described_class.parse('', exit_status: 8, stderr: stderr)
 
       expect(result).to have_attributes(exit_status: 8, stderr: stderr)
+    end
+
+    it 'flags no object for stderr lines that are not object findings' do
+      stderr = <<~OUTPUT
+        Checking ref database
+        warning: refs/heads/no-newline: refMissingNewline: misses LF at the end
+        error: refs/heads/broken: not a commit
+        error: #{sha1}: object corrupt or missing: .git/objects/ab/c123
+      OUTPUT
+
+      result = described_class.parse('', exit_status: 10, stderr: stderr)
+
+      expect(result.to_h.values).to all(be_empty)
     end
 
     it 'ignores unrecognized lines' do
@@ -145,13 +204,6 @@ RSpec.describe Git::Parsers::Fsck do
       described_class.parse_line("dangling commit #{sha1}", result)
 
       expect(result[:dangling]).not_to be_empty
-    end
-
-    it 'returns truthy for warning lines' do
-      result = { dangling: [], missing: [], unreachable: [], warnings: [], root: [], tagged: [] }
-      ret = described_class.parse_line("warning in commit #{sha1}: message", result)
-
-      expect(ret).to be_truthy
     end
   end
 
@@ -194,19 +246,28 @@ RSpec.describe Git::Parsers::Fsck do
     end
   end
 
-  describe '.parse_warning_line' do
+  describe '.parse_finding_line' do
     it 'parses warning line' do
       result = { warnings: [] }
-      described_class.parse_warning_line("warning in commit #{sha1}: bad date", result)
+      described_class.parse_finding_line("warning in commit #{sha1}: bad date", result)
 
       expect(result[:warnings].size).to eq(1)
       expect(result[:warnings][0].type).to eq(:commit)
       expect(result[:warnings][0].message).to eq('bad date')
     end
 
+    it 'parses error line' do
+      result = { errors: [] }
+      described_class.parse_finding_line("error in commit #{sha1}: bad date", result)
+
+      expect(result[:errors].size).to eq(1)
+      expect(result[:errors][0].type).to eq(:commit)
+      expect(result[:errors][0].message).to eq('bad date')
+    end
+
     it 'returns nil for non-matching lines' do
-      result = { warnings: [] }
-      ret = described_class.parse_warning_line('some other line', result)
+      result = { warnings: [], errors: [] }
+      ret = described_class.parse_finding_line('some other line', result)
 
       expect(ret).to be_nil
     end

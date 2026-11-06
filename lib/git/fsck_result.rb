@@ -11,6 +11,9 @@ module Git
   # exit status and stderr. A result for such a run has no flagged objects, but
   # {#any_issues?} still returns true.
   #
+  # A warning about a ref, as opposed to an object, appears only in {#stderr}. It
+  # flags no object and git exits 0, so {#any_issues?} returns false.
+  #
   # @api public
   #
   class FsckResult
@@ -122,7 +125,8 @@ module Git
 
     # Returns true if no issues were found
     #
-    # Returns false for a nonzero {#exit_status}, even with no flagged objects.
+    # Returns false for a nonzero {#exit_status}, even with no flagged objects. A
+    # warning about a ref does not make this false. See {Git::FsckResult}.
     #
     # @example Check if the result is empty
     #   result = git.fsck
@@ -148,8 +152,9 @@ module Git
 
     # Returns the total number of flagged objects
     #
-    # A finding git reports only in {#exit_status} and {#stderr} is not counted, so
-    # this can be 0 when {#any_issues?} is true.
+    # An object flagged for more than one reason counts once for each. A finding git
+    # reports only in {#exit_status} and {#stderr} is not counted, so this can be 0
+    # when {#any_issues?} is true.
     #
     # @example Count flagged objects
     #   result = git.fsck
