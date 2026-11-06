@@ -140,36 +140,46 @@ Configure the git gem:
 ```ruby
 Git.configure do |config|
   config.binary_path = '/usr/local/bin/git'
-  config.git_ssh = 'ssh -i ~/.ssh/id_rsa'
+  config.git_ssh = '/path/to/ssh-wrapper'
 end
 
 # or
 
 Git.config.binary_path = '/usr/local/bin/git'
-Git.config.git_ssh = 'ssh -i ~/.ssh/id_rsa'
+Git.config.git_ssh = '/path/to/ssh-wrapper'
+```
+
+The gem passes `git_ssh` to git as `GIT_SSH`, and git runs that value as a
+program, not as a shell command, so put any `ssh` arguments in a wrapper script:
+
+```sh
+#!/bin/sh
+exec ssh -i /path/to/private_key "$@"
 ```
 
 How SSH configuration is determined:
 
 - If the API call does not specify `git_ssh`, the gem uses the global config
   (`Git.configure { |c| c.git_ssh = ... }`).
-- If the call specifies `git_ssh: nil`, the gem disables SSH for that instance and
-  uses no SSH key or script.
+- If the call specifies `git_ssh: nil`, the gem unsets `GIT_SSH` for that
+  instance, so git uses its default `ssh` command.
 - If `git_ssh` is a non-empty string, the gem uses it for that instance instead of
   the global config.
+- `GIT_SSH_COMMAND` in the environment and git's `core.sshCommand` setting take
+  precedence over `GIT_SSH`, so either one overrides `git_ssh`.
 
 You can also specify a custom SSH script on a per-repository basis:
 
 ```ruby
 # Use a specific SSH key for a single repository
-git = Git.open('/path/to/repo', git_ssh: 'ssh -i /path/to/private_key')
+git = Git.open('/path/to/repo', git_ssh: '/path/to/ssh-wrapper')
 
 # Or when cloning
 git = Git.clone('git@github.com:user/repo.git', 'local-dir',
-                git_ssh: 'ssh -i /path/to/private_key')
+                git_ssh: '/path/to/ssh-wrapper')
 
 # Or when initializing
-git = Git.init('new-repo', git_ssh: 'ssh -i /path/to/private_key')
+git = Git.init('new-repo', git_ssh: '/path/to/ssh-wrapper')
 ```
 
 This matters in multi-threaded applications where different repositories need
