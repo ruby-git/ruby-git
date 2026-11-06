@@ -74,8 +74,8 @@ module Git
         # @example git-diff exits 1 when a diff is found (not an error)
         #   allow_exit_status 0..1
         #
-        # @example git-fsck uses exit codes 0-7 as bit flags
-        #   allow_exit_status 0..7
+        # @example git-fsck reports findings as bit flags up to 127
+        #   allow_exit_status 0..127
         #
         # @param range [Range] range of accepted exit status values
         #

@@ -11,8 +11,10 @@ require 'git/repository/inspecting'
 #   * #show joins objectish and path into an `objectish:path` expression before
 #     calling git, so a real blob read proves the pre-processing produces a
 #     valid object specifier.
-#   * #fsck parses real `git fsck` stdout into a Git::FsckResult, so a real
-#     invocation proves the parsing handles actual output.
+#   * #fsck builds a Git::FsckResult from the stdout, stderr, and exit status of
+#     `git fsck`, so a real invocation proves the parsing handles actual output
+#     and that a finding git reports only in stderr and the exit status reaches
+#     the result.
 #
 # #describe is a single-command delegator whose facade-owned transforms
 # (:"exact-match" key translation, option allowlist) are pure-Ruby and fully
@@ -52,7 +54,23 @@ RSpec.describe Git::Repository::Inspecting, :integration do
 
     context 'when the repository is healthy' do
       it 'reports no issues' do
-        expect(described_instance.fsck).to be_empty
+        expect(described_instance.fsck).to have_attributes(empty?: true, exit_status: 0)
+      end
+    end
+
+    context 'when git reports a finding only in stderr and the exit status' do
+      before do
+        tag = repo.tag_create('t', annotate: true, message: 't')
+        # update-ref refuses this; write the files-backend ref directly
+        write_file('.git/refs/heads/points-at-tag', "#{tag.oid}\n")
+      end
+
+      it 'reports the issue with the exit status and the ref git named' do
+        expect(described_instance.fsck).to have_attributes(
+          any_issues?: true,
+          exit_status: 8,
+          stderr: include('points-at-tag')
+        )
       end
     end
 

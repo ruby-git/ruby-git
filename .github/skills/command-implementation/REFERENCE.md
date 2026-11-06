@@ -867,8 +867,8 @@ allow_exit_status 0..1
 ```
 
 ```ruby
-# fsck uses exit codes 0-7 as bit flags for findings
-allow_exit_status 0..7
+# fsck reports findings as bit flags in exit codes up to 127
+allow_exit_status 0..127
 ```
 
 ## Facade delegation and policy options

@@ -53,9 +53,10 @@ module Git
       end
 
       # git fsck reports findings as bit flags in its exit code: 1 object,
-      # 2 reachable, 4 pack, 8 refs, 16 commit-graph, 32 multi-pack-index and
-      # 64 pack-rev-index. Exit code 128 is excluded because die() uses it too,
-      # so it cannot be told apart from older git's ERROR_BITMAP (128).
+      # 2 reachable, 8 refs and 16 commit-graph. Before git 2.56 it also set
+      # 4 pack, 32 multi-pack-index, 64 pack-rev-index and 128 bitmap. Exit codes
+      # above 127 raise because die() exits 128 and usage errors exit 129, so
+      # the bitmap bit, alone or combined, cannot be told apart from a failure.
       allow_exit_status 0..127
 
       # @overload call(*object, **options)
