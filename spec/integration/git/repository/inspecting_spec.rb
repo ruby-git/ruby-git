@@ -42,6 +42,17 @@ RSpec.describe Git::Repository::Inspecting, :integration do
   end
 
   describe '#fsck' do
+    # Writes a tag object git would refuse to create and points a tag ref at it
+    #
+    # The gem has no hash-object command, and repo.update_ref writes only branches.
+    def create_tag_object(name, headers)
+      write_file(name, "object #{repo.rev_parse('HEAD')}\ntype commit\ntag #{name}\n#{headers}\nmessage\n")
+      tag_oid = execution_context.command_capturing(
+        'hash-object', '-t', 'tag', '-w', '--literally', name, chdir: repo_dir
+      ).stdout.strip
+      execution_context.command_capturing('update-ref', "refs/tags/#{name}", tag_oid)
+    end
+
     before do
       write_file('README.md', "hello world\n")
       repo.add(all: true)
@@ -70,6 +81,30 @@ RSpec.describe Git::Repository::Inspecting, :integration do
           any_issues?: true,
           exit_status: 8,
           stderr: include('points-at-tag')
+        )
+      end
+    end
+
+    context 'when git reports a warning about an object' do
+      before { create_tag_object('no-tagger', '') }
+
+      it 'reports the warning from a run that exits 0' do
+        expect(described_instance.fsck).to have_attributes(
+          any_issues?: true,
+          exit_status: 0,
+          warnings: [have_attributes(type: :tag, message: include('missingTaggerEntry'))]
+        )
+      end
+    end
+
+    context 'when git reports an error about an object' do
+      before { create_tag_object('bad-tagger', "tagger no-email 0 +0000\n") }
+
+      it 'reports the error with the object git named' do
+        expect(described_instance.fsck).to have_attributes(
+          any_issues?: true,
+          exit_status: 1,
+          errors: [have_attributes(type: :tag, message: include('missingEmail'))]
         )
       end
     end

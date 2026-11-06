@@ -8,7 +8,8 @@ module Git
     # Parser for git fsck command output
     #
     # Handles parsing of `git fsck` output into structured data objects
-    # for dangling, missing, unreachable objects, warnings, roots, and tagged objects.
+    # for dangling, missing, unreachable objects, warnings, errors, roots, and tagged
+    # objects.
     #
     # ## Design Note: Namespace Organization
     #
@@ -36,10 +37,18 @@ module Git
       #   unreachable tree 789abc... (name)
       OBJECT_PATTERN = /\A(dangling|missing|unreachable) (\w+) ([0-9a-f]{40})(?: \((.+)\))?\z/
 
-      # Pattern matcher for warning lines
+      # Pattern matcher for warning and error lines about an object, which git writes
+      # to stderr
       # Matches lines like:
       #   warning in commit abc123...: message here
-      WARNING_PATTERN = /\Awarning in (\w+) ([0-9a-f]{40}): (.+)\z/
+      #   error in tree abc123...: message here
+      #   error in blob abc123... (:path): message here
+      #
+      # The name is greedy because a path in it can contain `): `.
+      FINDING_PATTERN = /\A(warning|error) in (\w+) ([0-9a-f]{40})(?: \((.+)\))?: (.+)\z/
+
+      # The result list for each kind of finding in {FINDING_PATTERN}
+      FINDING_LISTS = { 'warning' => :warnings, 'error' => :errors }.freeze
 
       # Pattern matcher for root commit lines
       # Matches lines like:
@@ -63,17 +72,20 @@ module Git
       #
       # @param exit_status [Integer] exit status of the git fsck command
       #
-      # @param stderr [String] stderr from the git fsck command
+      # @param stderr [String] stderr from the git fsck command, which is where git
+      #   writes object warnings and errors
       #
       # @return [Git::FsckResult] the parsed result
       #
       def parse(stdout, exit_status:, stderr:)
-        result = { dangling: [], missing: [], unreachable: [], warnings: [], root: [], tagged: [] }
+        result = { dangling: [], missing: [], unreachable: [], warnings: [], errors: [], root: [], tagged: [] }
         stdout.each_line { |line| parse_line(line.strip, result) }
+        stderr.each_line { |line| parse_finding_line(line.strip, result) }
+        remove_repeated_findings(result)
         Git::FsckResult.new(**result, exit_status: exit_status, stderr: stderr)
       end
 
-      # Parse a single line of fsck output
+      # Parse a single line of fsck stdout
       #
       # @param line [String] a line of output
       #
@@ -83,9 +95,21 @@ module Git
       #
       def parse_line(line, result)
         parse_object_line(line, result) ||
-          parse_warning_line(line, result) ||
           parse_root_line(line, result) ||
           parse_tagged_line(line, result)
+      end
+
+      # Drop findings git repeated for another copy of an object
+      #
+      # git checks each stored copy, so an object both loose and in a pack gets the same
+      # line twice.
+      #
+      # @param result [Hash] the result hash to update
+      #
+      # @return [void]
+      #
+      def remove_repeated_findings(result)
+        %i[warnings errors].each { |list| result[list].uniq! { |object| [object.oid, object.message] } }
       end
 
       # Parse a dangling/missing/unreachable object line
@@ -102,18 +126,20 @@ module Git
         result[match[1].to_sym] << Git::FsckObject.new(type: match[2].to_sym, oid: match[3], name: match[4])
       end
 
-      # Parse a warning line
+      # Parse a warning or error line
       #
       # @param line [String] a line of output
       #
       # @param result [Hash] the result hash to populate
       #
-      # @return [Boolean] true if the line was parsed
+      # @return [Array<Git::FsckObject>, nil] the list the line was added to, or nil if
+      #   the line did not match
       #
-      def parse_warning_line(line, result)
-        return unless (match = WARNING_PATTERN.match(line))
+      def parse_finding_line(line, result)
+        return unless (match = FINDING_PATTERN.match(line))
 
-        result[:warnings] << Git::FsckObject.new(type: match[1].to_sym, oid: match[2], message: match[3])
+        result[FINDING_LISTS[match[1]]] <<
+          Git::FsckObject.new(type: match[2].to_sym, oid: match[3], name: match[4], message: match[5])
       end
 
       # Parse a root line

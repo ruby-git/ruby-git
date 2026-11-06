@@ -163,7 +163,7 @@ module Git
       #
       # Runs `git fsck` and returns the categorized objects it flags, along with its
       # exit status and stderr. Progress output is always suppressed
-      # (`--no-progress`) so that stdout contains only the machine-parsable findings.
+      # (`--no-progress`) so that stderr contains only what git reports.
       #
       # @overload fsck(*objects, **options)
       #
