@@ -161,9 +161,9 @@ module Git
 
       # Verify the connectivity and validity of the objects in the database
       #
-      # Runs `git fsck` and returns the categorized objects it flags. Progress
-      # output is always suppressed (`--no-progress`) so that stdout contains only
-      # the machine-parsable findings.
+      # Runs `git fsck` and returns the categorized objects it flags, along with its
+      # exit status and stderr. Progress output is always suppressed
+      # (`--no-progress`) so that stdout contains only the machine-parsable findings.
       #
       # @overload fsck(*objects, **options)
       #
@@ -235,7 +235,8 @@ module Git
       #
       #   @option options [Boolean, nil] :no_references (nil) skip reference checking
       #
-      #   @return [Git::FsckResult] the objects flagged by fsck, categorized by status
+      #   @return [Git::FsckResult] the objects flagged by fsck, categorized by
+      #     status, with the exit status and stderr of the run
       #
       #   @raise [ArgumentError] when unsupported options are provided
       #

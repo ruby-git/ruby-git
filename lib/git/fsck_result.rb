@@ -4,7 +4,12 @@ module Git
   # Represents the result of running `git fsck`
   #
   # This class provides structured access to the objects found during a
-  # repository integrity check, categorized by their status.
+  # repository integrity check, categorized by their status, along with the exit
+  # status and stderr of the run.
+  #
+  # git reports some findings, such as a branch that points at a tag, only in the
+  # exit status and stderr. A result for such a run has no flagged objects, but
+  # {#any_issues?} still returns true.
   #
   # @api public
   #
@@ -103,6 +108,8 @@ module Git
 
     # Returns true if any issues were found
     #
+    # An issue is a flagged object or a nonzero {#exit_status}.
+    #
     # @example Check for repository issues
     #   result = git.fsck
     #   puts "Repository has issues!" if result.any_issues?
@@ -110,10 +117,12 @@ module Git
     # @return [Boolean]
     #
     def any_issues?
-      [dangling, missing, unreachable, warnings, errors].any?(&:any?)
+      !exit_status.zero? || [dangling, missing, unreachable, warnings, errors].any?(&:any?)
     end
 
     # Returns true if no issues were found
+    #
+    # Returns false for a nonzero {#exit_status}, even with no flagged objects.
     #
     # @example Check if the result is empty
     #   result = git.fsck
@@ -137,11 +146,14 @@ module Git
       dangling + missing + unreachable + warnings + errors
     end
 
-    # Returns the total number of issues found
+    # Returns the total number of flagged objects
     #
-    # @example Count all issues
+    # A finding git reports only in {#exit_status} and {#stderr} is not counted, so
+    # this can be 0 when {#any_issues?} is true.
+    #
+    # @example Count flagged objects
     #   result = git.fsck
-    #   puts "Found #{result.count} issues"
+    #   puts "Found #{result.count} flagged objects"
     #
     # @return [Integer]
     #

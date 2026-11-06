@@ -210,21 +210,21 @@ RSpec.describe Git::Commands::Fsck do
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
-      it 'handles exit code 1 (errors found)' do
+      it 'handles exit code 1 (object)' do
         output = "missing tree 1234567890abcdef1234567890abcdef12345678\n"
         mock_command('fsck', stdout: output, exitstatus: 1)
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
-      it 'handles exit code 2 (missing objects)' do
+      it 'handles exit code 2 (reachable)' do
         output = "missing blob abcdef1234567890abcdef1234567890abcdef12\n"
         mock_command('fsck', stdout: output, exitstatus: 2)
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
-      it 'handles exit code 4 (warnings)' do
+      it 'handles exit code 4 (pack)' do
         output = "warning in commit 1234567890abcdef1234567890abcdef12345678: bad date\n"
         mock_command('fsck', stdout: output, exitstatus: 4)
         result = command.call
@@ -232,7 +232,7 @@ RSpec.describe Git::Commands::Fsck do
       end
 
       # Exit codes are bit flags that can be combined
-      it 'handles exit code 3 (errors + missing)' do
+      it 'handles exit code 3 (object + reachable)' do
         output = <<~OUTPUT
           missing tree 1111111111111111111111111111111111111111
           missing blob 2222222222222222222222222222222222222222
@@ -242,7 +242,7 @@ RSpec.describe Git::Commands::Fsck do
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
-      it 'handles exit code 5 (errors + warnings)' do
+      it 'handles exit code 5 (object + pack)' do
         output = <<~OUTPUT
           missing tree 1111111111111111111111111111111111111111
           warning in commit 2222222222222222222222222222222222222222: bad date
@@ -252,7 +252,7 @@ RSpec.describe Git::Commands::Fsck do
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
-      it 'handles exit code 6 (missing + warnings)' do
+      it 'handles exit code 6 (reachable + pack)' do
         output = <<~OUTPUT
           missing blob 1111111111111111111111111111111111111111
           warning in commit 2222222222222222222222222222222222222222: bad date
@@ -262,7 +262,7 @@ RSpec.describe Git::Commands::Fsck do
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
-      it 'handles exit code 7 (errors + missing + warnings)' do
+      it 'handles exit code 7 (object + reachable + pack)' do
         output = <<~OUTPUT
           missing tree 1111111111111111111111111111111111111111
           missing blob 2222222222222222222222222222222222222222
@@ -281,6 +281,12 @@ RSpec.describe Git::Commands::Fsck do
 
       it 'handles exit code 16 (commit-graph)' do
         mock_command('fsck', stderr: "error: commit-graph has incorrect fanout value\n", exitstatus: 16)
+        result = command.call
+        expect(result).to be_a(Git::CommandLine::Result)
+      end
+
+      it 'handles exit code 127 (the highest allowed)' do
+        mock_command('fsck', exitstatus: 127)
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end

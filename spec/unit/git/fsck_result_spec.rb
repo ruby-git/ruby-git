@@ -73,6 +73,14 @@ RSpec.describe Git::FsckResult do
       it { is_expected.to be false }
     end
 
+    context 'when the exit status is nonzero and no objects are flagged' do
+      let(:described_instance) do
+        described_class.new(exit_status: 8, stderr: "error: refs/heads/broken: not a commit\n")
+      end
+
+      it { is_expected.to be false }
+    end
+
     context 'when only root and tagged are non-empty' do
       let(:described_instance) { described_class.new(root: [obj1], tagged: [obj2], exit_status: 0, stderr: '') }
 
@@ -97,6 +105,14 @@ RSpec.describe Git::FsckResult do
 
     context 'when errors is not empty' do
       let(:described_instance) { described_class.new(errors: [obj1], exit_status: 0, stderr: '') }
+
+      it { is_expected.to be true }
+    end
+
+    context 'when the exit status is nonzero and no objects are flagged' do
+      let(:described_instance) do
+        described_class.new(exit_status: 8, stderr: "error: refs/heads/broken: not a commit\n")
+      end
 
       it { is_expected.to be true }
     end
@@ -148,8 +164,18 @@ RSpec.describe Git::FsckResult do
         )
       end
 
-      it 'returns the total number of issue objects' do
+      it 'returns the total number of flagged objects' do
         is_expected.to eq(5)
+      end
+    end
+
+    context 'when the exit status is nonzero and no objects are flagged' do
+      let(:described_instance) do
+        described_class.new(exit_status: 8, stderr: "error: refs/heads/broken: not a commit\n")
+      end
+
+      it 'counts only flagged objects' do
+        is_expected.to eq(0)
       end
     end
   end
