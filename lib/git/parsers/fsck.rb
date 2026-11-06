@@ -56,17 +56,21 @@ module Git
       # Parse git fsck output into a FsckResult object
       #
       # @example
-      #   FsckParser.parse("dangling commit abc123...\nmissing blob def456...\n")
-      #   # => #<Git::FsckResult dangling: [...], missing: [...]>
+      #   Git::Parsers::Fsck.parse("dangling commit abc123...\n", exit_status: 0, stderr: '')
+      #   # => #<Git::FsckResult dangling: [...], exit_status: 0, stderr: ''>
       #
       # @param stdout [String] output from git fsck command
       #
+      # @param exit_status [Integer] exit status of the git fsck command
+      #
+      # @param stderr [String] stderr from the git fsck command
+      #
       # @return [Git::FsckResult] the parsed result
       #
-      def parse(stdout)
+      def parse(stdout, exit_status:, stderr:)
         result = { dangling: [], missing: [], unreachable: [], warnings: [], root: [], tagged: [] }
         stdout.each_line { |line| parse_line(line.strip, result) }
-        Git::FsckResult.new(**result)
+        Git::FsckResult.new(**result, exit_status: exit_status, stderr: stderr)
       end
 
       # Parse a single line of fsck output

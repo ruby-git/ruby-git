@@ -19,7 +19,7 @@ RSpec.describe Git::Parsers::Fsck do
         dangling blob #{sha2}
       OUTPUT
 
-      result = described_class.parse(stdout)
+      result = described_class.parse(stdout, exit_status: 0, stderr: '')
 
       expect(result).to be_a(Git::FsckResult)
       expect(result.dangling.size).to eq(2)
@@ -32,7 +32,7 @@ RSpec.describe Git::Parsers::Fsck do
     it 'parses missing objects' do
       stdout = "missing tree #{sha1}\n"
 
-      result = described_class.parse(stdout)
+      result = described_class.parse(stdout, exit_status: 0, stderr: '')
 
       expect(result.missing.size).to eq(1)
       expect(result.missing[0].type).to eq(:tree)
@@ -42,7 +42,7 @@ RSpec.describe Git::Parsers::Fsck do
     it 'parses unreachable objects' do
       stdout = "unreachable commit #{sha1}\n"
 
-      result = described_class.parse(stdout)
+      result = described_class.parse(stdout, exit_status: 0, stderr: '')
 
       expect(result.unreachable.size).to eq(1)
       expect(result.unreachable[0].type).to eq(:commit)
@@ -51,7 +51,7 @@ RSpec.describe Git::Parsers::Fsck do
     it 'parses unreachable objects with names' do
       stdout = "unreachable commit #{sha1} (HEAD~2^2:src/)\n"
 
-      result = described_class.parse(stdout)
+      result = described_class.parse(stdout, exit_status: 0, stderr: '')
 
       expect(result.unreachable.size).to eq(1)
       expect(result.unreachable[0].name).to eq('HEAD~2^2:src/')
@@ -60,7 +60,7 @@ RSpec.describe Git::Parsers::Fsck do
     it 'parses warning lines' do
       stdout = "warning in commit #{sha1}: badTimezone: invalid author/committer line\n"
 
-      result = described_class.parse(stdout)
+      result = described_class.parse(stdout, exit_status: 0, stderr: '')
 
       expect(result.warnings.size).to eq(1)
       expect(result.warnings[0].type).to eq(:commit)
@@ -71,7 +71,7 @@ RSpec.describe Git::Parsers::Fsck do
     it 'parses root lines' do
       stdout = "root #{sha1}\n"
 
-      result = described_class.parse(stdout)
+      result = described_class.parse(stdout, exit_status: 0, stderr: '')
 
       expect(result.root.size).to eq(1)
       expect(result.root[0].type).to eq(:commit)
@@ -81,7 +81,7 @@ RSpec.describe Git::Parsers::Fsck do
     it 'parses tagged lines' do
       stdout = "tagged commit #{sha1} (v1.0.0) in #{sha2}\n"
 
-      result = described_class.parse(stdout)
+      result = described_class.parse(stdout, exit_status: 0, stderr: '')
 
       expect(result.tagged.size).to eq(1)
       expect(result.tagged[0].type).to eq(:commit)
@@ -98,7 +98,7 @@ RSpec.describe Git::Parsers::Fsck do
         tagged blob #{sha5} (release-notes) in #{sha6}
       OUTPUT
 
-      result = described_class.parse(stdout)
+      result = described_class.parse(stdout, exit_status: 0, stderr: '')
 
       expect(result.dangling.size).to eq(1)
       expect(result.missing.size).to eq(1)
@@ -108,7 +108,7 @@ RSpec.describe Git::Parsers::Fsck do
     end
 
     it 'returns empty result for empty output' do
-      result = described_class.parse('')
+      result = described_class.parse('', exit_status: 0, stderr: '')
 
       expect(result.dangling).to be_empty
       expect(result.missing).to be_empty
@@ -118,6 +118,14 @@ RSpec.describe Git::Parsers::Fsck do
       expect(result.tagged).to be_empty
     end
 
+    it 'passes the exit status and stderr through to the result' do
+      stderr = "error: refs/heads/broken: not a commit\n"
+
+      result = described_class.parse('', exit_status: 8, stderr: stderr)
+
+      expect(result).to have_attributes(exit_status: 8, stderr: stderr)
+    end
+
     it 'ignores unrecognized lines' do
       stdout = <<~OUTPUT
         Checking connectivity... done.
@@ -125,7 +133,7 @@ RSpec.describe Git::Parsers::Fsck do
         Some other output
       OUTPUT
 
-      result = described_class.parse(stdout)
+      result = described_class.parse(stdout, exit_status: 0, stderr: '')
 
       expect(result.dangling.size).to eq(1)
     end
