@@ -57,7 +57,10 @@ module Git
 
     # The exit status of `git fsck`
     #
-    # git sets a bit in this status for each kind of problem it finds.
+    # git sets a bit in this status for each kind of problem it finds. A nonzero
+    # status can also mean the run failed for a reason unrelated to the repository,
+    # such as an object name git rejects or a wrapper set as `binary_path` that
+    # never ran git. {#stderr} says which.
     #
     # @return [Integer]
     attr_reader :exit_status
@@ -111,7 +114,8 @@ module Git
 
     # Returns true if any issues were found
     #
-    # An issue is a flagged object or a nonzero {#exit_status}.
+    # An issue is a flagged object or a nonzero {#exit_status}. A nonzero status
+    # does not always mean the repository is damaged. See {#exit_status}.
     #
     # @example Check for repository issues
     #   result = git.fsck
@@ -166,7 +170,11 @@ module Git
       all_objects.size
     end
 
-    # Returns a hash representation of the result
+    # Returns a hash of the object lists
+    #
+    # The hash leaves out {#exit_status} and {#stderr}, so a run with findings git
+    # reports only in those has the same hash as a clean run. Use {#any_issues?} to
+    # check for problems.
     #
     # @example Convert to a hash
     #   result = git.fsck
