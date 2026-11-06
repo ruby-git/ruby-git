@@ -29,6 +29,14 @@ module Git
     # @return [Array<Git::FsckObject>]
     attr_reader :warnings
 
+    # Objects that failed a check (each includes a message)
+    #
+    # An object git cannot read gets no `error in` line, so it is not listed here
+    # and appears only in {#stderr}.
+    #
+    # @return [Array<Git::FsckObject>]
+    attr_reader :errors
+
     # Root nodes (commits with no parents) when --root is used
     #
     # @return [Array<Git::FsckObject>]
@@ -38,6 +46,21 @@ module Git
     #
     # @return [Array<Git::FsckObject>]
     attr_reader :tagged
+
+    # The exit status of `git fsck`
+    #
+    # git sets a bit in this status for each kind of problem it finds.
+    #
+    # @return [Integer]
+    attr_reader :exit_status
+
+    # What `git fsck` wrote to stderr
+    #
+    # For a finding that is not on an object list, this is where git names the ref,
+    # object, or file that failed.
+    #
+    # @return [String]
+    attr_reader :stderr
 
     # rubocop:disable Metrics/ParameterLists
 
@@ -51,17 +74,29 @@ module Git
     #
     # @param warnings [Array<Git::FsckObject>] objects with warnings
     #
+    # @param errors [Array<Git::FsckObject>] objects that failed a check
+    #
     # @param root [Array<Git::FsckObject>] root nodes
     #
     # @param tagged [Array<Git::FsckObject>] tagged objects
     #
-    def initialize(dangling: [], missing: [], unreachable: [], warnings: [], root: [], tagged: [])
+    # @param exit_status [Integer] the exit status of `git fsck`
+    #
+    # @param stderr [String] what `git fsck` wrote to stderr
+    #
+    def initialize(
+      dangling: [], missing: [], unreachable: [], warnings: [], errors: [], root: [], tagged: [], exit_status: 0,
+      stderr: ''
+    )
       @dangling = dangling
       @missing = missing
       @unreachable = unreachable
       @warnings = warnings
+      @errors = errors
       @root = root
       @tagged = tagged
+      @exit_status = exit_status
+      @stderr = stderr
     end
 
     # rubocop:enable Metrics/ParameterLists
@@ -75,7 +110,7 @@ module Git
     # @return [Boolean]
     #
     def any_issues?
-      [dangling, missing, unreachable, warnings].any?(&:any?)
+      [dangling, missing, unreachable, warnings, errors].any?(&:any?)
     end
 
     # Returns true if no issues were found
@@ -99,7 +134,7 @@ module Git
     # @return [Array<Git::FsckObject>]
     #
     def all_objects
-      dangling + missing + unreachable + warnings
+      dangling + missing + unreachable + warnings + errors
     end
 
     # Returns the total number of issues found
@@ -125,7 +160,7 @@ module Git
     def to_h
       {
         dangling: dangling, missing: missing, unreachable: unreachable,
-        warnings: warnings, root: root, tagged: tagged
+        warnings: warnings, errors: errors, root: root, tagged: tagged
       }
     end
   end

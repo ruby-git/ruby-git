@@ -245,7 +245,7 @@ module Git
       def fsck(*objects, **)
         SharedPrivate.assert_valid_opts!(FSCK_ALLOWED_OPTS, **)
         result = Git::Commands::Fsck.new(@execution_context).call(*objects, **, no_progress: true)
-        Git::Parsers::Fsck.parse(result.stdout)
+        Git::Parsers::Fsck.parse(result.stdout, exit_status: result.status.exitstatus, stderr: result.stderr)
       end
     end
   end

@@ -10,10 +10,14 @@ require 'git/parsers/fsck'
 RSpec.describe Git::Parsers::Fsck, :integration do
   include_context 'in an empty repository'
 
-  # Helper to run git fsck and return raw output
-  def git_fsck_output(*args)
-    result = repo.execution_context.command_capturing('fsck', '--no-progress', *args, raise_on_failure: false)
-    result.stdout
+  # Helper to run git fsck and return the whole command result
+  def git_fsck(*args)
+    repo.execution_context.command_capturing('fsck', '--no-progress', *args, raise_on_failure: false)
+  end
+
+  # Helper to parse a command result the way the facade does
+  def parse(fsck)
+    described_class.parse(fsck.stdout, exit_status: fsck.status.exitstatus, stderr: fsck.stderr)
   end
 
   describe '.parse' do
@@ -25,8 +29,7 @@ RSpec.describe Git::Parsers::Fsck, :integration do
       end
 
       it 'returns an empty result' do
-        output = git_fsck_output
-        result = described_class.parse(output)
+        result = parse(git_fsck)
         expect(result.empty?).to be true
         expect(result.any_issues?).to be false
       end
@@ -46,8 +49,7 @@ RSpec.describe Git::Parsers::Fsck, :integration do
       end
 
       it 'detects dangling blobs' do
-        output = git_fsck_output
-        result = described_class.parse(output)
+        result = parse(git_fsck)
         expect(result.dangling.any? { |obj| obj.type == :blob }).to be true
       end
     end
@@ -64,14 +66,12 @@ RSpec.describe Git::Parsers::Fsck, :integration do
       end
 
       it 'reports root commits' do
-        output = git_fsck_output('--root')
-        result = described_class.parse(output)
+        result = parse(git_fsck('--root'))
         expect(result.root).not_to be_empty
       end
 
       it 'returns root commits as FsckObject with :commit type' do
-        output = git_fsck_output('--root')
-        result = described_class.parse(output)
+        result = parse(git_fsck('--root'))
         result.root.each do |obj|
           expect(obj.type).to eq(:commit)
           expect(obj.oid).to match(/^[0-9a-f]{40}$/)
@@ -88,8 +88,7 @@ RSpec.describe Git::Parsers::Fsck, :integration do
       end
 
       it 'returns tagged objects with tag name' do
-        output = git_fsck_output('--tags')
-        result = described_class.parse(output)
+        result = parse(git_fsck('--tags'))
         tag_obj = result.tagged.find { |t| t.name == 'v1.0.0' }
         expect(tag_obj).not_to be_nil
         expect(tag_obj.oid).to match(/^[0-9a-f]{40}$/)

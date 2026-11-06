@@ -82,15 +82,29 @@ RSpec.describe Git::Repository::Inspecting do
         result
       end
 
-      it 'parses the command stdout via Git::Parsers::Fsck' do
+      it 'parses the command stdout, exit status, and stderr via Git::Parsers::Fsck' do
         allow(fsck_command).to receive(:call).and_return(fsck_result)
-        expect(Git::Parsers::Fsck).to receive(:parse).with("dangling commit #{'a' * 40}\n")
+        expect(Git::Parsers::Fsck).to(
+          receive(:parse).with("dangling commit #{'a' * 40}\n", exit_status: 0, stderr: '')
+        )
         result
       end
 
       it 'returns the parsed FsckResult' do
         allow(fsck_command).to receive(:call).and_return(fsck_result)
         expect(result).to be(parsed_result)
+      end
+    end
+
+    context 'when git reports findings only in stderr and the exit status' do
+      let(:fsck_result) { command_result('', stderr: "error: refs/heads/broken: not a commit\n", exitstatus: 8) }
+
+      it 'passes the exit status and stderr to Git::Parsers::Fsck' do
+        allow(fsck_command).to receive(:call).and_return(fsck_result)
+        expect(Git::Parsers::Fsck).to(
+          receive(:parse).with('', exit_status: 8, stderr: "error: refs/heads/broken: not a commit\n")
+        )
+        result
       end
     end
 
