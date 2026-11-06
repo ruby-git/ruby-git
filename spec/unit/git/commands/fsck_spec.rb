@@ -211,8 +211,7 @@ RSpec.describe Git::Commands::Fsck do
       end
 
       it 'handles exit code 1 (object)' do
-        output = "missing tree 1234567890abcdef1234567890abcdef12345678\n"
-        mock_command('fsck', stdout: output, exitstatus: 1)
+        mock_command('fsck', exitstatus: 1)
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end
@@ -225,50 +224,32 @@ RSpec.describe Git::Commands::Fsck do
       end
 
       it 'handles exit code 4 (pack)' do
-        output = "warning in commit 1234567890abcdef1234567890abcdef12345678: bad date\n"
-        mock_command('fsck', stdout: output, exitstatus: 4)
+        mock_command('fsck', exitstatus: 4)
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
       # Exit codes are bit flags that can be combined
       it 'handles exit code 3 (object + reachable)' do
-        output = <<~OUTPUT
-          missing tree 1111111111111111111111111111111111111111
-          missing blob 2222222222222222222222222222222222222222
-        OUTPUT
-        mock_command('fsck', stdout: output, exitstatus: 3)
+        mock_command('fsck', exitstatus: 3)
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles exit code 5 (object + pack)' do
-        output = <<~OUTPUT
-          missing tree 1111111111111111111111111111111111111111
-          warning in commit 2222222222222222222222222222222222222222: bad date
-        OUTPUT
-        mock_command('fsck', stdout: output, exitstatus: 5)
+        mock_command('fsck', exitstatus: 5)
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles exit code 6 (reachable + pack)' do
-        output = <<~OUTPUT
-          missing blob 1111111111111111111111111111111111111111
-          warning in commit 2222222222222222222222222222222222222222: bad date
-        OUTPUT
-        mock_command('fsck', stdout: output, exitstatus: 6)
+        mock_command('fsck', exitstatus: 6)
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles exit code 7 (object + reachable + pack)' do
-        output = <<~OUTPUT
-          missing tree 1111111111111111111111111111111111111111
-          missing blob 2222222222222222222222222222222222222222
-          warning in commit 3333333333333333333333333333333333333333: bad date
-        OUTPUT
-        mock_command('fsck', stdout: output, exitstatus: 7)
+        mock_command('fsck', exitstatus: 7)
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end
