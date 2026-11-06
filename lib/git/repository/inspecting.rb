@@ -211,6 +211,9 @@ module Git
       #
       #   @option options [Boolean, nil] :verbose (nil) be chatty
       #
+      #     git writes a line to stderr for each object it checks, so
+      #     {Git::FsckResult#stderr} grows with the size of the repository.
+      #
       #   @option options [Boolean, nil] :lost_found (nil) write dangling objects
       #     into `.git/lost-found`
       #
@@ -242,6 +245,10 @@ module Git
       #
       #   @raise [Git::FailedError] when git exits outside the allowed range (exit
       #     code > 127)
+      #
+      #     This includes a run that completed and found a corrupt bitmap on git 2.43
+      #     through 2.55, which set bit 128 in the exit status. git 2.56 reports that
+      #     finding with a status below 128, so it returns a result.
       #
       def fsck(*objects, **)
         SharedPrivate.assert_valid_opts!(FSCK_ALLOWED_OPTS, **)
