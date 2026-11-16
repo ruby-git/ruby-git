@@ -463,9 +463,13 @@ module Git
         #
         # The pin has two halves, and the load-bearing one is not the obvious one:
         #
-        # - Messages: keeps git's human-readable text in English. This is now only
-        #   defense-in-depth — lib/ reads `--format=%(refname:short)` rather than
-        #   git's prose, and matches no English git message.
+        # - Messages: keeps git's human-readable text in English. Most of lib/ reads
+        #   machine-readable output such as `--format=%(refname:short)`, but
+        #   `Git::Parsers::Fsck` matches git's English text on both stdout and
+        #   stderr. gettext reads `LANGUAGE` ahead of `LC_ALL`, so on some hosts a
+        #   caller's `LANGUAGE` alone defeats the pin; `LANGUAGE` is unset below for
+        #   that reason. Hooks and other programs git starts no longer see it either,
+        #   but their locale is already pinned by `LC_ALL`.
         # - Ctype: makes git's regex engine match *characters* rather than *bytes*.
         #   This is the half that matters. Under a C ctype, `grep`, `log`, and the
         #   `config` value regexes silently return wrong answers — with exit status
@@ -492,7 +496,8 @@ module Git
         #
         # RHEL 7 (glibc 2.17) has neither locale and gets a C ctype whatever is pinned.
         # It is EOL, and there is deliberately no public override for this value.
-        'LC_ALL' => darwin_platform? ? 'en_US.UTF-8' : 'C.UTF-8'
+        'LC_ALL' => darwin_platform? ? 'en_US.UTF-8' : 'C.UTF-8',
+        'LANGUAGE' => nil
       }.merge(additional_overrides)
     end
 

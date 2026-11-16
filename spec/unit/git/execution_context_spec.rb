@@ -89,7 +89,8 @@ RSpec.describe Git::ExecutionContext do
           'GIT_INDEX_FILE' => '/fake/repo/.git/index',
           'GIT_SSH' => '/configured/ssh',
           'GIT_EDITOR' => 'true',
-          'LC_ALL' => expected_lc_all
+          'LC_ALL' => expected_lc_all,
+          'LANGUAGE' => nil
         )
       end
 
@@ -200,6 +201,14 @@ RSpec.describe Git::ExecutionContext do
           'GIT_DIR' => '/fake/repo/.git',
           'GIT_WORK_TREE' => '/fake/repo'
         )
+      end
+    end
+
+    context 'when additional overrides replace LANGUAGE' do
+      let(:additional_overrides) { { 'LANGUAGE' => 'de' } }
+
+      it 'uses the per-call LANGUAGE value instead of unsetting it' do
+        expect(env).to include('LANGUAGE' => 'de')
       end
     end
 
