@@ -25,6 +25,7 @@ methods on `Git::Repository::*` modules.
     - [When to skip integration tests](#when-to-skip-integration-tests)
     - [Integration test grouping](#integration-test-grouping)
     - [What integration tests assert](#what-integration-tests-assert)
+    - [Review checks for signature policy](#review-checks-for-signature-policy)
     - [What integration tests do not assert](#what-integration-tests-do-not-assert)
 - [Workflow](#workflow)
 - [Output](#output)
@@ -297,10 +298,14 @@ methods are covered exclusively by command integration tests.
 
 #### Integration test grouping
 
-Mirror the [Command Test Conventions](../command-test-conventions/SKILL.md)
-integration grouping. Use a multi-command or post-processing facade method —
-single-command delegators do not warrant integration tests (see [When to skip
-integration tests](#when-to-skip-integration-tests)):
+A facade spec does not mirror the command skill's `context 'when the command
+succeeds'` / `context 'when the command fails'` pair: use one success context
+(or `it` blocks directly under `describe`) and no failure context, because
+error wrapping belongs to the command. See [Integration test
+grouping](../command-test-conventions/SKILL.md#integration-test-grouping) in the
+command skill for the contrast. Use a multi-command or post-processing facade
+method — single-command delegators do not warrant integration tests (see [When
+to skip integration tests](#when-to-skip-integration-tests)):
 
 The shared context (e.g. `'in an empty repository'`) provides `repo`,
 `repo_dir`, and `execution_context` helpers. Stage any required repository state
